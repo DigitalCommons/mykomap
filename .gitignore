@@ -1,0 +1,24 @@
+# For Vim users:
+*.swp
+*.swo
+
+# For emacs users:
+*~
+*#
+
+# For VSCode users
+*.vscode
+
+# General:
+*.zip
+
+# Mac OS/X cruft:
+.DS_Store
+
+# NOTE: npm generated package-lock.json *should* be committed
+
+# NPM installs libraries here (and in subdirs)
+node_modules/
+
+# Transient build files go here:
+/build
