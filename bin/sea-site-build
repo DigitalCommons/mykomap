@@ -62,4 +62,4 @@ generate-version "$npm_package_name" >config/version.json &&
 ln -sfrn "$config" "$dest/in/www/configuration" &&
 cp -f "$sea_map/build.js" "$dest/in/build.js" &&
 { if [ -n "$*" ]; then ln -vsfrn "$@" "$dest/in/www/"; fi } &&
-"$sea_map/node_modules/.bin/r.js" -o "$dest/in/build.js" "dir=$dest/out"
+r.js -o "$dest/in/build.js" "dir=$dest/out"
