@@ -22,3 +22,6 @@ node_modules/
 
 # Transient build files go here:
 /build
+
+# Configuration for local testing
+/www/configuration
