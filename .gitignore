@@ -25,3 +25,4 @@ node_modules/
 
 # Configuration for local testing
 /www/configuration
+/www/services/locCache.json
