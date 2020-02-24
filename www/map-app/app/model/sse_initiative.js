@@ -55,6 +55,8 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
         value: e.country ? e.country : undefined,
         enumerable: true
       },
+      searchstr: { value: (e.name + e.dataset + e.www + e.locality + e.postcode + e.country + "")
+        , enumerable: true },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
@@ -119,7 +121,7 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function(i) {
-      return i.name.toUpperCase().includes(up);
+      return i.searchstr.toUpperCase().includes(up);
     });
   }
 

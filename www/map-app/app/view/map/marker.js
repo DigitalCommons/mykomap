@@ -4,8 +4,9 @@ define([
   "leafletAwesomeMarkers",
   "view/base",
   "presenter/map/marker",
-  "app/eventbus"
-], function(leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus) {
+  "app/eventbus",
+  "model/sse_initiative"
+], function (leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus, sse_initiatives) {
   "use strict";
 
   // Keep a mapping between initiatives and their Markers:
@@ -14,7 +15,7 @@ define([
   let hiddenClusterGroup = null;
   let unselectedClusterGroup = null;
 
-  function MarkerView() {}
+  function MarkerView() { }
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
 
@@ -24,7 +25,7 @@ define([
   // http://fortawesome.github.io/Font-Awesome/icons/
   const dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
 
-  proto.create = function(map, initiative) {
+  proto.create = function (map, initiative) {
     this.initiative = initiative;
     mapObj = map;
 
@@ -70,7 +71,7 @@ define([
       });
 
       this.cluster = hiddenClusterGroup;
-      this.cluster.addLayer(this.marker);
+      //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
     } else {
       const hovertext = this.presenter.getHoverText(initiative);
@@ -83,7 +84,7 @@ define([
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-marker",
-        cluster: false
+        cluster: false,
       });
 
       //this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {icon: icon, title: hovertext});
@@ -104,17 +105,17 @@ define([
       });
       this.marker.bindTooltip(this.presenter.getHoverText(initiative));
       const that = this;
-      this.marker.on("click", function(e) {
+      this.marker.on("click", function (e) {
         that.onClick(e);
       });
       this.cluster = unselectedClusterGroup;
-      // this.cluster.addLayer(this.marker);
+      this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = true;
     }
 
     markerForInitiative[initiative.uniqueId] = this;
   };
-  proto.onClick = function(e) {
+  proto.onClick = function (e) {
     // console.log("MarkerView.onclick");
     // Browser seems to consume the ctrl key: ctrl-click is like right-buttom-click (on Chrome)
     if (e.originalEvent.ctrlKey) {
@@ -140,14 +141,14 @@ define([
       });
     }
   };
-  proto.setUnselected = function(initiative) {
+  proto.setUnselected = function (initiative) {
     mapObj.closePopup();
     eventbus.publish({
       topic: "Sidebar.hideInitiative"
     });
     try {
       initiative.marker.__parent.unspiderfy();
-    } catch (e) {}
+    } catch (e) { }
     mapObj.selectedInitiative = undefined;
     mapObj.off("zoomend", selectInitiative);
     if (!initiative.nongeo) {
@@ -165,7 +166,7 @@ define([
       );
     }
   };
-  proto.setSelected = function(initiative) {
+  proto.setSelected = function (initiative) {
     mapObj.selectedInitiative = initiative;
     mapObj.on("zoomend", selectInitiative);
     unselectedClusterGroup.once("clusterclick", e => {
@@ -199,7 +200,7 @@ define([
           unselectedClusterGroup.getVisibleParent(initiative.marker) !==
           initiative.marker
         ) {
-          if(initiative.marker.__parent) //if it has a parent
+          if (initiative.marker.__parent) //if it has a parent
             initiative.marker.__parent.spiderfy();
         }
         initiative.marker.openPopup();
@@ -218,7 +219,7 @@ define([
     }
   }
 
-  proto.showTooltip = function(initiative) {
+  proto.showTooltip = function (initiative) {
     // This variation zooms the map, and makes sure the marker can
     // be seen, spiderifying if needed.
     // But this auto-zooming maybe more than the user bargained for!
@@ -234,40 +235,132 @@ define([
     this.marker.openTooltip();
     this.marker.setZIndexOffset(1000);
   };
-  proto.hideTooltip = function(initiative) {
+  proto.hideTooltip = function (initiative) {
     this.marker.closeTooltip();
     this.marker.setZIndexOffset(0);
   };
-  proto.getInitiativeContent = function(initiative) {
+  proto.getInitiativeContent = function (initiative) {
     return this.presenter.getInitiativeContent(initiative);
   };
 
   function setSelected(initiative) {
     markerForInitiative[initiative.uniqueId].setSelected(initiative);
   }
-  function setUnselected(initiative) {       
-    if(markerForInitiative[initiative.uniqueId])                                                   
+  function setUnselected(initiative) {
+    if (markerForInitiative[initiative.uniqueId])
       markerForInitiative[initiative.uniqueId].setUnselected(initiative);
   }
 
-  
-  proto.destroy = function() {
+
+  proto.destroy = function () {
+    //this.marker.hasPhysicalLocation = false;
     this.cluster.removeLayer(this.marker);
   };
-  function destroyAll(){                                                          
+
+  proto.show = function () {
+    this.cluster.addLayer(this.marker);
+  }
+
+  function destroyAll() {
     let that = this;
     let initiatives = Object.keys(markerForInitiative);
     initiatives.forEach(initiative => {
       markerForInitiative[initiative].destroy();
     });
-    
-    
-
     markerForInitiative = {};
-
-    
   }
   MarkerView.prototype = proto;
+
+  let hiddenMarkers = [];
+  let highlighted = [];
+  let filtered = {};
+
+  //filter filters the results you search
+  //add each to filter and hide all that aren't in the filtered ones
+  //collect filters and remove them 
+  //initatives from different filters can overlap (make sure you catch that)
+  function addFilter(initiatives, filterName) {
+    filtered[filterName] = initiatives;
+  }
+
+  function removeFilter(filterName) {
+    if (!filterName || filterName == '')
+      filtered = {};
+    else//remove all
+      delete filtered[filterName];
+
+  }
+
+  function getFiltered() {
+    const filteredIds = [];
+    Object.keys(filtered).forEach(k => {
+      filtered[k].forEach(i => {
+        filteredIds.push(i.uniqueId);
+      })
+    });
+    return filteredIds;
+  }
+
+
+  function highlightMarkers(initiatives) {
+    //check if same request is being made
+    if (highlighted == initiatives)
+      return;
+
+    showMarkers();
+    //need to recreate them afterwards
+    const uniqueIds = initiatives.map(initiative => initiative.uniqueId);
+    const filteredIds = getFiltered();
+
+    //remove all non-highlighted from the filtered ones
+    if (filteredIds.length != 0) {
+      //remove all non-filtered
+      Object.keys(markerForInitiative).filter(init => !filteredIds.includes(init))
+        .forEach(init => {
+          hiddenMarkers.push(markerForInitiative[init]);
+          markerForInitiative[init].destroy();
+        });
+
+
+      filteredIds.filter(init => !uniqueIds.includes(init))
+        .forEach(init => {
+          hiddenMarkers.push(markerForInitiative[init]);
+          markerForInitiative[init].destroy();
+        });
+    }
+    else {
+      Object.keys(markerForInitiative).filter(init => !uniqueIds.includes(init))
+        .forEach(init => {
+          hiddenMarkers.push(markerForInitiative[init]);
+          markerForInitiative[init].destroy();
+        });
+
+
+    }
+
+    highlighted = initiatives;
+  }
+
+  function showMarkers() {
+    hiddenMarkers.forEach(m => {
+      m.show();
+    });
+
+    //pan and zoom
+    const latlng = sse_initiatives.latLngBounds(null)
+    eventbus.publish({
+      topic: "Map.needsToBeZoomedAndPanned",
+      data: {
+        bounds: latlng,
+        options: {
+          maxZoom: 3
+        }
+      }
+    });
+    hiddenMarkers = [];
+    highlighted = [];
+
+  }
 
   function createMarker(map, initiative) {
     const view = new MarkerView();
@@ -310,7 +403,12 @@ define([
     hideTooltip: hideTooltip,
     getInitiativeContent: getInitiativeContent,
     getClusterGroup: getClusterGroup,
-    destroyAll: destroyAll
+    destroyAll: destroyAll,
+    highlightMarkers: highlightMarkers,
+    showMarkers: showMarkers,
+    addFilter: addFilter,
+    removeFilter: removeFilter,
+    getFiltered: getFiltered
   };
   return pub;
 });

@@ -2,8 +2,9 @@ define([
   "app/eventbus",
   "model/config",
   "model/sse_initiative",
-  "presenter/sidebar/base"
-], function(eventbus, config, sseInitiative, sidebarPresenter) {
+  "presenter/sidebar/base",
+  "view/map/marker"
+], function(eventbus, config, sseInitiative, sidebarPresenter,markerView) {
   "use strict";
 
   function StackItem(initiatives) {
@@ -28,16 +29,30 @@ define([
   proto.currentItem = function() {
     return this.contentStack.current();
   };
+
+  proto.highlightCurrentData = function(){
+    eventbus.publish({
+      topic: "Markers.highlightMarkers",
+      data: {
+        initiativesToHighlight: this.contentStack.current().initiatives
+      }
+    });
+  };
+
+
   proto.currentItemExists = function() {
     // returns true only if the contentStack is empty
     return typeof this.contentStack.current() !== "undefined";
   };
-  proto.notifyMarkersNeedToShowNewSelection = function(lastContent) {
+  proto.notifyMarkersNeedToShowNewSelection = function(lastContent,newContent = null) {
+    if(!newContent){
+      newContent = this.contentStack.current().initiatives
+    }
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
         unselected: lastContent ? lastContent.initiatives : [],
-        selected: this.contentStack.current().initiatives
+        selected: newContent
       }
     });
   };
@@ -69,6 +84,32 @@ define([
       });
     }
   };
+
+  proto.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative = function(initiative,sidebarWidth) {
+    const initiatives = [initiative];
+    const lats = initiatives.map(x => x.lat);
+    const lngs = initiatives.map(x => x.lng);
+    sidebarWidth = sidebarWidth || 0;
+
+    if (initiatives.length > 0) {
+      eventbus.publish({
+        topic: "Map.needsToBeZoomedAndPanned",
+        data: {
+          bounds: [
+            [arrayMin(lats), arrayMin(lngs)],
+            [arrayMax(lats), arrayMax(lngs)]
+          ],
+          options: {
+            paddingTopLeft: [sidebarWidth, window.innerHeight / 2],
+            paddingBottomRight: [0, 0],
+            maxZoom: 12
+          }
+        }
+      });
+    }
+  };
+
+
   proto.notifyShowInitiativeTooltip = function(initiative) {
     eventbus.publish({
       topic: "Map.needToShowInitiativeTooltip",
@@ -87,7 +128,7 @@ define([
   proto.historyButtonsUsed = function(lastContent) {
     //console.log("sidebar/initiatives historyButtonsUsed");
     //console.log(lastContent);
-    this.notifyMarkersNeedToShowNewSelection(lastContent);
+    //this.notifyMarkersNeedToShowNewSelection(lastContent);
     this.view.refresh();
   };
 
@@ -96,19 +137,48 @@ define([
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
     const lastContent = this.contentStack.current();
-    this.contentStack.append(new SearchResults(data.results, data.text));
-    this.notifyMarkersNeedToShowNewSelection(lastContent);
-    this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
+    const filters = markerView.getFiltered();
+    console.log(filters);
+    if(filters.length!=0){
+      data.results = data.results.filter(i=>{
+        return filters.includes(i.uniqueId);
+      });
+    }
+
+
+
+    if(data.results.length == 1){
+
+      this.contentStack.append(new SearchResults(data.results, data.text));
+      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
+      this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
+    }
+    else{
+      this.contentStack.append(new SearchResults(data.results, data.text));
+     // this.notifyMarkersNeedToShowNewSelection(lastContent);
+      this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
+      //This will leave out only the initiatives passed to the function
+      eventbus.publish({
+        topic: "Markers.highlightMarkers",
+        data: {
+          initiativesToHighlight: data.results
+        }
+      });
+    }
+
     this.notifySidebarNeedsToShowInitiatives();
     this.view.refresh();
   };
+
   proto.onInitiativeClickedInSidebar = function(data) {
+    console.log(data)
+
     const initiative = data.initiative;
-    const sidebarWidth = data.sidebarWidth;
     const lastContent = this.contentStack.current();
-    this.contentStack.append(new StackItem([initiative]));
-    let marker = this.notifyMarkersNeedToShowNewSelection(lastContent);
-    this.notifyMapNeedsToNeedsToBeZoomedAndPanned(sidebarWidth);
+    //this.contentStack.append(new StackItem([initiative]));
+    //console.log(this.contentStack.current());
+    this.notifyMarkersNeedToShowNewSelection(lastContent,[initiative]);
+    this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
     this.view.refresh();
   };
   proto.onInitiativeMouseoverInSidebar = function(initiative) {
@@ -147,6 +217,8 @@ define([
   Presenter.prototype = proto;
 
   function createPresenter(view) {
+
+
     var p = new Presenter();
     p.registerView(view);
     eventbus.subscribe({
@@ -163,6 +235,7 @@ define([
       }
     });
     */
+
     eventbus.subscribe({
       topic: "Marker.SelectionToggled",
       callback: function(data) {

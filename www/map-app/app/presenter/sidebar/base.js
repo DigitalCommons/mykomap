@@ -98,12 +98,20 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //console.log("backButtonClicked");
       //console.log(pres);
       const lastContent = pres.contentStack.current();
-      pres.contentStack.previous();
+      const newContent = pres.contentStack.previous();
+      if (newContent == lastContent)
+        return;
       // TODO: Think: maybe better to call a method on pres that indicates thay
       //       the contentStack has been changed.
       //       Then it is up to the pres to perform other actions related to this
       //       (e.g. where it affects which initiatives are selected)
       //pres.view.refresh();
+      eventbus.publish({
+        topic: "Markers.highlightMarkers",
+        data: {
+          initiativesToHighlight: newContent.initiatives
+        }
+      });
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -114,8 +122,16 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //console.log("forwardButtonClicked");
       //console.log(pres);
       const lastContent = pres.contentStack.current();
-      pres.contentStack.next();
+      const newContent = pres.contentStack.next();
+      if (newContent == lastContent)
+        return;
       //pres.view.refresh();
+      eventbus.publish({
+        topic: "Markers.highlightMarkers",
+        data: {
+          initiativesToHighlight: newContent.initiatives
+        }
+      });
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -123,7 +139,7 @@ define(["app/eventbus", "model/config", "presenter"], function(
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
   proto.historyButtonsUsed = function(lastContent) {
-    console.log("historyButtonsUsed");
+    
     this.view.refresh();
   };
 

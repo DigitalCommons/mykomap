@@ -1,7 +1,8 @@
-define(["app/eventbus", "presenter", "model/config"], function(
+define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], function(
   eventbus,
   presenter,
-  config
+  config,
+  sse_initiatives
 ) {
   "use strict";
 
@@ -182,6 +183,7 @@ define(["app/eventbus", "presenter", "model/config"], function(
   Presenter.prototype = proto;
 
   function createPresenter(view) {
+    
     const p = new Presenter();
     p.registerView(view);
     return p;

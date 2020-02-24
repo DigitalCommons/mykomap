@@ -677,3 +677,23 @@ div.leaflet-popup-content {
     transform: translateX(0);
   }
 }
+
+#dir-filter {
+  border-top-style: hidden;
+  border-right-style: hidden;
+  border-left-style: hidden;
+  border-bottom-style: hidden;
+  background-color: white;
+  caret-color: transparent;
+  overflow: hidden;
+  opacity: 0;
+  padding : 0px 0px 0px 16px;
+  margin: 0px;
+  width: auto;
+}
+#dir-filter:focus {
+  outline: none;
+}
+#dir-title{
+  padding: 0px 0px 0px 16px;
+}

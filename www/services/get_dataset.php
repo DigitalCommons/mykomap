@@ -48,6 +48,7 @@ function getSparqlUrl($dataset, $q, $uid)
 }
 function request($url){
 
+	
 	// is curl installed?
 	if (!function_exists('curl_init')){ 
 		report_error_and_die("PHP can't find function curl_init. Is CURL installed?");
@@ -75,7 +76,6 @@ function request($url){
 	//curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
 
 	// See curl docs: http://www.php.net/curl_setopt
-
 	$response = curl_exec($ch);
 	if (curl_errno($ch)) { 
 		report_error_and_die("PHP curl_exec produces error: " . curl_error($ch)); 
@@ -103,34 +103,42 @@ if (isset($_GET["uid"])) {
 			break;
 	}
 }
-// Add a uid to get the values for a specific initiative (currently used for activities and org structure)
-// TODO: Need to make more secure
-$uid = isset($_GET["uid"]) ? $_GET["uid"] : "";
-
-$requestURL = getSparqlUrl($dataset, $q, $uid);
-$response = request($requestURL);
-$res = json_decode($response, true);
-
-// The keys correspond to two things:
-//   1. The names of the variables used in the SPARQL query (see Initiative::create_sparql_files in generate-triples.rb)
-//   2. The names used in the JSON that is returned to the map-app
-$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "postcode", "country", "primaryActivity", "activity", "orgStructure", "tel", "email");
-// $keys = array("name", "uri", "lat", "lng", "country");
-
-$result = array();
-foreach($res["results"]["bindings"] as $item) {
-	$obj = array();
-	foreach($keys as $key) {
-		// Some keys are optional (e.g. www and regorg). Check a key is defined before using it:
-		if (array_key_exists($key, $item)) {
-			$obj[$key] = $item[$key]["value"];
-		}
-	}
-	// As well as what comes back from the SPARQL query, we manually add the name of the dataset
-	// (i.e. the sub-directory of this script which contained the details of the query)): 
-	$obj["dataset"] = $dataset;
-	array_push($result, $obj);
+$filename = "locCache.json";
+// need to fix cache (used for testing locally)
+if (file_exists($filename)) {
+	$cached_res = file_get_contents($filename);
+	echo $cached_res;
 }
-// echo json_encode($requestURL);
-report_success($result);
+else{
+	// Add a uid to get the values for a specific initiative (currently used for activities and org structure)
+	// TODO: Need to make more secure
+	$uid = isset($_GET["uid"]) ? $_GET["uid"] : "";
+
+	$requestURL = getSparqlUrl($dataset, $q, $uid);
+	$response = request($requestURL);
+	$res = json_decode($response, true);
+
+	// The keys correspond to two things:
+	//   1. The names of the variables used in the SPARQL query (see Initiative::create_sparql_files in generate-triples.rb)
+	//   2. The names used in the JSON that is returned to the map-app
+	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "postcode", "country", "primaryActivity", "activity", "orgStructure", "tel", "email");
+	// $keys = array("name", "uri", "lat", "lng", "country");
+
+	$result = array();
+	foreach($res["results"]["bindings"] as $item) {
+		$obj = array();
+		foreach($keys as $key) {
+			// Some keys are optional (e.g. www and regorg). Check a key is defined before using it:
+			if (array_key_exists($key, $item)) {
+				$obj[$key] = $item[$key]["value"];
+			}
+		}
+		// As well as what comes back from the SPARQL query, we manually add the name of the dataset
+		// (i.e. the sub-directory of this script which contained the details of the query)): 
+		$obj["dataset"] = $dataset;
+		array_push($result, $obj);
+	}
+	// echo json_encode($requestURL);
+	report_success($result);
+}
 ?>

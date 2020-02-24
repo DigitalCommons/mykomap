@@ -23,12 +23,12 @@ define([
     return this.hasOwnProperty("searchString");
   };
 
-  // function SearchResults(initiatives, searchString) {
-  // 	// isa StackItem
-  // 	StackItem.call(this, initiatives);
-  // 	this.searchString = searchString;
-  // }
-  // SearchResults.prototype = Object.create(StackItem.prototype);
+  function SearchResults(initiatives, searchString) {
+  	// isa StackItem
+  	StackItem.call(this, initiatives);
+  	this.searchString = searchString;
+  }
+  SearchResults.prototype = Object.create(StackItem.prototype);
 
   function Presenter() {}
 
@@ -92,8 +92,7 @@ define([
     return config.doesDirectoryHaveColours();
   };
 
-  proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function(initiative) {
-    const initiatives = [initiative];
+  proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function(initiatives) {
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
 
@@ -109,19 +108,19 @@ define([
       });
     }
   };
-
+ 
   proto.initiativeClicked = function(initiative) {
     const lastContent = this.contentStack.current();
     if (initiative) {
-      this.contentStack.append(new StackItem([initiative]));
+      //this.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
-      this.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiative);
+      this.notifyMapNeedsToNeedsToBeZoomedAndPanned([initiative]);
       // Update selection
       eventbus.publish({
         topic: "Markers.needToShowLatestSelection",
         data: {
           unselected: lastContent ? lastContent.initiatives : [],
-          selected: this.contentStack.current().initiatives
+          selected: [initiative]
         }
       });
       // Populate the sidebar and hoghlight the iitiative in the directory

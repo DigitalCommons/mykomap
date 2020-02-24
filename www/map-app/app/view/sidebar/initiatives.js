@@ -25,21 +25,29 @@ define([
   const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
   proto.populateFixedSelection = function(selection) {
-    let textContent = "Initiatives"; // default content, if no initiatives to show
+    let textContent = ""; // default content, if no initiatives to show
     if (this.presenter.currentItemExists()) {
       const item = this.presenter.currentItem();
       const initiatives = item.initiatives;
       if (initiatives.length === 1) {
-        textContent = initiatives[0].name;
+        //textContent = initiatives[0].name;
+        textContent = "Search: " + item.searchString;
       } else if (item.isSearchResults()) {
         textContent = "Search: " + item.searchString;
       }
+      this.presenter.highlightCurrentData();
     }
-    selection
+    const container = selection
       .append("div")
-      .attr("class", "w3-container")
+      .attr("class", "w3-container");
+    container
+      .append("h1")
+      .text("Search History");
+
+    container
       .append("p")
       .text(textContent);
+
   };
   proto.geekZoneContentAtD3Selection = function(selection, initiative) {
     const that = this;
@@ -136,8 +144,9 @@ define([
         .attr("title", "Click to see details here and on map")
         // TODO - shift-click should remove initiative from selection,
         //        just like shift-clicking a marker.
-        .on("click", function(e) {
-          pres.onInitiativeClickedInSidebar(initiative);
+        .on("click", function(e) {          
+          pres.onInitiativeClickedInSidebar({initiative: initiative,
+            sidebarWidth: 5});
         })
         .on("mouseover", function(e) {
           pres.onInitiativeMouseoverInSidebar(initiative);
@@ -163,7 +172,8 @@ define([
           }
           break;
         case 1:
-          this.populateSelectionWithOneInitiative(selection, initiatives[0]);
+          //this.populateSelectionWithOneInitiative(selection, initiatives[0]);
+          this.populateSelectionWithListOfInitiatives(selection, initiatives);
           break;
         default:
           this.populateSelectionWithListOfInitiatives(selection, initiatives);
@@ -187,6 +197,7 @@ define([
   function createSidebar() {
     var view = new Sidebar();
     view.setPresenter(presenter.createPresenter(view));
+
     return view;
   }
   var pub = {

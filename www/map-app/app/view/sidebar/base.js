@@ -35,7 +35,8 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
     // Fwd/back navigation for moving around the contentStack of a particular sidebar
     // (e.g. moving between different search results)
     var buttons = this.presenter.historyNavigation();
-    var buttonClasses = "w3-white w3-cell w3-right w3-btn w3-border-0";
+    //w3-button
+    var buttonClasses = "w3-white w3-cell w3-right w3-border-0";
     var selection = this.d3selectAndClear(
       "#map-app-sidebar-history-navigation"
     );

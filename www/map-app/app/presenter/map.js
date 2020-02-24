@@ -2,8 +2,9 @@ define([
   "app/eventbus",
   "model/sse_initiative",
   "presenter",
-  "model/config"
-], function(eventbus, sse_initiative, presenter, config) {
+  "model/config",
+  "view/map/marker"
+], function(eventbus, sse_initiative, presenter, config, markerView) {
   "use strict";
 
   function Presenter() {}
@@ -92,9 +93,21 @@ define([
     allMarkers = [];
     console.log("removing all");
     //rm markers 
-    
-
   };
+
+  proto.highlightMarkers= function(data){
+    markerView.highlightMarkers(data.initiativesToHighlight);
+  }
+  proto.showAllMarkers = function () {
+    markerView.showMarkers();
+  }
+  proto.addFilter = function (data) {
+    markerView.addFilter(data.initiatives,
+      data.filterName);
+  }
+  proto.removeFilter = function (data) {
+    markerView.removeFilter(data.filterName);
+  }
 
   proto.onInitiativeComplete = function() {
     // Load the markers into the clustergroup
@@ -128,6 +141,7 @@ define([
   };
   proto.onMarkersNeedToShowLatestSelection = function(data) {
     console.log("onMarkersNeedToShowLatestSelection");
+    console.log(data)
     const that = this;
 
     data.unselected.forEach(function(e) {
@@ -259,6 +273,34 @@ define([
       topic: "Map.fitBounds",
       callback: function(data) {
         p.onBoundsRequested(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Markers.highlightMarkers",
+      callback: function(data) {
+        p.highlightMarkers(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Markers.addFilter",
+      callback: function(data) {
+        p.addFilter(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Markers.removeFilter",
+      callback: function(data) {
+        p.removeFilter(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Markers.showAllMarkers",
+      callback: function() {
+        p.showAllMarkers();
       }
     });
 

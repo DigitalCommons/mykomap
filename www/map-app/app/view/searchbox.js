@@ -16,6 +16,7 @@ define(["d3", "view/base", "presenter/searchbox"], function(
     //d3.event.stopPropagation();
 
     var searchText = d3.select("#search-box").property("value");
+ 
     this.presenter.performSearch(searchText);
     console.log("Search submitted: [" + searchText + "]");
   };
@@ -23,6 +24,7 @@ define(["d3", "view/base", "presenter/searchbox"], function(
     // d3 selection redefines this, so hang onto it here:
     var view = this;
     var selection = this.d3selectAndClear("#map-app-search-widget");
+
     selection = selection
       .append("form")
       .attr("id", "map-app-search-form")
@@ -52,7 +54,13 @@ define(["d3", "view/base", "presenter/searchbox"], function(
       .attr("id", "search-box")
       .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
       .attr("type", "search")
-      .attr("placeholder", "Search initiatives");
+      .attr("placeholder", "Search initiatives")
+      .attr("autocomplete","off");
+
+      //search (addr/domains)
+      //
+
+     
   };
   SearchBoxView.prototype = proto;
   //var view;

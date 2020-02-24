@@ -4,11 +4,11 @@ define([
   "app/eventbus",
   "presenter/sidebar/directory",
   "view/sidebar/base"
-], function(d3, eventbus, presenter, sidebarView) {
+], function (d3, eventbus, presenter, sidebarView) {
   "use strict";
 
   // Our local Sidebar object:
-  function Sidebar() {}
+  function Sidebar() { }
 
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
@@ -17,16 +17,70 @@ define([
   proto.title = "Directory";
   proto.hasHistoryNavigation = false;
 
-  proto.populateFixedSelection = function(selection) {
+  proto.populateFixedSelection = function (selection) {
+
+    const that = this;
     let sidebarTitle = proto.title;
-    selection
-      .append("div")
-      .attr("class", "w3-container")
-      .append("h1")
-      .text(sidebarTitle);
+    const container = selection
+      .append("div");
+
+    container.append("h1")
+      .text(sidebarTitle)
+      .attr("id", "dir-title");
+
+    container.append("input")
+      .attr("id", "dir-filter")
+      //.classed("w3-center",true)
+      .attr("type", "text")
+      .on("keyup", function () {
+        that.handleFilter(this.value);
+      });
+
+    d3.select(".sea-main-sidebar").on("click", function () {
+      if(document.getElementById("dir-filter"))
+        document.getElementById("dir-filter").focus();
+    });
+
+
   };
 
-  proto.populateScrollableSelection = function(selection) {
+  var dissapear;
+
+  proto.handleFilter = function (input) {
+    if (this.dissapear) {
+      clearTimeout(this.dissapear);
+      this.dissapear = null;
+    }
+
+    if (!input || input == null)
+      d3.selectAll("li.sea-directory-field").attr("hidden", null);
+    else {
+      const a = d3.selectAll("li.sea-directory-field");
+      a.attr("hidden", null);
+      a.filter(function (obj, i) {
+        return !a._groups[0][i].innerHTML.toLowerCase().includes(input);
+      }).attr("hidden", true);
+      //appear and set dissapear after seconds
+      //cancel last dissapear if new one is coming in
+      d3.select("#dir-filter")
+        .style("width", "auto")
+        .style("opacity", "100");
+
+      function dissapear() {
+        d3.select("#dir-filter")
+          .transition()
+          .duration(400)
+          .style("opacity", "0").transition().style("width", "0px");
+      }
+
+      // dissapear in 1 sec
+      this.dissapear = window.setTimeout(dissapear, 1000);
+
+    }
+
+  }
+
+  proto.populateScrollableSelection = function (selection) {
     let that = this;
     let list = selection
       .append("ul")
@@ -41,7 +95,7 @@ define([
       let directoryField = field;
       let valuesByName = this.presenter.getAllValuesByName(directoryField);
       Object.keys(registeredValues[field])
-        .sort(function(a, b) {
+        .sort(function (a, b) {
           // Check if we're working numerically or alpabetically
           if (isNaN(parseInt(a.replace(/[^\d]/g, "")))) {
             if (a.replace(/\d/gi, "") < b.replace(/d/gi, "")) {
@@ -63,8 +117,10 @@ define([
             .append("li")
             .text(valuesByName ? valuesByName[key.toUpperCase()] : key)
             .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
-            .on("click", function() {
+            .classed("sea-directory-field", true)
+            .on("click", function () {
               that.listInitiativesForSelection(directoryField, key);
+
               d3.select(".sea-field-active").classed("sea-field-active", false);
               d3.select(this).classed("sea-field-active", true);
             });
@@ -73,12 +129,51 @@ define([
     }
   };
 
-  proto.listInitiativesForSelection = function(directoryField, selectionKey) {
+
+
+  proto.listInitiativesForSelection = function (directoryField, selectionKey) {
     let that = this;
     let initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
       directoryField,
       selectionKey
     );
+
+    // eventbus.publish({
+    //   topic: "Markers.addFilter",
+    //   data: {
+    //     initiatives: initiatives,
+    //     filterName: (directoryField+selectionKey)
+    //   }
+    // });
+
+    eventbus.publish({
+      topic: "Markers.highlightMarkers",
+      data: {
+        initiativesToHighlight: initiatives
+      }
+    });
+
+
+    const boundsс = presenter.latLngBounds(initiatives);
+    eventbus.publish({
+      topic: "Directory.InitiativeClicked"
+    });
+    if (window.innerWidth <= 800) {
+      eventbus.publish({
+        topic: "Directory.InitiativeClickedSidebar.hideSidebar"
+      });
+    }
+    eventbus.publish({
+      topic: "Map.fitBounds",
+      data: {
+        bounds: boundsс,
+        options: {
+          paddingBottomRight: [0, 0],
+          maxZoom: 5
+        }
+      }
+    });
+
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     d3.select(".w3-btn").attr("title", "Hide directory");
@@ -114,7 +209,7 @@ define([
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", "Close " + title)
-      .on("click", function() {
+      .on("click", function () {
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });
@@ -125,14 +220,14 @@ define([
       .append("h2")
       .classed("sea-field", true)
       .text(title)
-      .on("click", function() {
+      .on("click", function () {
         const bounds = presenter.latLngBounds(initiatives);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
         if (window.innerWidth <= 800) {
           eventbus.publish({
-            topic: "Sidebar.hideSidebar"
+            topic: "Directory.InitiativeClickedSidebar.hideSidebar"
           });
         }
         eventbus.publish({
@@ -154,7 +249,7 @@ define([
         .text(initiative.name)
         .attr("data-uid", initiative.uniqueId)
         .classed(activeClass, true)
-        .on("click", function() {
+        .on("click", function () {
           eventbus.publish({
             topic: "Directory.InitiativeClicked",
             data: initiative
@@ -164,7 +259,7 @@ define([
     sidebar
       .on(
         "transitionend",
-        function() {
+        function () {
           if (event.target.className === "w3-btn") return;
           if (event.propertyName === "transform") {
             eventbus.publish({
@@ -182,7 +277,7 @@ define([
       .classed("sea-sidebar-list-initiatives", true);
   };
 
-  proto.populateInitiativeSidebar = function(initiative, initiativeContent) {
+  proto.populateInitiativeSidebar = function (initiative, initiativeContent) {
     // Highlight the correct initiative in the directory
     d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
     d3.select('[data-uid="' + initiative.uniqueId + '"]').classed(
@@ -197,7 +292,7 @@ define([
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", "Close " + initiative.name)
-      .on("click", function() {
+      .on("click", function () {
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
@@ -222,7 +317,7 @@ define([
       });
   };
 
-  proto.deselectInitiativeSidebar = function() {
+  proto.deselectInitiativeSidebar = function () {
     d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
     let initiativeSidebar = d3.select("#sea-initiative-sidebar");
     // let initiativeContentElement = d3.select("#sea-initiative-sidebar-content");
@@ -234,6 +329,7 @@ define([
 
   function createSidebar() {
     var view = new Sidebar();
+
     view.setPresenter(presenter.createPresenter(view));
     return view;
   }

@@ -30,6 +30,7 @@ define([
       })
       .append("i")
       .attr("class", "fa fa-angle-right");
+
   };
 
   proto.createButtonRow = function() {
@@ -42,11 +43,27 @@ define([
     selection.append("i").attr("id", "map-app-sidebar-history-navigation");
 
     // The sidebar has a button that causes the main menu to be dispayed
+   
+
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", "Show directory")
       .on("click", function() {
+        //remove filters
+        // eventbus.publish({
+        //   topic: "Markers.removeFilter",
+        //   data: {
+        //     filterName: null
+        //   }
+        // });
+
+        eventbus.publish({
+          topic: "Markers.showAllMarkers",
+          data: {}
+        });
+        //notify zoom 
+        that.hideInitiativeList();
         that.changeSidebar("directory");
       })
       .append("i")
@@ -55,8 +72,20 @@ define([
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
+      .attr("title", "Show search history")
+      .on("click", function() {
+        that.hideInitiativeList();
+        that.changeSidebar("initiatives");
+      })
+      .append("i")
+      .attr("class", "fa fa-history");
+
+    selection
+      .append("button")
+      .attr("class", "w3-button w3-border-0")
       .attr("title", "Show info")
       .on("click", function() {
+        that.hideInitiativeList();
         that.changeSidebar("about");
       })
       .append("i")
@@ -67,6 +96,7 @@ define([
       .attr("class", "w3-button w3-border-0")
       .attr("title", "Show Datasets")
       .on("click", function() {
+        that.hideInitiativeList();
         that.changeSidebar("datasets");
       })
       .append("i")
@@ -128,6 +158,19 @@ define([
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
       d3.select(".w3-btn").attr("title", "Hide directory");
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
+
+    // eventbus.publish({
+    //   topic: "Markers.showAllMarkers",
+    //   data: {}
+    // });
+
+    //that.changeSidebar("directory");
+    if(document.getElementById("dir-filter"))
+      document.getElementById("dir-filter").focus();
+
+
+    
+
   };
 
   // This should be split into three functions:
@@ -136,6 +179,7 @@ define([
   // 3. Close the Initiative sidebar
   proto.hideSidebar = function() {
     const that = this;
+    //that.hideInitiativeList();
     let sidebar = d3.select("#map-app-sidebar");
 
     sidebar
@@ -163,6 +207,7 @@ define([
       .classed("sea-sidebar-open", false);
     d3.select(".w3-btn").attr("title", "Show directory");
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
+
   };
 
   proto.hideInitiativeSidebar = function() {
@@ -205,6 +250,20 @@ define([
       .classed("sea-sidebar-list-initiatives", false);
     d3.select(".w3-btn").attr("title", "Hide directory");
     d3.select(".sea-field-active").classed("sea-field-active", false);
+
+    //remove filters
+    // eventbus.publish({
+    //   topic: "Markers.removeFilter",
+    //   data: {
+    //     filterName: null
+    //   }
+    // });
+
+    eventbus.publish({
+      topic: "Markers.showAllMarkers",
+      data: {}
+    });
+
   };
   SidebarView.prototype = proto;
   var view;
