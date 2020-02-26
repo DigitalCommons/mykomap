@@ -50,21 +50,13 @@ define([
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", "Show directory")
       .on("click", function() {
-        //remove filters
-        // eventbus.publish({
-        //   topic: "Markers.removeFilter",
-        //   data: {
-        //     filterName: null
-        //   }
-        // });
-
         eventbus.publish({
-          topic: "Markers.showAllMarkers",
+          topic: "Map.removeSearchFilter",
           data: {}
         });
         //notify zoom 
-        that.hideInitiativeList();
         that.changeSidebar("directory");
+        that.showInitiativeList();
       })
       .append("i")
       .attr("class", "fa fa-bars");
@@ -75,6 +67,9 @@ define([
       .attr("title", "Show search history")
       .on("click", function() {
         that.hideInitiativeList();
+        eventbus.publish({
+          topic: "Initiatives.showSearchHistory",
+        });
         that.changeSidebar("initiatives");
       })
       .append("i")
@@ -86,6 +81,8 @@ define([
       .attr("title", "Show info")
       .on("click", function() {
         that.hideInitiativeList();
+        eventbus.publish({
+        topic: "Map.removeSearchFilter"});
         that.changeSidebar("about");
       })
       .append("i")
@@ -97,6 +94,9 @@ define([
       .attr("title", "Show Datasets")
       .on("click", function() {
         that.hideInitiativeList();
+        eventbus.publish({
+          topic: "Map.removeSearchFilter",
+          });
         that.changeSidebar("datasets");
       })
       .append("i")
@@ -159,11 +159,6 @@ define([
       d3.select(".w3-btn").attr("title", "Hide directory");
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
-    // eventbus.publish({
-    //   topic: "Markers.showAllMarkers",
-    //   data: {}
-    // });
-
     //that.changeSidebar("directory");
     if(document.getElementById("dir-filter"))
       document.getElementById("dir-filter").focus();
@@ -218,6 +213,45 @@ define([
     }
   };
 
+  proto.showInitiativeList = function() {
+    //if empty don't show
+    const empty = d3.select("#sea-initiatives-list-sidebar-content").select("ul").empty();
+    if (empty){
+      return;
+    }
+    //else show it
+    let sidebar = d3.select("#map-app-sidebar");
+    let sidebarButton = document.getElementById("map-app-sidebar-button");
+    d3.select(".w3-btn").attr("title", "Hide directory");
+
+    let initiativeListSidebar = document.getElementById(
+      "sea-initiatives-list-sidebar"
+    );
+    let selection = d3.select(
+      "#sea-initiatives-list-sidebar-content"
+    );
+    initiativeListSidebar.insertBefore(sidebarButton, selection.node());
+
+    sidebar
+      .on(
+        "transitionend",
+        function () {
+          if (event.target.className === "w3-btn") return;
+          if (event.propertyName === "transform") {
+            eventbus.publish({
+              topic: "Sidebar.updateSidebarWidth",
+              data: {
+                target: event.target,
+                directoryBounds: this.getBoundingClientRect(),
+                initiativeListBounds: initiativeListSidebar.getBoundingClientRect()
+              }
+            });
+          }
+        },
+        false
+      )
+      .classed("sea-sidebar-list-initiatives", true);
+  };
   proto.hideInitiativeList = function() {
     const that = this;
     let sidebar = d3.select("#map-app-sidebar");
@@ -250,19 +284,6 @@ define([
       .classed("sea-sidebar-list-initiatives", false);
     d3.select(".w3-btn").attr("title", "Hide directory");
     d3.select(".sea-field-active").classed("sea-field-active", false);
-
-    //remove filters
-    // eventbus.publish({
-    //   topic: "Markers.removeFilter",
-    //   data: {
-    //     filterName: null
-    //   }
-    // });
-
-    eventbus.publish({
-      topic: "Markers.showAllMarkers",
-      data: {}
-    });
 
   };
   SidebarView.prototype = proto;

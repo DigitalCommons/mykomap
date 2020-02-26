@@ -173,7 +173,6 @@ define([
           }
         });
         //todo reload new ones inside instead (without closing)
-        console.log("should close");
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });

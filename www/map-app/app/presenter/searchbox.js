@@ -24,7 +24,8 @@ define([
       });
     }
     else {
-      eventbus.publish({topic: "Markers.showAllMarkers"});
+      //TODO: do other stuff like panning
+      eventbus.publish({topic: "Map.removeSearchFilter"});
     }
   };
   Presenter.prototype = proto;

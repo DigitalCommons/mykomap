@@ -117,12 +117,23 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
   function getInitiativeByUniqueId(uid) {
     return initiativesByUid[uid];
   }
+  function getInitiativeUIDMap(){
+    return initiativesByUid;
+  }
   function search(text) {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function(i) {
       return i.searchstr.toUpperCase().includes(up);
     });
+  }
+
+  function filter(filter){ 
+
+  }
+
+  function getLoadedInitiatives(){
+    return loadedInitiatives;
   }
 
   function filterDatabases(dbSource,all) {
@@ -342,7 +353,9 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     filterDatabases:filterDatabases,
     getAllDatasets:getDatasets,
     reset:reset,
-    getCurrentDatasets:getCurrentDatasets
+    getCurrentDatasets:getCurrentDatasets,
+    getLoadedInitiatives: getLoadedInitiatives,
+    getInitiativeUIDMap: getInitiativeUIDMap
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});

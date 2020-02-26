@@ -95,20 +95,6 @@ define([
     //rm markers 
   };
 
-  proto.highlightMarkers= function(data){
-    markerView.highlightMarkers(data.initiativesToHighlight);
-  }
-  proto.showAllMarkers = function () {
-    markerView.showMarkers();
-  }
-  proto.addFilter = function (data) {
-    markerView.addFilter(data.initiatives,
-      data.filterName);
-  }
-  proto.removeFilter = function (data) {
-    markerView.removeFilter(data.filterName);
-  }
-
   proto.onInitiativeComplete = function() {
     // Load the markers into the clustergroup
     this.view.fitBounds(sse_initiative.latLngBounds());
@@ -123,6 +109,8 @@ define([
     //   data: ""
     // });
   };
+
+
   proto.onInitiativeDatasetLoaded = function(data) {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
@@ -151,6 +139,8 @@ define([
       that.view.setSelected(e);
     });
   };
+
+
   proto.onNeedToShowInitiativeTooltip = function(data) {
     this.view.showTooltip(data);
   };
@@ -195,6 +185,158 @@ define([
   proto.getDisableClusteringAtZoomFromConfig = function() {
     return config.getDisableClusteringAtZoom() || false;
   };
+
+
+
+  //FILTERS
+  let filtered = {};
+  let filteredInitiativesUIDMap = {};
+  let initiativesOutsideOfFilterUIDMap = sse_initiative.getInitiativeUIDMap();
+
+  proto.applyFilter = function () {
+    //if there are currently any filters 
+    if (getFiltered().length > 0) {
+      //display only filtered initiatives, the rest should be hidden
+      markerView.hideMarkers(this.getInitiativesOutsideOfFilter());
+      markerView.showMarkers(getFiltered());
+    } else //if no filters available show everything
+      this.removeFilters();
+
+  };
+
+
+  proto.addFilter = function (data) {
+    let initiatives = data.initiatives;
+    let filterName = data.filterName;
+
+    //if filter already exists don't do anything
+    if (Object.keys(filtered).includes(filterName))
+      return;
+
+    //add filter
+    filtered[filterName] = initiatives;
+
+    //add to array only new unique entries
+    initiatives.forEach(i => {
+      //rm entry from outside map
+      delete initiativesOutsideOfFilterUIDMap[i.uniqueId];
+      filteredInitiativesUIDMap[i.uniqueId] = i;
+    });
+
+    //apply filters
+    this.applyFilter();
+  };
+
+
+
+  proto.removeFilters = function(){
+    //remove filters
+    filtered = {};
+    filteredInitiativesUIDMap = {};
+    initiativesOutsideOfFilterUIDMap = sse_initiative.getInitiativeUIDMap();
+
+    //show all markers
+    markerView.showMarkers(sse_initiative.getLoadedInitiatives());
+  };
+
+
+
+  proto.removeFilter = function(data) {
+    const filterName = data.filterName;
+    //if filter doesn't exist don't do anything
+    if (!Object.keys(filtered).includes(filterName))
+      return;
+
+    //remove the filter
+    let oldFilterVals = filtered[filterName];
+    delete filtered[filterName];
+
+    //if no filters left call remove all and stop
+    if (Object.keys(filtered).length <= 0){
+      this.removeFilters();
+      return;
+    }
+
+    //add in the values that you are removing 
+    oldFilterVals.forEach(i => {
+      initiativesOutsideOfFilterUIDMap[i.uniqueId] = i;
+    });
+
+    //remove filter initatitives 
+    //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
+    Object.keys(filtered).forEach(k => {
+      filtered[k].forEach(i => {
+        //add in unique ones
+        filteredInitiativesUIDMap[i.uniqueId] = i;
+        //remove the ones you added
+        delete initiativesOutsideOfFilterUIDMap[i.uniqueId];
+      })
+    });
+
+
+    //apply filters
+    this.applyFilter(); 
+  };
+
+
+
+  //should return an array of unique initiatives in filters
+  function getFiltered () {
+    return Object.values(filteredInitiativesUIDMap);
+  };
+
+  function getFilteredMap() {
+    return filteredInitiativesUIDMap;
+  }
+
+
+  //should return an array of unique initiatives outside of filters
+  proto.getInitiativesOutsideOfFilter = function () {
+    return Object.values(initiativesOutsideOfFilterUIDMap);
+  };
+  //FILTERS END
+
+
+  //SEARCH HIGHLIGHT
+
+
+  //highlights markers
+
+  //there should not be any filters (search was on all of the data) A
+  //if A you need to just hide all the data outside of the passed initiatives and reveal the ones passed
+
+  //OR B, you will recieve a subset of filtered (search was on filtered content) B
+  //if B you need to hide all the initiatives in the filter outside of the data passed
+  // (i.e filter/initiatives needs to be hidden)
+  //and make sure that the initiatives passed are revealed
+  //note: filters should have already been applied to the initiatives passed (i.e. they are a subset)
+
+
+  proto.addSearchFilter = function(data) {
+    const initiativesMap = data.initiativesMap;
+    
+    const isCaseA = filtered == {};
+    if(isCaseA) {//no filter case
+      //TODO: test if you should hide all then reveal needed ones
+      //      Or hide only the ones you have to hide
+      markerView.hideMarkers(sse_initiative.getLoadedInitiatives());
+      markerView.showMarkers(initiatives);
+    }
+
+  };
+
+  proto.removeSearchFilter = function() {
+
+    const isCaseA = getFiltered().length == 0;
+
+    if(isCaseA){
+      markerView.showMarkers(sse_initiative.getLoadedInitiatives());
+    }
+
+  };
+  
+  //END SEARCH HIGHLIGHT
+
 
   Presenter.prototype = proto;
 
@@ -276,38 +418,51 @@ define([
       }
     });
 
-    eventbus.subscribe({
-      topic: "Markers.highlightMarkers",
-      callback: function(data) {
-        p.highlightMarkers(data);
-      }
-    });
+
 
     eventbus.subscribe({
-      topic: "Markers.addFilter",
+      topic: "Map.addFilter", //change this
       callback: function(data) {
         p.addFilter(data);
       }
     });
 
     eventbus.subscribe({
-      topic: "Markers.removeFilter",
+      topic: "Map.removeFilter",
       callback: function(data) {
         p.removeFilter(data);
       }
     });
 
     eventbus.subscribe({
-      topic: "Markers.showAllMarkers",
-      callback: function() {
-        p.showAllMarkers();
+      topic: "Map.removeFilters",
+      callback: function(data) {
+        p.removeFilters();
       }
     });
+
+    eventbus.subscribe({
+      topic: "Map.addSearchFilter",
+      callback: function(data) {
+        p.addSearchFilter(data);
+      }
+    });//change this to search
+
+    eventbus.subscribe({
+      topic: "Map.removeSearchFilter",
+      callback: function (data) {
+        p.removeSearchFilter();
+      }
+    });
+
+    
 
     return p;
   }
   var pub = {
-    createPresenter: createPresenter
+    createPresenter: createPresenter,
+    getFiltered: getFiltered,
+    getFilteredMap: getFilteredMap
   };
   return pub;
 });

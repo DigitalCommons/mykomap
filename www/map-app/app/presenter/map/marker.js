@@ -20,6 +20,7 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
     OS90: "Producer co-operative",
     OS100: "Multi-stakeholder co-operative",
     OS110: "Secondary co-operative",
+    OS115: "Co-operative",
     OS120: "Community Interest Company (CIC)",
     OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
     OS140: "Employee trust",
@@ -60,6 +61,7 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
       postcode,
       dotcoop =
         config.namedDatasets().indexOf("dotcoop") > -1 ||
+        config.namedDatasets().indexOf("dotcooptest") > -1 ||
         config.namedDatasets().indexOf("dotcoop-sandbox") > -1,
       popupHTML =
         '<div class="sea-initiative-details">' +
@@ -80,10 +82,19 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
     // All initiatives should have a name
     popupHTML = popupHTML.replace("{initiative.name}", initiative.name);
     // TODO Add org type
-    popupHTML = popupHTML.replace(
-      "{initiative.org-structure}",
-      initiative.orgStructure.map(OS => orgStructures[OS]).join(", ")
-    );
+    if (initiative.orgStructure && initiative.orgStructure.length > 0){
+        popupHTML = popupHTML.replace(
+        "{initiative.org-structure}",
+        initiative.orgStructure.map(OS => orgStructures[OS]).join(", ")
+      );
+    }
+    else {
+      popupHTML = popupHTML.replace(
+        "{initiative.org-structure}",
+        orgStructures[initiative.regorg.substr(initiative.regorg.lastIndexOf('/') + 1)]
+        );
+    }
+
     // All initiatives should have a description (this isn't true with dotcoop)
     popupHTML = popupHTML.replace("{initiative.desc}", initiative.desc || "");
 
@@ -92,7 +103,7 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
       let domains = initiative.www.split(";");
       var domainsList = "<p>Domains</p><ul>";
       for (let domain of domains) {
-        domainsList += '<li><a href="' + domain + '">' + domain + "</li>";
+        domainsList += '<li><a href="' + domain + '">' + domain + "</a></li>";
       }
       domainsList += "</ul>";
     }

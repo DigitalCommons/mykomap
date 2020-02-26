@@ -260,6 +260,9 @@ define([
   proto.show = function () {
     this.cluster.addLayer(this.marker);
   }
+  proto.isVisible = function() {
+    this.cluster.hasLayer(this.marker);
+  }
 
   function destroyAll() {
     let that = this;
@@ -271,96 +274,167 @@ define([
   }
   MarkerView.prototype = proto;
 
-  let hiddenMarkers = [];
-  let highlighted = [];
-  let filtered = {};
 
+
+  function showMarkers (initiatives){
+    //show markers only if it is not currently vissible
+    initiatives.forEach(initiative =>{
+      if(!markerForInitiative[initiative.uniqueId].isVisible())
+        markerForInitiative[initiative.uniqueId].show();
+    });
+
+  }
+
+  function hideMarkers (initiatives){
+    initiatives.forEach(initiative =>{
+      if(markerForInitiative[initiative.uniqueId].isVisible())
+        markerForInitiative[initiative.uniqueId].destroy();
+    });
+  }
+
+
+
+
+
+
+  //from here
+  // let hiddenMarkers = [];
+  // let highlighted = [];
+  // let currentFilterArray = [];
+  // let lastWasSearchHistory = null;
+  
+  //TODO: NEEDS REFACTORING DOCUMENTATION AND OPTIMISATION
   //filter filters the results you search
   //add each to filter and hide all that aren't in the filtered ones
   //collect filters and remove them 
+  //TODO: optimise the way you add remove things from currentFilterArray
   //initatives from different filters can overlap (make sure you catch that)
-  function addFilter(initiatives, filterName) {
-    filtered[filterName] = initiatives;
-  }
-
-  function removeFilter(filterName) {
-    if (!filterName || filterName == '')
-      filtered = {};
-    else//remove all
-      delete filtered[filterName];
-
-  }
-
-  function getFiltered() {
-    const filteredIds = [];
-    Object.keys(filtered).forEach(k => {
-      filtered[k].forEach(i => {
-        filteredIds.push(i.uniqueId);
-      })
-    });
-    return filteredIds;
-  }
 
 
-  function highlightMarkers(initiatives) {
-    //check if same request is being made
-    if (highlighted == initiatives)
-      return;
-
-    showMarkers();
-    //need to recreate them afterwards
-    const uniqueIds = initiatives.map(initiative => initiative.uniqueId);
-    const filteredIds = getFiltered();
-
-    //remove all non-highlighted from the filtered ones
-    if (filteredIds.length != 0) {
-      //remove all non-filtered
-      Object.keys(markerForInitiative).filter(init => !filteredIds.includes(init))
-        .forEach(init => {
-          hiddenMarkers.push(markerForInitiative[init]);
-          markerForInitiative[init].destroy();
-        });
+  
 
 
-      filteredIds.filter(init => !uniqueIds.includes(init))
-        .forEach(init => {
-          hiddenMarkers.push(markerForInitiative[init]);
-          markerForInitiative[init].destroy();
-        });
-    }
-    else {
-      Object.keys(markerForInitiative).filter(init => !uniqueIds.includes(init))
-        .forEach(init => {
-          hiddenMarkers.push(markerForInitiative[init]);
-          markerForInitiative[init].destroy();
-        });
+  //Search Markers
+  // let lastSearched = [];
+  // //these ones already passed the filter
+  // function highlightSearchedForMarkers(initiatives){
+  //   if(lastSearched==initiatives)
+  //     return;
+    
+  //   //reveal old initiatives and set new
+  //   revealSearchedInitiatives(lastSearched);
+  //   lastSearched = initiatives;
 
 
-    }
+  //   //remove all other markers except the ones identified by the passed initiatives
+  //   const initativeIDs = initiatives.map(initiative => initiative.uniqueId);    
 
-    highlighted = initiatives;
-  }
 
-  function showMarkers() {
-    hiddenMarkers.forEach(m => {
-      m.show();
-    });
 
-    //pan and zoom
-    const latlng = sse_initiatives.latLngBounds(null)
-    eventbus.publish({
-      topic: "Map.needsToBeZoomedAndPanned",
-      data: {
-        bounds: latlng,
-        options: {
-          maxZoom: 3
-        }
-      }
-    });
-    hiddenMarkers = [];
-    highlighted = [];
 
-  }
+  // }
+
+  // function revealSearchedInitiatives(){
+
+  // }
+
+  
+
+  
+  //Search
+  // function highlightMarkers(initiatives,searchHistory=null) {
+
+  //   if (highlighted == initiatives)
+  //     return;
+  //   showMarkersold();
+
+  //   lastWasSearchHistory = searchHistory;
+  
+
+  //   //check if same request is being made
+
+  //   //need to recreate thehighlightMarkershighlightMarkersm afterwards
+  //   const uniqueIds = initiatives.map(initiative => initiative.uniqueId);
+  //   const filteredIds = getFiltered();
+  //   //remove all non-highlighted from the filtered ones
+
+  //   if (filteredIds.length > 0 && !searchHistory) {
+  //     filteredIds.filter(init => !uniqueIds.includes(init))
+  //       .forEach(init => {init
+  //         hiddenMarkers.push(init);
+  //         markerForInitiative[init].destroy();
+  //       });
+  //   }
+  //   else {
+  //     //remove markers
+  //     Object.keys(markerForInitiative).filter(init => !uniqueIds.includes(init))
+  //       .forEach(init => {
+  //           hiddenMarkers.push(init);
+  //           markerForInitiative[init].destroy();
+  //       });
+
+  //     //reveal filtered ones in uniqueIds
+  //     // if(searchHistory){
+  //     //   const outsideFilter = Object.keys(markerForInitiative).filter(i => !filteredIds.includes(i));
+
+  //     //   console.log("gets to this case");
+  //     //   //get intersection of uniqueids and filtered ones and reveal them
+  //     //   uniqueIds.filter(i => outsideFilter.includes(i))
+  //     //   .forEach(m => {
+  //     //     markerForInitiative[m].show();
+  //     //   });        
+  //     // }
+      
+  //   }
+
+  //   highlighted = initiatives;
+  // }
+
+
+  //if last highlight was from search history initiatives outside of filter might be shown
+  //to solve that you need to hide the ones that are not in the filter and remove them from hidden array
+  //and then reveal hidden ones
+  //effectively revealing only the filtered ones after a search
+  // function showMarkersold() {
+  //   // const filteredIds = getFiltered();
+  //   // //hide ones not in filter
+  //   // if (filteredIds.length != 0 && lastWasSearchHistory) {
+  //   //   const outsideFilter = hiddenMarkers.filter(i => !filteredIds.includes(i));
+
+  //   //   outsideFilter.forEach(m => {
+  //   //     markerForInitiative[m].destroy();
+  //   //   });
+
+  //   //   hiddenMarkers = hiddenMarkers.filter(i => !outsideFilter.includes(i));
+  //   // }
+    
+  //   // hiddenMarkers.forEach(m => {
+  //   //   markerForInitiative[m].show();
+  //   // });
+
+
+  //   //pan and zoom
+  //   //pass filtered initiatives
+  //   const latlng = sse_initiatives.latLngBounds(null)
+  //   eventbus.publish({
+  //     topic: "Map.needsToBeZoomedAndPanned",
+  //     data: {
+  //       bounds: latlng,
+  //       options: {
+  //         maxZoom: 3
+  //       }
+  //     }
+  //   });
+  //   hiddenMarkers = [];
+  //   highlighted = [];
+
+  // }
+
+
+
+//to here
+
+
 
   function createMarker(map, initiative) {
     const view = new MarkerView();
@@ -404,11 +478,8 @@ define([
     getInitiativeContent: getInitiativeContent,
     getClusterGroup: getClusterGroup,
     destroyAll: destroyAll,
-    highlightMarkers: highlightMarkers,
+    hideMarkers: hideMarkers,
     showMarkers: showMarkers,
-    addFilter: addFilter,
-    removeFilter: removeFilter,
-    getFiltered: getFiltered
   };
   return pub;
 });

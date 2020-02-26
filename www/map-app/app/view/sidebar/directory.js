@@ -46,6 +46,13 @@ define([
 
   var dissapear;
 
+  proto.resetFilterSearch = function (){
+    if(document.getElementById("dir-filter")){
+      document.getElementById("dir-filter").value = '';
+      this.handleFilter('');
+    }
+  };
+  
   proto.handleFilter = function (input) {
     if (this.dissapear) {
       clearTimeout(this.dissapear);
@@ -119,8 +126,12 @@ define([
             .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
             .classed("sea-directory-field", true)
             .on("click", function () {
+              eventbus.publish({
+                topic: "Map.removeFilters",
+                data: {}
+              });
               that.listInitiativesForSelection(directoryField, key);
-
+              that.resetFilterSearch();
               d3.select(".sea-field-active").classed("sea-field-active", false);
               d3.select(this).classed("sea-field-active", true);
             });
@@ -137,19 +148,12 @@ define([
       directoryField,
       selectionKey
     );
-
-    // eventbus.publish({
-    //   topic: "Markers.addFilter",
-    //   data: {
-    //     initiatives: initiatives,
-    //     filterName: (directoryField+selectionKey)
-    //   }
-    // });
-
+    
     eventbus.publish({
-      topic: "Markers.highlightMarkers",
+      topic: "Map.addFilter",
       data: {
-        initiativesToHighlight: initiatives
+        initiatives: initiatives,
+        filterName: (directoryField+selectionKey)
       }
     });
 
@@ -169,7 +173,7 @@ define([
         bounds: boundsс,
         options: {
           paddingBottomRight: [0, 0],
-          maxZoom: 5
+          maxZoom: 9
         }
       }
     });
@@ -210,6 +214,17 @@ define([
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", "Close " + title)
       .on("click", function () {
+        //remove filters
+        eventbus.publish({
+          topic: "Map.removeFilter",
+          data: {
+            filterName: directoryField+selectionKey
+          }
+        });
+        that.d3selectAndClear(
+          "#sea-initiatives-list-sidebar-content"
+        );
+        //clear the window
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });

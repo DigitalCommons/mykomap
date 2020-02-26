@@ -35,7 +35,6 @@ define([
       } else if (item.isSearchResults()) {
         textContent = "Search: " + item.searchString;
       }
-      this.presenter.highlightCurrentData();
     }
     const container = selection
       .append("div")

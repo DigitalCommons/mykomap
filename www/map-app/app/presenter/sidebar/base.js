@@ -106,12 +106,13 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //       Then it is up to the pres to perform other actions related to this
       //       (e.g. where it affects which initiatives are selected)
       //pres.view.refresh();
-      eventbus.publish({
-        topic: "Markers.highlightMarkers",
-        data: {
-          initiativesToHighlight: newContent.initiatives
-        }
-      });
+
+      // eventbus.publish({
+      //   topic: "Map.removeSearchFilter",
+      //   data: {
+      //     initiatives: newContent.initiatives
+      //   }
+      // }); //historySEARCH TODO
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -126,12 +127,12 @@ define(["app/eventbus", "model/config", "presenter"], function(
       if (newContent == lastContent)
         return;
       //pres.view.refresh();
-      eventbus.publish({
-        topic: "Markers.highlightMarkers",
-        data: {
-          initiativesToHighlight: newContent.initiatives
-        }
-      });
+      // eventbus.publish({
+      //   topic: "Map.addSearchFilter",
+      //   data: {
+      //     initiatives: newContent.initiatives
+      //   }
+      // }); //history
       pres.historyButtonsUsed(lastContent);
     };
   };

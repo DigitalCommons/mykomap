@@ -40,7 +40,8 @@ define([
     //remove initiatives from menu on the side
     //remove initiatives from map
     proto.changeDatasets = (dataset,getAll) => {
-      
+        //if only one dataset no changing needed
+        if(sseInitiative.getCurrentDatasets()) return;
         //if the currently loaded dataset is requested
         if(dataset === sseInitiative.getCurrentDatasets()
         //or if all are requested and the currently loaded databases are all 

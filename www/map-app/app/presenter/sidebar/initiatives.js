@@ -3,8 +3,8 @@ define([
   "model/config",
   "model/sse_initiative",
   "presenter/sidebar/base",
-  "view/map/marker"
-], function(eventbus, config, sseInitiative, sidebarPresenter,markerView) {
+  "presenter/map"
+], function(eventbus, config, sseInitiative, sidebarPresenter,map) {
   "use strict";
 
   function StackItem(initiatives) {
@@ -29,16 +29,6 @@ define([
   proto.currentItem = function() {
     return this.contentStack.current();
   };
-
-  proto.highlightCurrentData = function(){
-    eventbus.publish({
-      topic: "Markers.highlightMarkers",
-      data: {
-        initiativesToHighlight: this.contentStack.current().initiatives
-      }
-    });
-  };
-
 
   proto.currentItemExists = function() {
     // returns true only if the contentStack is empty
@@ -136,35 +126,51 @@ define([
     // TODO - handle better when data.results is empty
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
-    const lastContent = this.contentStack.current();
-    const filters = markerView.getFiltered();
-    console.log(filters);
-    if(filters.length!=0){
-      data.results = data.results.filter(i=>{
-        return filters.includes(i.uniqueId);
+
+    const filtersMap = map.getFilteredMap();
+    //create a map of the results
+    let initiativesMapified = {};
+
+    data.results.forEach(i=>{
+      initiativesMapified[i.uniqueId] = i;
+    });
+
+    if(filtersMap != {}){
+      //get the intersection of the filtered content and the search data
+      //search results should be a subset of filtered
+      let intersectKeys = Object.keys(initiativesMapified).filter({}.hasOwnProperty.bind(filtersMap));
+
+      //change the map data
+      let tempMap = {};
+      intersectKeys.forEach(k => {
+        tempMap[k] = initiativesMapified[k]
       });
+      initiativesMapified = tempMap;
+      //edit results 
+      data.results = intersectKeys.map(k=>{
+        return initiativesMapified[k];
+      });
+       
     }
 
-
+    //filter
+    const lastContent = this.contentStack.current();
+    this.contentStack.append(new SearchResults(data.results, data.text));
 
     if(data.results.length == 1){
-
-      this.contentStack.append(new SearchResults(data.results, data.text));
       this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
     }
     else{
-      this.contentStack.append(new SearchResults(data.results, data.text));
-     // this.notifyMarkersNeedToShowNewSelection(lastContent);
+      this.notifyMarkersNeedToShowNewSelection(lastContent);
       this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
-      //This will leave out only the initiatives passed to the function
-      eventbus.publish({
-        topic: "Markers.highlightMarkers",
-        data: {
-          initiativesToHighlight: data.results
-        }
-      });
     }
+
+    //highlight markers on search results 
+    eventbus.publish({
+      topic: "Map.addSearchFilter",
+      data: {initiativesMap: initiativesMapified}
+    });
 
     this.notifySidebarNeedsToShowInitiatives();
     this.view.refresh();
@@ -214,6 +220,18 @@ define([
     this.view.refresh();
   };
 
+  proto.onSearchHistory = function () {
+    const that = this;
+    if (that.contentStack.current()){
+      // eventbus.publish({
+      //   topic: "Map.history",
+      //   data: {
+      //     initiatives: that.contentStack.current().initiatives
+      //   }
+      // });//do history search
+    }
+  }
+
   Presenter.prototype = proto;
 
   function createPresenter(view) {
@@ -252,6 +270,13 @@ define([
       topic: "Directory.initiativeClicked",
       callback: function(data) {
         p.onInitiativeClickedInSidebar(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Initiatives.showSearchHistory",
+      callback: function(data){
+        p.onSearchHistory()
       }
     });
     return p;
