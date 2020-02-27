@@ -108,7 +108,7 @@ define([
       });
     }
   };
- 
+
   proto.initiativeClicked = function(initiative) {
     const lastContent = this.contentStack.current();
     if (initiative) {

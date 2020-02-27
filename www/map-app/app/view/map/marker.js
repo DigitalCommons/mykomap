@@ -213,7 +213,7 @@ define([
         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
         initiative.marker
       ) {
-        initiative.marker.__parent.spiderfy();
+          initiative.marker.__parent.spiderfy();
       }
       initiative.marker.openPopup();
     }
@@ -261,7 +261,7 @@ define([
     this.cluster.addLayer(this.marker);
   }
   proto.isVisible = function() {
-    this.cluster.hasLayer(this.marker);
+    return this.cluster.hasLayer(this.marker);
   }
 
   function destroyAll() {
@@ -287,8 +287,7 @@ define([
 
   function hideMarkers (initiatives){
     initiatives.forEach(initiative =>{
-      if(markerForInitiative[initiative.uniqueId].isVisible())
-        markerForInitiative[initiative.uniqueId].destroy();
+       markerForInitiative[initiative.uniqueId].destroy();
     });
   }
 

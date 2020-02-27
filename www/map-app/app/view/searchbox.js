@@ -18,7 +18,6 @@ define(["d3", "view/base", "presenter/searchbox"], function(
     var searchText = d3.select("#search-box").property("value");
  
     this.presenter.performSearch(searchText);
-    console.log("Search submitted: [" + searchText + "]");
   };
   proto.createSearchBox = function() {
     // d3 selection redefines this, so hang onto it here:

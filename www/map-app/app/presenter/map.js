@@ -128,16 +128,18 @@ define([
     // TODO - hook this up to a log?
   };
   proto.onMarkersNeedToShowLatestSelection = function(data) {
-    console.log("onMarkersNeedToShowLatestSelection");
-    console.log(data)
-    const that = this;
-
-    data.unselected.forEach(function(e) {
-      that.view.setUnselected(e);
-    });
-    data.selected.forEach(function(e) {
-      that.view.setSelected(e);
-    });
+    //gliches everything else 
+    //TODO: FIX NEED TO PUT IN THE SELECTIONS/DESELECTIONS IN THE RIGHT PLACE
+    console.log("onMarkersNeedToShowLatestSelection NEEDS TO BE FIXED");
+    // console.log(data)
+    // const that = this;
+    
+    // data.unselected.forEach(function(e) {
+    //   that.view.setUnselected(e);
+    // });
+    // data.selected.forEach(function(e) {
+    //   that.view.setSelected(e);
+    // });
   };
 
 
@@ -191,8 +193,8 @@ define([
   //FILTERS
   let filtered = {};
   let filteredInitiativesUIDMap = {};
-  let initiativesOutsideOfFilterUIDMap = sse_initiative.getInitiativeUIDMap();
-
+  let initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
+  let loadedInitiatives = sse_initiative.getLoadedInitiatives();
   proto.applyFilter = function () {
     //if there are currently any filters 
     if (getFiltered().length > 0) {
@@ -233,10 +235,10 @@ define([
     //remove filters
     filtered = {};
     filteredInitiativesUIDMap = {};
-    initiativesOutsideOfFilterUIDMap = sse_initiative.getInitiativeUIDMap();
+    initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
 
     //show all markers
-    markerView.showMarkers(sse_initiative.getLoadedInitiatives());
+    markerView.showMarkers(loadedInitiatives);
   };
 
 
@@ -311,30 +313,106 @@ define([
   //and make sure that the initiatives passed are revealed
   //note: filters should have already been applied to the initiatives passed (i.e. they are a subset)
 
-
+  let hidden = [];
+  let lastRequest = [];
   proto.addSearchFilter = function(data) {
-    const initiativesMap = data.initiativesMap;
-    
-    const isCaseA = filtered == {};
-    if(isCaseA) {//no filter case
-      //TODO: test if you should hide all then reveal needed ones
-      //      Or hide only the ones you have to hide
-      markerView.hideMarkers(sse_initiative.getLoadedInitiatives());
-      markerView.showMarkers(initiatives);
+    //if no results remove the filter
+
+    if(data.initiatives!=null && data.initiatives.length == 0){
+      this.removeSearchFilter();
+      return;
     }
 
+    //if the results match the previous results don't do anything
+    if(data.initiatives == lastRequest)
+      return;
+
+    lastRequest = data.initiatives; //cache the last request
+
+    //get the ids from the passed data
+    const initiativeIds = data.initiatives.map(i=>i.uniqueId);
+
+    //case a - global search
+    const isCaseA = Object.keys(filtered).length == 0;
+    if(isCaseA) {//no filter case
+      //hide the ones you need to hide, i.e. difference between ALL and initiativesMap
+      hidden = loadedInitiatives.filter(i=>{
+        return !initiativeIds.includes(i.uniqueId);
+      });
+ 
+
+    }
+    else {//case B - filter search
+      hidden = getFiltered().filter(i=>{
+        return !initiativeIds.includes(i.uniqueId);
+      });
+    }
+
+    //hide all unneeded markers
+    markerView.hideMarkers(hidden);
+    //make sure the markers you need to highlight are shown
+    markerView.showMarkers(data.initiatives);
+
+    //zoom and pan
+    const latlng = sse_initiative.latLngBounds(data.initiatives)
+    eventbus.publish({
+      topic: "Map.needsToBeZoomedAndPanned",
+      data: {
+        bounds: latlng,
+        options: {
+          maxZoom: 5
+        }
+      }
+    });
   };
 
+
+
+
+    //this can get called multiple times make sure it doesn't crash
   proto.removeSearchFilter = function() {
 
-    const isCaseA = getFiltered().length == 0;
+    //if no search filter to remove just return
+    if(hidden.length === 0)
+      return;
+      
+    //show hidden markers
+    //markerView.showMarkers(hidden);
+    this.applyFilter();
 
-    if(isCaseA){
-      markerView.showMarkers(sse_initiative.getLoadedInitiatives());
-    }
+    if (getFiltered().length > 0) {
+      //hide the initiatives that were outside of the filter
+      markerView.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
+      //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
+      //with the difference between getFiltered() and data.initiatives
+      //i.e. getting the initiatives that are outside of the filter but still shown
+
+      //show the ones inside the filter that you just hid
+      markerView.showMarkers(hidden);
+    } else //if no filters available then the search was under global (only hidden ones need to be shown)
+      markerView.showMarkers(hidden);
+
+    //clear last request so you can search the same data again
+    lastRequest = [];
+
+    //reset the hidden array
+    hidden = [];
+
+    //zoom and pan
+    const latlng = sse_initiative.latLngBounds(null)
+    eventbus.publish({
+      topic: "Map.needsToBeZoomedAndPanned",
+      data: {
+        bounds: latlng,
+        options: {
+          maxZoom: 3
+        }
+      }
+    });
 
   };
   
+
   //END SEARCH HIGHLIGHT
 
 

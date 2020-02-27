@@ -158,12 +158,16 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     return currentDatasets;
   }
 
-
+  let cachedLatLon = [];
   function latLngBounds(initiatives) {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east
     //
     // Careful: isNaN(null) returns false ...
+    if(!initiatives && cachedLatLon.length > 0){
+      return cachedLatLon;
+    }
+
     const lats = (initiatives || loadedInitiatives)
       .filter(obj => obj.lat !== null && !isNaN(obj.lat))
       .map(obj => obj.lat);
@@ -175,6 +179,9 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     const south = Math.min.apply(Math, lats);
     const north = Math.max.apply(Math, lats);
 
+    if(!initiatives){
+      cachedLatLon = [[south, west], [north, east]];
+    }
     return [[south, west], [north, east]];
   }
   function loadNextInitiatives() {

@@ -54,6 +54,14 @@ define([
     });
 
     eventbus.subscribe({
+      topic: "Sidebar.showDirectory",
+      callback: function() {
+        p.changeSidebar("directory");
+        view.showInitiativeList();
+      }
+    });
+
+    eventbus.subscribe({
       topic: "Sidebar.showSidebar",
       callback: function() {
         p.showSidebar();

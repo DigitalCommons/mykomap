@@ -25,7 +25,9 @@ define([
     }
     else {
       //TODO: do other stuff like panning
+      //causes err?
       eventbus.publish({topic: "Map.removeSearchFilter"});
+      eventbus.publish({topic: "Sidebar.showDirectory"});
     }
   };
   Presenter.prototype = proto;

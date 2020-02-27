@@ -228,6 +228,17 @@ define([
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });
+
+        const latlng = presenter.latLngBounds(null);
+        eventbus.publish({
+          topic: "Map.needsToBeZoomedAndPanned",
+          data: {
+            bounds: latlng,
+            options: {
+              maxZoom: 3
+            }
+          }
+        });
       })
       .append("i")
       .attr("class", "fa " + "fa-times");

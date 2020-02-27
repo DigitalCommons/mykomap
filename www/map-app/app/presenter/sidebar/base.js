@@ -107,12 +107,10 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //       (e.g. where it affects which initiatives are selected)
       //pres.view.refresh();
 
-      // eventbus.publish({
-      //   topic: "Map.removeSearchFilter",
-      //   data: {
-      //     initiatives: newContent.initiatives
-      //   }
-      // }); //historySEARCH TODO
+      eventbus.publish({
+        topic: "Map.addSearchFilter",
+        data: {initiatives: newContent.initiatives}
+      }); //historySEARCH
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -127,12 +125,10 @@ define(["app/eventbus", "model/config", "presenter"], function(
       if (newContent == lastContent)
         return;
       //pres.view.refresh();
-      // eventbus.publish({
-      //   topic: "Map.addSearchFilter",
-      //   data: {
-      //     initiatives: newContent.initiatives
-      //   }
-      // }); //history
+      eventbus.publish({
+        topic: "Map.addSearchFilter",
+        data: {initiatives: newContent.initiatives}
+      }); //historySEARCH
       pres.historyButtonsUsed(lastContent);
     };
   };

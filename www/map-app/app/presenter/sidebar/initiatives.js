@@ -127,30 +127,14 @@ define([
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
 
-    const filtersMap = map.getFilteredMap();
-    //create a map of the results
-    let initiativesMapified = {};
+    //get the uniquids of the applied filters
+    const filterKeys = Object.keys(map.getFilteredMap());
 
-    data.results.forEach(i=>{
-      initiativesMapified[i.uniqueId] = i;
-    });
-
-    if(filtersMap != {}){
+    //go in if there are any filters
+    if(filterKeys.length != 0){
       //get the intersection of the filtered content and the search data
       //search results should be a subset of filtered
-      let intersectKeys = Object.keys(initiativesMapified).filter({}.hasOwnProperty.bind(filtersMap));
-
-      //change the map data
-      let tempMap = {};
-      intersectKeys.forEach(k => {
-        tempMap[k] = initiativesMapified[k]
-      });
-      initiativesMapified = tempMap;
-      //edit results 
-      data.results = intersectKeys.map(k=>{
-        return initiativesMapified[k];
-      });
-       
+      data.results = data.results.filter(i=> filterKeys.includes(i.uniqueId));
     }
 
     //filter
@@ -158,18 +142,18 @@ define([
     this.contentStack.append(new SearchResults(data.results, data.text));
 
     if(data.results.length == 1){
-      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
+      //this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
     }
     else{
-      this.notifyMarkersNeedToShowNewSelection(lastContent);
+      //this.notifyMarkersNeedToShowNewSelection(lastContent);
       this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
     }
 
     //highlight markers on search results 
     eventbus.publish({
       topic: "Map.addSearchFilter",
-      data: {initiativesMap: initiativesMapified}
+      data: {initiatives: data.results}
     });
 
     this.notifySidebarNeedsToShowInitiatives();
@@ -223,12 +207,10 @@ define([
   proto.onSearchHistory = function () {
     const that = this;
     if (that.contentStack.current()){
-      // eventbus.publish({
-      //   topic: "Map.history",
-      //   data: {
-      //     initiatives: that.contentStack.current().initiatives
-      //   }
-      // });//do history search
+      eventbus.publish({
+        topic: "Map.addSearchFilter",
+        data: {initiatives:  that.contentStack.current().initiatives}
+      });
     }
   }
 
