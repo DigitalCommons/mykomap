@@ -88,11 +88,19 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
         initiative.orgStructure.map(OS => orgStructures[OS]).join(", ")
       );
     }
-    else {
-      popupHTML = popupHTML.replace(
-        "{initiative.org-structure}",
-        orgStructures[initiative.regorg.substr(initiative.regorg.lastIndexOf('/') + 1)]
-        );
+    else{
+      if(initiative.regorg){
+        popupHTML = popupHTML.replace(
+          "{initiative.org-structure}",
+          orgStructures[initiative.regorg.substr(initiative.regorg.lastIndexOf('/') + 1)]
+          );
+      }else{
+        popupHTML = popupHTML.replace(
+          "{initiative.org-structure}",
+          ""
+          );
+      }
+        
     }
 
     // All initiatives should have a description (this isn't true with dotcoop)
