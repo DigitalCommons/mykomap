@@ -121,11 +121,15 @@ define([
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
+    this.view.stopLoading();
+
   };
   proto.onInitiativeLoadMessage = function(data) {
     /* The protecting veil is now obsolete. */
     //view.showProtectingVeil(data.message);
     // TODO - hook this up to a log?
+    this.view.startLoading(data.dataset);
+    
   };
   proto.onMarkersNeedToShowLatestSelection = function(data) {
     //gliches everything else 
@@ -442,12 +446,20 @@ define([
     eventbus.subscribe({
       topic: "Initiative.complete",
       callback: function() {
+        p.onInitiativeLoadComplete();
         p.onInitiativeComplete();
       }
     });
 
+    eventbus.subscribe({
+      topic: "Initiative.loadStarted",
+      callback: function(data){ 
+        p.onInitiativeLoadMessage(data); 
+      }
+    });
+
+
     //eventbus.subscribe({topic: "Initiative.loadComplete", callback: function(data) { p.onInitiativeLoadComplete(data); } });
-    //eventbus.subscribe({topic: "Initiative.loadStarted", callback: function(data) { p.onInitiativeLoadMessage(data); } });
     //eventbus.subscribe({topic: "Initiative.loadFailed", callback: function(data) { p.onInitiativeLoadMessage(data); } });
     // TODO - strip out this mechanism from everywhere it appears:
     //eventbus.subscribe({topic: "Initiative.selected", callback: function(data) { p.onInitiativeSelected(data); } });

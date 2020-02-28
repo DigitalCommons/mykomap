@@ -95,30 +95,31 @@ define([
       .classed("colours", this.presenter.doesDirectoryHaveColours());
 
     let registeredValues = this.presenter.getRegisteredValues();
-
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
       let directoryField = field;
       let valuesByName = this.presenter.getAllValuesByName(directoryField);
       Object.keys(registeredValues[field])
-        .sort(function (a, b) {
-          // Check if we're working numerically or alpabetically
-          if (isNaN(parseInt(a.replace(/[^\d]/g, "")))) {
-            if (a.replace(/\d/gi, "") < b.replace(/d/gi, "")) {
-              return -1;
-            }
-            if (a.replace(/\d/gi, "") > b.replace(/d/gi, "")) {
-              return 1;
-            }
-            return 0;
-          } else {
-            return (
-              parseInt(a.replace(/[^\d]/g, "")) -
-              parseInt(b.replace(/[^\d]/g, ""))
-            );
-          }
-        })
+        //any sorting should happen as the initiatives are loaded
+        //OBSOLETE 
+        // .sort(function (a, b) {
+        //   // Check if we're working numerically or alpabetically
+        //   if (isNaN(parseInt(a.replace(/[^\d]/g, "")))) {
+        //     if (a.replace(/\d/gi, "") < b.replace(/d/gi, "")) {
+        //       return -1;
+        //     }
+        //     if (a.replace(/\d/gi, "") > b.replace(/d/gi, "")) {
+        //       return 1;
+        //     }
+        //     return 0;
+        //   } else {
+        //     return (
+        //       parseInt(a.replace(/[^\d]/g, "")) -
+        //       parseInt(b.replace(/[^\d]/g, ""))
+        //     );
+        //   }
+        // })
         .forEach(key => {
           list
             .append("li")
@@ -228,7 +229,7 @@ define([
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });
-
+0
         const latlng = presenter.latLngBounds(null);
         eventbus.publish({
           topic: "Map.needsToBeZoomedAndPanned",
@@ -258,7 +259,13 @@ define([
         }
         eventbus.publish({
           topic: "Map.fitBounds",
-          data: bounds
+          data: {
+          bounds: bounds,
+          options: {
+            paddingBottomRight: [0, 0],
+            maxZoom: 9
+          }
+          }
         });
       });
     list = selection.append("ul").classed("sea-initiative-list", true);

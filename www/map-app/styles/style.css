@@ -697,3 +697,45 @@ div.leaflet-popup-content {
 #dir-title{
   padding: 0px 0px 0px 16px;
 }
+
+#loadingCirclespin {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 400px;
+  height: 400px;
+
+  display: block;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -200px;
+  margin-left: -200px;
+
+  -webkit-animation: spin 1s linear infinite; /* Safari */
+  animation: spin 1s linear infinite;
+}
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#loadingCircletxt {
+  position: absolute;
+  width: 250px;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+  margin-left: -125px; /* margin is -0.5 * dimension */
+  margin-top: -30px; 
+  font-size: 20px;
+}
+
+#map-app-leaflet-map{  text-align: center;
+}

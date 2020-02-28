@@ -21,6 +21,74 @@ define([
     putSelectedMarkersInClusterGroup: false
   };
 
+  function loader(config) {
+    return function() {
+      //example loading
+      //with css
+      //could look a lot better, with svgs
+      
+      if(d3.select(config.id).empty()){
+        //create new
+        let loading  = d3.select(config.container).append("div");
+        loading.append("div").attr("id",config.id+"spin");
+        loading.append("p").text("Loading " + config.text + " Data..").attr("id",config.id+"txt");
+      }
+      else {
+        //edit text
+        d3.select(config.id+"txt").text(config.text);
+      }
+
+      
+    };
+  }
+
+  function stopLoader(config){
+    return function() {
+      //example loading
+      //with css
+      //could look a lot better
+      d3.select(config.id).remove();
+      d3.select(config.id+"spin").remove();
+      d3.select(config.id+"txt").remove();
+
+    };
+  }
+  
+  var SpinMapMixin = {
+    seaLoading: function (state, options) {
+        if (!!state) {
+          options.datasetLoading = 
+          options.datasetLoading.charAt(0).toUpperCase() + options.datasetLoading.slice(1);
+          
+          var myLoader = loader({text:options.datasetLoading, container: "#map-app-leaflet-map", id: "loadingCircle"});
+          myLoader();
+          }
+        else {
+         var myStopLoader = stopLoader({id:"#loadingCircle"});
+         myStopLoader();
+        }
+    }
+};
+
+
+//experiments
+  var SpinMapInitHook = function () {
+    this.on('layeradd', function (e) {
+        // If added layer is currently loading, spin !
+        if (typeof e.layer.on !== 'function') return;
+        e.layer.on('data:loading', function () {
+        }, this);
+        e.layer.on('data:loaded',  function () {
+        }, this);
+    }, this);
+    this.on('layerremove', function (e) {
+        // Clean-up
+        if (typeof e.layer.on !== 'function') return;
+        e.layer.off('data:loaded');
+        e.layer.off('data:loading');
+    }, this);
+}; 
+
   function MapView() {}
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
@@ -76,6 +144,12 @@ define([
       // If we're here, then selectedClusterGroup is a BAD NAME for this property!
       this.selectedClusterGroup = this.map;
     }
+
+    leaflet.Map.include(SpinMapMixin);
+    leaflet.Map.addInitHook(SpinMapInitHook);
+
+
+
     markerView.setSelectedClusterGroup(this.selectedClusterGroup);
     markerView.setUnselectedClusterGroup(this.unselectedClusterGroup);
 
@@ -163,6 +237,15 @@ define([
     console.log("zoomAndPanTo");
     this.map.setView(latLng, 16, { animate: true });
   };
+
+  proto.startLoading = function(dataset){
+    this.map.seaLoading(true,{datasetLoading:dataset});
+  };
+
+  proto.stopLoading = function(){
+    this.map.seaLoading(false);
+
+  }
 
   proto.setActiveArea = function(data) {
     if (this._settingActiveArea) return;

@@ -1,11 +1,12 @@
 // Model for SSE Initiatives.
-define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
+define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
   let loadedInitiatives = [];
   let initiativesToLoad = [];
   let initiativesByUid = {};
   let allDatasets = config.namedDatasets();
+
 
   //true means all available datasets from config are loaded
   //otherwise a string to indicate which dataset is loaded
@@ -22,7 +23,11 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
   const filterableFields = config.getFilterableFields();
 
   /* Format will be:
-    {
+    {label :
+      { field1: [ val1, val2 ... valN ] }
+      ...
+      { fieldN: [ ... ] },
+    label2 :
       { field1: [ val1, val2 ... valN ] }
       ...
       { fieldN: [ ... ] }
@@ -55,8 +60,10 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
         value: e.country ? e.country : undefined,
         enumerable: true
       },
-      searchstr: { value: (e.name + e.dataset + e.www + e.locality + e.postcode + e.country + "")
-        , enumerable: true },
+      searchstr: {
+        value: (e.name + e.dataset + e.www + e.locality + e.postcode + e.country + "")
+        , enumerable: true
+      },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
@@ -104,10 +111,11 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
   }
 
   function sortInitiatives(a, b) {
-    const name1 = a.name.toLowerCase();
-    const name2 = b.name.toLowerCase();
-    if (name1 > name2) return 1;
-    else if (name1 < name2) return -1;
+
+    let f1 = a.name.toLowerCase();
+    let f2 = b.name.toLowerCase();
+    if (f1 > f2) return 1;
+    else if (f1 < f2) return -1;
     else return 0;
   }
 
@@ -117,44 +125,44 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
   function getInitiativeByUniqueId(uid) {
     return initiativesByUid[uid];
   }
-  function getInitiativeUIDMap(){
+  function getInitiativeUIDMap() {
     return initiativesByUid;
   }
   function search(text) {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
-    return loadedInitiatives.filter(function(i) {
+    return loadedInitiatives.filter(function (i) {
       return i.searchstr.toUpperCase().includes(up);
     });
   }
 
-  function filter(filter){ 
+  function filter(filter) {
 
   }
 
-  function getLoadedInitiatives(){
+  function getLoadedInitiatives() {
     return loadedInitiatives;
   }
 
-  function filterDatabases(dbSource,all) {
+  function filterDatabases(dbSource, all) {
     // returns an array of sse objects whose dataset is the same as dbSource
     //if boolean all is set to true returns all instead
     if (all)
       return loadedInitiatives;
     else {
       let up = dbSource.toUpperCase();
-      return loadedInitiatives.filter(function(i) {
+      return loadedInitiatives.filter(function (i) {
         return i.dataset.toUpperCase() === up;
       });
     }
-    
+
   }
 
-  function getDatasets(){
+  function getDatasets() {
     return allDatasets;
   }
 
-  function getCurrentDatasets(){
+  function getCurrentDatasets() {
     return currentDatasets;
   }
 
@@ -164,7 +172,7 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     // The first element is south-west, the second north east
     //
     // Careful: isNaN(null) returns false ...
-    if(!initiatives && cachedLatLon.length > 0){
+    if (!initiatives && cachedLatLon.length > 0) {
       return cachedLatLon;
     }
 
@@ -179,11 +187,14 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     const south = Math.min.apply(Math, lats);
     const north = Math.max.apply(Math, lats);
 
-    if(!initiatives){
+    if (!initiatives) {
       cachedLatLon = [[south, west], [north, east]];
     }
     return [[south, west], [north, east]];
   }
+
+
+  //NEEDS TO BE FIXED TO WORK WITH MULTIPLE DATASETS
   function loadNextInitiatives() {
     var i, e;
     var maxInitiativesToLoadPerFrame = 100;
@@ -196,7 +207,7 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     }
     // If there's still more to load, we do so after returning to the event loop:
     if (e !== undefined) {
-      setTimeout(function() {
+      setTimeout(function () {
         loadNextInitiatives();
       });
     } else {
@@ -205,14 +216,48 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
       console.info(
         `Time took to process all initiatives
         ${performance.getEntriesByName("endProcessing")[0].startTime -
-          performance.getEntriesByName("startProcessing")[0].startTime}`
+        performance.getEntriesByName("startProcessing")[0].startTime}`
       );
+      sortLoadedData();
       eventbus.publish({ topic: "Initiative.complete" });
     }
   }
   function add(json) {
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
+  }
+
+
+  function sortLoadedData() {
+    // loop through the filters and sort their data, then sort the keys in order
+    filterableFields.forEach(filterable => {
+      let label = filterable.label;
+      console.log("number of initiatives to sort",loadedInitiatives.length);
+      // Create the object that holds the registered values for the current field if it hasn't already been created
+      if (registeredValues[label]) {
+        /*unordered = 
+          field1 => [initiatives],
+          field2 => [initiatives],
+          fieldN => [initiatives],
+        */
+        //sort keys and initiatives
+        //TODO: do the same for activities (copy sort from directories)
+        const ordered = {};
+        Object.keys(registeredValues[label]).sort().forEach(function (key) {
+          //sort initiatives
+          registeredValues[label][key].sort(function(a, b) {
+               return sortInitiatives(a, b);
+           });
+          //new order keys
+          ordered[key] = registeredValues[label][key];
+        });
+
+        //finished
+        registeredValues[label] = ordered;
+
+      }
+    });
+
   }
 
   function getSkosCode(originalValue) {
@@ -244,20 +289,20 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
-  function reset(dataset){
+  function reset(dataset) {
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-    
+
 
     //publish reset to map markers
     eventbus.publish({
       topic: "Initiative.reset",
-      data: { dataset:"all"}
+      data: { dataset: "all" }
     });
 
-    if(allDatasets.includes(dataset)){
+    if (allDatasets.includes(dataset)) {
       currentDatasets = dataset;
       loadDataset(dataset);
     }
@@ -265,51 +310,54 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
       //return true to signal that all datasets are loaded
       currentDatasets = true;
       loadFromWebService();
-      console.log("loading mixed dataset" );
+      console.log("loading mixed dataset");
 
     }
 
   }
 
+
+  //TODO: this whole structure will be pretty glitchy when multithreaded
+  //need to fix this
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
     //load all of them
     //load all from the begining if there are more than one
-    if (ds.length>1){
-      loadDataset(ds[0],true);
+    if (ds.length > 1) {
+      loadDataset(ds[0], true);
       ds.forEach(dataset => {
-        loadDataset(dataset,false,false);
+        loadDataset(dataset, false, false);
       });
 
 
     }
-    else if (ds.length==1)
+    else if (ds.length == 1)
       loadDataset(ds[0]);
 
   }
 
 
-  function loadDataset(dataset,mixed=false,sameas=true) {
+  function loadDataset(dataset, mixed = false, sameas = true) {
 
     var service = mixed
-    ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed" 
-    : 
-    (sameas? 
-      config.getServicesPath() + "get_dataset.php?dataset=" + dataset
-      :config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
+      ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
+      :
+      (sameas ?
+        config.getServicesPath() + "get_dataset.php?dataset=" + dataset
+        : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
 
     console.log(service);
     var response = null;
     var message = null;
     eventbus.publish({
       topic: "Initiative.loadStarted",
-      data: { message: "Loading data via " + service }
+      data: { message: "Loading data via " + service, dataset:dataset }
     });
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:
     //setTimeout(function() {
-    d3.json(service).then(function(json) {
+    d3.json(service).then(function (json) {
       // This now uses d3.fetch and the fetch API.
       // TODO - error handling
       // TODO - publish events (e.g. loading, success, failure)
@@ -319,6 +367,7 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
       console.info("Recording entire process");
       performance.mark("startProcessing");
       add(json.data);
+      //sort if this is the last dataset you are loading 
       eventbus.publish({ topic: "Initiative.datasetLoaded" });
     }).catch(err => console.log(err));
   }
@@ -335,7 +384,7 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
         uid;
       var response = null;
       var message = null;
-      d3.json(service).then(function(json) {
+      d3.json(service).then(function (json) {
         for (let result of json.data) {
           let initiative;
           for (let key in result) {
@@ -357,10 +406,10 @@ define(["d3", "app/eventbus", "model/config"], function(d3, eventbus, config) {
     latLngBounds: latLngBounds,
     getRegisteredValues: getRegisteredValues,
     getInitiativeByUniqueId: getInitiativeByUniqueId,
-    filterDatabases:filterDatabases,
-    getAllDatasets:getDatasets,
-    reset:reset,
-    getCurrentDatasets:getCurrentDatasets,
+    filterDatabases: filterDatabases,
+    getAllDatasets: getDatasets,
+    reset: reset,
+    getCurrentDatasets: getCurrentDatasets,
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap
   };
