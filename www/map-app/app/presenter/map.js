@@ -128,7 +128,7 @@ define([
     /* The protecting veil is now obsolete. */
     //view.showProtectingVeil(data.message);
     // TODO - hook this up to a log?
-    this.view.startLoading(data.dataset);
+    this.view.startLoading(data);
     
   };
   proto.onMarkersNeedToShowLatestSelection = function(data) {
@@ -460,7 +460,7 @@ define([
 
 
     //eventbus.subscribe({topic: "Initiative.loadComplete", callback: function(data) { p.onInitiativeLoadComplete(data); } });
-    //eventbus.subscribe({topic: "Initiative.loadFailed", callback: function(data) { p.onInitiativeLoadMessage(data); } });
+    eventbus.subscribe({topic: "Initiative.loadFailed", callback: function(data) { p.onInitiativeLoadMessage(data); } });
     // TODO - strip out this mechanism from everywhere it appears:
     //eventbus.subscribe({topic: "Initiative.selected", callback: function(data) { p.onInitiativeSelected(data); } });
     eventbus.subscribe({

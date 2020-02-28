@@ -369,7 +369,13 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       add(json.data);
       //sort if this is the last dataset you are loading 
       eventbus.publish({ topic: "Initiative.datasetLoaded" });
-    }).catch(err => console.log(err));
+    }).catch(err => {
+      eventbus.publish({
+        topic: "Initiative.loadFailed",
+        data: { error: err,dataset:dataset}
+      });
+      console.log(err)
+    });
   }
   function loadPluralObjects(query, uid, callback) {
     var ds = config.namedDatasets();
