@@ -702,15 +702,15 @@ div.leaflet-popup-content {
   border: 16px solid #f3f3f3;
   border-radius: 50%;
   border-top: 16px solid #3498db;
-  width: 400px;
-  height: 400px;
+  width: 300px;
+  height: 300px;
 
   display: block;
   position: fixed;
   top: 50%;
   left: 50%;
-  margin-top: -200px;
-  margin-left: -200px;
+  margin-top: -150px;
+  margin-left: -150px;
 
   -webkit-animation: spin 1s linear infinite; /* Safari */
   animation: spin 1s linear infinite;
@@ -728,12 +728,12 @@ div.leaflet-popup-content {
 
 #loadingCircletxt {
   position: absolute;
-  width: 250px;
+  width: 200px;
   height: 100px;
   top: 50%;
   left: 50%;
-  margin-left: -125px; /* margin is -0.5 * dimension */
-  margin-top: -30px; 
+  margin-left: -100px; /* margin is -0.5 * dimension */
+  margin-top: -40px; 
   font-size: 20px;
 }
 
