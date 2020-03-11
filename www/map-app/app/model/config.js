@@ -1,3 +1,12 @@
+/**
+ *
+ * The purpose of this module is to insulate the rest of the application from
+ * changes made to the format of config_json, version_json, etc.
+ *
+ * It returns an object with accessor methods for obtaining configured data.
+ */
+
+
 define([
   "json!configuration/config",
   "json!configuration/version.json",
