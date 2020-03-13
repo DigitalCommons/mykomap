@@ -95,6 +95,9 @@ define([
   proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function(initiatives) {
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
+    let options = {};
+    if (initiatives.length == 1)
+      options = {maxZoom: 18};
 
     if (initiatives.length > 0) {
       eventbus.publish({
@@ -104,13 +107,15 @@ define([
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
           ]
+          //,options
         }
       });
+      
+      //rm for now as it isn't working well enough
     }
   };
 
   proto.initiativeClicked = function(initiative) {
-    const lastContent = this.contentStack.current();
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
@@ -119,7 +124,6 @@ define([
       eventbus.publish({
         topic: "Markers.needToShowLatestSelection",
         data: {
-          unselected: lastContent ? lastContent.initiatives : [],
           selected: [initiative]
         }
       });
@@ -134,12 +138,13 @@ define([
       eventbus.publish({
         topic: "Markers.needToShowLatestSelection",
         data: {
-          unselected: lastContent ? lastContent.initiatives : [],
           selected: []
         }
       });
       // Deselect the sidebar and hoghlight the iitiative in the directory
       this.view.deselectInitiativeSidebar();
+      
+      //doesn't do much?
     }
   };
 
@@ -159,7 +164,6 @@ define([
         p.notifyViewToBuildDirectory();
       }
     });
-    const lastContent = Presenter.prototype.contentStack.current();
     eventbus.subscribe({
       topic: "Initiative.reset",
       callback: function(data) {
@@ -168,7 +172,6 @@ define([
         eventbus.publish({
           topic: "Markers.needToShowLatestSelection",
           data: {
-            unselected: lastContent ? lastContent.initiatives : [],
             selected: []
           }
         });

@@ -533,6 +533,11 @@ div.map-app-map-container {
   background-color: white;
 }
 
+.sea-search-initiative-active {
+  color: white;
+  background-color: var(--dark);
+}
+
 .ml-auto {
   margin-left: auto;
 }

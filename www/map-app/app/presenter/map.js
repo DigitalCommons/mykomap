@@ -131,19 +131,19 @@ define([
     this.view.startLoading(data);
     
   };
+
+  let previouslySelected = [];
   proto.onMarkersNeedToShowLatestSelection = function(data) {
-    //gliches everything else 
-    //TODO: FIX NEED TO PUT IN THE SELECTIONS/DESELECTIONS IN THE RIGHT PLACE
-    console.log("onMarkersNeedToShowLatestSelection NEEDS TO BE FIXED");
-    // console.log(data)
-    // const that = this;
+    console.log(data)
+    const that = this;
     
-    // data.unselected.forEach(function(e) {
-    //   that.view.setUnselected(e);
-    // });
-    // data.selected.forEach(function(e) {
-    //   that.view.setSelected(e);
-    // });
+    previouslySelected.forEach(function(e) {
+      that.view.setUnselected(e);
+    });
+    previouslySelected = data.selected;
+    data.selected.forEach(function(e) {
+      that.view.setSelected(e);
+    });
   };
 
 
@@ -197,6 +197,7 @@ define([
   //FILTERS
   let filtered = {};
   let filteredInitiativesUIDMap = {};
+  let verboseNamesMap = {};
   let initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
   let loadedInitiatives = sse_initiative.getLoadedInitiatives();
   proto.applyFilter = function () {
@@ -214,6 +215,7 @@ define([
   proto.addFilter = function (data) {
     let initiatives = data.initiatives;
     let filterName = data.filterName;
+    let verboseName = data.verboseName;
 
     //if filter already exists don't do anything
     if (Object.keys(filtered).includes(filterName))
@@ -221,6 +223,9 @@ define([
 
     //add filter
     filtered[filterName] = initiatives;
+
+    //add the verbose name of the filter
+    verboseNamesMap[filterName] = verboseName;
 
     //add to array only new unique entries
     initiatives.forEach(i => {
@@ -240,7 +245,7 @@ define([
     filtered = {};
     filteredInitiativesUIDMap = {};
     initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
-
+    verboseNamesMap = {};
     //show all markers
     markerView.showMarkers(loadedInitiatives);
   };
@@ -279,6 +284,9 @@ define([
       })
     });
 
+    //remove filter from verbose name
+    delete verboseNamesMap[filterName];
+
 
     //apply filters
     this.applyFilter(); 
@@ -295,6 +303,9 @@ define([
     return filteredInitiativesUIDMap;
   }
 
+  function getFiltersVerbose() {
+    return Object.values(verboseNamesMap);
+  }
 
   //should return an array of unique initiatives outside of filters
   proto.getInitiativesOutsideOfFilter = function () {
@@ -403,13 +414,13 @@ define([
     hidden = [];
 
     //zoom and pan
-    const latlng = sse_initiative.latLngBounds(null)
+    const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
     eventbus.publish({
       topic: "Map.needsToBeZoomedAndPanned",
       data: {
         bounds: latlng,
         options: {
-          maxZoom: 3
+          maxZoom: 5
         }
       }
     });
@@ -552,7 +563,8 @@ define([
   var pub = {
     createPresenter: createPresenter,
     getFiltered: getFiltered,
-    getFilteredMap: getFilteredMap
+    getFilteredMap: getFilteredMap,
+    getFiltersVerbose: getFiltersVerbose
   };
   return pub;
 });

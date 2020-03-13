@@ -15,10 +15,12 @@ define([
     return this.hasOwnProperty("searchString");
   };
 
-  function SearchResults(initiatives, searchString) {
+  function SearchResults(initiatives, searchString,filters=[]) {
     // isa StackItem
     StackItem.call(this, initiatives);
-    this.searchString = searchString;
+    this.searchString = filters.length > 0? 
+    "\""+searchString + "\" in " + filters.join(", ")
+    : "\""+searchString + "\"";
   }
   SearchResults.prototype = Object.create(StackItem.prototype);
 
@@ -41,7 +43,6 @@ define([
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
-        unselected: lastContent ? lastContent.initiatives : [],
         selected: newContent
       }
     });
@@ -91,8 +92,8 @@ define([
           ],
           options: {
             paddingTopLeft: [sidebarWidth, window.innerHeight / 2],
-            paddingBottomRight: [0, 0],
-            maxZoom: 12
+            paddingBottomRight: [0, 0]
+            //,maxZoom: 12
           }
         }
       });
@@ -139,11 +140,15 @@ define([
 
     //filter
     const lastContent = this.contentStack.current();
-    this.contentStack.append(new SearchResults(data.results, data.text));
+    this.contentStack.append(new SearchResults(data.results, data.text,map.getFiltersVerbose()));
 
     if(data.results.length == 1){
       //this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
+    }
+    else if (data.results.length == 0){
+      //do nothing on failed search
+      console.log("no results");
     }
     else{
       //this.notifyMarkersNeedToShowNewSelection(lastContent);
@@ -167,9 +172,15 @@ define([
     const lastContent = this.contentStack.current();
     //this.contentStack.append(new StackItem([initiative]));
     //console.log(this.contentStack.current());
+    
     this.notifyMarkersNeedToShowNewSelection(lastContent,[initiative]);
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
+    
     this.view.refresh();
+    eventbus.publish({
+      topic: "Initiatives.searchedInitiativeClicked",
+      data: {initiative: data.initiative}
+    });
   };
   proto.onInitiativeMouseoverInSidebar = function(initiative) {
     this.notifyShowInitiativeTooltip(initiative);
@@ -212,6 +223,10 @@ define([
         data: {initiatives:  that.contentStack.current().initiatives}
       });
     }
+  }
+
+  proto.searchedInitiativeClicked = function (id) {
+    this.view.onInitiativeClicked(id);
   }
 
   Presenter.prototype = proto;
@@ -259,6 +274,13 @@ define([
       topic: "Initiatives.showSearchHistory",
       callback: function(data){
         p.onSearchHistory()
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Initiatives.searchedInitiativeClicked",
+      callback: function(data){
+        p.searchedInitiativeClicked(data.initiative.uniqueId)
       }
     });
     return p;

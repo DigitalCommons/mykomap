@@ -131,19 +131,33 @@ define([
       hideContent: true
     });
   };
+
+  proto.onInitiativeClicked = function(id){
+    d3.select(".sea-search-initiative-active")
+            .classed("sea-search-initiative-active",false);
+
+    d3.select('[data-uid="' + id + '"]')
+           .classed(
+            "sea-search-initiative-active",
+            true
+          );
+  };
+
   proto.populateSelectionWithListOfInitiatives = function(
     selection,
     initiatives
   ) {
     const pres = this.presenter;
+    const that = this;
     initiatives.forEach(function(initiative) {
       selection
         .append("button")
-        .attr("class", "w3-bar-item w3-button w3-mobile")
+        .attr("class", "w3-bar-item w3-button w3-mobile srch-initiative")
+        .attr("data-uid",initiative.uniqueId)
         .attr("title", "Click to see details here and on map")
         // TODO - shift-click should remove initiative from selection,
         //        just like shift-clicking a marker.
-        .on("click", function(e) {          
+        .on("click", function(e) {
           pres.onInitiativeClickedInSidebar({initiative: initiative,
             sidebarWidth: 5});
         })

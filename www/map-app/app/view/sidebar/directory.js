@@ -154,7 +154,8 @@ define([
       topic: "Map.addFilter",
       data: {
         initiatives: initiatives,
-        filterName: (directoryField+selectionKey)
+        filterName: (directoryField+selectionKey),
+        verboseName: selectionKey
       }
     });
 
@@ -236,7 +237,7 @@ define([
           data: {
             bounds: latlng,
             options: {
-              maxZoom: 3
+              maxZoom: 5
             }
           }
         });
@@ -356,6 +357,8 @@ define([
     // let initiativeContentElement = d3.select("#sea-initiative-sidebar-content");
     // initiativeContentElement.html(initiativeContent);
     initiativeSidebar.classed("sea-initiative-sidebar-open", false);
+    d3.select(".sea-search-initiative-active")
+            .classed("sea-search-initiative-active",false);
   };
 
   Sidebar.prototype = proto;

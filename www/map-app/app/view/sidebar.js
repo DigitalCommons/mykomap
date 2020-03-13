@@ -54,7 +54,7 @@ define([
           topic: "Map.removeSearchFilter",
           data: {}
         });
-        //notify zoom 
+        //notify zoom
         that.changeSidebar("directory");
         that.showInitiativeList();
       })
