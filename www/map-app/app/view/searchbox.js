@@ -10,6 +10,11 @@ define(["d3", "view/base", "presenter/searchbox"], function(
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
 
+  proto.changeSearchText = function(txt) {
+    d3.select("#search-box").property("value", txt);
+
+  };
+
   proto.searchSubmitted = function() {
     // By default, submitting the form will cause a page reload!
     d3.event.preventDefault();

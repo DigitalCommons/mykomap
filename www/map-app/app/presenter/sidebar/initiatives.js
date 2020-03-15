@@ -18,6 +18,7 @@ define([
   function SearchResults(initiatives, searchString,filters=[]) {
     // isa StackItem
     StackItem.call(this, initiatives);
+    this.searchedFor = searchString;
     this.searchString = filters.length > 0? 
     "\""+searchString + "\" in " + filters.join(", ")
     : "\""+searchString + "\"";
@@ -89,12 +90,12 @@ define([
           bounds: [
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
-          ],
-          options: {
-            paddingTopLeft: [sidebarWidth, window.innerHeight / 2],
-            paddingBottomRight: [0, 0]
-            //,maxZoom: 12
-          }
+          ]
+          // ,options: {
+          //   paddingTopLeft: [sidebarWidth, window.innerHeight / 2],
+          //   paddingBottomRight: [0, 0]
+          //   //,maxZoom: 12
+          // }
         }
       });
     }
@@ -143,7 +144,7 @@ define([
     this.contentStack.append(new SearchResults(data.results, data.text,map.getFiltersVerbose()));
 
     if(data.results.length == 1){
-      //this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
+      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
     }
     else if (data.results.length == 0){

@@ -334,8 +334,10 @@ define([
     //if no results remove the filter
 
     if(data.initiatives!=null && data.initiatives.length == 0){
-      this.removeSearchFilter();
-      return;
+      // uncommenting this will reveal all initiatives on a failed search
+      // this.removeSearchFilter();
+      // return;
+      console.log("no results, hide everything");
     }
 
     //if the results match the previous results don't do anything
@@ -369,16 +371,18 @@ define([
     markerView.showMarkers(data.initiatives);
 
     //zoom and pan
-    const latlng = sse_initiative.latLngBounds(data.initiatives)
-    eventbus.publish({
-      topic: "Map.needsToBeZoomedAndPanned",
-      data: {
-        bounds: latlng,
-        options: {
-          maxZoom: 5
+    if(data.initiatives.length > 0){
+      const latlng = sse_initiative.latLngBounds(data.initiatives)
+      eventbus.publish({
+        topic: "Map.needsToBeZoomedAndPanned",
+        data: {
+          bounds: latlng,
+          options: {
+            maxZoom: 5
+          }
         }
-      }
-    });
+      });
+    }
   };
 
 

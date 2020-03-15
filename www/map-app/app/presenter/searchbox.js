@@ -30,11 +30,24 @@ define([
       eventbus.publish({topic: "Sidebar.showDirectory"});
     }
   };
+
+
+  proto.changeSearchText = function(txt){
+    this.view.changeSearchText(txt);
+  };
+
   Presenter.prototype = proto;
 
   function createPresenter(view) {
     var p = new Presenter();
     p.registerView(view);
+
+    eventbus.subscribe({
+      topic: "Search.changeSearchText",
+      callback: function(data){
+        p.changeSearchText(data.txt)
+      }
+    });
     return p;
   }
   var pub = {

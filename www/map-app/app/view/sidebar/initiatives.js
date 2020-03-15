@@ -35,6 +35,16 @@ define([
       } else if (item.isSearchResults()) {
         textContent = "Search: " + item.searchString;
       }
+
+      //change the text in the search bar
+      eventbus.publish({
+        topic: "Search.changeSearchText",
+        data: {
+          txt: item.searchedFor
+        }
+      });
+      
+      
     }
     const container = selection
       .append("div")

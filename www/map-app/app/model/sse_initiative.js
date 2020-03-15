@@ -133,7 +133,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function (i) {
       return i.searchstr.toUpperCase().includes(up);
-    });
+    }).sort((a,b) => sortInitiatives(a,b));
   }
 
   function filter(filter) {
