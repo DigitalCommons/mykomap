@@ -20,8 +20,9 @@
 # NPM installs libraries here (and in subdirs)
 node_modules/
 
-# Transient build files go here:
-/build
+# Optional link to an external map project for development purposes
+# (e.g. playground)
+/ext
 
 # Configuration for local testing
 /www/configuration

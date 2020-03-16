@@ -88,6 +88,46 @@ This is not currently properly documented, but here is an example:
 }
 ```
 
+# DEVELOPMENT
+
+Developing `sea-map` needs a way to deploy a website using it for
+testing. Doing this via a dependency from (say) the [`playground`][1]
+project to `sea-map` is a bit cumbersome if changes to `sea-map` need
+to be propagated back to the consuming project via pushing the changes
+under test to github.
+
+It is also possible to change a `package.json` dependency on `sea-map`
+to a relative path. But this also doesn't work well, because
+
+1. This change mustn't be checked in, but more seriously
+2. It doesn't then pull in the RequireJS dependency correctly.
+
+The latter seems to be a known problem with npm.
+
+So, a suggested simpler way is to embed a simple project using
+`sea-map` within a subdirectory `ext`, either directly (from within
+the same directory as this README):
+
+    git clone $PROJECT_URL ext
+
+Or using a symlink:
+
+    ln -sf $PROJECT_PATH ext
+
+A pair of npm script tasks to build and serve that directly have been
+added to `package.json`, so given the above, you can the build and
+serve the project like this:
+
+    npm install    # installs sea-map deps
+	npm run build  # builds the embedded project in ext/build/out
+	npm run serve  # serves the embedded project in ext/build/out
+
+The website, using the under-development version of `sea-map`, will
+then be accessible locally via the URL http://localhost:8080
+
+*Caveat:* the embedded project should not have any extra dependencies
+beyond `sea-map`, because the `npm install` above will not find those.
+
 # SCRIPT TARGETS
 
 This package does little in its own right. The following are the
@@ -97,4 +137,17 @@ script targets it supports.
 	
 Runs a static analysis of the source, highlighting possible improvements
 
+    npm build
 
+Assuming a project consuming sea-map (such as [playground][1])has been
+symlinked (or installed) into `ext/`, this builds that dependent
+project. Primarily for the sea-map developers' convenience, rather
+than any users of sea-map.
+
+[1]: https://github.com/SolidarityEconomyAssociation/playground
+
+    npm serve
+
+As above, a sea-map developers' convenience. Launches a PHP
+development web-server, publishing a project consuming sea-map in
+`ext/`

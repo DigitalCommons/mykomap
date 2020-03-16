@@ -13,7 +13,9 @@
   },
   "scripts": {
     "lint": "eslint www/map-app/**/*.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
+    "serve": "php -t ext/build/out -S localhost:8080"
   },
   "repository": {
     "type": "git",
