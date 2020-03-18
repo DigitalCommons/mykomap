@@ -69,7 +69,7 @@ or packaged for deployment.
 
  ## CONFIG.JSON
  
- This is not currently properly documented, but here is an example:
+This is not currently properly documented, but here is an example:
 
 ```
  {
