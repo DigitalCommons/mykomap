@@ -115,6 +115,36 @@ requirejs(["app/main"], function(main) {
     return config;
   }
 
+  /** Parse the URL in location.search
+   *
+   * @returns a list of key/value pairs (each pair is a two element array)
+   * The array also has an attribute `values` which is a map of keys to lists of values
+   * (there may be zero or more values per key).
+   */
+  function parseUrlParameters(search) {
+    const query = search
+          .replace(/^[?]/, '')
+          .replace(/#.*/, '');
+    const components = query.split(/[&;]/);
+    const kvList = components
+          .filter(c => c.length > 0) // empty string is not a param
+          .map(
+            c => c
+              .split(/=(.*)/, 2) // split on first =, don't drop
+                                 // characters after second =
+              .map(kv => decodeURIComponent(kv.replace(/[+]/g, ' ')))
+          );
+    kvList.values = new Object();
+    kvList.forEach(kv => {
+      var list = kvList.values[kv[0]];
+      if (list === undefined)
+        list = kvList.values[kv[0]] = [];
+      if (kv.length > 1) {
+        list.push(kv[1]);
+      }
+    });
+    return kvList;
+  }
 
   const mapApp = document.getElementById("map-app");
   mapApp.innerHTML = `
@@ -160,6 +190,14 @@ requirejs(["app/main"], function(main) {
     </div>`;
 
   const attrs = parseAttributes(mapApp, 'map-app');
-  
-  main.init(attrs);
+  // Combine/flatten the parameter array into an object. This will
+  // lose duplicates.
+  const urlParams = parseUrlParameters(window.location.search)
+        .reduce((acc, e) => { acc[e[0]] = e[1]; return acc}, {});
+
+  // Combine the attributes and the url params (latter override former).
+  const combined = Object.assign({}, attrs, urlParams);
+
+  // Call the main function with the config values to override.
+  main.init(combined);
 });
