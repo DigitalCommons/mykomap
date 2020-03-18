@@ -83,6 +83,39 @@ requirejs(["app/main"], function(main) {
   "use strict";
   console.log("app/main.js has been loaded");
 
+  /** Convert names-like-this into namesLikeThis
+   */
+  function snakeToCamelCase(string) {
+    return string.replace(/-([^-])/g, (m, p1) => p1.toUpperCase());
+  }
+
+  /** Parse attributes from an element, convert snake-case names to camelCase
+   *
+   * If a namespace is supplied, then only attributes prefied by this are returned.
+   *
+   * @return an object containing the matching attribute names (converted) and values
+   * (as is).
+   */
+  function parseAttributes(elem, namespace = '') {
+    if (namespace !== '') {
+      namespace = namespace+':';
+    }
+
+    const config = {};
+    for(var ix = 0; ix < elem.attributes.length; ix += 1) {
+      const attr = elem.attributes[ix];
+      console.log("attr", attr);
+      if (attr.name.indexOf(namespace) != 0)
+        continue;
+      const name = snakeToCamelCase(attr.name.substring(namespace.length));
+      console.log("adding", name, attr.value);
+      config[name] = attr.value;
+    }
+
+    return config;
+  }
+
+
   const mapApp = document.getElementById("map-app");
   mapApp.innerHTML = `
 		<!-- Page Content -->
@@ -126,6 +159,7 @@ requirejs(["app/main"], function(main) {
 			</div>
     </div>`;
 
+  const attrs = parseAttributes(mapApp, 'map-app');
   
-  main.init();
+  main.init(attrs);
 });
