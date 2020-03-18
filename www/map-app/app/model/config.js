@@ -67,6 +67,7 @@ define([
     { id: 'htmlTitle',
       descr: `If set, this will override the default value for the map's HTML <title> tag`,
       init: () => config_json.htmlTitle,
+      setter: 'setHtmlTitle',
     },
     { id: 'defaultNongeoLatLng',
       descr: 'The default latitude and longitude values (as a '+
@@ -77,25 +78,30 @@ define([
         return this.defaultNongeoLatLng?
           this.defaultNongeoLatLng  : { lat: undefined, lng: undefined };
       },
+      setter: 'setDefaultNongeoLatLng'
     },
     { id: 'initialBounds',
       descr: 'The initial bounds of the map; these are chosen automatically if this is unset',
       init: () => config_json.initialBounds,
       getter: 'getInitialBounds',
+      setter: 'setInitialBounds',
     },
     { id: 'filterableFields',
       descr: 'Defines the fields that can populate the directory',
       init: () => config_json.filterableFields,
       getter: 'getFilterableFields',
+      setter: 'setFilterableFields',
     },
     { id: 'doesDirectoryHaveColours',
       descr: 'True if the directory should feature coloured entries',
       init: () => config_json.doesDirectoryHaveColours,
+      setter: 'setDirectoryHasColours',
     },
     { id: 'disableClusteringAtZoom',
       descr: 'Defines the zoom level to stop clustering at (an integer; or false for off)',
       init: () => config_json.disableClusteringAtZoom,
       getter: 'getDisableClusteringAtZoom',
+      setter: 'setDisableClusteringAtZoom',
     },
   ];
 
