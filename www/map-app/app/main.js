@@ -17,7 +17,10 @@ define([
     console.log(
       "header, footer and left column have been reduce to zero in style.css."
     );
-    config.add(cfg);
+
+    // Override any config values passed.
+    // Parse string values as approriate for the config value in question.
+    config.add(config.parseStrings(cfg));
 
     // The code for each view is loaded by www/app/view.js
     // Initialize the views:
