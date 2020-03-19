@@ -14,6 +14,53 @@ define([
 ], function(config_json, version_json, about_html) {
   "use strict";
 
+  /** Define config value types, and certain helper functions.
+   *
+   * parseString should accept a string and return a parsed value
+   * suitable for the config item of associated type.
+   */
+  const types = {
+    boolean: {
+      // Parse '', 'false', or 'no' as false, everything else as true.
+      parseString: (val) => {
+        switch(val.toLowerCase()) {
+        case '':
+        case 'false':
+        case 'no':
+          return false;
+        default:
+          return true;        
+        }
+      },
+    },
+    string: {
+      // No-op
+      parseString: (val) => val,
+    },
+    latLng:  {
+      // Parse as a list of 2 comma-delimited numbers.
+      // Like: "<latitude>,<longitude>"
+      // Drop trailing numbers
+      parseString: (val) =>
+        val.split(',', 2).map(s => isNaN(s)? 0 : Number(s)),
+    },
+    latLng2:  {
+      // Parse as a list of 4 comma-delimited numbers.
+      // Like: "<latitude1>,<longitude1>,<latitude2>,<longitude2>"
+      // Drop trailing numbers
+      parseString: (val) => {
+        const e = val.split(',', 4).map(s => isNaN(s)? 0 : Number(s));
+        return [[e[0],e[1]],[e[2],e[3]]];
+      },
+    },
+    arrayOfString:  {
+      // Parse as comma-delimited values.
+      // NB doesn't handle escaping, so no ',' possible in strings
+      // Spaces are considered significant - they are not trimmed.
+      parseString: (val) => val.split(/,/),
+    },
+  };
+  
   /* Define the config schema using a list of field meta-data, from
    * which we construct the object. This allows a lot of flexibility
    * and introspection.
@@ -68,6 +115,7 @@ define([
       descr: `If set, this will override the default value for the map's HTML <title> tag`,
       init: () => config_json.htmlTitle,
       setter: 'setHtmlTitle',
+      type: types.string,
     },
     { id: 'defaultNongeoLatLng',
       descr: 'The default latitude and longitude values (as a '+
@@ -78,30 +126,36 @@ define([
         return this.defaultNongeoLatLng?
           this.defaultNongeoLatLng  : { lat: undefined, lng: undefined };
       },
-      setter: 'setDefaultNongeoLatLng'
+      setter: 'setDefaultNongeoLatLng',
+      type: types.latLng,
     },
     { id: 'initialBounds',
-      descr: 'The initial bounds of the map; these are chosen automatically if this is unset',
+      descr: 'The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; '+
+      'these are chosen automatically if this is unset',
       init: () => config_json.initialBounds,
       getter: 'getInitialBounds',
       setter: 'setInitialBounds',
+      type: types.latLng2,
     },
     { id: 'filterableFields',
       descr: 'Defines the fields that can populate the directory',
       init: () => config_json.filterableFields,
       getter: 'getFilterableFields',
       setter: 'setFilterableFields',
+      type: types.arrayOfString,
     },
     { id: 'doesDirectoryHaveColours',
       descr: 'True if the directory should feature coloured entries',
       init: () => config_json.doesDirectoryHaveColours,
       setter: 'setDirectoryHasColours',
+      type: types.boolean,
     },
     { id: 'disableClusteringAtZoom',
       descr: 'Defines the zoom level to stop clustering at (an integer; or false for off)',
       init: () => config_json.disableClusteringAtZoom,
       getter: 'getDisableClusteringAtZoom',
       setter: 'setDisableClusteringAtZoom',
+      type: types.boolean,
     },
   ];
 
@@ -205,6 +259,24 @@ define([
       
       setter.call(data, cfg[id]);
     });
+  };
+
+  /** Parses an object mapping config ids to string values into an object with parsed values
+   *
+   * Parsing is done using the schema's type's parseString method, if present.
+   * Otherwise the value is left as a string.
+   * @param an object containing the string ids.
+   * @returns the new object containing the parsed values.
+   */
+  methods.parseStrings = (cfg) => {
+    const result = {};
+
+    Object.keys(cfg).forEach(id => {
+      const def = configSchema.find((e) => id === e.id);
+      result[id] = (def && def.type && def.type.parseString)?
+        def.type.parseString(cfg[id]) : cfg[id];
+    });
+    return result;
   };
   
   return methods; // hides the data by closing over it
