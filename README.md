@@ -25,6 +25,7 @@ the `php-cli` and `php-curl` packages.)
   },
 ```
 
+
 Given these, basic usage of a consuming NPM package therefore would
 look like this:
 
@@ -67,26 +68,21 @@ Where:
 `build/out` can then be served by a (PHP enabled) web server directly,
 or packaged for deployment.
 
- ## CONFIG.JSON
+## CONFIG.JSON
  
-This is not currently properly documented, but here is an example:
+This JSON file defines the defaults for a map-app. Put in at the path
+`config/config.json` within the NPM project consuming sea-map
+(relative to `package.json`). Note, because it is JSON, comments are
+not allowed and all keys must be delimited by double-quotes. Double
+quotes are the only string delimiter.
 
-```
- {
-  "namedDatasets_comment": "These names correspond to directories in www/services which contain: default-graph-uri.txt, endpoint.txt, query.rq",
-  "namedDatasets": ["oxford"],
-  "htmlTitle_comment": "This will override the default value for the htmp <title> tag",
-  "htmlTitle": "Solidarity Oxford",
-  "defaultNongeoLatLng_comment": "The default latitude and longitude values for initiatives with no address",
-  "defaultNongeoLatLng": { "lat": "51.7520", "lng": "-1.2577" },
-  "filterableFields_comment": "A list of the fields that can populate the directory",
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
-  "doesDirectoryHaveColours_comment": "Does the directory feature coloured entries",
-  "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom_comment": "Zoom level to stop clustering at (false for off)",
-  "disableClusteringAtZoom": false
-}
-```
+The valid configuration attributes defined in [CONFIG.md][CONFIG.md].
+This is regenerated automatically from the config schema defined in
+[www/map-app/app/model/config.js][config.js]) by running the
+`generate-config-doc` NPM run script. Run this whenever the config changes.
+
+[CONFIG.md]: ./CONFIG.md
+[config.js]: ./www/map-app/app/model/config.js
 
 # DEVELOPMENT
 
@@ -151,3 +147,9 @@ than any users of sea-map.
 As above, a sea-map developers' convenience. Launches a PHP
 development web-server, publishing a project consuming sea-map in
 `ext/`
+
+    npm generate-config-doc
+	
+Developer convenience. Regenerates the documentation for `config.json`
+in `CONFIG.md`. Developers should run this when the schema definitions
+in `config_schema.js` are changed.
