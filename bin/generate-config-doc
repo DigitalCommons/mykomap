@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+/** Generates a CONFIG.md documentation file from the schema in config.js
+ */
+
+/** Stub the Require.js framework `define` function. */
+global.define = function(names, func) {
+    const config_schema = func()
+    console.log(config_schema.doc());
+}
+
+require("../www/map-app/app/model/config_schema.js");
+

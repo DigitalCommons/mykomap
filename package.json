@@ -14,6 +14,7 @@
   "scripts": {
     "lint": "eslint www/map-app/**/*.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
     "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "serve": "php -t ext/build/out -S localhost:8080"
   },
