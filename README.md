@@ -25,6 +25,7 @@ the `php-cli` and `php-curl` packages.)
   },
 ```
 
+
 Given these, basic usage of a consuming NPM package therefore would
 look like this:
 
@@ -67,26 +68,87 @@ Where:
 `build/out` can then be served by a (PHP enabled) web server directly,
 or packaged for deployment.
 
- ## CONFIG.JSON
+## CONFIG.JSON
  
-This is not currently properly documented, but here is an example:
+This JSON file defines the defaults for a map-app. Put in at the path
+`config/config.json` within the NPM project consuming sea-map
+(relative to `package.json`). Note, because it is JSON, comments are
+not allowed and all keys must be delimited by double-quotes. Double
+quotes are the only string delimiter.
 
-```
- {
-  "namedDatasets_comment": "These names correspond to directories in www/services which contain: default-graph-uri.txt, endpoint.txt, query.rq",
-  "namedDatasets": ["oxford"],
-  "htmlTitle_comment": "This will override the default value for the htmp <title> tag",
-  "htmlTitle": "Solidarity Oxford",
-  "defaultNongeoLatLng_comment": "The default latitude and longitude values for initiatives with no address",
-  "defaultNongeoLatLng": { "lat": "51.7520", "lng": "-1.2577" },
-  "filterableFields_comment": "A list of the fields that can populate the directory",
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
-  "doesDirectoryHaveColours_comment": "Does the directory feature coloured entries",
-  "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom_comment": "Zoom level to stop clustering at (false for off)",
-  "disableClusteringAtZoom": false
-}
-```
+The valid configuration attributes defined in [CONFIG.md][CONFIG.md].
+This is regenerated automatically from the config schema defined in
+[www/map-app/app/model/config.js][config.js]) by running the
+`generate-config-doc` NPM run script. Run this whenever the config changes.
+
+[CONFIG.md]: ./CONFIG.md
+[config.js]: ./www/map-app/app/model/config.js
+
+## OVERRIDING CONFIG.JSON ATTRIBUTES
+
+Some of these may be tweaked in various ways, to allow users of the
+library some flexibility, as follows. Methods are listed in order of
+increasing priority - if the parameter is defined different ways, the
+latter override the former.
+
+Only those attributes which are settable (as defined in [CONFIG.md])
+can be overridden. When being set from a context which can only supply
+string values, these are parsed into a valid value.
+
+### In the `<div id="map-app">` element
+
+For example, you can define the `div` like this to override values:
+
+    <div id="map-app"
+	     map-app:html-title="My Title"
+	     map-app:initial-bounds="40.712,-74.227,40.774,-74.125" 
+	>
+	</div>
+
+Here, a config attribute name like `initialBounds` should be defined
+as `map-app:initial-bounds`. There's a namespace prefix to make sure
+there can't be clashes with existing HTML attributes. Also,
+hyphenation is used instead of capitalisation. The reason for this is
+that HTML elements' attributes are case-insensitive. The case can't be
+accessed from Javascript because they effectively get downcased before
+Javascript even sees them.
+
+### In URL query parameters.
+
+For example, you can load the webpage containing the `div` with ID
+`map-app` with query parameters like this:
+
+    http://example.com/map?initialBounds=40.712,-74.227,40.774,-74.125
+
+You'll need URL escaping where necessary: a space should be denoted
+with a `+`, a question mark with `%3B`, etc. You can use the
+Javascript built-in function `encodeURIComponent` to do this. Multiple
+parameters should be delimited by ampersands or semi-colons, as usual.
+
+Note, these parameters are parsed on the client-side in the
+Javascript, so no extra PHP or Apache scripts needed for it to work.
+
+### In code
+
+If the map-app `init()` function defined in `app/main.js` is called
+directly, a object defining config attributes can be supplied as the
+first parameter. From HTML, for example:
+
+    <script src="lib/require.js"></script>
+    <script type="application/javascript">
+    
+    require(['app/main'], function(main) {
+        main.init({
+            initialBounds: [[40.712,-74.227],[40.774,-74.125]],
+            htmlTitle: "My Title",
+        });
+    });
+    
+    </script>
+
+Note, this actually bypasses any HTML attribute or URL parsing, so if
+you use this method these won't happen at all. Typically you won't be
+doing this, as it requires understanding of RequireJS.
 
 # DEVELOPMENT
 
@@ -151,3 +213,9 @@ than any users of sea-map.
 As above, a sea-map developers' convenience. Launches a PHP
 development web-server, publishing a project consuming sea-map in
 `ext/`
+
+    npm generate-config-doc
+	
+Developer convenience. Regenerates the documentation for `config.json`
+in `CONFIG.md`. Developers should run this when the schema definitions
+in `config_schema.js` are changed.
