@@ -55,8 +55,9 @@ define([], function() {
       descr: 'A two-element array defining latitude and longitude in degrees.',
       stringDescr: 'A comma-delimited list of two numbers defining latitude '+
         'and longitude in degrees.',
-      parseString: (val) =>
-        val.split(',', 2).map(s => isNaN(s)? 0 : Number(s)),
+      parseString: (val) =>{
+        return val? val.split(',', 2).map(s => isNaN(s)? 0 : Number(s)) : [0,0];
+      },
     },
     latLng2: {
       name: '{number[][]}',
@@ -113,6 +114,7 @@ define([], function() {
     namedDatasets,
     htmlTitle,
     initialBounds,
+    defaultLatLng,
     filterableFields,
     doesDirectoryHaveColours,
     disableClusteringAtZoom,
@@ -172,6 +174,14 @@ define([], function() {
       getter: 'getInitialBounds',
       setter: 'setInitialBounds',
       type: types.latLng2,
+    },
+    { id: 'defaultLatLng',
+      descr: 'The initial bounds of the map as an array: [lat,lon]; '+
+      'these are set to [0,0] if this is unset',
+      init: () => defaultLatLng==undefined? [0,0] : defaultLatLng,
+      getter: 'getDefaultLatLng',
+      setter: 'setDefaultLatLng',
+      type: types.latLng,
     },
     { id: 'filterableFields',
       descr: 'Defines the fields that can populate the directory',

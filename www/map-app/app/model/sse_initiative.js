@@ -69,8 +69,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       orgStructure: { value: [], enumerable: true, writable: true },
       tel: { value: e.tel, enumerable: true },
       email: { value: e.email, enumerable: true },
-      nongeoLat: { value: config.getNongeoLatLng().lat, enumerable: true },
-      nongeoLng: { value: config.getNongeoLatLng().lng, enumerable: true }
+      nongeoLat: { value: config.getDefaultLatLng()[0], enumerable: true },
+      nongeoLng: { value: config.getDefaultLatLng()[1], enumerable: true }
     });
 
     // loop through the filterable fields and register

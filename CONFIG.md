@@ -122,6 +122,18 @@ The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen a
 
 
 
+### `defaultLatLng`
+
+- *type:* `{number[]}` 
+- *in string context:* A comma-delimited list of two numbers defining latitude and longitude in degrees.
+- *default:* `0,0`
+- *settable?:* yes
+
+The initial bounds of the map as an array: [lat,lon]; these are set to [0,0] if this is unset
+
+
+
+
 ### `filterableFields`
 
 - *type:* `{string[]}` 
