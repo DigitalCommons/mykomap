@@ -50,6 +50,7 @@ define([
   };
   function arrayMax(array) {
     return array.reduce((a, b) => Math.max(a, b));
+    
   }
   function arrayMin(array) {
     return array.reduce((a, b) => Math.min(a, b));
