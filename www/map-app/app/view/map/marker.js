@@ -228,10 +228,10 @@ define([
 
     // This variation spiderfys the cluster to which the marker belongs.
     // This only works if selectedClusterGroup is actually a ClusterGroup!
-    //const cluster = selectedClusterGroup.getVisibleParent(this.marker);
-    //if (cluster && typeof cluster.spiderfy === 'function') {
-    //cluster.spiderfy();
-    //}
+    // const cluster = unselectedClusterGroup.getVisibleParent(this.marker);
+    // if (cluster && typeof cluster.spiderfy === 'function') {
+    //   cluster.spiderfy();
+    // }
     this.marker.openTooltip();
     this.marker.setZIndexOffset(1000);
   };

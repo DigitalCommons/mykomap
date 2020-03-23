@@ -140,6 +140,15 @@ define(["app/eventbus", "model/config", "presenter"], function(
     this.view.refresh();
   };
 
+  proto.deselectInitiatives = function(){
+    eventbus.publish({
+      topic: "Markers.needToShowLatestSelection",
+      data: {
+        selected: []
+      }
+    });
+  }
+
   proto.historyNavigation = function() {
     //console.log("presenter/sidebar/base/historyNavigation");
     //console.log(this);

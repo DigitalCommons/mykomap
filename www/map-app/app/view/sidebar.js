@@ -57,6 +57,14 @@ define([
         //notify zoom
         that.changeSidebar("directory");
         that.showInitiativeList();
+
+        //deselect 
+        eventbus.publish({
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
       })
       .append("i")
       .attr("class", "fa fa-bars");
@@ -67,6 +75,14 @@ define([
       .attr("title", "Show search history")
       .on("click", function() {
         that.hideInitiativeList();
+
+        //deselect
+        eventbus.publish({
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
         eventbus.publish({
           topic: "Initiatives.showSearchHistory",
         });

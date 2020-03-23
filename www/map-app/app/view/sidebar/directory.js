@@ -288,6 +288,12 @@ define([
             topic: "Directory.InitiativeClicked",
             data: initiative
           });
+        })
+        .on("mouseover", function(e) {
+          that.presenter.onInitiativeMouseoverInSidebar(initiative);
+        })
+        .on("mouseout", function(e) {
+          that.presenter.onInitiativeMouseoutInSidebar(initiative);
         });
     }
     sidebar

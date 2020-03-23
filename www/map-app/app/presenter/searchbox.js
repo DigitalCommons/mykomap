@@ -16,6 +16,12 @@ define([
       eventbus.publish({
         topic: "Sidebar.hideInitiativeList"
       });
+      eventbus.publish({
+        topic: "Markers.needToShowLatestSelection",
+        data: {
+          selected: []
+        }
+      });
       var results = sseInitiative.search(text);
       console.log(results);
       eventbus.publish({

@@ -97,7 +97,7 @@ define([
 
   proto.onInitiativeComplete = function() {
     // Load the markers into the clustergroup
-    this.view.fitBounds(sse_initiative.latLngBounds());
+    this.view.fitBounds(this.getInitialBounds());
     this.view.unselectedClusterGroup.addLayers(allMarkers);
     console.log("onInitiativeComplete");
     // eventbus.publish({
@@ -426,6 +426,13 @@ define([
         options: {
           maxZoom: 5
         }
+      }
+    });
+
+    eventbus.publish({
+      topic: "Markers.needToShowLatestSelection",
+      data: {
+        selected: []
       }
     });
 

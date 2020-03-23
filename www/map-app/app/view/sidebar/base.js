@@ -40,6 +40,8 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
     var selection = this.d3selectAndClear(
       "#map-app-sidebar-history-navigation"
     );
+    var that = this;
+
     function createButton(b, faClass, hovertext) {
       selection
         .append("button")
@@ -49,6 +51,8 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
         .attr("title", hovertext)
         .on("click", function() {
           b.onClick();
+          that.presenter.deselectInitiatives();
+          //hide initiatives
         })
         .append("i")
         .attr("class", "fa " + faClass);

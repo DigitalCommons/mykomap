@@ -115,6 +115,19 @@ define([
     }
   };
 
+  proto.onInitiativeMouseoverInSidebar = function(initiative) {
+    eventbus.publish({
+      topic: "Map.needToShowInitiativeTooltip",
+      data: initiative
+    });
+  };
+  proto.onInitiativeMouseoutInSidebar = function(initiative) {
+    eventbus.publish({
+      topic: "Map.needToHideInitiativeTooltip",
+      data: initiative
+    });
+  };
+
   proto.initiativeClicked = function(initiative) {
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));

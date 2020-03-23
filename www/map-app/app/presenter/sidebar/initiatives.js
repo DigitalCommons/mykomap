@@ -154,6 +154,7 @@ define([
     }
     else{
       //this.notifyMarkersNeedToShowNewSelection(lastContent);
+      //deselect all
       this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
     }
 
