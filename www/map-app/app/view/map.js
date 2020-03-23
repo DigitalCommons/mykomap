@@ -120,9 +120,6 @@ define([
 
     window.seaMap = this.map;
 
-    // Get the initial bounds from config
-    let initialBounds = this.presenter.getInitialBounds();
-    if (initialBounds) this.map.fitBounds(initialBounds);
 
     for (i = 0; i < k.length; ++i) {
       this.map.on(k[i], eventHandlers[k[i]]);

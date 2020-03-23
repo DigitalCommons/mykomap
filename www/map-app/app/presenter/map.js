@@ -179,7 +179,8 @@ define([
   };
 
   proto.getInitialBounds = function() {
-    return config.getInitialBounds();
+    return config.getInitialBounds()==undefined?
+      sse_initiative.latLngBounds(null) : config.getInitialBounds();
   };
 
   proto.getInitialZoom = function() {};
