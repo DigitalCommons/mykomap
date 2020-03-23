@@ -61,7 +61,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         enumerable: true
       },
       searchstr: {
-        value: (e.name + e.dataset + e.www + e.locality + e.postcode + e.country + "")
+        value: config.getSearchedFields().map(x=>e[x]).join("")
         , enumerable: true
       },
       primaryActivity: { value: primaryActivityCode, enumerable: true },

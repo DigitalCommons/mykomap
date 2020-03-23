@@ -118,6 +118,8 @@ define([], function() {
     filterableFields,
     doesDirectoryHaveColours,
     disableClusteringAtZoom,
+    searchedFields,
+    showDatasetsPanel
   } = {}) => [
     { id: 'aboutHtml',
       descr: `Raw HTML definition of the map's "about" text.`,
@@ -167,6 +169,13 @@ define([], function() {
       setter: 'setHtmlTitle',
       type: types.string,
     },
+    { id: 'showDatasetsPanel',
+      descr: `If true this will load the datasets panel`,
+      init: () => showDatasetsPanel == undefined? true : showDatasetsPanel,
+      getter: 'getShowDatasetsPanel',
+      setter: 'setShowDatasetsPanel',
+      type: types.boolean,
+    },
     { id: 'initialBounds',
       descr: 'The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; '+
       'these are chosen automatically if this is unset',
@@ -203,6 +212,17 @@ define([], function() {
       setter: 'setDisableClusteringAtZoom',
       type: types.boolean,
     },
+    { id: 'searchedFields',
+      descr: 'A list of fields that are looked at when searching '+
+      ["name", "uri", "within", "lat", "lng", "www",
+      "regorg", "sameas", "desc", "street", "locality",
+      "region", "postcode", "country", "primaryActivity",
+      "activity", "orgStructure", "tel", "email"].join(","),
+      init: () => searchedFields==undefined? ["name","www"] : searchedFields,
+      getter: 'getSearchedFields',
+      setter: 'setSearchedFields',
+      type: types.arrayOfString,
+    }
   ];
 
   // This generates the documentation for this schema, in Markdown

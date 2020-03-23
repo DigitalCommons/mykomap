@@ -21,6 +21,8 @@ define([
     this.view.showSidebar();
   };
 
+  proto.showingDatasets = () => config.getShowDatasetsPanel();
+
   proto.hideSidebar = function(name) {
     this.view.hideSidebar();
   };

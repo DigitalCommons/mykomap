@@ -110,6 +110,18 @@ If set, this will override the default value for the map's HTML <title> tag.
 
 
 
+### `showDatasetsPannel`
+
+- *type:* `{boolean}` 
+- *in string context:* parsed as-is
+- *default:* `true`
+- *settable?:* yes
+
+If true this will load the datasets panel
+
+
+
+
 ### `initialBounds`
 
 - *type:* `{number[][]}` 
@@ -166,6 +178,18 @@ True if the directory should feature coloured entries
 - *settable?:* yes
 
 Defines the zoom level to stop clustering at (an integer; or false for off)
+
+
+
+
+### `searchedFields`
+
+- *type:* `{string[]}` 
+- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
+- *default:* `name,www`
+- *settable?:* yes
+
+A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email
 
 
 

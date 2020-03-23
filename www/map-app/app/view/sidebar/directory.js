@@ -220,7 +220,8 @@ define([
         eventbus.publish({
           topic: "Map.removeFilter",
           data: {
-            filterName: directoryField+selectionKey
+            filterName: directoryField+selectionKey,
+            noZoom: true
           }
         });
         that.d3selectAndClear(
@@ -230,17 +231,23 @@ define([
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });
-0
-        const latlng = presenter.latLngBounds(null);
         eventbus.publish({
-          topic: "Map.needsToBeZoomedAndPanned",
+          topic: "Markers.needToShowLatestSelection",
           data: {
-            bounds: latlng,
-            options: {
-              maxZoom: 5
-            }
+            selected: []
           }
         });
+0
+        // const latlng = presenter.latLngBounds(null);
+        // eventbus.publish({
+        //   topic: "Map.needsToBeZoomedAndPanned",
+        //   data: {
+        //     bounds: latlng,
+        //     options: {
+        //       maxZoom: 5
+        //     }
+        //   }
+        // });
       })
       .append("i")
       .attr("class", "fa " + "fa-times");

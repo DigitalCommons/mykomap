@@ -104,29 +104,45 @@ define([
       .append("i")
       .attr("class", "fa fa-info-circle");
 
-    selection = selection
-      .append("button")
-      .attr("class", "w3-button w3-border-0")
-      .attr("title", "Show Datasets")
-      .on("click", function() {
-        that.hideInitiativeList();
-        eventbus.publish({
-          topic: "Map.removeSearchFilter",
-          });
-        that.changeSidebar("datasets");
-      })
-      .append("i")
-      .attr("class", "fa fa-database");
+    if(this.presenter.showingDatasets()){
+      selection = selection
+        .append("button")
+        .attr("class", "w3-button w3-border-0")
+        .attr("title", "Show Datasets")
+        .on("click", function() {
+          that.hideInitiativeList();
+          eventbus.publish({
+            topic: "Map.removeSearchFilter",
+            });
+          that.changeSidebar("datasets");
+        })
+        .append("i")
+        .attr("class", "fa fa-database");
+    }
+
+
   };
 
   proto.createSidebars = function() {
-    this.sidebar = {
-      about: about.createSidebar(),
-      initiatives: initiatives.createSidebar(),
-      // mainMenu: mainMenu.createSidebar(),
-      directory: directory.createSidebar(),
-      datasets: datasets.createSidebar()
-    };
+    
+
+    if(this.presenter.showingDatasets()){
+      this.sidebar = {
+        about: about.createSidebar(),
+        initiatives: initiatives.createSidebar(),
+        // mainMenu: mainMenu.createSidebar(),
+        directory: directory.createSidebar(),
+        datasets: datasets.createSidebar()
+      };
+    }else{
+      this.sidebar = {
+        about: about.createSidebar(),
+        initiatives: initiatives.createSidebar(),
+        // mainMenu: mainMenu.createSidebar(),
+        directory: directory.createSidebar(),
+      };
+    }
+
   };
 
   proto.changeSidebar = function(name) {
