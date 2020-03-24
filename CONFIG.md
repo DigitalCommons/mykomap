@@ -129,7 +129,7 @@ If true this will load the datasets panel
 - *default:* `undefined`
 - *settable?:* yes
 
-The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen automatically if this is unset
+The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen automatically if this is unset. (To adjust the initial position, visit https://openstreetmap.org, navigate to the position of two of the boundary corners in turn, and right click, selecting "show address" in the pop-up menu that appears. The latitude and longitudes of each should be concatenated, without spaces, and delimited with commas, as the `initialBounds` parameter: `initialBounds=<lat1>,<long1>,<lat2>,<long2>`.
 
 
 
