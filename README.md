@@ -151,6 +151,19 @@ scope of this document.
 parameter won't work in this context, however, since the title of the
 page inside the `iframe` isn't visible to the user.)
 
+If you wish to adjust the initial position of the map using the
+`initialBounds` paramter, here is a rough guide to finding the correct
+coordinates.
+
+ - Visit https://openstreetmap.org,
+ - Navigate so that the position of one of the corners of the initial bounds is in view.
+ - Right-click on the exact location, and
+ - A pop-up menu appears. Select 'Show address'.
+ - A side-bar should open showing the latitiude and longitude coordinates of this point.
+ - Record this, and repeat for the opposite corner.
+ - Concatenate these numbers with commas, like this: `<lat1>,<long1>,<lat2>,<long2>`
+ - Use this as the `initialBounds` parameter value
+
 ### In code
 
 If the map-app `init()` function defined in `app/main.js` is called
