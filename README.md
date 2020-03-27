@@ -125,8 +125,31 @@ with a `+`, a question mark with `%3B`, etc. You can use the
 Javascript built-in function `encodeURIComponent` to do this. Multiple
 parameters should be delimited by ampersands or semi-colons, as usual.
 
-Note, these parameters are parsed on the client-side in the
-Javascript, so no extra PHP or Apache scripts needed for it to work.
+(Note, these parameters are parsed on the client-side in the
+Javascript, so no extra PHP or Apache scripts needed for it to work.)
+
+The upshot of this is that you can embed the map hosted on (say)
+`server1.example.com` in a page on `server2.example.com` using an
+`iframe` element in a web page on the latter referring to the
+former. The element should set the configuration paramters in the URL
+as above. So a super simple example might be:
+
+    <!DOCTYPE html>
+	<html>
+	  <head><!-- ... --></head>
+	  <body>
+	    Blah blah
+
+        <iframe src="https://server1.example.com/index.html?initialBounds=40.712,-74.227,40.774,-74.125"></iframe>
+	  </body>
+	</html>
+
+This example omits all styling and layout, etc., which is out of the
+scope of this document.
+
+(Note that setting the parent page's title using the `htmlTitle`
+parameter won't work in this context, however, since the title of the
+page inside the `iframe` isn't visible to the user.)
 
 ### In code
 
