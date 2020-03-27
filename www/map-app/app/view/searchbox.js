@@ -16,13 +16,7 @@ define(["d3", "view/base", "presenter/searchbox"], function(
   };
 
   proto.searchSubmitted = function() {
-    // By default, submitting the form will cause a page reload!
-    d3.event.preventDefault();
-    //d3.event.stopPropagation();
-
-    var searchText = d3.select("#search-box").property("value");
- 
-    this.presenter.performSearch(searchText);
+   
   };
   proto.createSearchBox = function() {
     // d3 selection redefines this, so hang onto it here:

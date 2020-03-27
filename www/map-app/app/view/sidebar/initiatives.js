@@ -25,8 +25,18 @@ define([
   const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
   proto.populateFixedSelection = function(selection) {
+    const container = selection
+    .append("div")
+    .attr("class", "w3-container");
+    container
+    .append("h1")
+    .text("Search");
+
+
+    this.createSearchBox(container);
+
     let textContent = ""; // default content, if no initiatives to show
-    if (this.presenter.currentItemExists()) {
+    if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
       const initiatives = item.initiatives;
       if (initiatives.length === 1) {
@@ -46,18 +56,15 @@ define([
       
       
     }
-    const container = selection
-      .append("div")
-      .attr("class", "w3-container");
-    container
-      .append("h1")
-      .text("Search History");
+ 
 
     container
       .append("p")
       .text(textContent);
 
   };
+
+
   proto.geekZoneContentAtD3Selection = function(selection, initiative) {
     const that = this;
     const s = selection.append("div").attr("class", "w3-bar-block");
@@ -168,8 +175,8 @@ define([
         // TODO - shift-click should remove initiative from selection,
         //        just like shift-clicking a marker.
         .on("click", function(e) {
-          pres.onInitiativeClickedInSidebar({initiative: initiative,
-            sidebarWidth: 5});
+          
+          pres.initClicked(initiative);
         })
         .on("mouseover", function(e) {
           pres.onInitiativeMouseoverInSidebar(initiative);
@@ -180,10 +187,61 @@ define([
         .text(initiative.name);
     });
   };
+
+  proto.changeSearchText = function(txt) {
+
+    d3.select("#search-box").property("value", txt);
+
+  };
+
+  proto.createSearchBox = function(selection) {
+    var view = this;
+
+    selection = selection
+      .append("form")
+      .attr("id", "map-app-search-form")
+      .attr(
+        "class",
+        "w3-card-2 w3-round map-app-search-form"
+      )
+      .on("submit", function() {
+         // By default, submitting the form will cause a page reload!
+          d3.event.preventDefault();
+          //d3.event.stopPropagation();
+
+          var searchText = d3.select("#search-box").property("value");
+      
+          view.presenter.performSearch(searchText);
+      })
+      .append("div")
+      .attr("class", "w3-border-0");
+    selection
+      .append("div")
+      .attr("class", "w3-col")
+      .attr("title", "Click to search")
+      .style("width", "50px")
+      .append("button")
+      .attr("type", "submit")
+      .attr("class", "w3-btn w3-border-0")
+      .append("i")
+      .attr("class", "w3-xlarge fa fa-search");
+    selection
+      .append("div")
+      .attr("class", "w3-rest")
+      .append("input")
+      .attr("id", "search-box")
+      .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
+      .attr("type", "search")
+      .attr("placeholder", "Search initiatives")
+      .attr("autocomplete","off");
+  };
+
+
+
   proto.populateScrollableSelection = function(selection) {
-    if (this.presenter.currentItemExists()) {
+    if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
-      const initiatives = item.initiatives;
+      const initiatives = item == null? [] : item.initiatives;
       switch (initiatives.length) {
         case 0:
           if (item.isSearchResults()) {
@@ -201,7 +259,8 @@ define([
         default:
           this.populateSelectionWithListOfInitiatives(selection, initiatives);
       }
-    } else {
+    }
+    else {
       selection
         .append("div")
         .attr("class", "w3-container w3-center")

@@ -7,25 +7,26 @@ define(["app/eventbus", "model/config", "presenter"], function(
 
   function Stack() {
     this.index = 0;
-    this.storage = [];
+    this.storage = [null];
   }
   Stack.prototype = {
     append: function(obj) {
       // This implementation behaves like a typical browser - you loose everything beyond the current
       // when you add something new:
-      if (this.index < this.storage.length - 1) {
-        // There are items beyond the current one, which we shall remove
-        const itemsToRemove = this.storage.length - this.index;
-        this.index++;
-        this.storage.splice(this.index, itemsToRemove, obj);
-      } else {
-        // Just add the new item to the end
-        this.storage[this.storage.length] = obj;
-        this.index = this.storage.length - 1;
-      }
+      // if (this.index < this.storage.length - 1) {
+      //   // There are items beyond the current one, which we shall remove
+      //   const itemsToRemove = this.storage.length - this.index;
+      //   this.index++;
+      //   this.storage.splice(this.index, itemsToRemove, obj);
+      // } else {
+      //   // Just add the new item to the end
+      //   this.storage[this.storage.length] = obj;
+      //   this.index = this.storage.length - 1;
+      // }
       // This implementation adds things to the very end, so the stack grows and grows:
-      //this.storage[this.storage.length] = obj;
-      //this.index = this.storage.length - 1;
+      this.storage[this.storage.length] = null;
+      this.storage[this.storage.length-2] = obj;
+      this.index = this.storage.length - 2;
     },
     current: function() {
       // returns undefined if the stack is empty
@@ -50,7 +51,8 @@ define(["app/eventbus", "model/config", "presenter"], function(
       return (
         this.storage.length === 0 || this.index === this.storage.length - 1
       );
-    }
+    },
+    gotoEnd: function() {this.index = this.storage.length-1;}
   };
 
   // Set up the object from which all sidebar presenters are derived:
@@ -125,10 +127,17 @@ define(["app/eventbus", "model/config", "presenter"], function(
       if (newContent == lastContent)
         return;
       //pres.view.refresh();
-      eventbus.publish({
-        topic: "Map.addSearchFilter",
-        data: {initiatives: newContent.initiatives}
-      }); //historySEARCH
+      if(newContent){
+        eventbus.publish({
+          topic: "Map.addSearchFilter",
+          data: {initiatives: newContent.initiatives}
+        }); //historySEARCH
+      }else{
+        eventbus.publish({
+          topic: "Map.removeSearchFilter",
+          data: {}
+        });
+      }
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -150,8 +159,6 @@ define(["app/eventbus", "model/config", "presenter"], function(
   }
 
   proto.historyNavigation = function() {
-    //console.log("presenter/sidebar/base/historyNavigation");
-    //console.log(this);
     return {
       back: {
         disabled: this.contentStack.isAtStart(),

@@ -72,10 +72,9 @@ define([
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", "Show search history")
+      .attr("title", "Show search")
       .on("click", function() {
         that.hideInitiativeList();
-
         //deselect
         eventbus.publish({
           topic: "Markers.needToShowLatestSelection",
@@ -89,7 +88,7 @@ define([
         that.changeSidebar("initiatives");
       })
       .append("i")
-      .attr("class", "fa fa-history");
+      .attr("class", "fa fa-search");
 
     selection
       .append("button")
@@ -97,8 +96,14 @@ define([
       .attr("title", "Show info")
       .on("click", function() {
         that.hideInitiativeList();
+        // eventbus.publish({
+        // topic: "Map.removeSearchFilter"});
         eventbus.publish({
-        topic: "Map.removeSearchFilter"});
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
         that.changeSidebar("about");
       })
       .append("i")
@@ -111,9 +116,15 @@ define([
         .attr("title", "Show Datasets")
         .on("click", function() {
           that.hideInitiativeList();
+          // eventbus.publish({
+          //   topic: "Map.removeSearchFilter",
+          //   });
           eventbus.publish({
-            topic: "Map.removeSearchFilter",
-            });
+            topic: "Markers.needToShowLatestSelection",
+            data: {
+              selected: []
+            }
+          });
           that.changeSidebar("datasets");
         })
         .append("i")

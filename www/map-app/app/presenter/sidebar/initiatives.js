@@ -35,7 +35,7 @@ define([
 
   proto.currentItemExists = function() {
     // returns true only if the contentStack is empty
-    return typeof this.contentStack.current() !== "undefined";
+    return typeof (this.contentStack.current() !== "undefined" || this.contentStack.current() != null);
   };
   proto.notifyMarkersNeedToShowNewSelection = function(lastContent,newContent = null) {
     if(!newContent){
@@ -168,6 +168,19 @@ define([
     this.view.refresh();
   };
 
+  proto.initClicked= function(initiative){
+    eventbus.publish({
+      topic: "Directory.InitiativeClicked",
+      data: initiative
+    });
+    if (window.innerWidth <= 800) {
+      eventbus.publish({
+        topic: "Directory.InitiativeClickedSidebar.hideSidebar",
+        data: {initiative: initiative}
+      });
+    }
+  };
+
   proto.onInitiativeClickedInSidebar = function(data) {
     console.log(data)
 
@@ -195,7 +208,7 @@ define([
     const initiative = data;
     //console.log(initiative);
     const lastContent = this.contentStack.current();
-    this.contentStack.append(new StackItem([initiative]));
+    //this.contentStack.append(new StackItem([initiative]));
     this.notifyMarkersNeedToShowNewSelection(lastContent);
     // this.notifySidebarNeedsToShowInitiatives();
     this.view.refresh();
@@ -213,24 +226,59 @@ define([
       // remove elment form array (sigh - is this really the best array method for this?)
       initiatives.splice(index, 1);
     }
-    this.contentStack.append(new StackItem(initiatives));
+    //this.contentStack.append(new StackItem(initiatives));
     this.notifyMarkersNeedToShowNewSelection(lastContent);
     this.view.refresh();
   };
 
   proto.onSearchHistory = function () {
     const that = this;
-    if (that.contentStack.current()){
-      eventbus.publish({
-        topic: "Map.addSearchFilter",
-        data: {initiatives:  that.contentStack.current().initiatives}
-      });
-    }
+    this.contentStack.gotoEnd();
+    eventbus.publish({
+      topic: "Map.removeSearchFilter",
+      data: {}
+    });
+    
   }
 
   proto.searchedInitiativeClicked = function (id) {
     this.view.onInitiativeClicked(id);
   }
+
+
+  proto.performSearch = function(text) {
+    console.log("Search submitted: [" + text + "]");
+    // We need to make sure that the search sidebar is loaded
+    if (text.length > 0) {
+      eventbus.publish({
+        topic: "Sidebar.hideInitiativeList"
+      });
+      eventbus.publish({
+        topic: "Markers.needToShowLatestSelection",
+        data: {
+          selected: []
+        }
+      });
+
+      //should be async
+      var results = sseInitiative.search(text);
+      eventbus.publish({
+        topic: "Search.initiativeResults",
+        data: { text: text, results: results }
+      });
+    }
+    else {
+      //TODO: do other stuff like panning
+      //causes err?
+      eventbus.publish({topic: "Map.removeSearchFilter"});
+      eventbus.publish({topic: "Sidebar.showDirectory"});
+    }
+  };
+
+
+  proto.changeSearchText = function(txt){
+    this.view.changeSearchText(txt);
+  };
 
   Presenter.prototype = proto;
 
@@ -284,6 +332,13 @@ define([
       topic: "Initiatives.searchedInitiativeClicked",
       callback: function(data){
         p.searchedInitiativeClicked(data.initiative.uniqueId)
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Search.changeSearchText",
+      callback: function(data){
+        p.changeSearchText(data.txt)
       }
     });
     return p;

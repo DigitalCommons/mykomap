@@ -551,8 +551,8 @@ div.map-app-map-container {
 }
 
 .map-app-search-form {
-  max-width: 500px;
-  width: 50%;
+  max-width: 300px;
+  width: 100%;
 }
 
 .sea-sidebar,

@@ -48,12 +48,7 @@ define([
     var p = new Presenter();
     p.registerView(view);
 
-    eventbus.subscribe({
-      topic: "Search.changeSearchText",
-      callback: function(data){
-        p.changeSearchText(data.txt)
-      }
-    });
+   
     return p;
   }
   var pub = {

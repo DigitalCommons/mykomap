@@ -97,7 +97,7 @@ define([
     const lngs = initiatives.map(x => x.lng);
     let options = {};
     if (initiatives.length == 1)
-      options = {maxZoom: 18};
+      options = {maxZoom: 5};
 
     if (initiatives.length > 0) {
       eventbus.publish({
@@ -145,6 +145,7 @@ define([
         initiative,
         markerView.getInitiativeContent(initiative)
       );
+
     } else {
       // User has deselected
       // TODO: This probably shouldn\t be here
