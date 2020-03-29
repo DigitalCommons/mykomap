@@ -37,8 +37,10 @@ define([
       });
 
     d3.select(".sea-main-sidebar").on("click", function () {
-      if(document.getElementById("dir-filter"))
+      if(document.getElementById("dir-filter") && window.innerWidth >= 900){
         document.getElementById("dir-filter").focus();
+      }
+
     });
 
 
@@ -161,14 +163,15 @@ define([
 
 
     const boundsс = presenter.latLngBounds(initiatives);
-    eventbus.publish({
-      topic: "Directory.InitiativeClicked"
-    });
-    if (window.innerWidth <= 800) {
-      eventbus.publish({
-        topic: "Directory.InitiativeClickedSidebar.hideSidebar"
-      });
-    }
+    //deselect all
+    that.presenter.clearLatestSelection();
+
+    // if (window.innerWidth <= 800) {
+    //   eventbus.publish({
+    //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
+    //   });
+    // }
+
     eventbus.publish({
       topic: "Map.fitBounds",
       data: {
@@ -231,12 +234,7 @@ define([
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList"
         });
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
+        that.presenter.clearLatestSelection();
 0
         // const latlng = presenter.latLngBounds(null);
         // eventbus.publish({
@@ -257,14 +255,12 @@ define([
       .text(title)
       .on("click", function () {
         const bounds = presenter.latLngBounds(initiatives);
-        eventbus.publish({
-          topic: "Directory.InitiativeClicked"
-        });
-        if (window.innerWidth <= 800) {
-          eventbus.publish({
-            topic: "Directory.InitiativeClickedSidebar.hideSidebar"
-          });
-        }
+   
+        // if (window.innerWidth <= 800) {
+        //   eventbus.publish({
+        //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
+        //   });
+        // }
         eventbus.publish({
           topic: "Map.fitBounds",
           data: {

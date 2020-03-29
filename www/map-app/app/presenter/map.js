@@ -420,15 +420,15 @@ define([
 
     //zoom and pan
     const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
-    eventbus.publish({
-      topic: "Map.needsToBeZoomedAndPanned",
-      data: {
-        bounds: latlng,
-        options: {
-          maxZoom: 5
-        }
-      }
-    });
+    // eventbus.publish({
+    //   topic: "Map.needsToBeZoomedAndPanned",
+    //   data: {
+    //     bounds: latlng,
+    //     options: {
+    //       maxZoom: 5
+    //     }
+    //   }
+    // });
 
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",

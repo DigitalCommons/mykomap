@@ -128,6 +128,15 @@ define([
     });
   };
 
+  proto.clearLatestSelection = function() {
+    eventbus.publish({
+      topic: "Markers.needToShowLatestSelection",
+      data: {
+        selected: []
+      }
+    });
+  }
+
   proto.initiativeClicked = function(initiative) {
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
