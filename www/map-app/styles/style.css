@@ -584,8 +584,7 @@ div.leaflet-popup-content {
   /* NB also requires setting maxWidth in leaflet Marker bindpopup, to make popup wide enough for big text */
   /* 200% works well for presentations: */
   /*font-size: 200%; */
-  max-height:210px;
-
+  max-height: 210px;
 }
 
 .sea-initiative-popup .leaflet-popup-content-wrapper {
@@ -694,14 +693,14 @@ div.leaflet-popup-content {
   caret-color: transparent;
   overflow: hidden;
   opacity: 0;
-  padding : 0px 0px 0px 16px;
+  padding: 0px 0px 0px 16px;
   margin: 0px;
   width: auto;
 }
 #dir-filter:focus {
   outline: none;
 }
-#dir-title{
+#dir-title {
   padding: 0px 0px 0px 16px;
 }
 
@@ -724,13 +723,21 @@ div.leaflet-popup-content {
 }
 /* Safari */
 @-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 #loadingCircletxt {
@@ -740,28 +747,25 @@ div.leaflet-popup-content {
   top: 50%;
   left: 50%;
   margin-left: -100px; /* margin is -0.5 * dimension */
-  margin-top: -40px; 
+  margin-top: -40px;
   font-size: 20px;
 }
 
-#map-app-leaflet-map{  text-align: center;
+#map-app-leaflet-map {
+  text-align: center;
 }
 
-
-
-.initiative-list-sidebar-btn-wrapper{
+.initiative-list-sidebar-btn-wrapper {
   display: none;
 }
 
 @media (max-width: 1080px) {
-  .initiative-list-sidebar-btn-wrapper{
-  display: flex;
-  justify-content: flex-start;
-  font-size: 1.4em;
-}
-
-.sidebar-normal-size-close-btn{
-  display: none;
-}
-
+  .initiative-list-sidebar-btn-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    font-size: 1.4em;
+  }
+  .sidebar-normal-size-close-btn {
+    display: none;
+  }
 }
