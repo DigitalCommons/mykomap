@@ -144,7 +144,6 @@ define([
   };
 
 
-
   proto.listInitiativesForSelection = function (directoryField, selectionKey) {
     let that = this;
     let initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
@@ -214,7 +213,101 @@ define([
       title = selectionKey;
     }
 
-    selection
+
+
+    //setup sidebar buttons in initiative list
+    const sidebarBtnHolder = selection.append("div").attr("class","initiative-list-sidebar-btn-wrapper");
+
+
+    sidebarBtnHolder
+      .append("button")
+      .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
+      .attr("title", "Show search")
+      .on("click", function() {
+
+        eventbus.publish({
+          topic: "Sidebar.hideInitiativeList",
+        });
+        eventbus.publish({
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
+        eventbus.publish({
+          topic: "Initiatives.showSearchHistory",
+        });
+        eventbus.publish({
+          topic: "Sidebar.showInitiatives",
+        });
+        
+      })
+      .append("i")
+      .attr("class", "fa fa-search");
+
+   
+
+    sidebarBtnHolder
+      .append("button")
+      .attr("class", "w3-button w3-border-0")
+      .attr("title", "Show info")
+      .on("click", function() {
+        eventbus.publish({
+          topic: "Sidebar.hideInitiativeList",
+        });
+        eventbus.publish({
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
+        // eventbus.publish({
+        // topic: "Map.removeSearchFilter"});
+        eventbus.publish({
+          topic: "Markers.needToShowLatestSelection",
+          data: {
+            selected: []
+          }
+        });
+        eventbus.publish({
+          topic: "Sidebar.showAbout",
+        });
+      })
+      .append("i")
+      .attr("class", "fa fa-info-circle");
+
+
+
+      if(true){
+        sidebarBtnHolder
+          .append("button")
+          .attr("class", "w3-button w3-border-0")
+          .attr("title", "Show Datasets")
+          .on("click", function() {
+            eventbus.publish({
+              topic: "Sidebar.hideInitiativeList",
+            });
+            eventbus.publish({
+              topic: "Markers.needToShowLatestSelection",
+              data: {
+                selected: []
+              }
+            });
+            eventbus.publish({
+              topic: "Sidebar.showDatasets",
+            });
+            // // eventbus.publish({
+            // //   topic: "Map.removeSearchFilter",
+            // //   });
+  
+          })
+          .append("i")
+          .attr("class", "fa fa-database");
+      }
+    
+      
+      
+    sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", "Close " + title)
@@ -249,6 +342,49 @@ define([
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
+    
+
+
+
+
+
+
+    selection
+      .append("button")
+      .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
+      .attr("title", "Close " + title)
+      .on("click", function () {
+        //remove filters
+        eventbus.publish({
+          topic: "Map.removeFilter",
+          data: {
+            filterName: directoryField+selectionKey,
+            noZoom: true
+          }
+        });
+        that.d3selectAndClear(
+          "#sea-initiatives-list-sidebar-content"
+        );
+        //clear the window
+        eventbus.publish({
+          topic: "Sidebar.hideInitiativeList"
+        });
+        that.presenter.clearLatestSelection();
+0
+        // const latlng = presenter.latLngBounds(null);
+        // eventbus.publish({
+        //   topic: "Map.needsToBeZoomedAndPanned",
+        //   data: {
+        //     bounds: latlng,
+        //     options: {
+        //       maxZoom: 5
+        //     }
+        //   }
+        // });
+      })
+      .append("i")
+      .attr("class", "fa " + "fa-times");
+      
     selection
       .append("h2")
       .classed("sea-field", true)

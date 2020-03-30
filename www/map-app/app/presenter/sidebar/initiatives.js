@@ -168,6 +168,10 @@ define([
     this.view.refresh();
   };
 
+  proto.getFilterNames = function(){
+    return map.getFiltersVerbose();
+   };
+
   proto.initClicked= function(initiative){
     eventbus.publish({
       topic: "Directory.InitiativeClicked",

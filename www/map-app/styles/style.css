@@ -746,3 +746,22 @@ div.leaflet-popup-content {
 
 #map-app-leaflet-map{  text-align: center;
 }
+
+
+
+.initiative-list-sidebar-btn-wrapper{
+  display: none;
+}
+
+@media (max-width: 1080px) {
+  .initiative-list-sidebar-btn-wrapper{
+  display: flex;
+  justify-content: flex-start;
+  font-size: 1.4em;
+}
+
+.sidebar-normal-size-close-btn{
+  display: none;
+}
+
+}

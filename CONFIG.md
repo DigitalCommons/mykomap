@@ -98,6 +98,18 @@ A list of names that correspond to directories in www/services, which must conta
 
 
 
+### `namedDatasetsVerbose`
+
+- *type:* `{string[]}` 
+- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
+- *default:* `undefined`
+- *settable?:* no
+
+A list of names for the named datasets. Length must be exactly the same as namedDatasets or this will not be used
+
+
+
+
 ### `htmlTitle`
 
 - *type:* `{string}` 
@@ -110,7 +122,7 @@ If set, this will override the default value for the map's HTML <title> tag.
 
 
 
-### `showDatasetsPannel`
+### `showDatasetsPanel`
 
 - *type:* `{boolean}` 
 - *in string context:* parsed as-is
@@ -129,7 +141,7 @@ If true this will load the datasets panel
 - *default:* `undefined`
 - *settable?:* yes
 
-The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen automatically if this is unset. (To adjust the initial position, visit https://openstreetmap.org, navigate to the position of two of the boundary corners in turn, and right click, selecting "show address" in the pop-up menu that appears. The latitude and longitudes of each should be concatenated, without spaces, and delimited with commas, as the `initialBounds` parameter: `initialBounds=<lat1>,<long1>,<lat2>,<long2>`.
+The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen automatically if this is unset
 
 
 

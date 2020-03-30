@@ -8,6 +8,22 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   let allDatasets = config.namedDatasets();
 
 
+
+  //TODO: should be in a method call
+  //setup map
+  let verboseDatasets = {}
+  const dsNamed =
+  (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length)?
+    config.namedDatasetsVerbose()
+    :[];
+  
+  if(dsNamed.length == allDatasets.length)
+    allDatasets.forEach((x,i) => verboseDatasets[x] = dsNamed[i]);
+  else
+    allDatasets.forEach((x,i) => verboseDatasets[x] = x);
+
+
+
   //true means all available datasets from config are loaded
   //otherwise a string to indicate which dataset is loaded
   let currentDatasets = true;
@@ -159,7 +175,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   function getDatasets() {
-    return allDatasets;
+    return verboseDatasets;
   }
 
   function getCurrentDatasets() {
@@ -352,7 +368,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var message = null;
     eventbus.publish({
       topic: "Initiative.loadStarted",
-      data: { message: "Loading data via " + service, dataset:dataset }
+      data: { message: "Loading data via " + service, dataset:verboseDatasets[dataset] }
     });
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:

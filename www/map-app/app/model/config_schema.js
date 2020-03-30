@@ -112,6 +112,7 @@ define([], function() {
     timestamp,
     gitcommit,
     namedDatasets,
+    namedDatasetsVerbose,
     htmlTitle,
     initialBounds,
     defaultLatLng,
@@ -161,6 +162,12 @@ define([], function() {
       descr: 'A list of names that correspond to directories in www/services, which must contain '+
       'default-graph-uri.txt, endpoint.txt, query.rq.',
       init: () => namedDatasets,
+      type: types.arrayOfString,
+    },
+    { id: 'namedDatasetsVerbose',
+      descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets'+
+      ' or this will not be used',
+      init: () => namedDatasetsVerbose,
       type: types.arrayOfString,
     },
     { id: 'htmlTitle',

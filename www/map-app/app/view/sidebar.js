@@ -110,7 +110,7 @@ define([
       .attr("class", "fa fa-info-circle");
 
     if(this.presenter.showingDatasets()){
-      selection = selection
+      selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
         .attr("title", "Show Datasets")
@@ -296,7 +296,6 @@ define([
       .classed("sea-sidebar-list-initiatives", true);
   };
   proto.hideInitiativeList = function() {
-    const that = this;
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     let initiativeListSidebar = document.getElementById(
@@ -342,6 +341,6 @@ define([
   }
   var pub = {
     init: init
-  };
+    };
   return pub;
 });

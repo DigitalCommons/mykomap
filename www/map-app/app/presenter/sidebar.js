@@ -64,6 +64,14 @@ define([
     });
 
     eventbus.subscribe({
+      topic: "Sidebar.showDatasets",
+      callback: function() {
+        p.changeSidebar("datasets");
+      }
+    });
+
+
+    eventbus.subscribe({
       topic: "Sidebar.showSidebar",
       callback: function() {
         p.showSidebar();

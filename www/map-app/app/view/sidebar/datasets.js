@@ -50,13 +50,13 @@ define([
     const color_class = function(i) {
         return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
     };
-    datasets.forEach((dataset, i) => {
+    Object.keys(datasets).forEach((dataset, i) => {
       let btn = datasetBtns
         .append("li")
         .attr("class", color_class(i))
         .attr("id",dataset+"-btn")
-        .attr("title", "load " + dataset + " dataset")
-        .text(dataset);
+        .attr("title", "load " + datasets[dataset] + " dataset")
+        .text(datasets[dataset]);
       btn.on("click",()=>{
           btn.classed("sea-field-active", true);
           that.presenter.changeDatasets(dataset,false);
@@ -64,10 +64,10 @@ define([
         });
     });    
     //add mixed btn
-    if(datasets.length > 1){
+    if(Object.keys(datasets).length > 1){
       let btn = datasetBtns
           .append("li")
-          .attr("class", color_class(datasets.length))
+          .attr("class", color_class(Object.keys(datasets).length))
           .attr("id",`${defaultIdMixed}-btn`)
           .attr("title", "load mixed dataset")
           .text("Mixed Sources");

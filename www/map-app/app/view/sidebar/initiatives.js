@@ -261,12 +261,14 @@ define([
       }
     }
     else {
+      var freshSearchText = this.presenter.getFilterNames().length > 0?
+        " Searching in " + this.presenter.getFilterNames().join(", ") : "When you search, or click on map markers, you'll see the results here";
       selection
         .append("div")
         .attr("class", "w3-container w3-center")
         .append("p")
         .text(
-          "When you search, or click on map markers, you'll see the results here"
+          freshSearchText
         );
     }
   };
