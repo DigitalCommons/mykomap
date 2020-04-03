@@ -37,7 +37,7 @@ define([
       });
 
     d3.select(".sea-main-sidebar").on("click", function () {
-      if(document.getElementById("dir-filter") && window.innerWidth >= 900){
+      if(document.getElementById("dir-filter") && window.innerWidth >= 1080){
         document.getElementById("dir-filter").focus();
       }
 

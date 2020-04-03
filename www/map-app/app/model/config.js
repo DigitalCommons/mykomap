@@ -94,7 +94,12 @@ define([
 
     // Initialise the config value
     if (def.init) {
-      data[def.id] = def.init();
+      //TODO: FIX THIS BUG
+      if(def.id == "aboutHtml")
+        data[def.id] = about_html;
+      else
+        data[def.id] = def.init();
+
     }
   });
 

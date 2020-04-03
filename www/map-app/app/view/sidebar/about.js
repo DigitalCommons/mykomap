@@ -44,6 +44,7 @@ define([
       .attr("class", "w3-container")
       .html(that.presenter.aboutHtml());
   };
+  
 
   Sidebar.prototype = proto;
 

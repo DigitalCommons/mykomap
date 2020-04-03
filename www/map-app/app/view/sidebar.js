@@ -203,7 +203,7 @@ define([
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     //that.changeSidebar("directory");
-    if(document.getElementById("dir-filter") && window.innerWidth >= 900)
+    if(document.getElementById("dir-filter") && window.innerWidth >= 1080)
       document.getElementById("dir-filter").focus();
 
 
