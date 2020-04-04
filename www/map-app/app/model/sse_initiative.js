@@ -112,10 +112,16 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         }
       }
     });
-
-
+    //check if lat/lng are numbers and no letters in it
+    if(isAlpha(that.lat+that.ln))
+    {
+      that.lat = that.nongeoLat;
+      that.lng = that.nongeoLng;
+    }
+      
     loadedInitiatives.push(this);
     initiativesByUid[this.uniqueId] = this;
+
 
     // Run new query to get activities
     // loadPluralObjects("activities", this.uniqueId);
@@ -124,6 +130,19 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     eventbus.publish({ topic: "Initiative.new", data: that });
     // });
     // loadPluralObjects("orgStructure", this.uniqueId);
+  }
+
+  function isAlpha (str){
+      var code, i, len;
+    
+      for (i = 0, len = str.length; i < len; i++) {
+        code = str.charCodeAt(i);
+        if (!(code > 64 && code < 91) && // upper alpha (A-Z)
+            !(code > 96 && code < 123)) { // lower alpha (a-z)
+          return false;
+        }
+      }
+      return true;
   }
 
   function sortInitiatives(a, b) {
