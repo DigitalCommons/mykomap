@@ -1,6 +1,6 @@
 # PACKAGE
 
-map-app - A web application for mapping initiatives in the Solidarity Economy
+sea-map - A web application for mapping initiatives in the Solidarity & Co-operative Economies
 
 # USAGE
 
@@ -70,7 +70,7 @@ or packaged for deployment.
 
 ## CONFIG.JSON
  
-This JSON file defines the defaults for a map-app. Put in at the path
+This JSON file defines the defaults for a sea-map. Put in at the path
 `config/config.json` within the NPM project consuming sea-map
 (relative to `package.json`). Note, because it is JSON, comments are
 not allowed and all keys must be delimited by double-quotes. Double
