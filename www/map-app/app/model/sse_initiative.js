@@ -113,12 +113,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       }
     });
     //check if lat/lng are numbers and no letters in it
-    if(isAlpha(that.lat+that.ln))
+    if(isAlpha(that.lat) || isAlpha(that.ln))
     {
-      that.lat = that.nongeoLat;
-      that.lng = that.nongeoLng;
+      that.lat = undefined;
+      that.lng = undefined;
     }
-      
+
     loadedInitiatives.push(this);
     initiativesByUid[this.uniqueId] = this;
 
@@ -133,6 +133,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   function isAlpha (str){
+      if(!str) return false;
       var code, i, len;
     
       for (i = 0, len = str.length; i < len; i++) {

@@ -59,11 +59,12 @@ define([
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
         initiative: this.initiative
-      });
+        });
 
       initiative.marker = this.marker;
 
       this.marker.bindPopup(opts.popuptext, {
+        autoPan:false,
         minWidth: "472",
         maxWidth: "472",
         closeButton: false,
@@ -91,13 +92,14 @@ define([
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
         initiative: this.initiative
-      });
+        });
 
       initiative.marker = this.marker;
 
       // maxWidth helps to accomodate big font, for presentation purpose, set up in CSS
       // maxWidth:800 is needed if the font-size is set to 200% in CSS:
       this.marker.bindPopup(opts.popuptext, {
+        autoPan:false,
         minWidth: "472",
         maxWidth: "472",
         closeButton: false,
