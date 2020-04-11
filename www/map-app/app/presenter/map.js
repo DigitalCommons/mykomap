@@ -339,6 +339,10 @@ define([
       // this.removeSearchFilter();
       // return;
       console.log("no results, hide everything");
+      //hide all 
+      hidden = loadedInitiatives;
+      markerView.hideMarkers(hidden);
+      return;
     }
 
     //if the results match the previous results don't do anything
@@ -349,7 +353,6 @@ define([
 
     //get the ids from the passed data
     const initiativeIds = data.initiatives.map(i=>i.uniqueId);
-
     //case a - global search
     const isCaseA = Object.keys(filtered).length == 0;
     if(isCaseA) {//no filter case
@@ -419,7 +422,7 @@ define([
     hidden = [];
 
     //zoom and pan
-    const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
+    //const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
     // eventbus.publish({
     //   topic: "Map.needsToBeZoomedAndPanned",
     //   data: {
