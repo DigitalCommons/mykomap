@@ -113,12 +113,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       }
     });
     //check if lat/lng are numbers and no letters in it
-    if(isAlpha(that.lat) || isAlpha(that.ln))
+    if(isAlpha(that.lat) || isAlpha(that.lng))
     {
       that.lat = undefined;
       that.lng = undefined;
     }
-
     loadedInitiatives.push(this);
     initiativesByUid[this.uniqueId] = this;
 
