@@ -192,8 +192,8 @@ define([], function() {
       type: types.latLng2,
     },
     { id: 'defaultLatLng',
-      descr: 'The initial bounds of the map as an array: [lat,lon]; '+
-      'these are set to [0,0] if this is unset',
+      descr: 'The position on the map that an initiative\'s dialog is positioned if it ' +
+        'has no resolvable geolocation, as an array: [lat,lon]; these are set to [0,0] if it is unset.',
       init: () => defaultLatLng==undefined? [0,0] : defaultLatLng,
       getter: 'getDefaultLatLng',
       setter: 'setDefaultLatLng',

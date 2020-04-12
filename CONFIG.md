@@ -153,7 +153,7 @@ The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen a
 - *default:* `0,0`
 - *settable?:* yes
 
-The initial bounds of the map as an array: [lat,lon]; these are set to [0,0] if this is unset
+The position on the map that an initiative's dialog is positioned if it has no resolvable geolocation, as an array: [lat,lon]; these are set to [0,0] if it is unset.
 
 
 
