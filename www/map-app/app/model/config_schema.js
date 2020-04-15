@@ -30,6 +30,11 @@ define([], function() {
    * suitable for the config item of associated type.
    */
   const types = {
+    int: {
+      name: '{number}',
+      // No-op
+      parseString: (val) => Number(val),
+    },
     boolean: {
       name: '{boolean}',
       stringDesc: "The empty string, 'false', or 'no' parse as `false`, "+
@@ -120,7 +125,10 @@ define([], function() {
     doesDirectoryHaveColours,
     disableClusteringAtZoom,
     searchedFields,
-    showDatasetsPanel
+    showDatasetsPanel,
+    maxZoomOnGroup,
+    maxZoomOnSearch,
+    maxZoomOnOne
   } = {}) => [
     { id: 'aboutHtml',
       descr: `Raw HTML definition of the map's "about" text.`,
@@ -229,7 +237,26 @@ define([], function() {
       getter: 'getSearchedFields',
       setter: 'setSearchedFields',
       type: types.arrayOfString,
+    },
+    { id: 'maxZoomOnGroup',
+      descr: 'The maximum zoom in that can happen when selecting any perticular group in directory, if 0 does no zooming. Defaults to 18',
+      init: () => maxZoomOnGroup==undefined? 18 :maxZoomOnGroup,
+      getter: 'getMaxZoomOnGroup',
+      type: types.int,
+    },
+    { id: 'maxZoomOnOne',
+      descr: 'The maximum zoom in that can happen when selecting an initiative, if 0 does no zooming. Defaults to 18',
+      init: () => maxZoomOnOne==undefined? 18 : maxZoomOnOne,
+      getter: 'getMaxZoomOnOne',
+      type: types.int,
+    },
+    { id: 'maxZoomOnSearch',
+      descr: 'The maximum zoom in that can happen when searching any perticular group, if 0 does no zooming. Defaults to 18',
+      init: () => maxZoomOnSearch == undefined? 18 : maxZoomOnSearch,
+      getter: 'getMaxZoomOnSearch',
+      type: types.int,
     }
+    
   ];
 
   // This generates the documentation for this schema, in Markdown

@@ -375,15 +375,20 @@ define([
     markerView.showMarkers(data.initiatives);
 
     //zoom and pan
+
     if(data.initiatives.length > 0){
+      var options = {
+        maxZoom: config.getMaxZoomOnSearch()
+      }
+      if(options.maxZoom == 0)
+        options = {};
+
       const latlng = sse_initiative.latLngBounds(data.initiatives)
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
           bounds: latlng,
-          options: {
-            maxZoom: 5
-          }
+          options : options
         }
       });
     }
@@ -428,7 +433,7 @@ define([
     //   data: {
     //     bounds: latlng,
     //     options: {
-    //       maxZoom: 5
+    //       maxZoom: config.getMaxZoomOnGroup()
     //     }
     //   }
     // });

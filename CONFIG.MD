@@ -206,3 +206,39 @@ A list of fields that are looked at when searching name,uri,within,lat,lng,www,r
 
 
 
+### `maxZoomOnGroup`
+
+- *type:* `{number}` 
+- *in string context:* parsed as-is
+- *default:* `9`
+- *settable?:* no
+
+The maximum zoom in that can happen when selecting any perticular group in directory.
+
+
+
+
+### `maxZoomOnOne`
+
+- *type:* `{number}` 
+- *in string context:* parsed as-is
+- *default:* `3`
+- *settable?:* no
+
+The maximum zoom in that can happen when selecting an initiative
+
+
+
+
+### `maxZoomOnSearch`
+
+- *type:* `{number}` 
+- *in string context:* parsed as-is
+- *default:* `5`
+- *settable?:* no
+
+The maximum zoom in that can happen when searching any perticular group.
+
+
+
+

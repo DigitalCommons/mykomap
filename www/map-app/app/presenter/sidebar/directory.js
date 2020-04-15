@@ -93,11 +93,27 @@ define([
   };
 
   proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function(initiatives) {
+    // eventbus.publish({
+    //   topic: "Map.fitBounds",
+    //   data: {
+    //     bounds: boundsс,
+    //     options: {
+    //       maxZoom: 9
+    //     }
+    //   }
+    // }); //should be doing this
+
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options = {};
+    let options = {maxZoom: config.getMaxZoomOnGroup()};
     if (initiatives.length == 1)
-      options = {maxZoom: 5};
+      options = {maxZoom: config.getMaxZoomOnOne()};
+    
+    if(options.maxZoom == 0)
+      options = {};
+    
+    console.log(options);
+    
 
     if (initiatives.length > 0) {
       eventbus.publish({
@@ -107,7 +123,7 @@ define([
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
           ]
-          //,options
+          ,options
         }
       });
       

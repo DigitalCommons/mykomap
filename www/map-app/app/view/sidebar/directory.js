@@ -151,17 +151,7 @@ define([
       selectionKey
     );
     
-    eventbus.publish({
-      topic: "Map.addFilter",
-      data: {
-        initiatives: initiatives,
-        filterName: (directoryField+selectionKey),
-        verboseName: selectionKey
-      }
-    });
 
-
-    const boundsс = presenter.latLngBounds(initiatives);
     //deselect all
     that.presenter.clearLatestSelection();
 
@@ -171,17 +161,8 @@ define([
     //   });
     // }
 
-    eventbus.publish({
-      topic: "Map.fitBounds",
-      data: {
-        bounds: boundsс,
-        options: {
-          paddingBottomRight: [0, 0],
-          maxZoom: 9
-        }
-      }
-    });
-
+    that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
+  
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     d3.select(".w3-btn").attr("title", "Hide directory");
@@ -212,6 +193,16 @@ define([
       // If values doesn't exist then the values are coming from the data directly
       title = selectionKey;
     }
+
+    eventbus.publish({
+      topic: "Map.addFilter",
+      data: {
+        initiatives: initiatives,
+        filterName: (directoryField+selectionKey),
+        verboseName: title
+      }
+    });
+
 
 
 
@@ -389,24 +380,13 @@ define([
       .append("h2")
       .classed("sea-field", true)
       .text(title)
-      .on("click", function () {
-        const bounds = presenter.latLngBounds(initiatives);
-   
+      .on("click", function () {   
         // if (window.innerWidth <= 800) {
         //   eventbus.publish({
         //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
         //   });
         // }
-        eventbus.publish({
-          topic: "Map.fitBounds",
-          data: {
-          bounds: bounds,
-          options: {
-            paddingBottomRight: [0, 0],
-            maxZoom: 9
-          }
-          }
-        });
+        that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
       });
     list = selection.append("ul").classed("sea-initiative-list", true);
     for (let initiative of initiatives) {

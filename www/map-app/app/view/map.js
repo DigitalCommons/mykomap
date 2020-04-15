@@ -200,6 +200,9 @@ define([
     return markerView.getClusterGroup();
   };
 
+  // proto.getZoom = function (){
+  //   return this
+  // }
   proto.setView = function(data) {
     let latlng = data,
       zoom = this.map.getZoom(),
