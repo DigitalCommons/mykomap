@@ -77,6 +77,8 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
         '<div class="sea-initiative-links">' +
         "{initiative.www}" +
         "{initiative.email}" +
+        "{initiative.facebook}" +
+        "{initiative.twitter}" +
         "</div>" +
         "</div>";
     // All initiatives should have a name
@@ -155,6 +157,22 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
         '<a class="fa fa-at" href="mailto:' + initiative.email + '"></a>'
       );
     } else popupHTML = popupHTML.replace("{initiative.email}", "");
+
+    // not all have twitter
+    if (initiative.twitter) {
+      popupHTML = popupHTML.replace(
+        "{initiative.twitter}",
+        '<a class="fab fa-twitter" href="https://twitter.com/' + initiative.twitter + '"></a>'
+      );
+    } else popupHTML = popupHTML.replace("{initiative.twitter}", "");
+
+    // not all have a facebook
+    if (initiative.facebook) {
+      popupHTML = popupHTML.replace(
+        "{initiative.facebook}",
+        '<a class="fab fa-facebook" href="https://facebook.com/' + initiative.facebook + '"></a>'
+      );
+    } else popupHTML = popupHTML.replace("{initiative.facebook}", "");
 
     // Not all orgs have a phone number
     popupHTML = popupHTML.replace(
