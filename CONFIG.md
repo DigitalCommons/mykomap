@@ -242,3 +242,15 @@ The maximum zoom in that can happen when searching any particular group, if 0 do
 
 
 
+### `logo`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* `undefined`
+- *settable?:* yes
+
+If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>
+
+
+
+

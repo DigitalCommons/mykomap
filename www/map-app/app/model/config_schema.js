@@ -128,7 +128,8 @@ define([], function() {
     showDatasetsPanel,
     maxZoomOnGroup,
     maxZoomOnSearch,
-    maxZoomOnOne
+    maxZoomOnOne,
+    logo
   } = {}) => [
     { id: 'aboutHtml',
       descr: `Raw HTML definition of the map's "about" text.`,
@@ -258,7 +259,14 @@ define([], function() {
       getter: 'getMaxZoomOnSearch',
       setter: 'setMaxZoomOnSearch',
       type: types.int,
+    },
+    { id: 'logo',
+      descr: `If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>`,
+      init: () => logo,
+      setter: 'setLogo',
+      type: types.string,
     }
+
     
   ];
 

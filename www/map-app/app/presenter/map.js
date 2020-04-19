@@ -394,7 +394,9 @@ define([
     }
   };
 
-
+  proto.getLogo = function() {
+    return config.logo();
+  };
 
 
     //this can get called multiple times make sure it doesn't crash

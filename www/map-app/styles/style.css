@@ -769,3 +769,17 @@ div.leaflet-popup-content {
     display: none;
   }
 }
+
+#company-logo{
+  width: 200px;
+  height: 100px;
+  position:relative;
+  left:25%;
+  bottom:10px;
+}
+
+#logo-holder{
+  display:inline;
+  pointer-events: none;
+  user-select: none;
+}

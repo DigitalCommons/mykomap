@@ -152,6 +152,19 @@ define([
     leaflet.Map.include(SpinMapMixin);
     leaflet.Map.addInitHook(SpinMapInitHook);
 
+    var logo = this.presenter.getLogo();
+    if(logo){
+      var a =  d3.select(".leaflet-bottom.leaflet-right").append("div").attr("id","logo-holder");
+      a.append("img")
+      .attr("src",logo)
+      .attr("alt","company logo")
+      .attr("id","company-logo");
+
+      var zoomInOutZoom = document.querySelectorAll(".leaflet-control-zoom.leaflet-bar.leaflet-control")[0];
+      document.getElementById("logo-holder").appendChild(zoomInOutZoom); 
+      d3.select("#logo-holder").lower();
+    }
+
 
 
     markerView.setSelectedClusterGroup(this.selectedClusterGroup);
