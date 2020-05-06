@@ -309,9 +309,9 @@ So if your app deploys `sea-map` code like the example, you can append
 `configuration/config.json` to the default map URL to find 
 `config.json` and the other resources. Like this:
 
-- https://oxford.solidarityeconomy.coop/configuration/about.html
-- https://oxford.solidarityeconomy.coop/configuration/version.json
-- https://oxford.solidarityeconomy.coop/configuration/oxford/query.rq
-- https://oxford.solidarityeconomy.coop/configuration/oxford/endpoint.txt
-- https://oxford.solidarityeconomy.coop/configuration/oxford/default-graph-uri.txt
+- https://dotcoop.solidarityeconomy.coop/configuration/about.html
+- https://dotcoop.solidarityeconomy.coop/configuration/version.json
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/query.rq
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/endpoint.txt
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/default-graph-uri.txt
 
