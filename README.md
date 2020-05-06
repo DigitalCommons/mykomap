@@ -285,10 +285,10 @@ you will need to know the names of these in advance.
 
 Strictly, the location of these resources is defined 
 relative to the `map-app.js` source code. So using 
-`oxford.solidarityeconomy.coop` as an example deployment, 
+`dotcoop.solidarityeconomy.coop` as an example deployment, 
 if the `map-app.js` file is published here:
 
-https://oxford.solidarityeconomy.coop/map-app/map-app.js
+https://dotcoop.solidarityeconomy.coop/map-app/map-app.js
 
 ...Then the configuration is published in an adjacent directory 
 `configuration`. (Note that the word "configuration" is not 
@@ -296,14 +296,7 @@ abbreviated here, as it is in the source code directory above.)
 
 Specifically, `config.json` will be here:
 
-https://oxford.solidarityeconomy.coop/configuration/config.json
-
-*Aside: this particular example does not work currently as the deployment
-predates this `sea-map` package. In this case the location is here:
-https://oxford.solidarityeconomy.coop/map-app/configuration/config.json
-And the development site does work:
-https://dev.oxford.solidarityeconomy.coop/configuration/config.json*
-
+https://dotcoop.solidarityeconomy.coop/configuration/config.json
 
 So if your app deploys `sea-map` code like the example, you can append 
 `configuration/config.json` to the default map URL to find 
@@ -315,3 +308,15 @@ So if your app deploys `sea-map` code like the example, you can append
 - https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/endpoint.txt
 - https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/default-graph-uri.txt
 
+### Pre `sea-map` versions of the map app
+
+Note that before the map-app was converted into this NPM package, 
+the configuration was located in a slightly different path relative to
+`map-app/map-app.js`. For example, at the time of writing the Oxford
+map predates `sea-map` and the configuration can be found here (and the 
+other files in their respective relative locations):
+
+https://oxford.solidarityeconomy.coop/map-app/configuration/config.json
+
+The location was changed to permit separation of the source code from
+the configuration files.
