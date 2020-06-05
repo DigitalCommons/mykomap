@@ -125,6 +125,8 @@ define([
       this.map.on(k[i], eventHandlers[k[i]]);
     }
 
+
+
     leaflet
       .tileLayer(osmUrl, { attribution: osmAttrib, maxZoom: 18 })
       .addTo(this.map);
@@ -164,8 +166,6 @@ define([
       document.getElementById("logo-holder").appendChild(zoomInOutZoom); 
       d3.select("#logo-holder").lower();
     }
-
-
 
     markerView.setSelectedClusterGroup(this.selectedClusterGroup);
     markerView.setUnselectedClusterGroup(this.unselectedClusterGroup);

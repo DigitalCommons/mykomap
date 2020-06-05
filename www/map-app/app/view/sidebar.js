@@ -163,7 +163,7 @@ define([
   // proto.hideSidebarIfItTakesWholeScreen = function() {
   //   // @todo - improve this test -
   //   // it is not really testing the predicate suggested by the name iof the function.
-  //   if (window.innerWidth <= 600) {
+  //   if (window.outerWidth <= 600) {
   //     d3.select("#map-app-sidebar").classed("sea-sidebar-open", false);
   //     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
   //   }
@@ -203,7 +203,7 @@ define([
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     //that.changeSidebar("directory");
-    if(document.getElementById("dir-filter") && window.innerWidth >= 1080)
+    if(document.getElementById("dir-filter") && window.outerWidth >= 1080)
       document.getElementById("dir-filter").focus();
 
 

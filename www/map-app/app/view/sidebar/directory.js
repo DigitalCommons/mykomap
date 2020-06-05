@@ -37,7 +37,7 @@ define([
       });
 
     d3.select(".sea-main-sidebar").on("click", function () {
-      if(document.getElementById("dir-filter") && window.innerWidth >= 1080){
+      if(document.getElementById("dir-filter") && window.outerWidth >= 1080){
         document.getElementById("dir-filter").focus();
       }
 
@@ -155,7 +155,7 @@ define([
     //deselect all
     that.presenter.clearLatestSelection();
 
-    // if (window.innerWidth <= 800) {
+    // if (window.outerWidth <= 800) {
     //   eventbus.publish({
     //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
     //   });
@@ -381,7 +381,7 @@ define([
       .classed("sea-field", true)
       .text(title)
       .on("click", function () {   
-        // if (window.innerWidth <= 800) {
+        // if (window.outerWidth <= 800) {
         //   eventbus.publish({
         //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
         //   });
@@ -470,7 +470,8 @@ define([
         )
       );
     initiativeSidebar.classed("sea-initiative-sidebar-open", true);
-    if (document.getElementById("map-app-leaflet-map").clientWidth < 800)
+   // if (document.getElementById("map-app-leaflet-map").clientWidth < 800)
+   if (window.outerWidth < 800)
       eventbus.publish({
         topic: "Sidebar.showSidebar"
       });

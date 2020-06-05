@@ -69,6 +69,7 @@ define(["app/eventbus", "model/config", "presenter"], function(
   proto.contentStack = new Stack();
 
   function updateSidebarWidth(data) {
+    console.log("i am updating sidebar width");
     const directoryBounds = data.directoryBounds,
       initiativeListBounds = data.initiativeListBounds;
     this.sidebarWidth =

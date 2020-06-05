@@ -177,7 +177,7 @@ define([
       topic: "Directory.InitiativeClicked",
       data: initiative
     });
-    if (window.innerWidth <= 800) {
+    if (window.outerWidth <= 800) {
       eventbus.publish({
         topic: "Directory.InitiativeClickedSidebar.hideSidebar",
         data: {initiative: initiative}

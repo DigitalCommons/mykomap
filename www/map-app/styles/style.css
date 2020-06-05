@@ -659,7 +659,7 @@ div.leaflet-popup-content {
   margin-top: 0.7rem;
 }
 
-@media (max-width: 1080px) {
+@media (max-device-width: 1080px) {
   .sea-initiatives-list-sidebar {
     transform: translateX(-100%);
     z-index: 100;
@@ -674,7 +674,7 @@ div.leaflet-popup-content {
   }
 }
 
-@media (max-width: 800px) {
+@media (max-device-width: 800px) {
   .sea-initiative-popup {
     display: none;
   }
@@ -759,7 +759,7 @@ div.leaflet-popup-content {
   display: none;
 }
 
-@media (max-width: 1080px) {
+@media (max-device-width: 1080px) {
   .initiative-list-sidebar-btn-wrapper {
     display: flex;
     justify-content: flex-start;

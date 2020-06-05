@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <style>
+      #holder {
+        height: 100%;
+        width: 100%;
+        left: 0;
+        top: 0;
+        overflow: hidden;
+        position: fixed;
+      }
+      iframe {
+position: relative; }
+    </style>
+
+    <script type="application/javascript">
+      function resize() {
+        var frame = document.getElementById("myIframe");
+        //frame.style.width = window.innerWidth + "px";
+        //frame.style.height = window.innerHeight + "px";
+        // frame.height = frame.contentWindow.window.body.scrollHeight + "px";
+        frame.style.width  = frame.contentWindow.document.body.scrollWidth;
+        frame.style.height = frame.contentWindow.document.body.scrollHeight;
+
+      }
+    </script>
+  </head>
+
+  <body onresize="resize()" onload="resize()">
+    <div id="holder">
+      <iframe id="myIframe" src="http://127.0.0.1/www/www/">
+        Your browser doesn't support iframes
+      </iframe>
+    </div>
+  </body>
+</html>

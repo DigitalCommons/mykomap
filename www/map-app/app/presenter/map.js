@@ -76,7 +76,8 @@ define([
         console.log("Map loaded");
       },
       resize: function(e) {
-        console.log("Map resize", window.innerWidth);
+        window.seaMap.invalidateSize();
+        console.log("Map resize", window.outerWidth);
       }
     };
   };
