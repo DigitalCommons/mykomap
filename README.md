@@ -30,7 +30,7 @@ Given these, basic usage of a consuming NPM package therefore would
 look like this:
 
     npm install         # Download the dependencies
-	npm run build       # Build and minify the source into builds/out
+    npm run build       # Build and minify the source into builds/out
     npm run def         # Launch a development web server on http://localhost:8080
 
 # CONSUMING PACKAGE REQUIREMENTS
@@ -39,7 +39,7 @@ These need to have a configuration directory containing:
 
  - `about.html` - containing mark-up which will be displayed on the about tab in the sidebar
  - `config.json` - configuration parameters, see beloow
- - *<dataset>*/ - a directory for each dataset named in the config, containing parameters for the SPARQL query to send to Virtuoso (these will be url-encoded):
+ - *&lt;dataset&gt;*/ - a directory for each dataset named in the config, containing parameters for the SPARQL query to send to Virtuoso (these will be url-encoded):
    - `query.rq` - the `query` parameter to pass
    - `default-graph-uri.txt` - the `default-graph-uri` parameter to pass
    - `endpoint.txt` - the base URL to the Virtuoso server
@@ -255,3 +255,68 @@ development web-server, publishing a project consuming sea-map in
 Developer convenience. Regenerates the documentation for `config.json`
 in `CONFIG.md`. Developers should run this when the schema definitions
 in `config_schema.js` are changed.
+
+# MISCELLANEA
+
+Information which doesn't quite fit in anywhere above.
+
+## Tips for identifying deployed sea-map parameters
+
+Sometimes you might want to see just what version a sea-map deployment 
+is, which datasets it is using, or what the SPARQL query is. 
+
+Even if this isn't possible to infer from the map, the sea-map
+configuration resources (described above) can be inspected in a browser.
+
+The following files will be present, at least, and possibly more 
+with `.rq` suffixes, defining other queries. 
+
+ - `about.html`
+ - `config.json`
+ - *&lt;dataset&gt;*/
+   - `query.rq`
+   - `default-graph-uri.txt`
+   - `endpoint.txt`
+
+The name of the folder *&lt;dataset&gt;* is up to you,
+its contents may include additional files, and you may have
+more than one folder. If the web server does not show file indexes,
+you will need to know the names of these in advance.
+
+Strictly, the location of these resources is defined 
+relative to the `map-app.js` source code. So using 
+`dotcoop.solidarityeconomy.coop` as an example deployment, 
+if the `map-app.js` file is published here:
+
+https://dotcoop.solidarityeconomy.coop/map-app/map-app.js
+
+...Then the configuration is published in an adjacent directory 
+`configuration`. (Note that the word "configuration" is not 
+abbreviated here, as it is in the source code directory above.)
+
+Specifically, `config.json` will be here:
+
+https://dotcoop.solidarityeconomy.coop/configuration/config.json
+
+So if your app deploys `sea-map` code like the example, you can append 
+`configuration/config.json` to the default map URL to find 
+`config.json` and the other resources. Like this:
+
+- https://dotcoop.solidarityeconomy.coop/configuration/about.html
+- https://dotcoop.solidarityeconomy.coop/configuration/version.json
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/query.rq
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/endpoint.txt
+- https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/default-graph-uri.txt
+
+### Pre `sea-map` versions of the map app
+
+Note that before the map-app was converted into this NPM package, 
+the configuration was located in a slightly different path relative to
+`map-app/map-app.js`. For example, at the time of writing the Oxford
+map predates `sea-map` and the configuration can be found here (and the 
+other files in their respective relative locations):
+
+https://oxford.solidarityeconomy.coop/map-app/configuration/config.json
+
+The location was changed to permit separation of the source code from
+the configuration files.
