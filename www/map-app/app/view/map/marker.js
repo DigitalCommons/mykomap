@@ -324,6 +324,7 @@ define([
     return this.unselectedClusterGroup;
   }
 
+
   var pub = {
     createMarker: createMarker,
     setSelectedClusterGroup: setSelectedClusterGroup,

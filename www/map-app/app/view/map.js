@@ -128,7 +128,7 @@ define([
 
 
     leaflet
-      .tileLayer(osmUrl, { attribution: osmAttrib, maxZoom: 18 })
+      .tileLayer(osmUrl, { attribution: osmAttrib, maxZoom: 17 })
       .addTo(this.map);
 
     let options = {},
@@ -212,6 +212,13 @@ define([
   proto.getClusterGroup = function() {
     return markerView.getClusterGroup();
   };
+  //fix for firefox, this triggers tiles to re-render
+  proto.refresh = function(){
+    //this.map.invalidateSize();
+    console.log("refresh new");
+    this.map.setView(this.map.getBounds().getCenter(), this.map.getZoom()-1, { animate: false });
+
+  }
 
   // proto.getZoom = function (){
   //   return this
@@ -243,6 +250,7 @@ define([
     this.map.flyTo(latlng, this.map.getZoom(), options);
   };
 
+  let flag = false;
   proto.flyToBounds = function(data) {
     let bounds = data,
       options = { duration: 0.25, maxZoom: this.map.getZoom() };
@@ -251,6 +259,23 @@ define([
       options = Object.assign(options, data.options);
     }
     this.map.flyToBounds(bounds, options);
+
+
+    //should check for firefox only? TODO
+    let that = this;
+    this.map.once('moveend', function() {
+      console.log("refresh new");
+      if(!that.flag){
+        that.flag = true;
+        //we refresh the screen once
+        //to make sure we do not get recurrsion due to the setview coming inside the same moveend event
+        //we use a flag
+        this.setView(this.getBounds().getCenter(), this.getZoom()-1, { animate: false });
+        //we release the flag after the refresh is made
+        this.once('moveend',function(){that.flag = false;});
+      }
+    });
+
   };
 
   proto.zoomAndPanTo = function(latLng) {

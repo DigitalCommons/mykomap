@@ -137,7 +137,6 @@ define([
   proto.onMarkersNeedToShowLatestSelection = function(data) {
     console.log(data)
     const that = this;
-    
     previouslySelected.forEach(function(e) {
       that.view.setUnselected(e);
     });
@@ -399,6 +398,13 @@ define([
     return config.logo();
   };
 
+  proto.refresh = function(){
+    eventbus.publish({
+      topic: "Map.refresh",
+      data: ""
+    });
+  }
+
 
     //this can get called multiple times make sure it doesn't crash
   proto.removeSearchFilter = function() {
@@ -548,6 +554,12 @@ define([
       topic: "Map.addFilter", //change this
       callback: function(data) {
         p.addFilter(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.refresh", //change this
+      callback: function(data) {
+        p.view.refresh();
       }
     });
 
