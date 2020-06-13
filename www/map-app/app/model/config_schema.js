@@ -32,7 +32,6 @@ define([], function() {
   const types = {
     int: {
       name: '{number}',
-      // No-op
       parseString: (val) => Number(val),
     },
     boolean: {
