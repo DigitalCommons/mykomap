@@ -1,0 +1,11 @@
+{
+  "namedDatasets": ["test-dataset"],
+  "htmlTitle": "Test Title",
+  "defaultLatLng": ["55.55", "66.66" ],
+  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "doesDirectoryHaveColours": true,
+  "disableClusteringAtZoom": 10,
+  "maxZoomOnGroup":12,
+  "maxZoomOnOne": 14,
+  "maxZoomOnSearch": 12
+}

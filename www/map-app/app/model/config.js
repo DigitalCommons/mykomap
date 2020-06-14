@@ -22,7 +22,7 @@ define([
   const methods = {}; // Exported methods
   const data = {}; // The config data, indexed by id
 
-  const inits = Object.assign({}, {about_html}, config_json, version_json);
+  const inits = Object.assign({}, {aboutHtml: about_html}, config_json, version_json);
   // (Avoiding ES2018 spread syntax for now)
   
   const configSchema = config_schema(inits);
@@ -94,16 +94,7 @@ define([
 
     // Initialise the config value
     if (def.init) {
-      //TODO: FIX THese BUGs
-      
-      if(def.id == "defaultLatLng")
-        def.init()
-      
-      if(def.id == "aboutHtml")
-        data[def.id] = about_html;
-      else
-        data[def.id] = def.init();
-
+      data[def.id] = def.init();
     }
   });
 
