@@ -22,7 +22,7 @@ define([
   const methods = {}; // Exported methods
   const data = {}; // The config data, indexed by id
 
-  const inits = Object.assign({}, {about_html}, config_json, version_json);
+  const inits = Object.assign({}, {aboutHtml: about_html}, config_json, version_json);
   // (Avoiding ES2018 spread syntax for now)
   
   const configSchema = config_schema(inits);
