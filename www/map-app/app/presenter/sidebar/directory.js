@@ -119,6 +119,7 @@ define([
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
+          initiatives: initiatives,
           bounds: [
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
@@ -160,7 +161,7 @@ define([
       this.notifyMapNeedsToNeedsToBeZoomedAndPanned([initiative]);
       // Update selection
       eventbus.publish({
-        topic: "Markers.needToShowLatestSelection",
+        topic: "Markers.needToShowLatestSelection", //here
         data: {
           selected: [initiative]
         }

@@ -150,6 +150,7 @@ define([
     });
     try {
       initiative.marker.__parent.unspiderfy();
+      console.log("attemp");
     } catch (e) { }
     mapObj.selectedInitiative = undefined;
     mapObj.off("zoomend", selectInitiative);
@@ -170,14 +171,25 @@ define([
   };
   proto.setSelected = function (initiative) {
     mapObj.selectedInitiative = initiative;
-    mapObj.on("zoomend", selectInitiative);
+    //displays marker on all zoom events
+    mapObj.on("zoomend", selectInitiative);  
+
+    /* tip: this can be used to uncluster a specific marker
+    unselectedClusterGroup.removeLayer(initiative.marker);
+    hiddenClusterGroup.addLayer(initiative.marker);
+     */
+    //what does this do? 
     unselectedClusterGroup.once("clusterclick", e => {
       this.setUnselected(initiative);
+      //can handle error here
     });
   };
 
   function selectInitiative({ target }) {
+    //get the initiative selected (specified in setSelected)
     let initiative = target.selectedInitiative;
+    
+    //change the color of the marker to a slightly darker shade
     if (!initiative.nongeo) {
       initiative.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
@@ -192,9 +204,11 @@ define([
         })
       );
     }
+
     if (initiative.nongeo) {
       initiative.marker.openPopup();
     }
+    
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     else if (unselectedClusterGroup._inZoomAnimation) {
       unselectedClusterGroup.on("animationend", e => {
@@ -203,7 +217,10 @@ define([
           initiative.marker
         ) {
           if (initiative.marker.__parent) //if it has a parent
+          {
+            console.log("error noanim");
             initiative.marker.__parent.spiderfy();
+          }
         }
         initiative.marker.openPopup();
         unselectedClusterGroup.off("animationend");
@@ -215,6 +232,7 @@ define([
         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
         initiative.marker
       ) {
+          console.log("error noanim");
           initiative.marker.__parent.spiderfy();
       }
       initiative.marker.openPopup();

@@ -387,6 +387,7 @@ define([
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
+          initiatives: data.initiatives,
           bounds: latlng,
           options : options
         }
@@ -440,6 +441,7 @@ define([
     // eventbus.publish({
     //   topic: "Map.needsToBeZoomedAndPanned",
     //   data: {
+    //   initiatives: hidden,
     //     bounds: latlng,
     //     options: {
     //       maxZoom: config.getMaxZoomOnGroup()

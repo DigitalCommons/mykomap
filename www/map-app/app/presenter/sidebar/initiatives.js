@@ -65,6 +65,7 @@ define([
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
+          initiatives: initiatives,
           bounds: [
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
@@ -88,6 +89,7 @@ define([
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
+          initiatives: initiatives,
           bounds: [
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]

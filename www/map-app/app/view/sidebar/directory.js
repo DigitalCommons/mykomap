@@ -324,6 +324,7 @@ define([
         // eventbus.publish({
         //   topic: "Map.needsToBeZoomedAndPanned",
         //   data: {
+        //    initiatives: initiatives?,
         //     bounds: latlng,
         //     options: {
         //       maxZoom: 5
@@ -366,6 +367,7 @@ define([
         // eventbus.publish({
         //   topic: "Map.needsToBeZoomedAndPanned",
         //   data: {
+          //  initiatives:initaitives?
         //     bounds: latlng,
         //     options: {
         //       maxZoom: 5

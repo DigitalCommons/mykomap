@@ -257,11 +257,14 @@ define([
     if (!Array.isArray(data)) {
       bounds = data.bounds;
       options = Object.assign(options, data.options);
+      //only execute zoom to bounds if initiatives in data.initiatives are not currently vissible
+      console.log("herehere,",options);
     }
     this.map.flyToBounds(bounds, options);
 
 
     //should check for firefox only? TODO
+    /*
     let that = this;
     this.map.once('moveend', function() {
       console.log("refresh new");
@@ -274,7 +277,7 @@ define([
         //we release the flag after the refresh is made
         this.once('moveend',function(){that.flag = false;});
       }
-    });
+    });*/
 
   };
 
