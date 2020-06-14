@@ -94,16 +94,7 @@ define([
 
     // Initialise the config value
     if (def.init) {
-      //TODO: FIX THese BUGs
-      
-      if(def.id == "defaultLatLng")
-        def.init()
-      
-      if(def.id == "aboutHtml")
-        data[def.id] = about_html;
-      else
-        data[def.id] = def.init();
-
+      data[def.id] = def.init();
     }
   });
 
