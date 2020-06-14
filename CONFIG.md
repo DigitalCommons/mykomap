@@ -184,12 +184,12 @@ True if the directory should feature coloured entries
 
 ### `disableClusteringAtZoom`
 
-- *type:* `{boolean}` 
+- *type:* `{number}` 
 - *in string context:* parsed as-is
 - *default:* `undefined`
 - *settable?:* yes
 
-Defines the zoom level to stop clustering at (an integer; or false for off)
+Defines the zoom level above which to cluster pins; passed to Leaflet.markercluster plugin. Zero effectively disables clustering, as this is a fully zoomed-out, global map; most maps zoom in to level 18. If omitted, clustering is always off.  See: https://leaflet.github.io/Leaflet.markercluster/#other-options and https://leafletjs.com/examples/zoom-levels/
 
 
 
