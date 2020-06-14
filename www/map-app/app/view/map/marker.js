@@ -182,6 +182,7 @@ define([
     unselectedClusterGroup.once("clusterclick", e => {
       this.setUnselected(initiative);
       //can handle error here
+
     });
   };
 
@@ -232,11 +233,14 @@ define([
         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
         initiative.marker
       ) {
+
           console.log("error noanim");
           initiative.marker.__parent.spiderfy();
       }
       initiative.marker.openPopup();
     }
+    mapObj.off("zoomend", selectInitiative);  
+
   }
 
   proto.showTooltip = function (initiative) {

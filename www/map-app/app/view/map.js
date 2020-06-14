@@ -264,20 +264,20 @@ define([
 
 
     //should check for firefox only? TODO
-    /*
-    let that = this;
-    this.map.once('moveend', function() {
-      console.log("refresh new");
-      if(!that.flag){
-        that.flag = true;
-        //we refresh the screen once
-        //to make sure we do not get recurrsion due to the setview coming inside the same moveend event
-        //we use a flag
-        this.setView(this.getBounds().getCenter(), this.getZoom()-1, { animate: false });
-        //we release the flag after the refresh is made
-        this.once('moveend',function(){that.flag = false;});
-      }
-    });*/
+    
+    // let that = this;
+    // this.map.once('moveend', function() {
+    //   console.log("refresh new");
+    //   if(!that.flag){
+    //     that.flag = true;
+    //     //we refresh the screen once
+    //     //to make sure we do not get recurrsion due to the setview coming inside the same moveend event
+    //     //we use a flag
+    //     this.setView(this.getBounds().getCenter(), this.getZoom()-1, { animate: false });
+    //     //we release the flag after the refresh is made
+    //     this.once('moveend',function(){that.flag = false;});
+    //   }
+    // });
 
   };
 
