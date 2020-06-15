@@ -242,12 +242,12 @@ define([
     }
     // mapObj.off("zoomend", selectInitiative);
     mapObj.off("zoomend", selectInitiative); 
-      initiative.marker.__parent.fire("click");
+    initiative.marker.__parent.fire("touch");
     mapObj.counttest = mapObj.counttest-1;
     console.log(mapObj.counttest);
     if(mapObj.counttest<0){
       mapObj.off("zoomend", selectInitiative); 
-      initiative.marker.__parent.fire("click");
+      initiative.marker.__parent.fire("touch");
 
     }
 
