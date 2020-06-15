@@ -171,6 +171,7 @@ define([
   };
   proto.setSelected = function (initiative) {
     mapObj.selectedInitiative = initiative;
+    mapObj.counttest = 1;
     //displays marker on all zoom events
     mapObj.on("zoomend", selectInitiative);  
 
@@ -239,7 +240,16 @@ define([
       }
       initiative.marker.openPopup();
     }
-    mapObj.off("zoomend", selectInitiative);  
+    // mapObj.off("zoomend", selectInitiative);
+    mapObj.off("zoomend", selectInitiative); 
+      initiative.marker.__parent.fire("click");
+    mapObj.counttest = mapObj.counttest-1;
+    console.log(mapObj.counttest);
+    if(mapObj.counttest<0){
+      mapObj.off("zoomend", selectInitiative); 
+      initiative.marker.__parent.fire("click");
+
+    }
 
   }
 

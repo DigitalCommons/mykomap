@@ -147,8 +147,8 @@ define([
     this.contentStack.append(new SearchResults(data.results, data.text,map.getFiltersVerbose()));
 
     if(data.results.length == 1){
-      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
+      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
     }
     else if (data.results.length == 0){
       //do nothing on failed search
@@ -195,9 +195,9 @@ define([
     //this.contentStack.append(new StackItem([initiative]));
     //console.log(this.contentStack.current());
     
-    this.notifyMarkersNeedToShowNewSelection(lastContent,[initiative]);
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
-    
+    this.notifyMarkersNeedToShowNewSelection(lastContent,[initiative]);
+
     this.view.refresh();
     eventbus.publish({
       topic: "Initiatives.searchedInitiativeClicked",
