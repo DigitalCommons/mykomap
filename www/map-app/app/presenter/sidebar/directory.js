@@ -112,7 +112,7 @@ define([
     if(options.maxZoom == 0)
       options = {};
     
-    console.log(options);
+    console.log(initiatives);
     
 
     if (initiatives.length > 0) {
@@ -129,6 +129,45 @@ define([
       });
       
       //rm for now as it isn't working well enough
+    }
+  };
+
+
+  proto.notifyMapNeedsToNeedsToSelectInitiative = function(initiatives) {
+    // eventbus.publish({
+    //   topic: "Map.fitBounds",
+    //   data: {
+    //     bounds: boundsс,
+    //     options: {
+    //       maxZoom: 9
+    //     }
+    //   }
+    // }); //should be doing this
+
+    const lats = initiatives.map(x => x.lat);
+    const lngs = initiatives.map(x => x.lng);
+    let options = {maxZoom: config.getMaxZoomOnGroup()};
+    if (initiatives.length == 1)
+      options = {maxZoom: config.getMaxZoomOnOne()};
+    
+    if(options.maxZoom == 0)
+      options = {};
+    
+    console.log(options);
+    
+
+    if (initiatives.length > 0) {
+      eventbus.publish({
+        topic: "Map.selectAndZoomOnInitiative",
+        data: {
+          initiatives: initiatives,
+          bounds: [
+            [arrayMin(lats), arrayMin(lngs)],
+            [arrayMax(lats), arrayMax(lngs)]
+          ]
+          ,options
+        }
+      });
     }
   };
 
@@ -158,14 +197,8 @@ define([
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
-      this.notifyMapNeedsToNeedsToBeZoomedAndPanned([initiative]);
-      // Update selection
-      eventbus.publish({
-        topic: "Markers.needToShowLatestSelection", //here
-        data: {
-          selected: [initiative]
-        }
-      });
+      this.notifyMapNeedsToNeedsToSelectInitiative([initiative]);
+     
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,

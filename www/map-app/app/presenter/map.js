@@ -134,13 +134,17 @@ define([
   };
 
   let previouslySelected = [];
+  //this will manage markers pop-ing up and zooming
   proto.onMarkersNeedToShowLatestSelection = function(data) {
     console.log(data)
     const that = this;
     previouslySelected.forEach(function(e) {
       that.view.setUnselected(e);
     });
+
     previouslySelected = data.selected;
+    
+    //zoom in and then select 
     data.selected.forEach(function(e) {
       that.view.setSelected(e);
     });
@@ -406,6 +410,10 @@ define([
     });
   }
 
+  proto.selectAndZoomOnInitiative = function(data){
+    this.view.selectAndZoomOnInitiative(data);
+  }
+
 
     //this can get called multiple times make sure it doesn't crash
   proto.removeSearchFilter = function() {
@@ -547,6 +555,13 @@ define([
       topic: "Map.fitBounds",
       callback: function(data) {
         p.onBoundsRequested(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.selectAndZoomOnInitiative",
+      callback: function(data){
+        p.selectAndZoomOnInitiative(data);
       }
     });
 

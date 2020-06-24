@@ -87,7 +87,7 @@ define([
 
     if (initiatives.length > 0) {
       eventbus.publish({
-        topic: "Map.needsToBeZoomedAndPanned",
+        topic: "Map.selectAndZoomOnInitiative",
         data: {
           initiatives: initiatives,
           bounds: [
@@ -143,12 +143,10 @@ define([
     }
 
     //filter
-    const lastContent = this.contentStack.current();
     this.contentStack.append(new SearchResults(data.results, data.text,map.getFiltersVerbose()));
 
     if(data.results.length == 1){
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
-      this.notifyMarkersNeedToShowNewSelection(lastContent,data.results);
     }
     else if (data.results.length == 0){
       //do nothing on failed search
@@ -157,7 +155,7 @@ define([
     else{
       //this.notifyMarkersNeedToShowNewSelection(lastContent);
       //deselect all
-      this.notifyMapNeedsToNeedsToBeZoomedAndPanned();
+      this.notifyMapNeedsToNeedsToBeZoomedAndPanned(); //does not do anything?
     }
 
     //highlight markers on search results 
@@ -191,13 +189,10 @@ define([
     console.log(data)
 
     const initiative = data.initiative;
-    const lastContent = this.contentStack.current();
     //this.contentStack.append(new StackItem([initiative]));
     //console.log(this.contentStack.current());
     
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
-    this.notifyMarkersNeedToShowNewSelection(lastContent,[initiative]);
-
     this.view.refresh();
     eventbus.publish({
       topic: "Initiatives.searchedInitiativeClicked",
