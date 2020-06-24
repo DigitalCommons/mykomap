@@ -212,10 +212,11 @@ define([
     return markerView.getClusterGroup();
   };
   //fix for firefox, this triggers tiles to re-render
-  proto.refresh = function () {
-    //this.map.invalidateSize();
-    this.map.setView(this.map.getBounds().getCenter(), this.map.getZoom() - 1, { animate: false });
-    this.map.setView(this.map.getBounds().getCenter(), this.map.getZoom() + 1, { animate: false });
+  proto.refresh = function (centre = this.map.getBounds().getCenter()) {
+    
+    this.map.invalidateSize();
+    this.map.setView(centre, this.map.getZoom() - 1, { animate: false });
+    this.map.setView(centre, this.map.getZoom() + 1, { animate: false });
 
     console.log("refreshed")
   }
@@ -339,13 +340,17 @@ define([
     //make sure you pan to center initiative 
     this.map.panTo(centre,{animate: true});
 
-    //trigger refresh if the marker is outside of the screen
-    if(!this.isVisible(data.initiatives))
-      this.refresh();
+    //trigger refresh if the marker is outside of the screen or if it's clustered
+    if(!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives) ) 
+      this.refresh(centre);
+
+
 
     //zoom to layer if needed and unspiderify
     this.unselectedClusterGroup.zoomToShowLayer(data.initiatives[0].marker, (m) =>
                 this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives }));
+    this.unselectedClusterGroup.refreshClusters(data.initiatives[0].marker);
+
 
     //code for not destroying pop-up when zooming out
     //only execute zoom to bounds if initiatives in data.initiatives are not currently vissible
