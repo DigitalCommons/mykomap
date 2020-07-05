@@ -5,7 +5,7 @@ define([
   "view/sidebar/base",
   "presenter/sidebar/base",
   "view/map/marker"
-], function(
+], function (
   eventbus,
   config,
   sseInitiative,
@@ -18,19 +18,19 @@ define([
   function StackItem(initiatives) {
     this.initiatives = initiatives;
   }
-  StackItem.prototype.isSearchResults = function() {
+  StackItem.prototype.isSearchResults = function () {
     // TODO - surely there's a more direct way to decide if this is a SearchResults object?
     return this.hasOwnProperty("searchString");
   };
 
   function SearchResults(initiatives, searchString) {
-  	// isa StackItem
-  	StackItem.call(this, initiatives);
-  	this.searchString = searchString;
+    // isa StackItem
+    StackItem.call(this, initiatives);
+    this.searchString = searchString;
   }
   SearchResults.prototype = Object.create(StackItem.prototype);
 
-  function Presenter() {}
+  function Presenter() { }
 
   var proto = Object.create(sidebarPresenter.base.prototype);
 
@@ -49,35 +49,41 @@ define([
       AM90: "Housing",
       AM100: "Money & Finance",
       AM110: "Nature, Conservation & Environment",
-      AM120: "Reduce, Reuse, Repair & Recycle"
+      AM120: "Reduce, Reuse, Repair & Recycle",
+      AM130: "Agriculture",
+      AM140: "Industry",
+      AM150: "Utilities",
+      AM160: "Transport"
+
+
     }
   };
 
-  proto.currentItem = function() {
+  proto.currentItem = function () {
     return this.contentStack.current();
   };
-  proto.currentItemExists = function() {
+  proto.currentItemExists = function () {
     // returns true only if the contentStack is empty
     return typeof this.contentStack.current() !== "undefined";
   };
 
-  proto.getAllValuesByName = function(name) {
+  proto.getAllValuesByName = function (name) {
     return values[name];
   };
 
-  proto.getRegisteredValues = function() {
+  proto.getRegisteredValues = function () {
     return sseInitiative.getRegisteredValues();
   };
 
-  proto.notifyViewToBuildDirectory = function() {
+  proto.notifyViewToBuildDirectory = function () {
     this.view.refresh();
   };
 
-  proto.getInitiativesForFieldAndSelectionKey = function(field, key) {
+  proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
     return sseInitiative.getRegisteredValues()[field][key];
   };
 
-  proto.getInitiativeByUniqueId = function(uid) {
+  proto.getInitiativeByUniqueId = function (uid) {
     return sseInitiative.getInitiativeByUniqueId(uid);
   };
 
@@ -88,11 +94,11 @@ define([
     return array.reduce((a, b) => Math.min(a, b));
   }
 
-  proto.doesDirectoryHaveColours = function() {
+  proto.doesDirectoryHaveColours = function () {
     return config.doesDirectoryHaveColours();
   };
 
-  proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function(initiatives) {
+  proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function (initiatives) {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -105,15 +111,15 @@ define([
 
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options = {maxZoom: config.getMaxZoomOnGroup()};
+    let options = { maxZoom: config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
-      options = {maxZoom: config.getMaxZoomOnOne()};
-    
-    if(options.maxZoom == 0)
+      options = { maxZoom: config.getMaxZoomOnOne() };
+
+    if (options.maxZoom == 0)
       options = {};
-    
+
     console.log(initiatives);
-    
+
 
     if (initiatives.length > 0) {
       eventbus.publish({
@@ -124,16 +130,16 @@ define([
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
           ]
-          ,options
+          , options
         }
       });
-      
+
       //rm for now as it isn't working well enough
     }
   };
 
 
-  proto.notifyMapNeedsToNeedsToSelectInitiative = function(initiatives) {
+  proto.notifyMapNeedsToNeedsToSelectInitiative = function (initiatives) {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -146,15 +152,15 @@ define([
 
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options = {maxZoom: config.getMaxZoomOnGroup()};
+    let options = { maxZoom: config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
-      options = {maxZoom: config.getMaxZoomOnOne()};
-    
-    if(options.maxZoom == 0)
+      options = { maxZoom: config.getMaxZoomOnOne() };
+
+    if (options.maxZoom == 0)
       options = {};
-    
+
     console.log(options);
-    
+
 
     if (initiatives.length > 0) {
       eventbus.publish({
@@ -165,26 +171,26 @@ define([
             [arrayMin(lats), arrayMin(lngs)],
             [arrayMax(lats), arrayMax(lngs)]
           ]
-          ,options
+          , options
         }
       });
     }
   };
 
-  proto.onInitiativeMouseoverInSidebar = function(initiative) {
+  proto.onInitiativeMouseoverInSidebar = function (initiative) {
     eventbus.publish({
       topic: "Map.needToShowInitiativeTooltip",
       data: initiative
     });
   };
-  proto.onInitiativeMouseoutInSidebar = function(initiative) {
+  proto.onInitiativeMouseoutInSidebar = function (initiative) {
     eventbus.publish({
       topic: "Map.needToHideInitiativeTooltip",
       data: initiative
     });
   };
 
-  proto.clearLatestSelection = function() {
+  proto.clearLatestSelection = function () {
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
@@ -193,12 +199,12 @@ define([
     });
   }
 
-  proto.initiativeClicked = function(initiative) {
+  proto.initiativeClicked = function (initiative) {
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
       this.notifyMapNeedsToNeedsToSelectInitiative([initiative]);
-     
+
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,
@@ -216,7 +222,7 @@ define([
       });
       // Deselect the sidebar and hoghlight the iitiative in the directory
       this.view.deselectInitiativeSidebar();
-      
+
       //doesn't do much?
     }
   };
@@ -233,13 +239,13 @@ define([
     // Populate the directory with the registered activities
     eventbus.subscribe({
       topic: "Initiative.complete",
-      callback: function(data) {
+      callback: function (data) {
         p.notifyViewToBuildDirectory();
       }
     });
     eventbus.subscribe({
       topic: "Initiative.reset",
-      callback: function(data) {
+      callback: function (data) {
         // User has deselected
         // TODO: This probably shouldn\t be here
         eventbus.publish({
@@ -258,7 +264,7 @@ define([
     // eventbus.subscribe({topic: "Marker.SelectionSet", callback: function(data) { p.onMarkerSelectionSet(data); } });
     eventbus.subscribe({
       topic: "Directory.InitiativeClicked",
-      callback: function(data) {
+      callback: function (data) {
         p.initiativeClicked(data);
       }
     });

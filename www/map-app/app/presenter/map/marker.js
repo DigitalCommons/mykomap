@@ -1,4 +1,4 @@
-define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], function(
+define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], function (
   eventbus,
   presenter,
   config,
@@ -6,7 +6,7 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
 ) {
   "use strict";
 
-  function Presenter() {}
+  function Presenter() { }
 
   const orgStructures = {
     OS10: "Community group (formal or informal)",
@@ -25,7 +25,14 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
     OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
     OS140: "Employee trust",
     OS150: "Self-employed",
-    OS160: "Unincorporated"
+    OS160: "Unincorporated",
+    OS170: "Mutual",
+    OS180: "National apex",
+    OS190: "National sectoral federation or union",
+    OS200: "Regional, state or provincial level federation or union",
+    OS210: "Cooperative group",
+    OS220: "Government agency/body",
+    OS230: "Supranational"
   };
 
   const proto = Object.create(presenter.base.prototype);
@@ -35,26 +42,26 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
     config.getServicesPath() +
     "display_similar_companies/main.php";
 
-  proto.notifySelectionToggled = function(initiative) {
+  proto.notifySelectionToggled = function (initiative) {
     eventbus.publish({ topic: "Marker.SelectionToggled", data: initiative });
   };
-  proto.notifySelectionSet = function(initiative) {
+  proto.notifySelectionSet = function (initiative) {
     eventbus.publish({ topic: "Marker.SelectionSet", data: initiative });
   };
 
-  proto.getLatLng = function(initiative) {
+  proto.getLatLng = function (initiative) {
     return [initiative.lat, initiative.lng];
   };
-  proto.getHoverText = function(initiative) {
+  proto.getHoverText = function (initiative) {
     return initiative.name;
   };
-  proto.prettyPhone = function(tel) {
+  proto.prettyPhone = function (tel) {
     return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
   };
   // proto.getAllOrgStructures = function() {
   //   return orgStructures;
   // };
-  proto.getInitiativeContent = function(initiative) {
+  proto.getInitiativeContent = function (initiative) {
     let address = "",
       street,
       locality,
@@ -84,25 +91,25 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
     // All initiatives should have a name
     popupHTML = popupHTML.replace("{initiative.name}", initiative.name);
     // TODO Add org type
-    if (initiative.orgStructure && initiative.orgStructure.length > 0){
-        popupHTML = popupHTML.replace(
+    if (initiative.orgStructure && initiative.orgStructure.length > 0) {
+      popupHTML = popupHTML.replace(
         "{initiative.org-structure}",
         initiative.orgStructure.map(OS => orgStructures[OS]).join(", ")
       );
     }
-    else{
-      if(initiative.regorg){
+    else {
+      if (initiative.regorg) {
         popupHTML = popupHTML.replace(
           "{initiative.org-structure}",
           orgStructures[initiative.regorg.substr(initiative.regorg.lastIndexOf('/') + 1)]
-          );
-      }else{
+        );
+      } else {
         popupHTML = popupHTML.replace(
           "{initiative.org-structure}",
           ""
-          );
+        );
       }
-        
+
     }
 
     // All initiatives should have a description (this isn't true with dotcoop)
@@ -179,8 +186,8 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
       "{initiative.tel}",
       initiative.tel
         ? '<p class="sea-initiative-tel">' +
-            this.prettyPhone(initiative.tel) +
-            "</p>"
+        this.prettyPhone(initiative.tel) +
+        "</p>"
         : ""
     );
     // Not all orgs have a website
@@ -188,22 +195,22 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
       "{initiative.www}",
       initiative.www && !dotcoop
         ? '<a class="fa fa-link" target="_blank" href="' +
-            initiative.www +
-            '"></a>'
+        initiative.www +
+        '"></a>'
         : ""
     );
 
     return popupHTML;
   };
 
-  proto.getMarkerColor = function(initiative) {
+  proto.getMarkerColor = function (initiative) {
     const hasWww = initiative.www && initiative.www.length > 0;
     const hasReg = initiative.regorg && initiative.regorg.length > 0;
     const markerColor =
       hasWww && hasReg ? "purple" : hasWww ? "blue" : hasReg ? "red" : "green";
     return markerColor;
   };
-  proto.getIconOptions = function(initiative) {
+  proto.getIconOptions = function (initiative) {
     const icon = initiative.dataset == "dotcoop" ? "globe" : "certificate";
     return {
       icon: icon,
@@ -213,14 +220,14 @@ define(["app/eventbus", "presenter", "model/config","model/sse_initiative"], fun
       markerColor: markerColor
     };
   };
-  proto.getIcon = function(initiative) {
+  proto.getIcon = function (initiative) {
     return initiative.dataset == "dotcoop" ? "globe" : "certificate";
   };
 
   Presenter.prototype = proto;
 
   function createPresenter(view) {
-    
+
     const p = new Presenter();
     p.registerView(view);
     return p;
