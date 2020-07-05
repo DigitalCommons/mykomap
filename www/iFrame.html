@@ -1,7 +1,7 @@
 <html>
   <head>
     <style>
-      #holder {
+      /* #holder {
         height: 100%;
         width: 100%;
         left: 0;
@@ -10,27 +10,30 @@
         position: fixed;
       }
       iframe {
-position: relative; }
+position: relative; } */
     </style>
 
     <script type="application/javascript">
-      function resize() {
-        var frame = document.getElementById("myIframe");
-        //frame.style.width = window.innerWidth + "px";
-        //frame.style.height = window.innerHeight + "px";
-        // frame.height = frame.contentWindow.window.body.scrollHeight + "px";
-        frame.style.width  = frame.contentWindow.document.body.scrollWidth;
-        frame.style.height = frame.contentWindow.document.body.scrollHeight;
+      // function resize() {
+      //   var frame = document.getElementById("myIframe");
+      //   //frame.style.width = window.innerWidth + "px";
+      //   //frame.style.height = window.innerHeight + "px";
+      //   // frame.height = frame.contentWindow.window.body.scrollHeight + "px";
+      //   frame.style.width  = frame.contentWindow.document.body.scrollWidth;
+      //   frame.style.height = frame.contentWindow.document.body.scrollHeight;
 
-      }
+      // }
     </script>
   </head>
 
   <body onresize="resize()" onload="resize()">
-    <div id="holder">
+    <iframe src="http://dev.ica.solidarityeconomy.coop/" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
+      Your browser doesn't support iframes
+  </iframe>
+    <!-- <div id="holder">
       <iframe id="myIframe" src="http://127.0.0.1/www/www/">
         Your browser doesn't support iframes
       </iframe>
-    </div>
-  </body>
+    </div> -->
+  </body> 
 </html>
