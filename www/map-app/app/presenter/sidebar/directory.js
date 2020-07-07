@@ -34,30 +34,6 @@ define([
 
   var proto = Object.create(sidebarPresenter.base.prototype);
 
-  // TODO: We should get these values from the vocab, from config or from the source data
-  const values = {
-    Activities: {
-      ALL: "All Activities",
-      AM10: "Arts, Media, Culture & Leisure",
-      AM20: "Campaigning, Activism & Advocacy",
-      AM30: "Community & Collective Spaces",
-      AM40: "Education",
-      AM50: "Energy",
-      AM60: "Food",
-      AM70: "Goods & Services",
-      AM80: "Health, Social Care & Wellbeing",
-      AM90: "Housing",
-      AM100: "Money & Finance",
-      AM110: "Nature, Conservation & Environment",
-      AM120: "Reduce, Reuse, Repair & Recycle",
-      AM130: "Agriculture",
-      AM140: "Industry",
-      AM150: "Utilities",
-      AM160: "Transport"
-
-
-    }
-  };
 
   proto.currentItem = function () {
     return this.contentStack.current();
@@ -68,7 +44,7 @@ define([
   };
 
   proto.getAllValuesByName = function (name) {
-    return values[name];
+    return sseInitiative.getVerboseValuesForFields()[name];
   };
 
   proto.getRegisteredValues = function () {

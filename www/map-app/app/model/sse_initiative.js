@@ -13,14 +13,63 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //setup map
   let verboseDatasets = {}
   const dsNamed =
-  (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length)?
-    config.namedDatasetsVerbose()
-    :[];
-  
-  if(dsNamed.length == allDatasets.length)
-    allDatasets.forEach((x,i) => verboseDatasets[x] = dsNamed[i]);
+    (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length) ?
+      config.namedDatasetsVerbose()
+      : [];
+
+  // // TODO: We should get these values from the vocab, from config or from the source data
+  const values = {
+    Activities: {
+      ALL: "All Activities",
+      AM10: "Arts, Media, Culture & Leisure",
+      AM20: "Campaigning, Activism & Advocacy",
+      AM30: "Community & Collective Spaces",
+      AM40: "Education",
+      AM50: "Energy",
+      AM60: "Food",
+      AM70: "Goods & Services",
+      AM80: "Health, Social Care & Wellbeing",
+      AM90: "Housing",
+      AM100: "Money & Finance",
+      AM110: "Nature, Conservation & Environment",
+      AM120: "Reduce, Reuse, Repair & Recycle",
+      AM130: "Agriculture",
+      AM140: "Industry",
+      AM150: "Utilities",
+      AM160: "Transport"
+    },
+    "Organisational Structure": {
+      OS10: "Community group (formal or informal)",
+      OS20: "Not-for-profit organisation",
+      OS30: "Social enterprise",
+      OS40: "Charity",
+      OS50: "Company (Other)",
+      OS60: "Workers co-operative",
+      OS70: "Housing co-operative",
+      OS80: "Consumer co-operative",
+      OS90: "Producer co-operative",
+      OS100: "Multi-stakeholder co-operative",
+      OS110: "Secondary co-operative",
+      OS115: "Co-operative",
+      OS120: "Community Interest Company (CIC)",
+      OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
+      OS140: "Employee trust",
+      OS150: "Self-employed",
+      OS160: "Unincorporated",
+      OS170: "Mutual",
+      OS180: "National apex",
+      OS190: "National sectoral federation or union",
+      OS200: "Regional, state or provincial level federation or union",
+      OS210: "Cooperative group",
+      OS220: "Government agency/body",
+      OS230: "Supranational"
+    }
+  };
+
+  if (dsNamed.length == allDatasets.length)
+    allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
   else
-    allDatasets.forEach((x,i) => verboseDatasets[x] = x);
+    allDatasets.forEach((x, i) => verboseDatasets[x] = x);
 
 
 
@@ -77,7 +126,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         enumerable: true
       },
       searchstr: {
-        value: config.getSearchedFields().map(x=>e[x]).join("")
+        value: config.getSearchedFields().map(x => e[x]).join("")
         , enumerable: true
       },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
@@ -116,8 +165,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     });
 
     //check if lat/lng are numbers and no letters in it
-    if(isAlpha(that.lat) || isAlpha(that.lng))
-    {
+    if (isAlpha(that.lat) || isAlpha(that.lng)) {
       that.lat = undefined;
       that.lng = undefined;
     }
@@ -134,18 +182,18 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // loadPluralObjects("orgStructure", this.uniqueId);
   }
 
-  function isAlpha (str){
-      if(!str) return false;
-      var code, i, len;
-    
-      for (i = 0, len = str.length; i < len; i++) {
-        code = str.charCodeAt(i);
-        if (!(code > 64 && code < 91) && // upper alpha (A-Z)
-            !(code > 96 && code < 123)) { // lower alpha (a-z)
-          return false;
-        }
+  function isAlpha(str) {
+    if (!str) return false;
+    var code, i, len;
+
+    for (i = 0, len = str.length; i < len; i++) {
+      code = str.charCodeAt(i);
+      if (!(code > 64 && code < 91) && // upper alpha (A-Z)
+        !(code > 96 && code < 123)) { // lower alpha (a-z)
+        return false;
       }
-      return true;
+    }
+    return true;
   }
 
   function sortInitiatives(a, b) {
@@ -171,7 +219,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function (i) {
       return i.searchstr.toUpperCase().includes(up);
-    }).sort((a,b) => sortInitiatives(a,b));
+    }).sort((a, b) => sortInitiatives(a, b));
   }
 
   function filter(filter) {
@@ -270,7 +318,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // loop through the filters and sort their data, then sort the keys in order
     filterableFields.forEach(filterable => {
       let label = filterable.label;
-      console.log("number of initiatives to sort",loadedInitiatives.length);
+      console.log("number of initiatives to sort", loadedInitiatives.length);
       // Create the object that holds the registered values for the current field if it hasn't already been created
       if (registeredValues[label]) {
         /*unordered = 
@@ -283,9 +331,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         const ordered = {};
         Object.keys(registeredValues[label]).sort().forEach(function (key) {
           //sort initiatives
-          registeredValues[label][key].sort(function(a, b) {
-               return sortInitiatives(a, b);
-           });
+          registeredValues[label][key].sort(function (a, b) {
+            return sortInitiatives(a, b);
+          });
           //new order keys
           ordered[key] = registeredValues[label][key];
         });
@@ -367,8 +415,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       ds.forEach(dataset => {
         loadDataset(dataset, false, false);
       });
-
-
     }
     else if (ds.length == 1)
       loadDataset(ds[0]);
@@ -390,7 +436,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var message = null;
     eventbus.publish({
       topic: "Initiative.loadStarted",
-      data: { message: "Loading data via " + service, dataset:verboseDatasets[dataset] }
+      data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
     });
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:
@@ -410,7 +456,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }).catch(err => {
       eventbus.publish({
         topic: "Initiative.loadFailed",
-        data: { error: err,dataset:dataset}
+        data: { error: err, dataset: dataset }
       });
       console.log(err)
     });
@@ -444,6 +490,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       });
     }
   }
+
+
+  function getVerboseValuesForFields() {
+    return values;
+  }
+
   var pub = {
     loadFromWebService: loadFromWebService,
     search: search,
@@ -455,7 +507,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     reset: reset,
     getCurrentDatasets: getCurrentDatasets,
     getLoadedInitiatives: getLoadedInitiatives,
-    getInitiativeUIDMap: getInitiativeUIDMap
+    getInitiativeUIDMap: getInitiativeUIDMap,
+    getVerboseValuesForFields: getVerboseValuesForFields
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});

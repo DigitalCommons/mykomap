@@ -8,33 +8,6 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
 
   function Presenter() { }
 
-  const orgStructures = {
-    OS10: "Community group (formal or informal)",
-    OS20: "Not-for-profit organisation",
-    OS30: "Social enterprise",
-    OS40: "Charity",
-    OS50: "Company (Other)",
-    OS60: "Workers co-operative",
-    OS70: "Housing co-operative",
-    OS80: "Consumer co-operative",
-    OS90: "Producer co-operative",
-    OS100: "Multi-stakeholder co-operative",
-    OS110: "Secondary co-operative",
-    OS115: "Co-operative",
-    OS120: "Community Interest Company (CIC)",
-    OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
-    OS140: "Employee trust",
-    OS150: "Self-employed",
-    OS160: "Unincorporated",
-    OS170: "Mutual",
-    OS180: "National apex",
-    OS190: "National sectoral federation or union",
-    OS200: "Regional, state or provincial level federation or union",
-    OS210: "Cooperative group",
-    OS220: "Government agency/body",
-    OS230: "Supranational"
-  };
-
   const proto = Object.create(presenter.base.prototype);
   const serviceToDisplaySimilarCompanies =
     document.location.origin +
@@ -59,9 +32,11 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
     return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
   };
   // proto.getAllOrgStructures = function() {
-  //   return orgStructures;
+  //   return sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
   // };
   proto.getInitiativeContent = function (initiative) {
+    let orgStructures = sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
+    let activitiesVerbose = sse_initiatives.getVerboseValuesForFields()["Activities"];
     let address = "",
       street,
       locality,
@@ -74,6 +49,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
         '<div class="sea-initiative-details">' +
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
         '<h4 class="sea-initiative-org-structure">{initiative.org-structure}</h4>' +
+        '<h4 class="sea-initiative-economic-activity">Activity: {initiative.economic-activity}</h4>' +
         "<p>{initiative.desc}</p>" +
         "{dotcoop.domains}" +
         "</div>" +
@@ -111,6 +87,23 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
       }
 
     }
+
+
+    if (initiative.primaryActivity) {
+
+      popupHTML = popupHTML.replace(
+        "{initiative.economic-activity}",
+        activitiesVerbose[initiative.primaryActivity]
+      );
+    } else {
+      popupHTML = popupHTML.replace(
+        "{initiative.economic-activity}",
+        ""
+      );
+
+    }
+
+
 
     // All initiatives should have a description (this isn't true with dotcoop)
     popupHTML = popupHTML.replace("{initiative.desc}", initiative.desc || "");
