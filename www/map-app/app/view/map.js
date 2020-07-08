@@ -103,7 +103,7 @@ define([
       "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png";
     const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const osmAttrib =
-      'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
+      'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | <a href="https://locationiq.com">Search by LocationIQ.com</a>';
     var i,
       eventHandlers = this.presenter.getMapEventHandlers();
     var k = Object.keys(eventHandlers);
