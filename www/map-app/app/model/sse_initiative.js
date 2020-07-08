@@ -102,10 +102,37 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   function Initiative(e) {
     const that = this;
+
     // Not all initiatives have activities
     let primaryActivityCode = e.primaryActivity
       ? getSkosCode(e.primaryActivity)
       : undefined;
+
+    let activityCode = e.activity
+      ? getSkosCode(e.activity)
+      : undefined;
+
+    let regorgCode = e.regorg
+      ? getSkosCode(e.regorg)
+      : undefined;
+
+    //if initiative exists already, just add properties
+    if (initiativesByUid[e.uri] != undefined) {
+      let initiative = initiativesByUid[e.uri];
+      //if the orgstructure is not in the initiative then add it
+      if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
+        initiative.orgStructure.push(regorgCode);
+      }
+      // if the activity is not in the initiative then add it
+      if (activityCode && !initiative.activities.includes(activityCode)) {
+        initiative.activities.push(activityCode);
+      }
+
+      //update pop-up
+      eventbus.publish({ topic: "Initiative.refresh", data: initiative });
+      return;
+      //TODO: decide if then you index the secondary activities
+    }
 
     Object.defineProperties(this, {
       name: { value: e.name, enumerable: true },
@@ -117,7 +144,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       lat: { value: e.lat, enumerable: true, writable: true },
       lng: { value: e.lng, enumerable: true, writable: true },
       www: { value: e.www, enumerable: true },
-      regorg: { value: e.regorg, enumerable: true },
+      regorg: { value: regorgCode, enumerable: true },
       street: { value: e.street, enumerable: true },
       locality: { value: e.locality, enumerable: true },
       postcode: { value: e.postcode, enumerable: true },
@@ -130,7 +157,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         , enumerable: true
       },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
-      activity: { value: [], enumerable: true, writable: true },
+      activity: { value: activityCode, enumerable: true, writable: true },
+      activities: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
       tel: { value: e.tel, enumerable: true },
       email: { value: e.email, enumerable: true },
@@ -163,6 +191,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         }
       }
     });
+    if (this.regorg) this.orgStructure.push(this.regorg);
+    if (this.activity) this.activities.push(this.activity);
 
     //check if lat/lng are numbers and no letters in it
     if (isAlpha(that.lat) || isAlpha(that.lng)) {
@@ -171,7 +201,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
     loadedInitiatives.push(this);
     initiativesByUid[this.uniqueId] = this;
-
 
     // Run new query to get activities
     // loadPluralObjects("activities", this.uniqueId);

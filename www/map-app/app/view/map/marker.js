@@ -59,12 +59,12 @@ define([
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
         initiative: this.initiative
-        });
+      });
 
       initiative.marker = this.marker;
 
       this.marker.bindPopup(opts.popuptext, {
-        autoPan:false,
+        autoPan: false,
         minWidth: "472",
         maxWidth: "472",
         closeButton: false,
@@ -92,14 +92,14 @@ define([
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
         initiative: this.initiative
-        });
+      });
 
       initiative.marker = this.marker;
 
       // maxWidth helps to accomodate big font, for presentation purpose, set up in CSS
       // maxWidth:800 is needed if the font-size is set to 200% in CSS:
       this.marker.bindPopup(opts.popuptext, {
-        autoPan:false,
+        autoPan: false,
         minWidth: "472",
         maxWidth: "472",
         closeButton: false,
@@ -174,29 +174,29 @@ define([
   };
 
   proto.setSelected = function (initiative) {
-      let that = this;
-      //set initiative for selection
-      mapObj.selectedInitiative = initiative;
-      //change the color of the marker to a slightly darker shade
-      if (!initiative.nongeo) {
-        initiative.marker.setIcon(
-          leaflet.AwesomeMarkers.icon({
-            prefix: "fa",
-            markerColor: initiative.primaryActivity
-              ? initiative.primaryActivity.toLowerCase()
-              : "ALL",
-            iconColor: "white",
-            icon: "certificate",
-            className: "awesome-marker sea-marker sea-selected",
-            cluster: false
-          })
-        );
-      }
+    let that = this;
+    //set initiative for selection
+    mapObj.selectedInitiative = initiative;
+    //change the color of the marker to a slightly darker shade
+    if (!initiative.nongeo) {
+      initiative.marker.setIcon(
+        leaflet.AwesomeMarkers.icon({
+          prefix: "fa",
+          markerColor: initiative.primaryActivity
+            ? initiative.primaryActivity.toLowerCase()
+            : "ALL",
+          iconColor: "white",
+          icon: "certificate",
+          className: "awesome-marker sea-marker sea-selected",
+          cluster: false
+        })
+      );
+    }
 
-      if (initiative.nongeo) {
-        initiative.marker.openPopup();
-      }
-      // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
+    if (initiative.nongeo) {
+      initiative.marker.openPopup();
+    }
+    // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     else if (unselectedClusterGroup._inZoomAnimation) {
       unselectedClusterGroup.on("animationend", e => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
@@ -220,27 +220,27 @@ define([
         initiative.marker
       ) {
 
-          initiative.marker.__parent.spiderfy();
+        initiative.marker.__parent.spiderfy();
       }
       initiative.marker.openPopup();
     }
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
-    let deselectInitiative = function() {
-        if (unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-          initiative.marker){
-            that.setUnselected(initiative.marker);
-            eventbus.publish({
-              topic: "Directory.InitiativeClicked"
-            });
-            unselectedClusterGroup.off("animationend",deselectInitiative);
-        }
+    let deselectInitiative = function () {
+      if (unselectedClusterGroup.getVisibleParent(initiative.marker) !==
+        initiative.marker) {
+        that.setUnselected(initiative.marker);
+        eventbus.publish({
+          topic: "Directory.InitiativeClicked"
+        });
+        unselectedClusterGroup.off("animationend", deselectInitiative);
+      }
     };
     //check for clustering at each animation of the layer
-    unselectedClusterGroup.on("animationend",deselectInitiative);
-  
-    };
-  
+    unselectedClusterGroup.on("animationend", deselectInitiative);
+
+  };
+
 
   //old code for not destroying pop-up when zooming out
   // proto.setSelected = function (initiative) {
@@ -255,13 +255,13 @@ define([
   //   hiddenClusterGroup.addLayer(initiative.marker);
   //    */
   //   //next time you click on a cluster, will unselect the current selection
- 
+
   // };
 
   // function selectInitiative({ target }) {
   //   //get the initiative selected (specified in setSelected)
   //   let initiative = target.selectedInitiative;
-    
+
   //   //change the color of the marker to a slightly darker shade
   //   if (!initiative.nongeo) {
   //     initiative.marker.setIcon(
@@ -281,7 +281,7 @@ define([
   //   if (initiative.nongeo) {
   //     initiative.marker.openPopup();
   //   }
-    
+
   //   // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
   //   else if (unselectedClusterGroup._inZoomAnimation) {
   //     unselectedClusterGroup.on("animationend", e => {
@@ -369,7 +369,7 @@ define([
   proto.show = function () {
     this.cluster.addLayer(this.marker);
   }
-  proto.isVisible = function() {
+  proto.isVisible = function () {
     return this.cluster.hasLayer(this.marker);
   }
 
@@ -385,18 +385,18 @@ define([
 
 
 
-  function showMarkers (initiatives){
+  function showMarkers(initiatives) {
     //show markers only if it is not currently vissible
-    initiatives.forEach(initiative =>{
-      if(!markerForInitiative[initiative.uniqueId].isVisible())
+    initiatives.forEach(initiative => {
+      if (!markerForInitiative[initiative.uniqueId].isVisible())
         markerForInitiative[initiative.uniqueId].show();
     });
 
   }
 
-  function hideMarkers (initiatives){
-    initiatives.forEach(initiative =>{
-       markerForInitiative[initiative.uniqueId].destroy();
+  function hideMarkers(initiatives) {
+    initiatives.forEach(initiative => {
+      markerForInitiative[initiative.uniqueId].destroy();
     });
   }
 
@@ -406,6 +406,12 @@ define([
     view.create(map, initiative);
     return view;
   }
+
+  function refreshMarker(initiative) {
+    markerForInitiative[initiative.uniqueId].marker
+      .setPopupContent(markerForInitiative[initiative.uniqueId].presenter.getInitiativeContent(initiative));
+  }
+
   function setSelectedClusterGroup(clusterGroup) {
     // CAUTION: this may be either a ClusterGroup, or the map itself
     hiddenClusterGroup = clusterGroup;
@@ -445,6 +451,7 @@ define([
     destroyAll: destroyAll,
     hideMarkers: hideMarkers,
     showMarkers: showMarkers,
+    refreshMarker: refreshMarker
   };
   return pub;
 });

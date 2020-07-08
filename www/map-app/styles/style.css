@@ -783,3 +783,11 @@ div.leaflet-popup-content {
   pointer-events: none;
   user-select: none;
 }
+
+
+p.sea-initiative-secondary-activity {
+  font-size: 12px;
+  font-weight: bolder;
+  font-family: lato;
+  color: var(--dark-gray);
+}

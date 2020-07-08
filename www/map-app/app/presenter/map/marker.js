@@ -50,6 +50,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
         '<h4 class="sea-initiative-org-structure">{initiative.org-structure}</h4>' +
         '<h4 class="sea-initiative-economic-activity">Activity: {initiative.economic-activity}</h4>' +
+        '<p class="sea-initiative-secondary-activity">Secondary Activities: {initiative.secondary-activity}</p>' +
         "<p>{initiative.desc}</p>" +
         "{dotcoop.domains}" +
         "</div>" +
@@ -68,16 +69,18 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
     popupHTML = popupHTML.replace("{initiative.name}", initiative.name);
     // TODO Add org type
     if (initiative.orgStructure && initiative.orgStructure.length > 0) {
+      let repl = initiative.orgStructure.map(OS => orgStructures[OS]).join(", ");
       popupHTML = popupHTML.replace(
         "{initiative.org-structure}",
-        initiative.orgStructure.map(OS => orgStructures[OS]).join(", ")
+        repl
       );
     }
+    //comment this out
     else {
       if (initiative.regorg) {
         popupHTML = popupHTML.replace(
           "{initiative.org-structure}",
-          orgStructures[initiative.regorg.substr(initiative.regorg.lastIndexOf('/') + 1)]
+          orgStructures[initiative.regorg]
         );
       } else {
         popupHTML = popupHTML.replace(
@@ -100,6 +103,29 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
         "{initiative.economic-activity}",
         ""
       );
+
+    }
+
+    if (initiative.activities && initiative.activities.length > 0) {
+      let repl = initiative.activities.map(AM => activitiesVerbose[AM]).join(", ");
+      popupHTML = popupHTML.replace(
+        "{initiative.secondary-activity}",
+        repl
+      );
+    }
+    //comment this out
+    else {
+      if (initiative.activity) {
+        popupHTML = popupHTML.replace(
+          "{initiative.secondary-activity}",
+          orgStructures[initiative.activity]
+        );
+      } else {
+        popupHTML = popupHTML.replace(
+          "{initiative.secondary-activity}",
+          ""
+        );
+      }
 
     }
 

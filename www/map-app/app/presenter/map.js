@@ -87,6 +87,11 @@ define([
 
     if (marker.hasPhysicalLocation) allMarkers.push(marker);
   };
+    proto.refreshInitiative = function (data) {
+      const initiative = data;
+      this.view.refreshMarker(initiative);
+    };
+
 
   proto.onInitiativeReset = function(data) {
     
@@ -485,6 +490,12 @@ define([
       topic: "Initiative.new",
       callback: function(data) {
         p.onInitiativeNew(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Initiative.refresh",
+      callback: function (data) {
+        p.refreshInitiative(data);
       }
     });
     eventbus.subscribe({

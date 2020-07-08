@@ -184,6 +184,9 @@ define([
   proto.addMarker = function (initiative) {
     return markerView.createMarker(this.map, initiative);
   };
+  proto.refreshMarker = function (initiative) {
+    markerView.refreshMarker(initiative);
+  };
   proto.setSelected = function (initiative) {
     markerView.setSelected(initiative);
   };
@@ -213,7 +216,7 @@ define([
   };
   //fix for firefox, this triggers tiles to re-render
   proto.refresh = function (centre = this.map.getBounds().getCenter()) {
-    
+
     this.map.invalidateSize();
     this.map.setView(centre, this.map.getZoom() - 1, { animate: false });
     this.map.setView(centre, this.map.getZoom() + 1, { animate: false });
@@ -301,29 +304,29 @@ define([
       // this.map.panTo(this.map.getBounds().getCenter())  ; // get center 
       //this.map.panTo(bounds.getBounds().getCenter())  ;
       let centre = leaflet.latLngBounds(bounds[0], bounds[1]).getCenter();
-      this.map.panTo(centre, {animate:true});
+      this.map.panTo(centre, { animate: true });
       //pan does not trigger the open popup event though because there is no zoom event
     }
     else { //case 3
       this.map.flyToBounds(bounds, options); // normal zoom/pan
     }
 
-     //should check for firefox only? TODO
-     let that = this;
-     
-     //refresh the screen to handle rendering bugs (missing tiles or markers)
-     var refresh = () => {
+    //should check for firefox only? TODO
+    let that = this;
+
+    //refresh the screen to handle rendering bugs (missing tiles or markers)
+    var refresh = () => {
       if (!that.flag) {
         that.flag = true;
-        that.map.off('moveend',refresh);
-        that.map.off('animationend',refresh)
+        that.map.off('moveend', refresh);
+        that.map.off('animationend', refresh)
         that.refresh();
         that.flag = false;
       }
-     }
+    }
 
-     this.map.on('moveend',refresh);
-     this.map.on('animationend',refresh)
+    this.map.on('moveend', refresh);
+    this.map.on('animationend', refresh)
 
   };
 
@@ -338,17 +341,17 @@ define([
     let centre = leaflet.latLngBounds(bounds[0], bounds[1]).getCenter();
 
     //make sure you pan to center initiative 
-    this.map.panTo(centre,{animate: true});
+    this.map.panTo(centre, { animate: true });
 
     //trigger refresh if the marker is outside of the screen or if it's clustered
-    if(!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives) ) 
+    if (!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives))
       this.refresh(centre);
 
 
 
     //zoom to layer if needed and unspiderify
     this.unselectedClusterGroup.zoomToShowLayer(data.initiatives[0].marker, (m) =>
-                this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives }));
+      this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives }));
     this.unselectedClusterGroup.refreshClusters(data.initiatives[0].marker);
 
 
@@ -364,7 +367,7 @@ define([
     //   //if you can contain the markers within the screen, then just pan
     //   // this.map.panTo(this.map.getBounds().getCenter())  ; // get center 
     //   //this.map.panTo(bounds.getBounds().getCenter())  ;
-   
+
     //   //pan does not trigger the open popup event though because there is no zoom event
     // }
     // else { //case 3
