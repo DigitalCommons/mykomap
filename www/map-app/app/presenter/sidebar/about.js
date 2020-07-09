@@ -1,22 +1,23 @@
-define(["app/eventbus", "model/config", "presenter/sidebar/base"], function(
+define(["app/eventbus", "model/config", "presenter/sidebar/base"], function (
   eventbus,
   config,
   sidebarPresenter
 ) {
   "use strict";
 
-  function Presenter() {}
+  function Presenter() { }
 
   var proto = Object.create(sidebarPresenter.base.prototype);
 
-  proto.getSoftwareVersion = function() {
+  proto.getSoftwareVersion = function () {
     return {
       variant: config.getSoftwareVariant(),
       timestamp: config.getSoftwareTimestamp(),
-      gitcommit: config.getSoftwareGitCommit()
+      gitcommit: config.getSoftwareGitCommit(),
+      version: config.getVersionTag()
     };
   };
-  proto.aboutHtml = function() {
+  proto.aboutHtml = function () {
     return config.aboutHtml();
   };
 

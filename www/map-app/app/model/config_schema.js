@@ -15,7 +15,7 @@
  */
 
 
-define([], function() {
+define([], function () {
   "use strict";
 
   /** Define config value types, and certain helper functions.
@@ -36,16 +36,16 @@ define([], function() {
     },
     boolean: {
       name: '{boolean}',
-      stringDesc: "The empty string, 'false', or 'no' parse as `false`, "+
+      stringDesc: "The empty string, 'false', or 'no' parse as `false`, " +
         "everything else as `true`.",
       parseString: (val) => {
-        switch(val.toLowerCase()) {
-        case '':
-        case 'false':
-        case 'no':
-          return false;
-        default:
-          return true;        
+        switch (val.toLowerCase()) {
+          case '':
+          case 'false':
+          case 'no':
+            return false;
+          default:
+            return true;
         }
       },
     },
@@ -57,33 +57,33 @@ define([], function() {
     latLng: {
       name: '{number[]}',
       descr: 'A two-element array defining latitude and longitude in degrees.',
-      stringDescr: 'A comma-delimited list of two numbers defining latitude '+
+      stringDescr: 'A comma-delimited list of two numbers defining latitude ' +
         'and longitude in degrees.',
-      parseString: (val) =>{
-        return val? val.split(',', 2).map(s => isNaN(s)? 0 : Number(s)) : [0,0];
+      parseString: (val) => {
+        return val ? val.split(',', 2).map(s => isNaN(s) ? 0 : Number(s)) : [0, 0];
       },
     },
     latLng2: {
       name: '{number[][]}',
-      descr: '[[latitude, longitude],[latitude, longitude]] - '+
-        'A two-element array of two-element arrays of numbers, '+
+      descr: '[[latitude, longitude],[latitude, longitude]] - ' +
+        'A two-element array of two-element arrays of numbers, ' +
         'defining two pairs of latitude and longitudes in degrees',
-      stringDescr: 'A comma-delimited list of four numbers defining two latitude '+
+      stringDescr: 'A comma-delimited list of four numbers defining two latitude ' +
         'and longitude pairs, in degrees.',
       parseString: (val) => {
-        const e = val.split(',', 4).map(s => isNaN(s)? 0 : Number(s));
-        return [[e[0],e[1]],[e[2],e[3]]];
+        const e = val.split(',', 4).map(s => isNaN(s) ? 0 : Number(s));
+        return [[e[0], e[1]], [e[2], e[3]]];
       },
     },
-    arrayOfString:  {
+    arrayOfString: {
       name: '{string[]}',
       descr: 'An array of strings.',
-      stringDescr: 'A comma-delimited list of strings. No escaping is used, '+
+      stringDescr: 'A comma-delimited list of strings. No escaping is used, ' +
         "so no commas can exist in the strings. Spaces are not trimmed.",
       parseString: (val) => val.split(/,/),
     },
   };
-  
+
   /* Define the config schema using a list of field meta-data, from
    * which we construct the object. This allows a lot of flexibility
    * and introspection.
@@ -115,6 +115,7 @@ define([], function() {
     variant,
     timestamp,
     gitcommit,
+    version,
     namedDatasets,
     namedDatasetsVerbose,
     htmlTitle,
@@ -130,150 +131,178 @@ define([], function() {
     maxZoomOnOne,
     logo
   } = {}) => [
-    { id: 'aboutHtml',
-      descr: `Raw HTML definition of the map's "about" text.`,
-      defaultDescr: "The contents of the consuming project's file `config/about.html`",
-      init: () => aboutHtml,
-      type: types.string,
-    },
-    { id: 'servicesPath',
-      descr: 'Preset location of the data source script(s).',
-      init: () => 'services/',
-      getter: 'getServicesPath',
-      type: types.string,
-    },
-    { id: 'variant',
-      descr: 'The name of the variant used to generate this map application.',
-      defaultDescr: "Defined by `variant` attribute of the consuming project's "+
-      "file `config/version.json`",
-      init: () => variant,
-      getter: 'getSoftwareVariant',
-      type: types.string,
-    },
-    { id: 'timestamp',
-      descr: 'A timestamp string indicating when this application was deployed.',
-      defaultDescr: "Defined by `variant` attribute of the consuming project's "+
-      "file `config/version.json`",
-      init: () => timestamp,
-      getter: 'getSoftwareTimestamp',
-      type: types.string,
-    },
-    { id: 'gitcommit',
-      descr: 'The git commit-ID of the sea-map source code deployed.',
-      defaultDescr: "Defined by `variant` attribute of the consuming project's "+
-      "file `config/version.json`",
-      init: () => gitcommit,
-      getter: 'getSoftwareGitCommit',
-      type: types.string,
-    },
-    { id: 'namedDatasets',
-      descr: 'A list of names that correspond to directories in www/services, which must contain '+
-      'default-graph-uri.txt, endpoint.txt, query.rq.',
-      init: () => namedDatasets,
-      type: types.arrayOfString,
-    },
-    { id: 'namedDatasetsVerbose',
-      descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets'+
-      ' or this will not be used',
-      init: () => namedDatasetsVerbose,
-      type: types.arrayOfString,
-    },
-    { id: 'htmlTitle',
-      descr: `If set, this will override the default value for the map's HTML <title> tag.`,
-      init: () => htmlTitle,
-      setter: 'setHtmlTitle',
-      type: types.string,
-    },
-    { id: 'showDatasetsPanel',
-      descr: `If true this will load the datasets panel`,
-      init: () => showDatasetsPanel == undefined? true : showDatasetsPanel,
-      getter: 'getShowDatasetsPanel',
-      setter: 'setShowDatasetsPanel',
-      type: types.boolean,
-    },
-    { id: 'initialBounds',
-      descr: 'The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; '+
-      'these are chosen automatically if this is unset',
-      init: () => initialBounds,
-      getter: 'getInitialBounds',
-      setter: 'setInitialBounds',
-      type: types.latLng2,
-    },
-    { id: 'defaultLatLng',
-      descr: 'The position on the map that an initiative\'s dialog is positioned if it ' +
-        'has no resolvable geolocation, as an array: [lat,lon]; these are set to [0,0] if it is unset.',
-      init: () => defaultLatLng==undefined? [0,0] : defaultLatLng,
-      getter: 'getDefaultLatLng',
-      setter: 'setDefaultLatLng',
-      type: types.latLng,
-    },
-    { id: 'filterableFields',
-      descr: 'Defines the fields that can populate the directory',
-      init: () => filterableFields,
-      getter: 'getFilterableFields',
-      setter: 'setFilterableFields',
-      type: types.arrayOfString,
-    },
-    { id: 'doesDirectoryHaveColours',
-      descr: 'True if the directory should feature coloured entries',
-      init: () => doesDirectoryHaveColours,
-      setter: 'setDirectoryHasColours',
-      type: types.boolean,
-    },
-    { id: 'disableClusteringAtZoom',
-      descr: ['Defines the zoom level above which to cluster pins;',
-	      'passed to Leaflet.markercluster plugin.',
-	      'Zero effectively disables clustering, as this is a fully zoomed-out, global map;',
-	      'most maps zoom in to level 18.',
-	      'If omitted, clustering is always off. ',
-	      'See: https://leaflet.github.io/Leaflet.markercluster/#other-options',
-	      'and https://leafletjs.com/examples/zoom-levels/'].join(' '),
-      init: () => disableClusteringAtZoom,
-      getter: 'getDisableClusteringAtZoom',
-      setter: 'setDisableClusteringAtZoom',
-      type: types.int,
-    },
-    { id: 'searchedFields',
-      descr: 'A list of fields that are looked at when searching '+
-      ["name", "uri", "within", "lat", "lng", "www",
-      "regorg", "sameas", "desc", "street", "locality",
-      "region", "postcode", "country", "primaryActivity",
-      "activity", "orgStructure", "tel", "email"].join(","),
-      init: () => searchedFields==undefined? ["name","www"] : searchedFields,
-      getter: 'getSearchedFields',
-      setter: 'setSearchedFields',
-      type: types.arrayOfString,
-    },
-    { id: 'maxZoomOnGroup',
-      descr: 'The maximum zoom in that can happen when selecting any particular group in directory, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-      init: () => maxZoomOnGroup==undefined? 18 :maxZoomOnGroup,
-      getter: 'getMaxZoomOnGroup',
-      setter: 'setMaxZoomOnGroup',
-      type: types.int,
-    },
-    { id: 'maxZoomOnOne',
-      descr: 'The maximum zoom in that can happen when selecting an initiative, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-      init: () => maxZoomOnOne==undefined? 18 : maxZoomOnOne,
-      getter: 'getMaxZoomOnOne',
-      setter: 'setMaxZoomOnOne',
-      type: types.int,
-    },
-    { id: 'maxZoomOnSearch',
-      descr: 'The maximum zoom in that can happen when searching any particular group, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-      init: () => maxZoomOnSearch == undefined? 18 : maxZoomOnSearch,
-      getter: 'getMaxZoomOnSearch',
-      setter: 'setMaxZoomOnSearch',
-      type: types.int,
-    },
-    { id: 'logo',
-      descr: `If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>`,
-      init: () => logo,
-      setter: 'setLogo',
-      type: types.string,
-    }
+      {
+        id: 'aboutHtml',
+        descr: `Raw HTML definition of the map's "about" text.`,
+        defaultDescr: "The contents of the consuming project's file `config/about.html`",
+        init: () => aboutHtml,
+        type: types.string,
+      },
+      {
+        id: 'servicesPath',
+        descr: 'Preset location of the data source script(s).',
+        init: () => 'services/',
+        getter: 'getServicesPath',
+        type: types.string,
+      },
+      {
+        id: 'variant',
+        descr: 'The name of the variant used to generate this map application.',
+        defaultDescr: "Defined by `variant` attribute of the consuming project's " +
+          "file `config/version.json`",
+        init: () => variant,
+        getter: 'getSoftwareVariant',
+        type: types.string,
+      },
+      {
+        id: 'timestamp',
+        descr: 'A timestamp string indicating when this application was deployed.',
+        defaultDescr: "Defined by `variant` attribute of the consuming project's " +
+          "file `config/version.json`",
+        init: () => timestamp,
+        getter: 'getSoftwareTimestamp',
+        type: types.string,
+      },
+      {
+        id: 'gitcommit',
+        descr: 'The git commit-ID of the sea-map source code deployed.',
+        defaultDescr: "Defined by `variant` attribute of the consuming project's " +
+          "file `config/version.json`",
+        init: () => gitcommit,
+        getter: 'getSoftwareGitCommit',
+        type: types.string,
+      },
+      {
+        id: 'version',
+        descr: 'The git tag of the sea-map source code deployed.',
+        defaultDescr: "Defined by `variant` attribute of the consuming project's " +
+          "file `config/version.json`",
+        init: () => version,
+        getter: 'getVersionTag',
+        type: types.string,
+      },
+      {
+        id: 'namedDatasets',
+        descr: 'A list of names that correspond to directories in www/services, which must contain ' +
+          'default-graph-uri.txt, endpoint.txt, query.rq.',
+        init: () => namedDatasets,
+        type: types.arrayOfString,
+      },
+      {
+        id: 'namedDatasetsVerbose',
+        descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets' +
+          ' or this will not be used',
+        init: () => namedDatasetsVerbose,
+        type: types.arrayOfString,
+      },
+      {
+        id: 'htmlTitle',
+        descr: `If set, this will override the default value for the map's HTML <title> tag.`,
+        init: () => htmlTitle,
+        setter: 'setHtmlTitle',
+        type: types.string,
+      },
+      {
+        id: 'showDatasetsPanel',
+        descr: `If true this will load the datasets panel`,
+        init: () => showDatasetsPanel == undefined ? true : showDatasetsPanel,
+        getter: 'getShowDatasetsPanel',
+        setter: 'setShowDatasetsPanel',
+        type: types.boolean,
+      },
+      {
+        id: 'initialBounds',
+        descr: 'The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; ' +
+          'these are chosen automatically if this is unset',
+        init: () => initialBounds,
+        getter: 'getInitialBounds',
+        setter: 'setInitialBounds',
+        type: types.latLng2,
+      },
+      {
+        id: 'defaultLatLng',
+        descr: 'The position on the map that an initiative\'s dialog is positioned if it ' +
+          'has no resolvable geolocation, as an array: [lat,lon]; these are set to [0,0] if it is unset.',
+        init: () => defaultLatLng == undefined ? [0, 0] : defaultLatLng,
+        getter: 'getDefaultLatLng',
+        setter: 'setDefaultLatLng',
+        type: types.latLng,
+      },
+      {
+        id: 'filterableFields',
+        descr: 'Defines the fields that can populate the directory',
+        init: () => filterableFields,
+        getter: 'getFilterableFields',
+        setter: 'setFilterableFields',
+        type: types.arrayOfString,
+      },
+      {
+        id: 'doesDirectoryHaveColours',
+        descr: 'True if the directory should feature coloured entries',
+        init: () => doesDirectoryHaveColours,
+        setter: 'setDirectoryHasColours',
+        type: types.boolean,
+      },
+      {
+        id: 'disableClusteringAtZoom',
+        descr: ['Defines the zoom level above which to cluster pins;',
+          'passed to Leaflet.markercluster plugin.',
+          'Zero effectively disables clustering, as this is a fully zoomed-out, global map;',
+          'most maps zoom in to level 18.',
+          'If omitted, clustering is always off. ',
+          'See: https://leaflet.github.io/Leaflet.markercluster/#other-options',
+          'and https://leafletjs.com/examples/zoom-levels/'].join(' '),
+        init: () => disableClusteringAtZoom,
+        getter: 'getDisableClusteringAtZoom',
+        setter: 'setDisableClusteringAtZoom',
+        type: types.int,
+      },
+      {
+        id: 'searchedFields',
+        descr: 'A list of fields that are looked at when searching ' +
+          ["name", "uri", "within", "lat", "lng", "www",
+            "regorg", "sameas", "desc", "street", "locality",
+            "region", "postcode", "country", "primaryActivity",
+            "activity", "orgStructure", "tel", "email"].join(","),
+        init: () => searchedFields == undefined ? ["name", "www"] : searchedFields,
+        getter: 'getSearchedFields',
+        setter: 'setSearchedFields',
+        type: types.arrayOfString,
+      },
+      {
+        id: 'maxZoomOnGroup',
+        descr: 'The maximum zoom in that can happen when selecting any particular group in directory, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
+        init: () => maxZoomOnGroup == undefined ? 18 : maxZoomOnGroup,
+        getter: 'getMaxZoomOnGroup',
+        setter: 'setMaxZoomOnGroup',
+        type: types.int,
+      },
+      {
+        id: 'maxZoomOnOne',
+        descr: 'The maximum zoom in that can happen when selecting an initiative, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
+        init: () => maxZoomOnOne == undefined ? 18 : maxZoomOnOne,
+        getter: 'getMaxZoomOnOne',
+        setter: 'setMaxZoomOnOne',
+        type: types.int,
+      },
+      {
+        id: 'maxZoomOnSearch',
+        descr: 'The maximum zoom in that can happen when searching any particular group, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
+        init: () => maxZoomOnSearch == undefined ? 18 : maxZoomOnSearch,
+        getter: 'getMaxZoomOnSearch',
+        setter: 'setMaxZoomOnSearch',
+        type: types.int,
+      },
+      {
+        id: 'logo',
+        descr: `If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>`,
+        init: () => logo,
+        setter: 'setLogo',
+        type: types.string,
+      }
 
-    
-  ];
+
+    ];
 
   // This generates the documentation for this schema, in Markdown
   configSchema.doc = () => [`
@@ -304,14 +333,14 @@ as described in [README.md](README.md)
 The following attributes can be defined.
 
 `]
-  // This maps each definition into s documentation section
+    // This maps each definition into s documentation section
     .concat(configSchema().map((def) => `
 ### \`${def.id}\`
 
 - *type:* \`${def.type.name}\` ${def.type.desc || ''}
 - *in string context:* ${def.type.stringDescr || 'parsed as-is'}
-- *default:* ${def.defaultDescr || '`'+def.init()+'`'}
-- *settable?:* ${def.setter? 'yes' : 'no'}
+- *default:* ${def.defaultDescr || '`' + def.init() + '`'}
+- *settable?:* ${def.setter ? 'yes' : 'no'}
 
 ${def.descr}
 
