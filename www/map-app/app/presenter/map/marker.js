@@ -91,8 +91,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
 
     }
 
-
-    if (initiative.primaryActivity) {
+    if (initiative.primaryActivity && initiative.primaryActivity != "") {
 
       popupHTML = popupHTML.replace(
         "{initiative.economic-activity}",
@@ -100,12 +99,11 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
       );
     } else {
       popupHTML = popupHTML.replace(
-        "{initiative.economic-activity}",
+        "Activity: {initiative.economic-activity}",
         ""
       );
 
     }
-
     if (initiative.activities && initiative.activities.length > 0) {
       let repl = initiative.activities.map(AM => activitiesVerbose[AM]).join(", ");
       popupHTML = popupHTML.replace(
@@ -122,7 +120,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
         );
       } else {
         popupHTML = popupHTML.replace(
-          "{initiative.secondary-activity}",
+          "Secondary Activities: {initiative.secondary-activity}",
           ""
         );
       }
