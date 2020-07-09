@@ -5,11 +5,11 @@ define([
   "presenter/sidebar/initiatives",
   "view/sidebar/base",
   "model/config"
-], function(d3, eventbus, presenter, sidebarView, config) {
+], function (d3, eventbus, presenter, sidebarView, config) {
   "use strict";
 
   // Our local Sidebar object:
-  function Sidebar() {}
+  function Sidebar() { }
 
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
@@ -24,13 +24,13 @@ define([
     "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
   const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
-  proto.populateFixedSelection = function(selection) {
+  proto.populateFixedSelection = function (selection) {
     const container = selection
-    .append("div")
-    .attr("class", "w3-container");
+      .append("div")
+      .attr("class", "w3-container");
     container
-    .append("h1")
-    .text("Search");
+      .append("h1")
+      .text("Search");
 
 
     this.createSearchBox(container);
@@ -53,10 +53,10 @@ define([
           txt: item.searchedFor
         }
       });
-      
-      
+
+
     }
- 
+
 
     container
       .append("p")
@@ -65,7 +65,7 @@ define([
   };
 
 
-  proto.geekZoneContentAtD3Selection = function(selection, initiative) {
+  proto.geekZoneContentAtD3Selection = function (selection, initiative) {
     const that = this;
     const s = selection.append("div").attr("class", "w3-bar-block");
     if (initiative.lat) {
@@ -83,7 +83,7 @@ define([
         .attr("class", sectionClasses + hoverColour)
         .text("Detailed data for this initiative")
         .style("cursor", "pointer")
-        .on("click", function(e) {
+        .on("click", function (e) {
           that.openInNewTabOrWindow(initiative.uri);
         });
     }
@@ -92,7 +92,7 @@ define([
         .attr("class", sectionClasses + hoverColour)
         .text("Ordnance Survey postcode information")
         .style("cursor", "pointer")
-        .on("click", function(e) {
+        .on("click", function (e) {
           that.openInNewTabOrWindow(initiative.within);
         });
     }
@@ -111,12 +111,12 @@ define([
         .attr("title", "A tech demo of federated Linked Open Data queries!")
         .text("Display similar companies nearby using Companies House data")
         .style("cursor", "pointer")
-        .on("click", function(e) {
+        .on("click", function (e) {
           that.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
         });
     }
   };
-  proto.populateSelectionWithOneInitiative = function(selection, initiative) {
+  proto.populateSelectionWithOneInitiative = function (selection, initiative) {
     const s = selection.append("div").attr("class", "w3-bar-block");
     const that = this;
     if (initiative.www) {
@@ -127,7 +127,7 @@ define([
         .attr("class", sectionClasses + hoverColour)
         .text(initiative.www)
         .style("cursor", "pointer")
-        .on("click", function(e) {
+        .on("click", function (e) {
           that.openInNewTabOrWindow(initiative.www);
         });
     }
@@ -142,59 +142,59 @@ define([
       selection: s,
       heading: "Geek zone",
       headingClasses: accordionClasses,
-      makeContentAtD3Selection: function(contentD3Selection) {
+      makeContentAtD3Selection: function (contentD3Selection) {
         that.geekZoneContentAtD3Selection(contentD3Selection, initiative);
       },
       hideContent: true
     });
   };
 
-  proto.onInitiativeClicked = function(id){
+  proto.onInitiativeClicked = function (id) {
     d3.select(".sea-search-initiative-active")
-            .classed("sea-search-initiative-active",false);
+      .classed("sea-search-initiative-active", false);
 
     d3.select('[data-uid="' + id + '"]')
-           .classed(
-            "sea-search-initiative-active",
-            true
-          );
+      .classed(
+        "sea-search-initiative-active",
+        true
+      );
   };
 
-  proto.populateSelectionWithListOfInitiatives = function(
+  proto.populateSelectionWithListOfInitiatives = function (
     selection,
     initiatives
   ) {
     const pres = this.presenter;
     const that = this;
-    initiatives.forEach(function(initiative) {
+    initiatives.forEach(function (initiative) {
       selection
         .append("button")
         .attr("class", "w3-bar-item w3-button w3-mobile srch-initiative")
-        .attr("data-uid",initiative.uniqueId)
+        .attr("data-uid", initiative.uniqueId)
         .attr("title", "Click to see details here and on map")
         // TODO - shift-click should remove initiative from selection,
         //        just like shift-clicking a marker.
-        .on("click", function(e) {
-          
+        .on("click", function (e) {
+
           pres.initClicked(initiative);
         })
-        .on("mouseover", function(e) {
+        .on("mouseover", function (e) {
           pres.onInitiativeMouseoverInSidebar(initiative);
         })
-        .on("mouseout", function(e) {
+        .on("mouseout", function (e) {
           pres.onInitiativeMouseoutInSidebar(initiative);
         })
         .text(initiative.name);
     });
   };
 
-  proto.changeSearchText = function(txt) {
+  proto.changeSearchText = function (txt) {
 
     d3.select("#search-box").property("value", txt);
 
   };
 
-  proto.createSearchBox = function(selection) {
+  proto.createSearchBox = function (selection) {
     var view = this;
 
     selection = selection
@@ -204,14 +204,14 @@ define([
         "class",
         "w3-card-2 w3-round map-app-search-form"
       )
-      .on("submit", function() {
-         // By default, submitting the form will cause a page reload!
-          d3.event.preventDefault();
-          //d3.event.stopPropagation();
+      .on("submit", function () {
+        // By default, submitting the form will cause a page reload!
+        d3.event.preventDefault();
+        //d3.event.stopPropagation();
 
-          var searchText = d3.select("#search-box").property("value");
-      
-          view.presenter.performSearch(searchText);
+        var searchText = d3.select("#search-box").property("value");
+
+        view.presenter.performSearch(searchText);
       })
       .append("div")
       .attr("class", "w3-border-0");
@@ -233,15 +233,17 @@ define([
       .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
       .attr("type", "search")
       .attr("placeholder", "Search initiatives")
-      .attr("autocomplete","off");
+      .attr("autocomplete", "off");
+    document.getElementById("search-box").focus();
+
   };
 
 
 
-  proto.populateScrollableSelection = function(selection) {
+  proto.populateScrollableSelection = function (selection) {
     if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
-      const initiatives = item == null? [] : item.initiatives;
+      const initiatives = item == null ? [] : item.initiatives;
       switch (initiatives.length) {
         case 0:
           if (item.isSearchResults()) {
@@ -261,7 +263,7 @@ define([
       }
     }
     else {
-      var freshSearchText = this.presenter.getFilterNames().length > 0?
+      var freshSearchText = this.presenter.getFilterNames().length > 0 ?
         " Searching in " + this.presenter.getFilterNames().join(", ") : "When you search, or click on map markers, you'll see the results here";
       selection
         .append("div")
@@ -272,7 +274,7 @@ define([
         );
     }
   };
-  proto.getWindowHeight = function() {
+  proto.getWindowHeight = function () {
     return d3.select("window").node().innerHeight;
   };
 

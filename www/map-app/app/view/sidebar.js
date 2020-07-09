@@ -8,24 +8,24 @@ define([
   "view/sidebar/about",
   "view/sidebar/directory",
   "view/sidebar/datasets"
-], function(eventbus, d3, viewBase, presenter, initiatives, about, directory,datasets) {
+], function (eventbus, d3, viewBase, presenter, initiatives, about, directory, datasets) {
   "use strict";
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
 
-  function SidebarView() {}
+  function SidebarView() { }
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
 
-  proto.createOpenButton = function() {
+  proto.createOpenButton = function () {
     // d3 selection redefines this, so hang onto it here:
     var that = this;
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
       .append("button")
       .attr("class", "w3-btn")
       .attr("title", "Show directory")
-      .on("click", function() {
+      .on("click", function () {
         that.showSidebar();
       })
       .append("i")
@@ -33,7 +33,7 @@ define([
 
   };
 
-  proto.createButtonRow = function() {
+  proto.createButtonRow = function () {
     // d3 selection redefines this, so hang onto it here:
     var that = this;
     var selection = this.d3selectAndClear("#map-app-sidebar-header");
@@ -43,13 +43,13 @@ define([
     selection.append("i").attr("id", "map-app-sidebar-history-navigation");
 
     // The sidebar has a button that causes the main menu to be dispayed
-   
+
 
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", "Show directory")
-      .on("click", function() {
+      .on("click", function () {
         eventbus.publish({
           topic: "Map.removeSearchFilter",
           data: {}
@@ -73,7 +73,7 @@ define([
       .append("button")
       .attr("class", "w3-button w3-border-0")
       .attr("title", "Show search")
-      .on("click", function() {
+      .on("click", function () {
         that.hideInitiativeList();
         //deselect
         eventbus.publish({
@@ -94,7 +94,7 @@ define([
       .append("button")
       .attr("class", "w3-button w3-border-0")
       .attr("title", "Show info")
-      .on("click", function() {
+      .on("click", function () {
         that.hideInitiativeList();
         // eventbus.publish({
         // topic: "Map.removeSearchFilter"});
@@ -109,12 +109,12 @@ define([
       .append("i")
       .attr("class", "fa fa-info-circle");
 
-    if(this.presenter.showingDatasets()){
+    if (this.presenter.showingDatasets()) {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
         .attr("title", "Show Datasets")
-        .on("click", function() {
+        .on("click", function () {
           that.hideInitiativeList();
           // eventbus.publish({
           //   topic: "Map.removeSearchFilter",
@@ -134,10 +134,10 @@ define([
 
   };
 
-  proto.createSidebars = function() {
-    
+  proto.createSidebars = function () {
 
-    if(this.presenter.showingDatasets()){
+
+    if (this.presenter.showingDatasets()) {
       this.sidebar = {
         about: about.createSidebar(),
         initiatives: initiatives.createSidebar(),
@@ -145,7 +145,7 @@ define([
         directory: directory.createSidebar(),
         datasets: datasets.createSidebar()
       };
-    }else{
+    } else {
       this.sidebar = {
         about: about.createSidebar(),
         initiatives: initiatives.createSidebar(),
@@ -156,7 +156,7 @@ define([
 
   };
 
-  proto.changeSidebar = function(name) {
+  proto.changeSidebar = function (name) {
     this.sidebar[name].refresh();
   };
 
@@ -169,7 +169,7 @@ define([
   //   }
   // };
 
-  proto.showSidebar = function() {
+  proto.showSidebar = function () {
     var that = this;
     let sidebar = d3.select("#map-app-sidebar");
     let initiativeListSidebar = document.getElementById(
@@ -178,12 +178,15 @@ define([
     sidebar
       .on(
         "transitionend",
-        function() {
+        function () {
           if (event.target.className === "w3-btn") return;
           if (event.propertyName === "transform") {
-            d3.select("#map-app-sidebar-button").on("click", function() {
+            d3.select("#map-app-sidebar-button").on("click", function () {
               that.hideSidebar();
             });
+            //select input textbox if possible 
+            if (document.getElementById("search-box") != null) document.getElementById("search-box").focus();
+
             eventbus.publish({
               topic: "Sidebar.updateSidebarWidth",
               data: {
@@ -203,11 +206,10 @@ define([
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     //that.changeSidebar("directory");
-    if(document.getElementById("dir-filter") && window.outerWidth >= 1080)
+    if (document.getElementById("dir-filter") && window.outerWidth >= 1080)
       document.getElementById("dir-filter").focus();
 
 
-    
 
   };
 
@@ -215,7 +217,7 @@ define([
   // 1. Close the sidebar regardless of current view
   // 2. Close the Initiatives list
   // 3. Close the Initiative sidebar
-  proto.hideSidebar = function() {
+  proto.hideSidebar = function () {
     const that = this;
     //that.hideInitiativeList();
     let sidebar = d3.select("#map-app-sidebar");
@@ -223,10 +225,10 @@ define([
     sidebar
       .on(
         "transitionend",
-        function() {
+        function () {
           if (event.target.className === "w3-btn") return;
           if (event.propertyName === "transform") {
-            d3.select("#map-app-sidebar-button").on("click", function() {
+            d3.select("#map-app-sidebar-button").on("click", function () {
               that.showSidebar();
             });
             eventbus.publish({
@@ -248,7 +250,7 @@ define([
 
   };
 
-  proto.hideInitiativeSidebar = function() {
+  proto.hideInitiativeSidebar = function () {
     let initiativeSidebar = d3.select("#sea-initiative-sidebar");
 
     if (initiativeSidebar.node().getBoundingClientRect().x === 0) {
@@ -256,10 +258,10 @@ define([
     }
   };
 
-  proto.showInitiativeList = function() {
+  proto.showInitiativeList = function () {
     //if empty don't show
     const empty = d3.select("#sea-initiatives-list-sidebar-content").select("ul").empty();
-    if (empty){
+    if (empty) {
       return;
     }
     //else show it
@@ -295,7 +297,7 @@ define([
       )
       .classed("sea-sidebar-list-initiatives", true);
   };
-  proto.hideInitiativeList = function() {
+  proto.hideInitiativeList = function () {
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     let initiativeListSidebar = document.getElementById(
@@ -305,7 +307,7 @@ define([
     sidebar
       .on(
         "transitionend",
-        function() {
+        function () {
           if (event.target.className === "w3-btn") return;
           if (event.propertyName === "transform") {
             // let initiativeListBounds = initiativeListSidebar.getBoundingClientRect();
@@ -341,6 +343,6 @@ define([
   }
   var pub = {
     init: init
-    };
+  };
   return pub;
 });
