@@ -100,10 +100,10 @@ body {
 }
 
 @media (min--moz-device-pixel-ratio: 1.5),
-  (-o-min-device-pixel-ratio: 3/2),
-  (-webkit-min-device-pixel-ratio: 1.5),
-  (min-device-pixel-ratio: 1.5),
-  (min-resolution: 1.5dppx) {
+(-o-min-device-pixel-ratio: 3/2),
+(-webkit-min-device-pixel-ratio: 1.5),
+(min-device-pixel-ratio: 1.5),
+(min-resolution: 1.5dppx) {
   .sea-marker {
     background-image: url(../lib/images/markers-sea@2x.png);
     background-size: 720px 46px;
@@ -428,6 +428,7 @@ body {
 .map-app-display-container {
   z-index: 30;
 }
+
 div.map-app-map-container {
   overflow: hidden;
   position: absolute;
@@ -619,6 +620,7 @@ div.leaflet-popup-content {
 .sea-initiative-popup h2,
 .sea-initiative-popup h3,
 .sea-initiative-popup h4,
+.sea-initiative-popup h5,
 .sea-initiative-popup p {
   font-family: var(--sea-font-family-sans-serif);
   font-weight: 700;
@@ -637,6 +639,14 @@ div.leaflet-popup-content {
 .sea-initiative-sidebar-content h4 {
   font-weight: 600;
   font-size: 0.95rem;
+  margin-top: 0rem;
+  color: var(--dark-gray);
+}
+
+.sea-initiative-popup h5,
+.sea-initiative-sidebar-content h5 {
+  font-weight: 500;
+  font-size: 0.9rem;
   margin-top: 0rem;
   color: var(--dark-gray);
 }
@@ -697,9 +707,11 @@ div.leaflet-popup-content {
   margin: 0px;
   width: auto;
 }
+
 #dir-filter:focus {
   outline: none;
 }
+
 #dir-title {
   padding: 0px 0px 0px 16px;
 }
@@ -718,14 +730,17 @@ div.leaflet-popup-content {
   margin-top: -150px;
   margin-left: -150px;
 
-  -webkit-animation: spin 1s linear infinite; /* Safari */
+  -webkit-animation: spin 1s linear infinite;
+  /* Safari */
   animation: spin 1s linear infinite;
 }
+
 /* Safari */
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
   }
+
   100% {
     -webkit-transform: rotate(360deg);
   }
@@ -735,6 +750,7 @@ div.leaflet-popup-content {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -746,7 +762,8 @@ div.leaflet-popup-content {
   height: 100px;
   top: 50%;
   left: 50%;
-  margin-left: -100px; /* margin is -0.5 * dimension */
+  margin-left: -100px;
+  /* margin is -0.5 * dimension */
   margin-top: -40px;
   font-size: 20px;
 }
@@ -765,29 +782,22 @@ div.leaflet-popup-content {
     justify-content: flex-start;
     font-size: 1.4em;
   }
+
   .sidebar-normal-size-close-btn {
     display: none;
   }
 }
 
-#company-logo{
+#company-logo {
   width: 200px;
   height: 100px;
-  position:relative;
-  left:25%;
-  bottom:10px;
+  position: relative;
+  left: 25%;
+  bottom: 10px;
 }
 
-#logo-holder{
-  display:inline;
+#logo-holder {
+  display: inline;
   pointer-events: none;
   user-select: none;
-}
-
-
-p.sea-initiative-secondary-activity {
-  font-size: 12px;
-  font-weight: bolder;
-  font-family: lato;
-  color: var(--dark-gray);
 }

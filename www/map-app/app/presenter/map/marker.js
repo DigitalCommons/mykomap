@@ -50,7 +50,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
         '<h4 class="sea-initiative-org-structure">{initiative.org-structure}</h4>' +
         '<h4 class="sea-initiative-economic-activity">Activity: {initiative.economic-activity}</h4>' +
-        '<p class="sea-initiative-secondary-activity">Secondary Activities: {initiative.secondary-activity}</p>' +
+        '<h5 class="sea-initiative-secondary-activity">Secondary Activities: {initiative.secondary-activity}</h5>' +
         "<p>{initiative.desc}</p>" +
         "{dotcoop.domains}" +
         "</div>" +
