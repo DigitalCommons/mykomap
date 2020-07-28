@@ -12,7 +12,8 @@ define([
   "json!configuration/version.json",
   "text!configuration/about.html!strip",
   "app/model/config_schema",
-], function(config_json, version_json, about_html, config_schema) {
+  "configuration/popup",
+], function (config_json, version_json, about_html, config_schema, popup) {
   "use strict";
 
   console.log(version_json);
@@ -22,11 +23,11 @@ define([
   const methods = {}; // Exported methods
   const data = {}; // The config data, indexed by id
 
-  const inits = Object.assign({}, {aboutHtml: about_html}, config_json, version_json);
+  const inits = Object.assign({}, { aboutHtml: about_html }, config_json, version_json);
   // (Avoiding ES2018 spread syntax for now)
-  
+
   const configSchema = config_schema(inits);
-  
+
   // Dynamically construct the config object from the schema
   configSchema.forEach((def) => {
     // Defaults.
@@ -34,19 +35,19 @@ define([
     let getter = def.getter;
 
     accessors[def.id] = {};
-    
+
     // Define getters by default.
     // Adjust the getter based on the config schema
-    if (typeof(getter) === 'function') {
+    if (typeof (getter) === 'function') {
       // A function, bind it's `this` to data.
-      getter = def.getter.bind(data); 
+      getter = def.getter.bind(data);
       if (getter.name
-          && getter.name !== 'anonymous') {
+        && getter.name !== 'anonymous') {
         // A named function, use its name.
         getterName = def.getter.name;
       }
     }
-    else if (typeof(getter) === 'string') {
+    else if (typeof (getter) === 'string') {
       // A string, use it as the getter name and a default getter implementation.
       getterName = getter;
       getter = () => data[def.id];
@@ -59,26 +60,26 @@ define([
       // Anything else...
       throw new Error(`config schema for ${def.id}.getter must be a string or a function`);
     }
-    
+
     methods[getterName] = getter;
     accessors[def.id].get = getter;
-    
+
     // Allow setters to be defined, but not by default
     if (def.setter !== undefined) {
       let setter = def.setter;
       let setterName;
-      
+
       // Adjust the setter based on the config schema
-      if (typeof(setter) === 'function') {
+      if (typeof (setter) === 'function') {
         // A function, bind it's `this` to data.
-        setter = setter.bind(data); 
+        setter = setter.bind(data);
         if (setter.name
-            && setter.name !== 'anonymous') {
+          && setter.name !== 'anonymous') {
           // A named function, use its name.
           setterName = setter.name;
         }
       }
-      else if (typeof(setter) === 'string') {
+      else if (typeof (setter) === 'string') {
         // A string, use it as the getter name and a default getter implementation.
         setterName = setter;
         setter = (val) => { data[def.id] = val };
@@ -102,22 +103,22 @@ define([
   // Define an 'add' method, which sets any settable items in the
   // object passed to the init function
   methods.add = (cfg) => {
-    if (typeof(cfg) !== 'object')
+    if (typeof (cfg) !== 'object')
       throw new Error(`argument to add must be an object`);
-    console.log("add", cfg);    
+    console.log("add", cfg);
     Object.keys(cfg).forEach(id => {
       const def = configSchema.find((e) => id === e.id);
       if (!def) {
         console.log(`ignoring invalid config item ${id}`);
         return;
       }
-      
+
       const setter = accessors[id].set;
       if (!setter) {
         console.log(`ignoring unsettable config item ${id}`);
         return;
       }
-      
+
       setter.call(data, cfg[id]);
     });
   };
@@ -134,11 +135,11 @@ define([
 
     Object.keys(cfg).forEach(id => {
       const def = configSchema.find((e) => id === e.id);
-      result[id] = (def && def.type && def.type.parseString)?
+      result[id] = (def && def.type && def.type.parseString) ?
         def.type.parseString(cfg[id]) : cfg[id];
     });
     return result;
   };
-  
+
   return methods; // hides the data by closing over it
 });

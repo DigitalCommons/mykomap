@@ -1,8 +1,9 @@
-define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], function (
+define(["app/eventbus", "presenter", "model/config", "model/sse_initiative", "configuration/popup",], function (
   eventbus,
   presenter,
   config,
-  sse_initiatives
+  sse_initiatives,
+  popup
 ) {
   "use strict";
 
@@ -35,6 +36,17 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
   //   return sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
   // };
   proto.getInitiativeContent = function (initiative) {
+    if (popup && popup.getPopup)
+      return popup.getPopup(initiative, sse_initiatives);
+    else
+      this.getDefaultPopup(initiative);
+  };
+
+
+  //this will never be used since define(["configuration/popup"]) 
+  //will crash if there is no popup.js file in the configuration folder
+  proto.getDefaultPopup = function (initiative) {
+
     let orgStructures = sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
     let activitiesVerbose = sse_initiatives.getVerboseValuesForFields()["Activities"];
     let address = "",
@@ -216,7 +228,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
     );
 
     return popupHTML;
-  };
+  }
 
   proto.getMarkerColor = function (initiative) {
     const hasWww = initiative.www && initiative.www.length > 0;
