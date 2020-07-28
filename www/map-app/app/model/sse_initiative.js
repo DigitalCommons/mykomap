@@ -168,6 +168,15 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       facebook: { value: e.facebook, enumerable: true }
     });
 
+    if (this.regorg) this.orgStructure.push(this.regorg);
+    if (this.activity) this.activities.push(this.activity);
+
+    //check if lat/lng are numbers and no letters in it
+    if (isAlpha(that.lat) || isAlpha(that.lng)) {
+      that.lat = undefined;
+      that.lng = undefined;
+    }
+
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
       let field = filterable.field;
@@ -177,29 +186,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         registeredValues[label] = { All: [this] };
         registeredValues[label][this[field]] = [this];
       } else {
-        registeredValues[label]["All"].push(this);
-        // registeredValues[label]["ALL"].sort(function(a, b) {
-        //   return sortInitiatives(a, b);
-        // });
+        // console.log(registeredValues[label]["All"]);
+        registeredValues[label]["All"] = insert(this, registeredValues[label]["All"]);
         if (registeredValues[label][this[field]]) {
-          registeredValues[label][this[field]].push(this);
-          // registeredValues[label][this[field]].sort(function(a, b) {
-          //   return sortInitiatives(a, b);
-          // });
+          registeredValues[label][this[field]] = insert(this, registeredValues[label][this[field]]);
         } else {
           registeredValues[label][this[field]] = [this];
         }
       }
     });
-    if (this.regorg) this.orgStructure.push(this.regorg);
-    if (this.activity) this.activities.push(this.activity);
 
-    //check if lat/lng are numbers and no letters in it
-    if (isAlpha(that.lat) || isAlpha(that.lng)) {
-      that.lat = undefined;
-      that.lng = undefined;
-    }
-    loadedInitiatives.push(this);
+    insert(this, loadedInitiatives);
     initiativesByUid[this.uniqueId] = this;
 
     // Run new query to get activities
@@ -226,12 +223,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   function sortInitiatives(a, b) {
-
-    let f1 = a.name.toLowerCase();
-    let f2 = b.name.toLowerCase();
-    if (f1 > f2) return 1;
-    else if (f1 < f2) return -1;
-    else return 0;
+    return a.name.localeCompare(b.name);
   }
 
   function getRegisteredValues() {
@@ -326,6 +318,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         loadNextInitiatives();
       });
     } else {
+      sortLoadedData();
       performance.mark("endProcessing");
       // var marks = performance.getEntriesByType("mark");
       console.info(
@@ -333,8 +326,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         ${performance.getEntriesByName("endProcessing")[0].startTime -
         performance.getEntriesByName("startProcessing")[0].startTime}`
       );
-      sortLoadedData();
-      eventbus.publish({ topic: "Initiative.complete" });
+      //if more left
+      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset that you just loaded
     }
   }
   function add(json) {
@@ -342,34 +335,49 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     loadNextInitiatives();
   }
 
+  //taken from 
+  function insert(element, array) {
+    array.splice(locationOf(element, array), 0, element);
+    let ar = [...array];
+    // console.log(ar)
+    return array;
+  }
 
+  function locationOf(element, array, start, end) {
+    start = start || 0;
+    end = end || array.length;
+    var pivot = parseInt(start + (end - start) / 2, 10);
+    if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
+      //SPECIAL CASE FOR ARRAY WITH LEN = 1
+      if (array.length == 1) {
+        return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+      }
+      else if
+        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+      else
+        return pivot + 1;
+    }
+
+    if (sortInitiatives(array[pivot], element) > 0) {
+      return locationOf(element, array, start, pivot);
+    } else {
+      return locationOf(element, array, pivot, end);
+    }
+
+  }
+
+  //sorts only the filterable fields not the initiatives they hold
   function sortLoadedData() {
-    // loop through the filters and sort their data, then sort the keys in order
+    // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
       let label = filterable.label;
-      console.log("number of initiatives to sort", loadedInitiatives.length);
-      // Create the object that holds the registered values for the current field if it hasn't already been created
       if (registeredValues[label]) {
-        /*unordered = 
-          field1 => [initiatives],
-          field2 => [initiatives],
-          fieldN => [initiatives],
-        */
-        //sort keys and initiatives
-        //TODO: do the same for activities (copy sort from directories)
         const ordered = {};
         Object.keys(registeredValues[label]).sort().forEach(function (key) {
-          //sort initiatives
-          registeredValues[label][key].sort(function (a, b) {
-            return sortInitiatives(a, b);
-          });
-          //new order keys
           ordered[key] = registeredValues[label][key];
         });
-
         //finished
         registeredValues[label] = ordered;
-
       }
     });
 
@@ -434,13 +442,13 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   //TODO: this whole structure will be pretty glitchy when multithreaded
   //need to fix this
+  let startedLoading = false;
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
-      loadDataset(ds[0], true);
       ds.forEach(dataset => {
         loadDataset(dataset, false, false);
       });
@@ -453,20 +461,26 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   function loadDataset(dataset, mixed = false, sameas = true) {
 
-    var service = mixed
-      ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
-      :
-      (sameas ?
-        config.getServicesPath() + "get_dataset.php?dataset=" + dataset
-        : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
-
+    // var service = mixed
+    //   ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
+    //   :
+    //   (sameas ?
+    //     config.getServicesPath() + "get_dataset.php?dataset=" + dataset
+    //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
+    var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
     console.log(service);
     var response = null;
     var message = null;
-    eventbus.publish({
-      topic: "Initiative.loadStarted",
-      data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
-    });
+    if (!startedLoading) {
+      eventbus.publish({
+        topic: "Initiative.loadStarted",
+        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
+      });
+      startedLoading = true;
+    }
+    else {
+      //load at bottom of screen msg
+    }
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:
     //setTimeout(function() {
