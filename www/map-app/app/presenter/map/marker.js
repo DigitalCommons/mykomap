@@ -42,9 +42,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative"], fu
       locality,
       postcode,
       dotcoop =
-        config.namedDatasets().indexOf("dotcoop") > -1 ||
-        config.namedDatasets().indexOf("dotcooptest") > -1 ||
-        config.namedDatasets().indexOf("dotcoop-sandbox") > -1,
+        initiative.dataset.includes("dotcoop"),
       popupHTML =
         '<div class="sea-initiative-details">' +
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
