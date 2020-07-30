@@ -147,7 +147,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative", "co
       let domains = initiative.www.split(";");
       var domainsList = "<p>Domains</p><ul>";
       for (let domain of domains) {
-        domainsList += '<li><a href="' + domain + '">' + domain + "</a></li>";
+        domainsList += '<li><a href="' + domain + '" target="_blank">' + domain + "</a></li>";
       }
       domainsList += "</ul>";
     }
@@ -188,7 +188,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative", "co
     if (initiative.email) {
       popupHTML = popupHTML.replace(
         "{initiative.email}",
-        '<a class="fa fa-at" href="mailto:' + initiative.email + '"></a>'
+        '<a class="fa fa-at" href="mailto:' + initiative.email + '" target="_blank" ></a>'
       );
     } else popupHTML = popupHTML.replace("{initiative.email}", "");
 
@@ -196,7 +196,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative", "co
     if (initiative.twitter) {
       popupHTML = popupHTML.replace(
         "{initiative.twitter}",
-        '<a class="fab fa-twitter" href="https://twitter.com/' + initiative.twitter + '"></a>'
+        '<a class="fab fa-twitter" href="https://twitter.com/' + initiative.twitter + '" target="_blank" ></a>'
       );
     } else popupHTML = popupHTML.replace("{initiative.twitter}", "");
 
@@ -204,7 +204,7 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative", "co
     if (initiative.facebook) {
       popupHTML = popupHTML.replace(
         "{initiative.facebook}",
-        '<a class="fab fa-facebook" href="https://facebook.com/' + initiative.facebook + '"></a>'
+        '<a class="fab fa-facebook" href="https://facebook.com/' + initiative.facebook + '" target="_blank" ></a>'
       );
     } else popupHTML = popupHTML.replace("{initiative.facebook}", "");
 
