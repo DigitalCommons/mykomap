@@ -36,7 +36,36 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       AM130: "Agriculture",
       AM140: "Industry",
       AM150: "Utilities",
-      AM160: "Transport"
+      AM160: "Transport",
+      ICA10: "Agriculture",
+      ICA20: "Dairy",
+      ICA30: "Forestry",
+      ICA40: "Irrigation",
+      ICA50: "Fishery",
+      ICA60: "Artisans",
+      ICA70: "Construction",
+      ICA80: "Industry",
+      ICA90: "Manufacturing",
+      ICA100: "Mining",
+      ICA110: "Professional",
+      ICA120: "Service",
+      ICA130: "Tourism",
+      ICA140: "Financial Services",
+      ICA150: "Insurance",
+      ICA160: "Education",
+      ICA170: "Health",
+      ICA180: "Community",
+      ICA190: "Social",
+      ICA200: "Social Service",
+      ICA210: "Housing",
+      ICA220: "Transport",
+      ICA230: "Utility",
+      ICA240: "Retail",
+      ICA250: "Production",
+      ICA260: "Wholesale and Retail",
+      ICA270: "Education / Health / Social Work",
+      ICA280: "Other Services",
+      ICA290: "All"
     },
     "Organisational Structure": {
       OS10: "Community group (formal or informal)",
@@ -62,7 +91,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       OS200: "Regional, state or provincial level federation or union",
       OS210: "Cooperative group",
       OS220: "Government agency/body",
-      OS230: "Supranational"
+      OS230: "Supranational",
+      OS240: "Cooperative of cooperatives / mutuals"
     }
   };
 
@@ -165,7 +195,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       nongeoLat: { value: config.getDefaultLatLng()[0], enumerable: true },
       nongeoLng: { value: config.getDefaultLatLng()[1], enumerable: true },
       twitter: { value: e.twitter, enumerable: true },
-      facebook: { value: e.facebook, enumerable: true }
+      facebook: { value: e.facebook, enumerable: true },
+      region: { value: e.region, enumerable: true }
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);
