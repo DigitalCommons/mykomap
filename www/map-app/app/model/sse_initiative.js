@@ -65,7 +65,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       ICA260: "Wholesale and Retail",
       ICA270: "Education / Health / Social Work",
       ICA280: "Other Services",
-      ICA290: "All"
+      ICA290: "All",
+      q09: "Coop Promoter/Supporter"
     },
     "Organisational Structure": {
       OS10: "Community group (formal or informal)",
@@ -138,6 +139,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       ? getSkosCode(e.primaryActivity)
       : undefined;
 
+    let qualifierCode = e.qualifier
+      ? getSkosCode(e.qualifier)
+      : undefined;
+
     let activityCode = e.activity
       ? getSkosCode(e.activity)
       : undefined;
@@ -196,7 +201,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       nongeoLng: { value: config.getDefaultLatLng()[1], enumerable: true },
       twitter: { value: e.twitter, enumerable: true },
       facebook: { value: e.facebook, enumerable: true },
-      region: { value: e.region, enumerable: true }
+      region: { value: e.region, enumerable: true },
+      qualifier: { value: qualifierCode, enumerable: true }
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);

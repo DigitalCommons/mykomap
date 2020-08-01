@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Based on code originally written by:
 // Author: John Wright
 // Website: http://johnwright.me/blog
@@ -7,7 +7,7 @@
 $base_url = __DIR__ . "/../configuration";
 //$cacheFile = "locCache.json";
 //TODO sanitize all user input
-function report_success($response) 
+function report_success($response)
 {
 	$result = array();
 	// API response uses JSend: https://labs.omniti.com/labs/jsend
@@ -16,7 +16,7 @@ function report_success($response)
 	$json_res = json_encode($result);
 	//make sure no one else can write and file exists only for us
 	//should be safe (i.e. writing .json and hardcoded value for name)
-	file_put_contents ("locCache.json" , $json_res);
+	file_put_contents("locCache.json", $json_res);
 	echo $json_res;
 }
 function report_error_and_die($msg)
@@ -27,8 +27,7 @@ function report_error_and_die($msg)
 	$result["message"] = $msg;
 	if (function_exists('http_response_code')) {
 		http_response_code(500);
-	}
-	else {
+	} else {
 		// TODO - use header() function
 	}
 	echo json_encode($result);
@@ -42,23 +41,24 @@ function getSparqlUrl($dataset, $q, $uid)
 	$query = file_get_contents("$base_url/$dataset/$q");
 	$endpoint = trim(file_get_contents("$base_url/$dataset/endpoint.txt"));
 	$default_graph_uri = trim(file_get_contents("$base_url/$dataset/default-graph-uri.txt"));
-	
-	$query=str_replace("__UID__", addslashes($uid), $query);
+
+	$query = str_replace("__UID__", addslashes($uid), $query);
 	// TODO - Consider using HTTP POST?
-	$searchUrl = $endpoint.'?'
-		.'default-graph-uri='.urlencode($default_graph_uri)
-		.'&query='.urlencode($query);
+	$searchUrl = $endpoint . '?'
+		. 'default-graph-uri=' . urlencode($default_graph_uri)
+		. '&query=' . urlencode($query);
 
 	return $searchUrl;
 }
-function request($url){
+function request($url)
+{
 
-	
+
 	// is curl installed?
-	if (!function_exists('curl_init')){ 
+	if (!function_exists('curl_init')) {
 		report_error_and_die("PHP can't find function curl_init. Is CURL installed?");
 	}
-	$ch= curl_init();
+	$ch = curl_init();
 
 	$headers = array(
 		"Accept: application/json"
@@ -82,8 +82,8 @@ function request($url){
 
 	// See curl docs: http://www.php.net/curl_setopt
 	$response = curl_exec($ch);
-	if (curl_errno($ch)) { 
-		report_error_and_die("PHP curl_exec produces error: " . curl_error($ch)); 
+	if (curl_errno($ch)) {
+		report_error_and_die("PHP curl_exec produces error: " . curl_error($ch));
 	}
 
 	curl_close($ch);
@@ -104,15 +104,14 @@ if (isset($_GET["uid"])) {
 		case "orgStructure":
 			$q = "org-structure.rq";
 			break;
-		default: 
+		default:
 			break;
 	}
 }
-if (file_exists("locCache.json") && !isset($_GET["uid"]) ) {
+if (file_exists("locCache.json") && !isset($_GET["uid"])) {
 	$cached_res = file_get_contents("locCache.json");
 	echo $cached_res;
-}
-else{
+} else {
 	// Add a uid to get the values for a specific initiative (currently used for activities and org structure)
 	// TODO: Need to make more secure
 	$uid = isset($_GET["uid"]) ? $_GET["uid"] : "";
@@ -124,13 +123,13 @@ else{
 	// The keys correspond to two things:
 	//   1. The names of the variables used in the SPARQL query (see Initiative::create_sparql_files in generate-triples.rb)
 	//   2. The names used in the JSON that is returned to the map-app
-	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "postcode", "country","twitter","facebook", "primaryActivity", "activity", "orgStructure", "tel", "email");
+	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "qualifier", "postcode", "country", "twitter", "facebook", "primaryActivity", "activity", "orgStructure", "tel", "email");
 	// $keys = array("name", "uri", "lat", "lng", "country");
 
 	$result = array();
-	foreach($res["results"]["bindings"] as $item) {
+	foreach ($res["results"]["bindings"] as $item) {
 		$obj = array();
-		foreach($keys as $key) {
+		foreach ($keys as $key) {
 			// Some keys are optional (e.g. www and regorg). Check a key is defined before using it:
 			if (array_key_exists($key, $item)) {
 				$obj[$key] = $item[$key]["value"];
@@ -145,4 +144,3 @@ else{
 	// echo json_encode($requestURL);
 	report_success($result);
 }
-?>
