@@ -154,13 +154,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
+
+
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
+        initiative.searchstr += values["Organisational Structure"][regorgCode];
       }
       // if the activity is not in the initiative then add it
       if (activityCode && !initiative.activities.includes(activityCode)) {
         initiative.activities.push(activityCode);
+        initiative.searchstr += values["Activities"][activityCode];
       }
 
       //update pop-up
@@ -188,8 +192,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         enumerable: true
       },
       searchstr: {
-        value: config.getSearchedFields().map(x => e[x]).join("")
-        , enumerable: true
+        value: genSearchValues(config.getSearchedFields(), e)
+        , enumerable: true, writable: true
       },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: activityCode, enumerable: true, writable: true },
@@ -245,6 +249,58 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // loadPluralObjects("orgStructure", this.uniqueId);
   }
 
+  function genSearchValues(srch, e) {
+    let searchedFields = [...srch]
+    // Not all initiatives have activities
+    let val = "";
+
+
+    //handle special fields
+    if (searchedFields.includes("primaryActivity")) {
+      val += e.primaryActivity
+        ? values["Activities"][getSkosCode(e.primaryActivity)]
+        : "";
+      searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
+    }
+
+    if (searchedFields.includes("qualifier")) {
+      val += e.qualifier
+        ? values["Activities"][getSkosCode(e.qualifier)]
+        : "";
+      searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
+
+    }
+
+    if (searchedFields.includes("activity") || searchedFields.includes("activities")) {
+      val += e.activity
+        ? values["Activities"][getSkosCode(e.activity)]
+        : "";
+      if (searchedFields.includes("activity"))
+        searchedFields.splice(searchedFields.indexOf("activity"), 1);
+      if (searchedFields.includes("activities"))
+        searchedFields.splice(searchedFields.indexOf("activities"), 1);
+    }
+
+    if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
+      val += e.regorg
+        ? values["Organisational Structure"][getSkosCode(e.regorg)]
+        : "";
+
+      if (searchedFields.includes("regorg"))
+        searchedFields.splice(searchedFields.indexOf("regorg"), 1);
+      if (searchedFields.includes("orgStructure"))
+        searchedFields.splice(searchedFields.indexOf("orgStructure"), 1);
+    }
+    //handle other fields
+    val += searchedFields.map(x => e[x]).join("");
+
+    //format
+    val = val.toUpperCase();
+
+    return val;
+
+  }
+
   function isAlpha(str) {
     if (!str) return false;
     var code, i, len;
@@ -276,7 +332,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function (i) {
-      return i.searchstr.toUpperCase().includes(up);
+      return i.searchstr.includes(up);
     }).sort((a, b) => sortInitiatives(a, b));
   }
 
