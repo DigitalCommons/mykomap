@@ -378,6 +378,11 @@ body {
   font-weight: 400;
 }
 
+.sea-initiative-non-geo {
+  color: gray;
+  font-style: italic;
+}
+
 .sea-initiative-sidebar-content {
   padding: 0;
 }

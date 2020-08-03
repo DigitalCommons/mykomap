@@ -37,7 +37,7 @@ define([
       });
 
     d3.select(".sea-main-sidebar").on("click", function () {
-      if(document.getElementById("dir-filter") && window.outerWidth >= 1080){
+      if (document.getElementById("dir-filter") && window.outerWidth >= 1080) {
         document.getElementById("dir-filter").focus();
       }
 
@@ -48,13 +48,13 @@ define([
 
   var dissapear;
 
-  proto.resetFilterSearch = function (){
-    if(document.getElementById("dir-filter")){
+  proto.resetFilterSearch = function () {
+    if (document.getElementById("dir-filter")) {
       document.getElementById("dir-filter").value = '';
       this.handleFilter('');
     }
   };
-  
+
   proto.handleFilter = function (input) {
     if (this.dissapear) {
       clearTimeout(this.dissapear);
@@ -150,7 +150,7 @@ define([
       directoryField,
       selectionKey
     );
-    
+
 
     //deselect all
     that.presenter.clearLatestSelection();
@@ -162,7 +162,7 @@ define([
     // }
 
     that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
-  
+
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     d3.select(".w3-btn").attr("title", "Hide directory");
@@ -198,7 +198,7 @@ define([
       topic: "Map.addFilter",
       data: {
         initiatives: initiatives,
-        filterName: (directoryField+selectionKey),
+        filterName: (directoryField + selectionKey),
         verboseName: title
       }
     });
@@ -207,14 +207,14 @@ define([
 
 
     //setup sidebar buttons in initiative list
-    const sidebarBtnHolder = selection.append("div").attr("class","initiative-list-sidebar-btn-wrapper");
+    const sidebarBtnHolder = selection.append("div").attr("class", "initiative-list-sidebar-btn-wrapper");
 
 
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
       .attr("title", "Show search")
-      .on("click", function() {
+      .on("click", function () {
 
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList",
@@ -231,18 +231,18 @@ define([
         eventbus.publish({
           topic: "Sidebar.showInitiatives",
         });
-        
+
       })
       .append("i")
       .attr("class", "fa fa-search");
 
-   
+
 
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0")
       .attr("title", "Show info")
-      .on("click", function() {
+      .on("click", function () {
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList",
         });
@@ -269,35 +269,35 @@ define([
 
 
 
-      if(true){
-        sidebarBtnHolder
-          .append("button")
-          .attr("class", "w3-button w3-border-0")
-          .attr("title", "Show Datasets")
-          .on("click", function() {
-            eventbus.publish({
-              topic: "Sidebar.hideInitiativeList",
-            });
-            eventbus.publish({
-              topic: "Markers.needToShowLatestSelection",
-              data: {
-                selected: []
-              }
-            });
-            eventbus.publish({
-              topic: "Sidebar.showDatasets",
-            });
-            // // eventbus.publish({
-            // //   topic: "Map.removeSearchFilter",
-            // //   });
-  
-          })
-          .append("i")
-          .attr("class", "fa fa-database");
-      }
-    
-      
-      
+    if (true) {
+      sidebarBtnHolder
+        .append("button")
+        .attr("class", "w3-button w3-border-0")
+        .attr("title", "Show Datasets")
+        .on("click", function () {
+          eventbus.publish({
+            topic: "Sidebar.hideInitiativeList",
+          });
+          eventbus.publish({
+            topic: "Markers.needToShowLatestSelection",
+            data: {
+              selected: []
+            }
+          });
+          eventbus.publish({
+            topic: "Sidebar.showDatasets",
+          });
+          // // eventbus.publish({
+          // //   topic: "Map.removeSearchFilter",
+          // //   });
+
+        })
+        .append("i")
+        .attr("class", "fa fa-database");
+    }
+
+
+
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
@@ -307,7 +307,7 @@ define([
         eventbus.publish({
           topic: "Map.removeFilter",
           data: {
-            filterName: directoryField+selectionKey,
+            filterName: directoryField + selectionKey,
             noZoom: true
           }
         });
@@ -319,7 +319,7 @@ define([
           topic: "Sidebar.hideInitiativeList"
         });
         that.presenter.clearLatestSelection();
-0
+        0
         // const latlng = presenter.latLngBounds(null);
         // eventbus.publish({
         //   topic: "Map.needsToBeZoomedAndPanned",
@@ -334,7 +334,7 @@ define([
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
-    
+
 
 
 
@@ -350,7 +350,7 @@ define([
         eventbus.publish({
           topic: "Map.removeFilter",
           data: {
-            filterName: directoryField+selectionKey,
+            filterName: directoryField + selectionKey,
             noZoom: true
           }
         });
@@ -362,12 +362,12 @@ define([
           topic: "Sidebar.hideInitiativeList"
         });
         that.presenter.clearLatestSelection();
-0
+        0
         // const latlng = presenter.latLngBounds(null);
         // eventbus.publish({
         //   topic: "Map.needsToBeZoomedAndPanned",
         //   data: {
-          //  initiatives:initaitives?
+        //  initiatives:initaitives?
         //     bounds: latlng,
         //     options: {
         //       maxZoom: 5
@@ -377,12 +377,12 @@ define([
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
-      
+
     selection
       .append("h2")
       .classed("sea-field", true)
       .text(title)
-      .on("click", function () {   
+      .on("click", function () {
         // if (window.outerWidth <= 800) {
         //   eventbus.publish({
         //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
@@ -393,29 +393,38 @@ define([
     list = selection.append("ul").classed("sea-initiative-list", true);
     for (let initiative of initiatives) {
       let activeClass = "";
+      let nongeoClass = "";
       if (
         this.presenter.contentStack.current() &&
         this.presenter.contentStack.current().initiatives[0] === initiative
       ) {
         activeClass = "sea-initiative-active";
       }
+
+      if (initiative.nongeo == 1) {
+        nongeoClass = "sea-initiative-non-geo";
+      }
+
       list
         .append("li")
         .text(initiative.name)
         .attr("data-uid", initiative.uniqueId)
         .classed(activeClass, true)
+        .classed(nongeoClass, true)
         .on("click", function () {
           eventbus.publish({
             topic: "Directory.InitiativeClicked",
             data: initiative
           });
         })
-        .on("mouseover", function(e) {
+        .on("mouseover", function (e) {
           that.presenter.onInitiativeMouseoverInSidebar(initiative);
         })
-        .on("mouseout", function(e) {
+        .on("mouseout", function (e) {
           that.presenter.onInitiativeMouseoutInSidebar(initiative);
         });
+
+
     }
     sidebar
       .on(
@@ -472,8 +481,8 @@ define([
         )
       );
     initiativeSidebar.classed("sea-initiative-sidebar-open", true);
-   // if (document.getElementById("map-app-leaflet-map").clientWidth < 800)
-   if (window.outerWidth < 800)
+    // if (document.getElementById("map-app-leaflet-map").clientWidth < 800)
+    if (window.outerWidth < 800)
       eventbus.publish({
         topic: "Sidebar.showSidebar"
       });
@@ -486,7 +495,7 @@ define([
     // initiativeContentElement.html(initiativeContent);
     initiativeSidebar.classed("sea-initiative-sidebar-open", false);
     d3.select(".sea-search-initiative-active")
-            .classed("sea-search-initiative-active",false);
+      .classed("sea-search-initiative-active", false);
   };
 
   Sidebar.prototype = proto;

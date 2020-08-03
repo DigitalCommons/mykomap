@@ -167,9 +167,15 @@ define([
     const pres = this.presenter;
     const that = this;
     initiatives.forEach(function (initiative) {
+      let initiativeClass = "w3-bar-item w3-button w3-mobile srch-initiative";
+
+      if (initiative.nongeo == 1) {
+        initiativeClass += " sea-initiative-non-geo";
+      }
+
       selection
         .append("button")
-        .attr("class", "w3-bar-item w3-button w3-mobile srch-initiative")
+        .attr("class", initiativeClass)
         .attr("data-uid", initiative.uniqueId)
         .attr("title", "Click to see details here and on map")
         // TODO - shift-click should remove initiative from selection,
