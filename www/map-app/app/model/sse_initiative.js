@@ -166,6 +166,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         initiative.activities.push(activityCode);
         initiative.searchstr += values["Activities"][activityCode];
       }
+      // if the qualifier is not in the initiative then add it
+      if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
+        initiative.qualifiers.push(qualifierCode);
+        initiative.searchstr += values["Activities"][qualifierCode];
+      }
 
       //update pop-up
       eventbus.publish({ topic: "Initiative.refresh", data: initiative });
@@ -206,11 +211,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       twitter: { value: e.twitter, enumerable: true },
       facebook: { value: e.facebook, enumerable: true },
       region: { value: e.region, enumerable: true },
-      qualifier: { value: qualifierCode, enumerable: true }
+      qualifier: { value: qualifierCode, enumerable: true },
+      qualifiers: { value: [], enumerable: true, writable: true }
+
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);
     if (this.activity) this.activities.push(this.activity);
+    if (this.qualifier) this.qualifiers.push(this.qualifier);
 
     //check if lat/lng are numbers and no letters in it
     if (isAlpha(that.lat) || isAlpha(that.lng)) {
@@ -263,12 +271,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
     }
 
-    if (searchedFields.includes("qualifier")) {
+    if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
       val += e.qualifier
         ? values["Activities"][getSkosCode(e.qualifier)]
         : "";
-      searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
-
+      if (searchedFields.includes("qualifier"))
+        searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
+      if (searchedFields.includes("qualifiers"))
+        searchedFields.splice(searchedFields.indexOf("qualifiers"), 1);
     }
 
     if (searchedFields.includes("activity") || searchedFields.includes("activities")) {
@@ -291,6 +301,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       if (searchedFields.includes("orgStructure"))
         searchedFields.splice(searchedFields.indexOf("orgStructure"), 1);
     }
+
     //handle other fields
     val += searchedFields.map(x => e[x]).join("");
 
