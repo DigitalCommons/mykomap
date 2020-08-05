@@ -362,7 +362,6 @@ define([
           topic: "Sidebar.hideInitiativeList"
         });
         that.presenter.clearLatestSelection();
-        0
         // const latlng = presenter.latLngBounds(null);
         // eventbus.publish({
         //   topic: "Map.needsToBeZoomedAndPanned",

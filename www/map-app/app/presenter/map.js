@@ -4,37 +4,37 @@ define([
   "presenter",
   "model/config",
   "view/map/marker"
-], function(eventbus, sse_initiative, presenter, config, markerView) {
+], function (eventbus, sse_initiative, presenter, config, markerView) {
   "use strict";
 
-  function Presenter() {}
+  function Presenter() { }
 
   var proto = Object.create(presenter.base.prototype);
 
   let allMarkers = [];
 
-  proto.getContextmenuItems = function() {
+  proto.getContextmenuItems = function () {
     // The context menu has been disabled (in www/app/view/map.js), in accordance with
     // https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
     // So, don't expect this to do anything!
     return [
       {
         text: "Placehoder 1 - does nothing",
-        callback: function(e) {
+        callback: function (e) {
           console.log("Context menu item 1 selected.");
           console.log(e);
         }
       },
       {
         text: "Placehoder 2 - does nothing",
-        callback: function(e) {
+        callback: function (e) {
           console.log("Context menu item 2 selected.");
           console.log(e);
         }
       },
       {
         text: "Launch Google maps",
-        callback: function(e) {
+        callback: function (e) {
           // Documentation of Google maps URL parameters from here:
           // https://moz.com/ugc/everything-you-never-wanted-to-know-about-google-maps-parameters
           // Example:
@@ -60,48 +60,109 @@ define([
       }
     ];
   };
-  proto.getMapEventHandlers = function() {
+  var copyTextToClipboard = function (text) {
+    var textArea = document.createElement("textarea");
+    // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
+    //
+    // *** This styling is an extra step which is likely not required. ***
+    //
+    // Why is it here? To ensure:
+    // 1. the element is able to have focus and selection.
+    // 2. if element was to flash render it has minimal visual impact.
+    // 3. less flakyness with selection and copying which **might** occur if
+    //    the textarea element is not visible.
+    //
+    // The likelihood is the element won't even render, not even a
+    // flash, so some of these are just precautions. However in
+    // Internet Explorer the element is visible whilst the popup
+    // box asking the user for permission for the web page to
+    // copy to the clipboard.
+    //
+
+    // Place in top-left corner of screen regardless of scroll position.
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+
+    // Ensure it has a small width and height. Setting to 1px / 1em
+    // doesn't work as this gives a negative w/h on some browsers.
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+
+    // We don't need padding, reducing the size if it does flash render.
+    textArea.style.padding = 0;
+
+    // Clean up any borders.
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+
+    // Avoid flash of white box if rendered for any reason.
+    textArea.style.background = 'transparent';
+
+
+    textArea.value = text;
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      var successful = document.execCommand('copy');
+      console.log('Copying text: ' + text);
+    } catch (err) {
+      console.log('Oops, unable to copy');
+    }
+
+    document.body.removeChild(textArea);
+  }
+
+  proto.getMapEventHandlers = function () {
     return {
-      click: function(e) {
+      click: function (e) {
         // Deselect any selected markers
         // this.marker.on("popupclose", e => {
         // console.log("Unselecting");
+        if (e.originalEvent.ctrlKey) {
+          copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
+        }
+
         eventbus.publish({
           topic: "Directory.InitiativeClicked",
           data: ""
         });
         // });
       },
-      load: function(e) {
+      load: function (e) {
         console.log("Map loaded");
       },
-      resize: function(e) {
+      resize: function (e) {
         window.seaMap.invalidateSize();
         console.log("Map resize", window.outerWidth);
       }
     };
   };
-  proto.onInitiativeNew = function(data) {
+  proto.onInitiativeNew = function (data) {
     const initiative = data,
       marker = this.view.addMarker(initiative).marker;
 
     if (marker.hasPhysicalLocation) allMarkers.push(marker);
   };
-    proto.refreshInitiative = function (data) {
-      const initiative = data;
-      this.view.refreshMarker(initiative);
-    };
+  proto.refreshInitiative = function (data) {
+    const initiative = data;
+    this.view.refreshMarker(initiative);
+  };
 
 
-  proto.onInitiativeReset = function(data) {
-    
+  proto.onInitiativeReset = function (data) {
+
     this.view.removeAllMarkers();
     allMarkers = [];
     console.log("removing all");
     //rm markers 
   };
 
-  proto.onInitiativeComplete = function() {
+  proto.onInitiativeComplete = function () {
     // Load the markers into the clustergroup
     this.view.fitBounds(this.getInitialBounds());
     this.view.unselectedClusterGroup.addLayers(allMarkers);
@@ -117,49 +178,49 @@ define([
   };
 
 
-  proto.onInitiativeDatasetLoaded = function(data) {
+  proto.onInitiativeDatasetLoaded = function (data) {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
     //console.log(data.latLngBounds());
     // this.view.fitBounds([[-45.87859, -162.60022], [76.47861, 176.84446]]);
   };
-  proto.onInitiativeLoadComplete = function() {
+  proto.onInitiativeLoadComplete = function () {
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
     this.view.stopLoading();
 
   };
-  proto.onInitiativeLoadMessage = function(data) {
+  proto.onInitiativeLoadMessage = function (data) {
     /* The protecting veil is now obsolete. */
     //view.showProtectingVeil(data.message);
     // TODO - hook this up to a log?
     this.view.startLoading(data);
-    
+
   };
 
   let previouslySelected = [];
   //this will manage markers pop-ing up and zooming
-  proto.onMarkersNeedToShowLatestSelection = function(data) {
+  proto.onMarkersNeedToShowLatestSelection = function (data) {
     console.log(data)
     const that = this;
-    previouslySelected.forEach(function(e) {
+    previouslySelected.forEach(function (e) {
       that.view.setUnselected(e);
     });
 
     previouslySelected = data.selected;
-    
+
     //zoom in and then select 
-    data.selected.forEach(function(e) {
+    data.selected.forEach(function (e) {
       that.view.setSelected(e);
     });
   };
 
 
-  proto.onNeedToShowInitiativeTooltip = function(data) {
+  proto.onNeedToShowInitiativeTooltip = function (data) {
     this.view.showTooltip(data);
   };
-  proto.onNeedToHideInitiativeTooltip = function(data) {
+  proto.onNeedToHideInitiativeTooltip = function (data) {
     this.view.hideTooltip(data);
   };
   //	proto.onInitiativeSelected = function(data) {
@@ -169,7 +230,7 @@ define([
   //		this.view.setSelected(initiative);
   //		this.view.zoomAndPanTo({lon: initiative.lng, lat: initiative.lat});
   //	};
-  proto.onMapNeedsToBeZoomedAndPanned = function(data) {
+  proto.onMapNeedsToBeZoomedAndPanned = function (data) {
     console.log("onMapNeedsToBeZoomedAndPanned ", data);
     const latLngBounds = data;
     this.view.flyToBounds(latLngBounds);
@@ -177,28 +238,28 @@ define([
     // this.view.setView(data);
   };
 
-  proto.onBoundsRequested = function(data) {
+  proto.onBoundsRequested = function (data) {
     this.view.fitBounds(data);
   };
 
-  proto.setZoom = function(data) {
+  proto.setZoom = function (data) {
     console.log("Zooming to ", data);
     const zoom = data;
     this.view.setZoom(zoom);
   };
 
-  proto.getInitialBounds = function() {
-    return config.getInitialBounds()==undefined?
+  proto.getInitialBounds = function () {
+    return config.getInitialBounds() == undefined ?
       sse_initiative.latLngBounds(null) : config.getInitialBounds();
   };
 
-  proto.getInitialZoom = function() {};
+  proto.getInitialZoom = function () { };
 
-  proto.setActiveArea = function(data) {
+  proto.setActiveArea = function (data) {
     this.view.setActiveArea(data);
   };
 
-  proto.getDisableClusteringAtZoomFromConfig = function() {
+  proto.getDisableClusteringAtZoomFromConfig = function () {
     return config.getDisableClusteringAtZoom() || false;
   };
 
@@ -250,7 +311,7 @@ define([
 
 
 
-  proto.removeFilters = function(){
+  proto.removeFilters = function () {
     //remove filters
     filtered = {};
     filteredInitiativesUIDMap = {};
@@ -262,7 +323,7 @@ define([
 
 
 
-  proto.removeFilter = function(data) {
+  proto.removeFilter = function (data) {
     const filterName = data.filterName;
     //if filter doesn't exist don't do anything
     if (!Object.keys(filtered).includes(filterName))
@@ -273,7 +334,7 @@ define([
     delete filtered[filterName];
 
     //if no filters left call remove all and stop
-    if (Object.keys(filtered).length <= 0){
+    if (Object.keys(filtered).length <= 0) {
       this.removeFilters();
       return;
     }
@@ -299,13 +360,13 @@ define([
 
 
     //apply filters
-    this.applyFilter(); 
+    this.applyFilter();
   };
 
 
 
   //should return an array of unique initiatives in filters
-  function getFiltered () {
+  function getFiltered() {
     return Object.values(filteredInitiativesUIDMap);
   };
 
@@ -340,10 +401,10 @@ define([
 
   let hidden = [];
   let lastRequest = [];
-  proto.addSearchFilter = function(data) {
+  proto.addSearchFilter = function (data) {
     //if no results remove the filter
 
-    if(data.initiatives!=null && data.initiatives.length == 0){
+    if (data.initiatives != null && data.initiatives.length == 0) {
       // uncommenting this will reveal all initiatives on a failed search
       // this.removeSearchFilter();
       // return;
@@ -355,25 +416,25 @@ define([
     }
 
     //if the results match the previous results don't do anything
-    if(data.initiatives == lastRequest)
+    if (data.initiatives == lastRequest)
       return;
 
     lastRequest = data.initiatives; //cache the last request
 
     //get the ids from the passed data
-    const initiativeIds = data.initiatives.map(i=>i.uniqueId);
+    const initiativeIds = data.initiatives.map(i => i.uniqueId);
     //case a - global search
     const isCaseA = Object.keys(filtered).length == 0;
-    if(isCaseA) {//no filter case
+    if (isCaseA) {//no filter case
       //hide the ones you need to hide, i.e. difference between ALL and initiativesMap
-      hidden = loadedInitiatives.filter(i=>{
+      hidden = loadedInitiatives.filter(i => {
         return !initiativeIds.includes(i.uniqueId);
       });
- 
+
 
     }
     else {//case B - filter search
-      hidden = getFiltered().filter(i=>{
+      hidden = getFiltered().filter(i => {
         return !initiativeIds.includes(i.uniqueId);
       });
     }
@@ -385,11 +446,11 @@ define([
 
     //zoom and pan
 
-    if(data.initiatives.length > 0){
+    if (data.initiatives.length > 0) {
       var options = {
         maxZoom: config.getMaxZoomOnSearch()
       }
-      if(options.maxZoom == 0)
+      if (options.maxZoom == 0)
         options = {};
 
       const latlng = sse_initiative.latLngBounds(data.initiatives)
@@ -398,35 +459,35 @@ define([
         data: {
           initiatives: data.initiatives,
           bounds: latlng,
-          options : options
+          options: options
         }
       });
     }
   };
 
-  proto.getLogo = function() {
+  proto.getLogo = function () {
     return config.logo();
   };
 
-  proto.refresh = function(){
+  proto.refresh = function () {
     eventbus.publish({
       topic: "Map.refresh",
       data: ""
     });
   }
 
-  proto.selectAndZoomOnInitiative = function(data){
+  proto.selectAndZoomOnInitiative = function (data) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
 
-    //this can get called multiple times make sure it doesn't crash
-  proto.removeSearchFilter = function() {
+  //this can get called multiple times make sure it doesn't crash
+  proto.removeSearchFilter = function () {
 
     //if no search filter to remove just return
-    if(hidden.length === 0)
+    if (hidden.length === 0)
       return;
-      
+
     //show hidden markers
     //markerView.showMarkers(hidden);
     this.applyFilter();
@@ -470,7 +531,7 @@ define([
     });
 
   };
-  
+
 
   //END SEARCH HIGHLIGHT
 
@@ -482,13 +543,13 @@ define([
     p.registerView(view);
     eventbus.subscribe({
       topic: "Initiative.datasetLoaded",
-      callback: function(data) {
+      callback: function (data) {
         p.onInitiativeDatasetLoaded(data);
       }
     });
     eventbus.subscribe({
       topic: "Initiative.new",
-      callback: function(data) {
+      callback: function (data) {
         p.onInitiativeNew(data);
       }
     });
@@ -500,13 +561,13 @@ define([
     });
     eventbus.subscribe({
       topic: "Initiative.reset",
-      callback: function(data) {
+      callback: function (data) {
         p.onInitiativeReset(data);
       }
     });
     eventbus.subscribe({
       topic: "Initiative.complete",
-      callback: function() {
+      callback: function () {
         p.onInitiativeLoadComplete();
         p.onInitiativeComplete();
       }
@@ -514,64 +575,64 @@ define([
 
     eventbus.subscribe({
       topic: "Initiative.loadStarted",
-      callback: function(data){ 
-        p.onInitiativeLoadMessage(data); 
+      callback: function (data) {
+        p.onInitiativeLoadMessage(data);
       }
     });
 
 
     //eventbus.subscribe({topic: "Initiative.loadComplete", callback: function(data) { p.onInitiativeLoadComplete(data); } });
-    eventbus.subscribe({topic: "Initiative.loadFailed", callback: function(data) { p.onInitiativeLoadMessage(data); } });
+    eventbus.subscribe({ topic: "Initiative.loadFailed", callback: function (data) { p.onInitiativeLoadMessage(data); } });
     // TODO - strip out this mechanism from everywhere it appears:
     //eventbus.subscribe({topic: "Initiative.selected", callback: function(data) { p.onInitiativeSelected(data); } });
     eventbus.subscribe({
       topic: "Markers.needToShowLatestSelection",
-      callback: function(data) {
+      callback: function (data) {
         p.onMarkersNeedToShowLatestSelection(data);
       }
     });
     eventbus.subscribe({
       topic: "Map.needsToBeZoomedAndPanned",
-      callback: function(data) {
+      callback: function (data) {
         p.onMapNeedsToBeZoomedAndPanned(data);
       }
     });
     eventbus.subscribe({
       topic: "Map.needToShowInitiativeTooltip",
-      callback: function(data) {
+      callback: function (data) {
         p.onNeedToShowInitiativeTooltip(data);
       }
     });
     eventbus.subscribe({
       topic: "Map.needToHideInitiativeTooltip",
-      callback: function(data) {
+      callback: function (data) {
         p.onNeedToHideInitiativeTooltip(data);
       }
     });
     eventbus.subscribe({
       topic: "Map.setZoom",
-      callback: function(data) {
+      callback: function (data) {
         p.setZoom(data);
       }
     });
 
     eventbus.subscribe({
       topic: "Map.setActiveArea",
-      callback: function(data) {
+      callback: function (data) {
         p.setActiveArea(data);
       }
     });
 
     eventbus.subscribe({
       topic: "Map.fitBounds",
-      callback: function(data) {
+      callback: function (data) {
         p.onBoundsRequested(data);
       }
     });
 
     eventbus.subscribe({
       topic: "Map.selectAndZoomOnInitiative",
-      callback: function(data){
+      callback: function (data) {
         p.selectAndZoomOnInitiative(data);
       }
     });
@@ -580,34 +641,34 @@ define([
 
     eventbus.subscribe({
       topic: "Map.addFilter", //change this
-      callback: function(data) {
+      callback: function (data) {
         p.addFilter(data);
       }
     });
     eventbus.subscribe({
       topic: "Map.refresh", //change this
-      callback: function(data) {
+      callback: function (data) {
         p.view.refresh();
       }
     });
 
     eventbus.subscribe({
       topic: "Map.removeFilter",
-      callback: function(data) {
+      callback: function (data) {
         p.removeFilter(data);
       }
     });
 
     eventbus.subscribe({
       topic: "Map.removeFilters",
-      callback: function(data) {
+      callback: function (data) {
         p.removeFilters();
       }
     });
 
     eventbus.subscribe({
       topic: "Map.addSearchFilter",
-      callback: function(data) {
+      callback: function (data) {
         p.addSearchFilter(data);
       }
     });//change this to search
@@ -619,7 +680,7 @@ define([
       }
     });
 
-    
+
 
     return p;
   }
