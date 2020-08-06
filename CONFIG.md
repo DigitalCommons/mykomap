@@ -201,7 +201,7 @@ Defines the zoom level above which to cluster pins; passed to Leaflet.markerclus
 - *default:* `name,www`
 - *settable?:* yes
 
-A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email
+A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email,qualifier
 
 
 
