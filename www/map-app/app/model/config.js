@@ -12,8 +12,7 @@ define([
   "json!configuration/version.json",
   "text!configuration/about.html!strip",
   "app/model/config_schema",
-  "configuration/popup",
-], function (config_json, version_json, about_html, config_schema, popup) {
+], function (config_json, version_json, about_html, config_schema) {
   "use strict";
 
   console.log(version_json);
