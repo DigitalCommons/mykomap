@@ -364,6 +364,7 @@ body {
   bottom: 0;
   width: 100%;
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
   background-color: white;
 }
@@ -371,6 +372,7 @@ body {
 .sea-initiatives-list-sidebar-content,
 .sea-initiative-sidebar-content {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
   padding: 0 0 1.4em;
   overflow-y: auto;
@@ -468,6 +470,7 @@ div.map-app-map-container {
 
 .map-app-sidebar-header {
   display: flex;
+  flex: 1 0 auto;
   justify-content: flex-start;
   background: white;
   color: var(--dark);
@@ -601,6 +604,7 @@ div.leaflet-popup-content {
 
 .sea-initiative-popup .leaflet-popup-content {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: row;
   margin: 0;
 }
@@ -784,6 +788,7 @@ div.leaflet-popup-content {
 @media (max-device-width: 1080px) {
   .initiative-list-sidebar-btn-wrapper {
     display: flex;
+    flex: 1 0 auto;
     justify-content: flex-start;
     font-size: 1.4em;
   }
