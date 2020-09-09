@@ -115,7 +115,7 @@ define([], function () {
     variant,
     timestamp,
     gitcommit,
-    version,
+    seaMapVersion,
     namedDatasets,
     namedDatasetsVerbose,
     htmlTitle,
@@ -177,7 +177,7 @@ define([], function () {
         descr: 'The git tag of the sea-map source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
-        init: () => version,
+        init: () => seaMapVersion,
         getter: 'getVersionTag',
         type: types.string,
       },
