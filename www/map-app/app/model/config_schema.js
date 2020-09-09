@@ -173,7 +173,7 @@ define([], function () {
         type: types.string,
       },
       {
-        id: 'version',
+        id: 'seaMapVersion',
         descr: 'The git tag of the sea-map source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
