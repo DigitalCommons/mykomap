@@ -187,6 +187,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       within: { value: e.within, enumerable: true },
       lat: { value: e.lat, enumerable: true, writable: true },
       lng: { value: e.lng, enumerable: true, writable: true },
+      manLat: { value: e.manLat, enumerable: true, writable: true },
+      manLng: { value: e.manLng, enumerable: true, writable: true },
       www: { value: e.www, enumerable: true },
       regorg: { value: regorgCode, enumerable: true },
       street: { value: e.street, enumerable: true },
@@ -224,6 +226,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if (isAlpha(that.lat) || isAlpha(that.lng)) {
       that.lat = undefined;
       that.lng = undefined;
+    }
+
+    //overwrite with manually added lat lng
+    if (this.manLat || this.manLng) {
+      this.lat = this.manLat;
+      this.lng = this.manLng;
     }
 
     // loop through the filterable fields and register
