@@ -1,6 +1,6 @@
 {
   "name": "sea-map",
-  "version": "0.1.36",
+  "version": "0.1.47",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
   "main": "www/map-app/app.js",
   "config": {},
@@ -40,6 +40,6 @@
   },
   "devDependencies": {
     "eslint": "^6.7.2",
-    "mocha": "^8.0.1"
+    "mocha": "^8.1.2"
   }
 }

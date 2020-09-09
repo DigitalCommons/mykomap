@@ -30,9 +30,18 @@ var commit = shell(`git rev-parse --short HEAD`);
 if (exec(`git diff-index --quiet HEAD`).status)
     commit += "-modified";
 
+// When run by a dependent package P, this resolves to
+// P/node_modules/sea-map/package.json.
+//
+// When run by sea-map itself (from bin/, in debug mode), it resolves
+// to its own package.json
+const sea_map_package_json = require('../package.json');
+
 const config = {
     variant: process.argv[2] || 'experimental',
     timestamp: timestamp,
     gitcommit: commit,
+    seaMapVersion: sea_map_package_json.version,
+    seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
 };
 console.log(JSON.stringify(config))

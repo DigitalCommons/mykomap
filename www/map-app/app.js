@@ -16,7 +16,8 @@ requirejs.config({
     model: "../app/model",
     presenter: "../app/presenter",
     data: "../app/data",
-
+    optional: "../app/optional",
+    
     configuration: "../../configuration",
     
     //jQuery: "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-beta1/jquery.min",
@@ -57,6 +58,13 @@ requirejs.config({
     json: "require/json",
     // json uses the text module, se we need it too:
     text: "require/text",
+  },
+  map: {
+    "*": {
+      // Allow the optional plug-in to be invoked in requires
+      // by just the prefix 'optional!'
+      optional: "optional",
+    },
   },
   shim: {
     // leaflet must be loaded before leafletAwesomeMarkers.
