@@ -79,6 +79,14 @@ define([
     }
   };
 
+  proto.removeFilters = function () {
+    eventbus.publish(
+      {
+        topic: "Directory.removeFilters",
+        data: null
+      });
+  }
+
   proto.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative = function (initiative, sidebarWidth) {
     const initiatives = [initiative];
     const lats = initiatives.map(x => x.lat);

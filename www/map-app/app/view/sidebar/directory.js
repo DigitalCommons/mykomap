@@ -303,41 +303,10 @@ define([
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", "Close " + title)
       .on("click", function () {
-        //remove filters
-        eventbus.publish({
-          topic: "Map.removeFilter",
-          data: {
-            filterName: directoryField + selectionKey,
-            noZoom: true
-          }
-        });
-        that.d3selectAndClear(
-          "#sea-initiatives-list-sidebar-content"
-        );
-        //clear the window
-        eventbus.publish({
-          topic: "Sidebar.hideInitiativeList"
-        });
-        that.presenter.clearLatestSelection();
-        0
-        // const latlng = presenter.latLngBounds(null);
-        // eventbus.publish({
-        //   topic: "Map.needsToBeZoomedAndPanned",
-        //   data: {
-        //    initiatives: initiatives?,
-        //     bounds: latlng,
-        //     options: {
-        //       maxZoom: 5
-        //     }
-        //   }
-        // });
+        that.presenter.removeFilters(directoryField + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
-
-
-
-
 
 
 
@@ -346,33 +315,7 @@ define([
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
       .attr("title", "Close " + title)
       .on("click", function () {
-        //remove filters
-        eventbus.publish({
-          topic: "Map.removeFilter",
-          data: {
-            filterName: directoryField + selectionKey,
-            noZoom: true
-          }
-        });
-        that.d3selectAndClear(
-          "#sea-initiatives-list-sidebar-content"
-        );
-        //clear the window
-        eventbus.publish({
-          topic: "Sidebar.hideInitiativeList"
-        });
-        that.presenter.clearLatestSelection();
-        // const latlng = presenter.latLngBounds(null);
-        // eventbus.publish({
-        //   topic: "Map.needsToBeZoomedAndPanned",
-        //   data: {
-        //  initiatives:initaitives?
-        //     bounds: latlng,
-        //     options: {
-        //       maxZoom: 5
-        //     }
-        //   }
-        // });
+        that.presenter.removeFilters(directoryField + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");

@@ -247,6 +247,7 @@ define([
 
 
   proto.populateScrollableSelection = function (selection) {
+    var that = this;
     if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
       const initiatives = item == null ? [] : item.initiatives;
@@ -269,15 +270,31 @@ define([
       }
     }
     else {
+      var noFilterTxt = "When you search, or click on map markers, you'll see the results here";
       var freshSearchText = this.presenter.getFilterNames().length > 0 ?
-        " Searching in " + this.presenter.getFilterNames().join(", ") : "When you search, or click on map markers, you'll see the results here";
+        " Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
       selection
         .append("div")
         .attr("class", "w3-container w3-center")
+        .attr("id", "searchTooltipId")
         .append("p")
         .text(
           freshSearchText
         );
+      // add clear button
+      if (this.presenter.getFilterNames().length > 0) {
+        selection
+          .attr("class", "w3-container w3-center")
+          .append("button")
+          .attr("id", "clearSearchFilterBtn")
+          .attr("class", "w3-button")
+          .text("Clear")
+          .on("click", function () {
+            that.presenter.removeFilters();
+            d3.select("#searchTooltipId").text(noFilterTxt);
+            d3.select("#clearSearchFilterBtn").remove();
+          });
+      }
     }
   };
   proto.getWindowHeight = function () {

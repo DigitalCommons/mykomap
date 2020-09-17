@@ -175,6 +175,44 @@ define([
     });
   }
 
+  proto.removeFilters = function (filterName = null) {
+    //remove specific filter
+    if (filterName) {
+      eventbus.publish({
+        topic: "Map.removeFilter",
+        data: {
+          filterName: filterName,
+          noZoom: true
+        }
+      });
+    } else {
+      //remove all filters
+      eventbus.publish({
+        topic: "Map.removeFilters",
+        data: {}
+      });
+    }
+    this.view.d3selectAndClear(
+      "#sea-initiatives-list-sidebar-content"
+    );
+    //clear the window
+    eventbus.publish({
+      topic: "Sidebar.hideInitiativeList"
+    });
+    this.clearLatestSelection();
+    // const latlng = latLngBounds(null);
+    // eventbus.publish({
+    //   topic: "Map.needsToBeZoomedAndPanned",
+    //   data: {
+    //    initiatives: initiatives?,
+    //     bounds: latlng,
+    //     options: {
+    //       maxZoom: 5
+    //     }
+    //   }
+    // });
+  }
+
   proto.initiativeClicked = function (initiative) {
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
@@ -244,6 +282,13 @@ define([
         p.initiativeClicked(data);
       }
     });
+    eventbus.subscribe({
+      topic: "Directory.removeFilters",
+      callback: function (data) {
+        p.removeFilters(data);
+      }
+    });
+
 
     return p;
   }
