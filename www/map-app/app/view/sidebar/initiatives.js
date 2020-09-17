@@ -284,9 +284,10 @@ define([
       // add clear button
       if (this.presenter.getFilterNames().length > 0) {
         selection
+          .append("div")
           .attr("class", "w3-container w3-center")
-          .append("button")
           .attr("id", "clearSearchFilterBtn")
+          .append("button")
           .attr("class", "w3-button")
           .text("Clear")
           .on("click", function () {
