@@ -94,6 +94,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       OS220: "Government agency/body",
       OS230: "Supranational",
       OS240: "Cooperative of cooperatives / mutuals"
+    },
+    "Base Membership Type": {
+      BMT10: "Consumer/Users",
+      BMT20: "Producers",
+      BMT30: "Workers",
+      BMT40: "Multi-stakeholders",
+      BMT50: "Residents",
+      BMT60: "Others"
     }
   };
 
@@ -149,6 +157,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     let regorgCode = e.regorg
       ? getSkosCode(e.regorg)
+      : undefined;
+
+    let membType = e.baseMembershipType
+      ? getSkosCode(e.baseMembershipType)
       : undefined;
 
     //if initiative exists already, just add properties
@@ -214,7 +226,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       facebook: { value: e.facebook, enumerable: true },
       region: { value: e.region, enumerable: true },
       qualifier: { value: qualifierCode, enumerable: true },
-      qualifiers: { value: [], enumerable: true, writable: true }
+      qualifiers: { value: [], enumerable: true, writable: true },
+      baseMembershipType: { value: membType, enumerable: true },
 
     });
 

@@ -123,7 +123,7 @@ if (file_exists("locCache.json") && !isset($_GET["uid"])) {
 	// The keys correspond to two things:
 	//   1. The names of the variables used in the SPARQL query (see Initiative::create_sparql_files in generate-triples.rb)
 	//   2. The names used in the JSON that is returned to the map-app
-	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "qualifier", "postcode", "country", "twitter", "facebook", "primaryActivity", "activity", "orgStructure", "tel", "email", "manLng", "manLat");
+	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "qualifier", "baseMembershipType", "postcode", "country", "twitter", "facebook", "primaryActivity", "activity", "orgStructure", "tel", "email", "manLng", "manLat");
 	// $keys = array("name", "uri", "lat", "lng", "country");
 
 	$result = array();

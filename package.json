@@ -1,6 +1,6 @@
 {
   "name": "sea-map",
-  "version": "0.1.52",
+  "version": "0.1.53",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
   "main": "www/map-app/app.js",
   "config": {},
