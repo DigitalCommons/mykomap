@@ -27,3 +27,4 @@ node_modules/
 # Configuration for local testing
 /www/configuration
 /www/services/locCache.json
+/www/services/latest_timestamp.txt

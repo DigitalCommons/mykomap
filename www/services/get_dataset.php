@@ -33,6 +33,55 @@ function report_error_and_die($msg)
 	echo json_encode($result);
 	exit(1);
 }
+function needsUpdate($dataset)
+{
+	global $base_url;
+	$default_graph_uri = trim(file_get_contents("$base_url/$dataset/default-graph-uri.txt"));
+	if (substr($default_graph_uri, -1) != "/") {
+		$default_graph_uri = $default_graph_uri . "/";
+	}
+	//get timestamp and put it in a timestamp file
+
+	//get the timestamp
+	// is curl installed?
+	if (!function_exists('curl_init')) {
+		report_error_and_die("PHP can't find function curl_init. Is CURL installed?");
+	}
+	$ch = curl_init();
+
+	// set request url
+	curl_setopt($ch, CURLOPT_URL, $default_graph_uri);
+
+	// return response, don't print/echo
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_NOBODY, true);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+	curl_setopt($ch, CURLOPT_MAXREDIRS, 100);
+	curl_setopt($ch, CURLOPT_FILETIME, true);
+
+	$response = curl_exec($ch);
+	$info = curl_getinfo($ch);
+	$curl_timestamp = date("Y-m-d H:i:s", $info['filetime']);
+	echo $curl_timestamp;
+
+	// check if file and get content if so
+	if (file_exists("latest_timestamp.txt")) {
+		$latest_timestamp_on_file = trim(file_get_contents("latest_timestamp.txt"));
+		// if there is no timestamp don't update
+		if ($latest_timestamp_on_file != $curl_timestamp && $info['filetime'] != -1) {
+			# update file and flag for update
+			file_put_contents("latest_timestamp.txt", $curl_timestamp);
+			return true;
+		}
+	} else {
+		// $latest_timestamp = trim(file_get_contents("$base_url/$dataset/default-graph-uri.txt")); the request
+		if ($info['filetime'] != -1) {
+			file_put_contents("latest_timestamp.txt", $curl_timestamp);
+		}
+		return true;
+	}
+	return false;
+}
 function getSparqlUrl($dataset, $q, $uid)
 {
 	// TODO - pass in SPARQL parameters as script arguments?
@@ -108,7 +157,9 @@ if (isset($_GET["uid"])) {
 			break;
 	}
 }
-if (file_exists("locCache.json") && !isset($_GET["uid"])) {
+
+
+if (file_exists("locCache.json") && !isset($_GET["uid"]) && !needsUpdate($dataset)) {
 	$cached_res = file_get_contents("locCache.json");
 	echo $cached_res;
 } else {
