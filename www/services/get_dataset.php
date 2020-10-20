@@ -62,7 +62,6 @@ function needsUpdate($dataset)
 	$response = curl_exec($ch);
 	$info = curl_getinfo($ch);
 	$curl_timestamp = date("Y-m-d H:i:s", $info['filetime']);
-	echo $curl_timestamp;
 
 	// check if file and get content if so
 	if (file_exists("latest_timestamp.txt")) {
