@@ -63,7 +63,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       ICA240: "Retail",
       ICA250: "Production",
       ICA260: "Wholesale and retail trade",
-      ICA270: "Education / Health / Social Work",
+      ICA270: "Education / health / social work",
       ICA280: "Other services",
       ICA290: "All",
       q09: "Coop Promoter/Supporter"
