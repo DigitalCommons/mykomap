@@ -22,13 +22,22 @@ As such you might expect this to install 0.1.46 and above, up to but
 excluding 1.0 - if any of these versions are available.
 
 However, although this is how packages deployed from the npm package
-registry, when deployed from git npn seems only to install the exact
+registry, when deployed from git npm seems only to install the exact
 named tag (or branch or commit). Therefore newer versions do not seem
 to get installed.
 
 Consequentially we need to apply a new version number every time a
-change is made which we want deployed, and to name that version in the
+change is made which we want deployed, to name that version in the
 packages depending on sea-map.
+
+It is also important that the Git tag is not applied *before* the
+`package.json` version is changed. Otherwise `npm update` in a project
+using `sea-map` will update it to the latest *tagged version*, but
+that will not have the latest version in `package.json`. This could
+cause problems in the consuming package, or miss out features, or at
+least create confusion should the user run `npm outdated`, as npm gets
+the source code from the latest tagged commit, not the one where the
+version was changed in `package.json`.
 
 Furthermore: 
 - tags need to follow the format `v0.1.45` (i.e. with a 'v'
@@ -49,7 +58,8 @@ Where `$NEW_VERSION` is a semantic version without the preceeding 'v'.
 
 The [npm version][version] command will update all the package
 metadata, commit the changes, and tag the commit with the new version
-number (correctly preceeded with a 'v').
+number (correctly preceeded with a 'v'), in a single step, so that
+they don't get out of sync.
 
 The `--tags` option is required for `git push` to push tags as well as
 commits.
