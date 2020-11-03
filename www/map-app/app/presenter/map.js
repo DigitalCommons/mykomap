@@ -116,7 +116,9 @@ define([
 
     document.body.removeChild(textArea);
   }
-
+  proto.getTileUrl = function () {
+    return config.getTileUrl();
+  }
   proto.getMapEventHandlers = function () {
     return {
       click: function (e) {

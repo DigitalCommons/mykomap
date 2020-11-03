@@ -99,9 +99,12 @@ define([
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
   proto.createMap = function () {
+
     const openCycleMapUrl =
       "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png";
-    const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    console.log(this.presenter.getTileUrl())
+    const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
     const osmAttrib =
       'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | Powered by <a href="https://www.geoapify.com/">Geoapify</a>';
     var i,
@@ -127,7 +130,7 @@ define([
 
 
     leaflet
-      .tileLayer(osmUrl, { attribution: osmAttrib, maxZoom: 17 })
+      .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17 })
       .addTo(this.map);
 
     let options = {},

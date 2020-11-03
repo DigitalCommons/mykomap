@@ -129,7 +129,8 @@ define([], function () {
     maxZoomOnGroup,
     maxZoomOnSearch,
     maxZoomOnOne,
-    logo
+    logo,
+    tileUrl
   } = {}) => [
       {
         id: 'aboutHtml',
@@ -179,6 +180,14 @@ define([], function () {
           "file `config/version.json`",
         init: () => seaMapVersion,
         getter: 'getVersionTag',
+        type: types.string,
+      },
+      {
+        id: 'tileUrl',
+        descr: 'the tile map url',
+        defaultDescr: "uses the OSM standard tile maps if nothing is provided",
+        init: () => tileUrl,
+        getter: 'getTileUrl',
         type: types.string,
       },
       {
