@@ -463,8 +463,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //taken from 
   function insert(element, array) {
     array.splice(locationOf(element, array), 0, element);
-    let ar = [...array];
-    // console.log(ar)
     return array;
   }
 
