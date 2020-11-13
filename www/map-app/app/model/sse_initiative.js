@@ -494,10 +494,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
       let label = filterable.label;
-      if (registeredValues[label]) {
-        const ordered = {};
-        Object.keys(registeredValues[label]).sort().forEach(function (key) {
-          ordered[key] = registeredValues[label][key];
+      const labelValues = registeredValues[label];
+      if (labelValues) {
+        const ordered = { All: labelValues.All };
+        delete labelValues.All;
+        Object.keys(labelValues).sort().forEach(function (key) {
+          ordered[key] = labelValues[key];
         });
         //finished
         registeredValues[label] = ordered;
