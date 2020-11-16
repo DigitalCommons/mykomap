@@ -44,7 +44,14 @@
   },
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
-    "d3": "^5.7.0"
+    "d3": "^5.7.0",
+    "font-awesome": "^4.7.0",
+    "leaflet": "^1.5.1",
+    "leaflet-active-area": "^1.1.0",
+    "leaflet-contextmenu": "^1.4.0",
+    "leaflet.awesome-markers": "^2.0.4",
+    "leaflet.markercluster": "^1.4.1",
+    "postal": "^2.0.5"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
