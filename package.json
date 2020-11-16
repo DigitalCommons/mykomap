@@ -44,7 +44,6 @@
   },
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
-    "requirejs": "^2.3.6"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
