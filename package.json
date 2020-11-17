@@ -49,7 +49,7 @@
     "leaflet": "^1.5.1",
     "leaflet-active-area": "^1.1.0",
     "leaflet-contextmenu": "^1.4.0",
-    "leaflet.awesome-markers": "^2.0.4",
+    "leaflet.awesome-markers": "^2.0.5",
     "leaflet.markercluster": "^1.4.1",
     "postal": "^2.0.5"
   },
