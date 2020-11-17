@@ -103,28 +103,10 @@ define([
       let directoryField = field;
       let valuesByName = this.presenter.getAllValuesByName(directoryField);
       Object.keys(registeredValues[field])
-        //any sorting should happen as the initiatives are loaded
-        //OBSOLETE 
-        // .sort(function (a, b) {
-        //   // Check if we're working numerically or alpabetically
-        //   if (isNaN(parseInt(a.replace(/[^\d]/g, "")))) {
-        //     if (a.replace(/\d/gi, "") < b.replace(/d/gi, "")) {
-        //       return -1;
-        //     }
-        //     if (a.replace(/\d/gi, "") > b.replace(/d/gi, "")) {
-        //       return 1;
-        //     }
-        //     return 0;
-        //   } else {
-        //     return (
-        //       parseInt(a.replace(/[^\d]/g, "")) -
-        //       parseInt(b.replace(/[^\d]/g, ""))
-        //     );
-        //   }
-        // })
-        .forEach(key => {
-          list
-            .append("li")
+      // Any sorting should have been done as the initiatives were loaded
+            .forEach(key => {
+              list
+                .append("li")
             .text(valuesByName ? valuesByName[key.toUpperCase()] : key)
             .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
             .classed("sea-directory-field", true)
