@@ -361,6 +361,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function getRegisteredValues() {
     return registeredValues;
   }
+  function getAllRegisteredValues() {
+    return allRegisteredValues;
+  }
   function getInitiativeByUniqueId(uid) {
     return initiativesByUid[uid];
   }
@@ -675,6 +678,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     search: search,
     latLngBounds: latLngBounds,
     getRegisteredValues: getRegisteredValues,
+    getAllRegisteredValues: getAllRegisteredValues,
     getInitiativeByUniqueId: getInitiativeByUniqueId,
     filterDatabases: filterDatabases,
     getAllDatasets: getDatasets,

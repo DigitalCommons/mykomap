@@ -51,6 +51,10 @@ define([
     return sseInitiative.getRegisteredValues();
   };
 
+  proto.getAllRegisteredValues = function () {
+    return sseInitiative.getAllRegisteredValues();
+  };
+
   proto.notifyViewToBuildDirectory = function () {
     this.view.refresh();
   };
