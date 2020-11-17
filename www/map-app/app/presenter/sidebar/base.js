@@ -1,8 +1,12 @@
-define(["app/eventbus", "model/config", "presenter"], function(
+/*define(["app/eventbus", "model/config", "presenter"], function(
   eventbus,
   config,
   presenter
-) {
+) {*/
+  const eventbus = require('../../eventbus');
+  const config = require('../../model/config');
+  const presenter = require('../../presenter');
+
   "use strict";
 
   function Stack() {
@@ -215,5 +219,5 @@ define(["app/eventbus", "model/config", "presenter"], function(
     updateSidebarWidth: updateSidebarWidth,
     getSidebarWidth: getSidebarWidth
   };
-  return pub;
-});
+  module.exports = pub;
+//});

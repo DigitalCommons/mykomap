@@ -1,14 +1,22 @@
 // Set up the various sidebars
-define([
-  "app/eventbus",
-  "d3",
-  "view/base",
-  "presenter/sidebar",
-  "view/sidebar/initiatives",
-  "view/sidebar/about",
-  "view/sidebar/directory",
-  "view/sidebar/datasets"
-], function (eventbus, d3, viewBase, presenter, initiatives, about, directory, datasets) {
+/*define([
+   "app/eventbus",
+   "d3",
+   "view/base",
+   "presenter/sidebar",
+   "view/sidebar/initiatives",
+   "view/sidebar/about",
+   "view/sidebar/directory",
+   "view/sidebar/datasets"
+   ], function (eventbus, d3, viewBase, presenter, initiatives, about, directory, datasets) {*/
+const eventbus = require('../eventbus');
+const d3 = require('d3');
+const viewBase = require('./base');
+const presenter = require('../presenter/sidebar');
+const about = require('../view/sidebar/about');
+const directory = require('../view/sidebar/directory');
+const datasets = require('../view/sidebar/datasets');
+
   "use strict";
 
   // This deals with the view object that controls the sidebar
@@ -350,5 +358,5 @@ define([
   var pub = {
     init: init
   };
-  return pub;
-});
+  module.exports = pub;
+//});

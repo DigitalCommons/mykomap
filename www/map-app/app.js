@@ -1,4 +1,5 @@
 "use strict";
+/*
 requirejs.config({
   //appDir: "map-app",
   // baseUrl is relative to appDir.
@@ -86,8 +87,9 @@ requirejs.config({
     }
   }
 });
-
-requirejs(["app/main"], function(main) {
+ */
+const main = require("./app/main");
+{
   "use strict";
   console.log("app/main.js has been loaded");
 
@@ -208,4 +210,4 @@ requirejs(["app/main"], function(main) {
 
   // Call the main function with the config values to override.
   main.init(combined);
-});
+};

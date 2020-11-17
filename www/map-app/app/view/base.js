@@ -1,4 +1,5 @@
-define(["d3"], function(d3) {
+//define(["d3"], function(d3) {
+const d3 = require('d3')
   "use strict";
 
   // 'Base class' for all views:
@@ -89,5 +90,5 @@ define(["d3"], function(d3) {
   var pub = {
     base: base
   };
-  return pub;
-});
+  module.exports = pub;
+//});

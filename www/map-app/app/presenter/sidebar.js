@@ -1,9 +1,14 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "presenter",
-  "presenter/sidebar/base"
-], function(eventbus, config, presenter, sidebarPresenter) {
+/*define([
+   "app/eventbus",
+   "model/config",
+   "presenter",
+   "presenter/sidebar/base"
+   ], function(eventbus, config, presenter, sidebarPresenter) {*/
+const eventbus = require('../eventbus');
+const config = require('../model/config');
+const presenter = require('../presenter');
+const sidebarPresenter = require('../presenter/sidebar/base');
+
   "use strict";
 
   // This is the presenter for the view/sidebar object.
@@ -118,5 +123,5 @@ define([
   var pub = {
     createPresenter: createPresenter
   };
-  return pub;
-});
+  module.exports = pub;
+//});

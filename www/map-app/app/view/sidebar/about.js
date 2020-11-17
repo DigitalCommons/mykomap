@@ -1,10 +1,15 @@
 // The view aspects of the About sidebar
-define([
-  "d3",
-  "app/eventbus",
-  "presenter/sidebar/about",
-  "view/sidebar/base"
-], function (d3, eventbus, presenter, sidebarView) {
+/*define([
+   "d3",
+   "app/eventbus",
+   "presenter/sidebar/about",
+   "view/sidebar/base"
+   ], function (d3, eventbus, presenter, sidebarView) {*/
+const d3 = require('d3');
+const eventbus = require('../../eventbus');
+const presenter = require('../../presenter/sidebar/about');
+const sidebarView = require('../sidebar/base');
+
   "use strict";
 
   // Our local Sidebar object:
@@ -66,5 +71,5 @@ define([
   var pub = {
     createSidebar: createSidebar
   };
-  return pub;
-});
+  module.exports = pub;
+//});

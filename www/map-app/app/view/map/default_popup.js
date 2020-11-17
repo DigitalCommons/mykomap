@@ -1,4 +1,4 @@
-define([], function () {
+//define([], function () {
     "use strict";
 
     var getLatLng = function (initiative) {
@@ -202,5 +202,5 @@ define([], function () {
     var pub = {
         getPopup: getPopup
     };
-    return pub;
-});
+module.exports = pub;
+//});

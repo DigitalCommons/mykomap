@@ -6,13 +6,28 @@
  * It returns an object with accessor methods for obtaining configured data.
  */
 
-
+/*
 define([
   "json!configuration/config",
   "json!configuration/version.json",
   "text!configuration/about.html!strip",
   "app/model/config_schema",
 ], function (config_json, version_json, about_html, config_schema) {
+  */
+  function require_opt(path, default_val) {
+    try {
+      return require(path);
+    }
+    catch(e) {
+      return default_val;
+    }
+  }
+  
+  const config_json = require_opt('../../../configuration/config.json');
+  const version_json = require_opt('../../../configuration/version.json');
+  const about_html = require_opt('../../../configuration/about.html');
+  const config_schema = require('./config_schema');
+
   "use strict";
 
   console.log(version_json);
@@ -140,5 +155,5 @@ define([
     return result;
   };
 
-  return methods; // hides the data by closing over it
-});
+  module.exports = methods; // hides the data by closing over it
+//});

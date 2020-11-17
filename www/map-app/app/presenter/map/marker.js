@@ -1,12 +1,20 @@
-define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
-        "app/view/map/default_popup", "optional!configuration/popup",], function (
-  eventbus,
-  presenter,
-  config,
-  sse_initiatives,
-  default_popup,
-  popup
-) {
+/*define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
+   "app/view/map/default_popup", "optional!configuration/popup",], function (
+   eventbus,
+   presenter,
+   config,
+   sse_initiatives,
+   default_popup,
+   popup
+   ) {*/
+const eventbus = require('../../eventbus');
+const presenter = require('../../presenter');
+const config = require('../../model/config');
+const sse_initiatives = require('../../model/sse_initiative');
+const default_popup = require('../../view/map/default_popup');
+const popup = default_popup; // FIXME
+
+
   "use strict";
 
   function Presenter() { }
@@ -79,5 +87,5 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
   var pub = {
     createPresenter: createPresenter
   };
-  return pub;
-});
+  module.exports = pub;
+//});

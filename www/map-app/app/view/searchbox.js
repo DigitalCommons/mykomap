@@ -1,9 +1,12 @@
 // The view aspects of the Main Menu sidebar
-define(["d3", "view/base", "presenter/searchbox"], function(
+/*define(["d3", "view/base", "presenter/searchbox"], function(
   d3,
   viewBase,
   presenter
-) {
+) {*/
+  const d3 = require('d3');
+  const viewBase = require('./base');
+  const presenter = require('../presenter/searchbox');
   "use strict";
 
   function SearchBoxView() {}
@@ -73,5 +76,5 @@ define(["d3", "view/base", "presenter/searchbox"], function(
     init: init
   };
 
-  return pub;
-});
+  module.exports = pub;
+//});

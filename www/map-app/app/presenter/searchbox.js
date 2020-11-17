@@ -1,9 +1,14 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "presenter"
-], function(eventbus, config, sseInitiative, presenter) {
+/*define([
+   "app/eventbus",
+   "model/config",
+   "model/sse_initiative",
+   "presenter"
+   ], function(eventbus, config, sseInitiative, presenter) {*/
+const eventbus = require('../eventbus');
+const config = require('../model/config');
+const sseInitiative = require('../model/sse_initiative');
+const presenter = require('../presenter');
+
   "use strict";
 
   function Presenter() {}
@@ -53,5 +58,5 @@ define([
   var pub = {
     createPresenter: createPresenter
   };
-  return pub;
-});
+  module.exports = pub;
+//});

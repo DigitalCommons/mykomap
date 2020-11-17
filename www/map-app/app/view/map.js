@@ -1,4 +1,4 @@
-define([
+/*define([
   "d3",
   "leaflet",
   "leafletActiveArea",
@@ -14,7 +14,15 @@ define([
   viewBase,
   presenter,
   markerView
-) {
+) {*/
+  const d3 = require('d3');
+  const leaflet = require('leaflet');
+  const activeArea = require('leaflet-active-area');
+  const contextmenu = require('leaflet-contextmenu');
+  const viewBase = require('./base');
+  const presenter = require('../presenter/map');
+  const markerView = require('../view/map/marker');
+  
   "use strict";
 
   const config = {
@@ -466,5 +474,5 @@ define([
   var pub = {
     init: init
   };
-  return pub;
-});
+  module.exports = pub;
+//});

@@ -1,11 +1,18 @@
 // This is the place where the various views are pulled into the application.
-define([
-  "model/config",
-  "d3",
-  "view/map",
-  "view/sidebar",
-  "view/searchbox"
-], function(config, d3, map, sidebar, searchbox) {
+/*define([
+   "model/config",
+   "d3",
+   "view/map",
+   "view/sidebar",
+   "view/searchbox"
+   ], function(config, d3, map, sidebar, searchbox) {*/
+const config = require('./model/config');
+const d3 = require('d3');
+const map = require('./view/map');
+const sidebar = require('./view/sidebar');
+const searchbox = require('./view/searchbox');
+
+
   "use strict";
 
   function init() {
@@ -33,4 +40,4 @@ define([
     init: init
   };
   return pub;
-});
+//});

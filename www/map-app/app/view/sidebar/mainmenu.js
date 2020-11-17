@@ -1,9 +1,13 @@
 // The view aspects of the Main Menu sidebar
-define([
+/*define([
   "app/eventbus",
   "presenter/sidebar/mainmenu",
   "view/sidebar/base"
-], function(eventbus, presenter, sidebarView) {
+   ], function(eventbus, presenter, sidebarView) {*/
+const eventbus = require('../../eventbus')
+const presenter = require('../../presenter/sidebar/mainmenu');
+const sidebarView = require('../../view/base');
+
   "use strict";
 
   // Our local Sidebar object:
@@ -40,5 +44,5 @@ define([
   var pub = {
     createSidebar: createSidebar
   };
-  return pub;
-});
+  module.exports = pub;
+//});

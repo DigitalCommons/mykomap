@@ -1,4 +1,4 @@
-define([
+/*define([
     "app/eventbus",
     "model/config",
     "model/sse_initiative",
@@ -12,7 +12,14 @@ define([
     sidebarView,
     sidebarPresenter,
     markerView
-  ) {
+  ) {*/
+  const eventbus = require('../../eventbus');
+  const config = require('../../model/config');
+  const sseInitiative = require('../../model/sse_initiative');
+  const sidebarView = require('../../view/sidebar/base');
+  const sidebarPresenter = require('../../presenter/sidebar/base');
+  const markerView = require('../../view/map/marker');
+
     "use strict";
   
     function Presenter() {}
@@ -55,6 +62,6 @@ define([
     var pub = {
       createPresenter: createPresenter
         };
-    return pub;
-  });
+module.exports = pub;
+//  });
   

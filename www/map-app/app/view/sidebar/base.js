@@ -1,6 +1,9 @@
 // Set up the various sidebars
-define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
+//define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
   "use strict";
+const d3 = require('d3');
+const eventbus = require('../../eventbus')
+const view = require('../../view/base');
 
   // base is the "base class" of all sidebars:
   function base() {}
@@ -72,5 +75,5 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
   var pub = {
     base: base
   };
-  return pub;
-});
+  module.exports = pub;
+//});

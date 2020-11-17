@@ -1,10 +1,17 @@
-define([
-  "model/config",
-  "model/sse_initiative",
-  "app/console",
-  "app/view",
-  "app/debug"
-], function(config, sseInitiative, myconsole, view, debugging) {
+
+/*define([
+   "model/config",
+   "model/sse_initiative",
+   "app/console",
+   "app/view",
+   "app/debug"
+   ], function(config, sseInitiative, myconsole, view, debugging) {*/
+const config = require('./model/config');
+const sseInitiative = require('./model/sse_initiative');
+const myconsole = require('./console');
+const view = require('./view');
+const debugging = require('./debug');
+
   "use strict";
 
   function init(cfg = {}) {
@@ -33,5 +40,5 @@ define([
   var pub = {
     init: init
   };
-  return pub;
-});
+  module.exports = pub;
+//});

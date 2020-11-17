@@ -1,10 +1,16 @@
-define([
+/*define([
   "app/eventbus",
   "model/config",
   "model/sse_initiative",
   "presenter/sidebar/base",
   "presenter/map"
-], function (eventbus, config, sseInitiative, sidebarPresenter, map) {
+   ], function (eventbus, config, sseInitiative, sidebarPresenter, map) {*/
+  const eventbus = require('../../eventbus');
+  const config = require('../../model/config');
+  const sseInitiative = require('../../model/sse_initiative');
+  const sidebarPresenter = require('../../presenter/sidebar/base');
+  const map = require('../../presenter/map');
+
   "use strict";
 
   function StackItem(initiatives) {
@@ -442,5 +448,5 @@ define([
   var pub = {
     createPresenter: createPresenter
   };
-  return pub;
-});
+  module.exports = pub;
+//});

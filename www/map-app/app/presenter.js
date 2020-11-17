@@ -1,4 +1,4 @@
-define([], function() {
+//define([], function() {
   "use strict";
 
   // 'Base class' for all presenters:
@@ -12,5 +12,5 @@ define([], function() {
   var pub = {
     base: base
   };
-  return pub;
-});
+  module.exports = pub;
+//});

@@ -1,12 +1,22 @@
-define([
-  "leaflet",
-  "leafletMarkerCluster",
-  "leafletAwesomeMarkers",
-  "view/base",
-  "presenter/map/marker",
-  "app/eventbus",
-  "model/sse_initiative"
-], function (leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus, sse_initiatives) {
+/*define([
+   "leaflet",
+   "leafletMarkerCluster",
+   "leafletAwesomeMarkers",
+   "view/base",
+   "presenter/map/marker",
+   "app/eventbus",
+   "model/sse_initiative"
+   ], function (leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus, sse_initiatives) {*/
+
+const leaflet = require('leaflet');
+const leafletMarkerCluster = require('leaflet.markercluster');
+const leafletAwesomeMarkers = require('leaflet.awesome-markers');
+const viewBase = require('../base');
+const presenter = require('../../presenter/map/marker');
+const eventbus = require('../../eventbus');
+const sse_initiatives = require('../../model/sse_initiative');
+
+
   "use strict";
 
   // Keep a mapping between initiatives and their Markers:
@@ -465,5 +475,5 @@ define([
     showMarkers: showMarkers,
     refreshMarker: refreshMarker
   };
-  return pub;
-});
+  module.exports = pub;
+//});

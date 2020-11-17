@@ -1,10 +1,16 @@
-define([
-  "app/eventbus",
-  "model/sse_initiative",
-  "presenter",
-  "model/config",
-  "view/map/marker"
-], function (eventbus, sse_initiative, presenter, config, markerView) {
+/*define([
+   "app/eventbus",
+   "model/sse_initiative",
+   "presenter",
+   "model/config",
+   "view/map/marker"
+   ], function (eventbus, sse_initiative, presenter, config, markerView) {*/
+const eventbus = require('../eventbus');
+const sse_initiative = require('../model/sse_initiative');
+const presenter = require('../presenter');
+const config = require('../model/config');
+const markerView = require('../view/map/marker');
+
   "use strict";
 
   function Presenter() { }
@@ -668,5 +674,5 @@ define([
     getFiltersFull: getFiltersFull,
     getFiltersVerbose: getFiltersVerbose
   };
-  return pub;
-});
+  module.exports = pub;
+//});
