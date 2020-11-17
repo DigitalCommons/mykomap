@@ -251,22 +251,23 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     filterableFields.forEach(filterable => {
       const fieldKey = filterable.field;
       const labelKey = filterable.label;
-      
+      const field = this[fieldKey];
+      let values = registeredValues[labelKey];
       // Create the object that holds the registered values for the current field if it hasn't already been created
       // Use '$$' as a rogue key value, presumed absent from actual data.
       // Store the special case collection of all the values in it, to be unpacked later.
-      if (!registeredValues[labelKey]) {
-        registeredValues[labelKey] = { $$: [this] };
-        registeredValues[labelKey][this[fieldKey]] = [this];// what about undef?
+      if (!values) {
+        values = registeredValues[labelKey] = { $$: [this] };
+        values[field] = [this];// what about undef?
       } else {
-        // console.log(registeredValues[label]["All"]);
-        registeredValues[labelKey]["$$"] = insert(this, registeredValues[labelKey]["$$"]);
-        if (registeredValues[labelKey][this[fieldKey]]) {
-          registeredValues[labelKey][this[fieldKey]] = insert(this, registeredValues[labelKey][this[fieldKey]]);
+        values["$$"] = insert(this, value["$$"]);
+        if (values[field]) {
+          insert(this, values[field]);
         } else {
-          registeredValues[labelKey][this[fieldKey]] = [this]; // what about undef?
+          values[field] = [this]; // what about undef?
         }
       }
+      
     });
 
     insert(this, loadedInitiatives);
