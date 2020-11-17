@@ -96,26 +96,31 @@ define([
       .classed("sea-directory-list", true)
       .classed("colours", this.presenter.doesDirectoryHaveColours());
 
+    function addItem(key, field, label) {
+      list
+        .append("li")
+        .text(label)
+        .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
+        .classed("sea-directory-field", true)
+        .on("click", function () {
+          eventbus.publish({
+            topic: "Map.removeFilters",
+            data: {}
+          });
+          that.listInitiativesForSelection(field, key);
+          that.resetFilterSearch();
+          d3.select(".sea-field-active").classed("sea-field-active", false);
+          d3.select(that).classed("sea-field-active", true);
+        });
+    }
+    
     function addItems(field, values) {
       let valuesByName = that.presenter.getAllValuesByName(field);
       Object.keys(values)
       // Any sorting should have been done as the initiatives were loaded
             .forEach(key => {
-              list
-                .append("li")
-                .text(valuesByName ? valuesByName[key.toUpperCase()] : key)
-                .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
-                .classed("sea-directory-field", true)
-                .on("click", function () {
-                  eventbus.publish({
-                    topic: "Map.removeFilters",
-                    data: {}
-                  });
-                  that.listInitiativesForSelection(field, key);
-                  that.resetFilterSearch();
-                  d3.select(".sea-field-active").classed("sea-field-active", false);
-                  d3.select(that).classed("sea-field-active", true);
-                });
+              const label = valuesByName ? valuesByName[key.toUpperCase()] : key;
+              addItem(key, field, label);
             });      
     }
     
