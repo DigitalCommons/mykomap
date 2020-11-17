@@ -256,14 +256,18 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let values = registeredValues[labelKey];
       // Create the object that holds the registered values for the current field if it hasn't already been created
       insert(this, allRegisteredValues)
+
+      if (field == null)
+        return; // This initiative has no value for `fieldKey`, so can't be indexed.
+      
       if (!values) {
         values = registeredValues[labelKey] = {};
-        values[field] = [this];// what about undef?
+        values[field] = [this];
       } else {
         if (values[field]) {
           insert(this, values[field]);
         } else {
-          values[field] = [this]; // what about undef?
+          values[field] = [this];
         }
       }
       
