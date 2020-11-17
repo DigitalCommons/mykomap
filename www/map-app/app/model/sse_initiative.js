@@ -503,6 +503,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let label = filterable.label;
       const labelValues = registeredValues[label];
       if (labelValues) {
+        const ordered = {};
         Object.keys(labelValues).sort().forEach(function (key) {
           ordered[key] = labelValues[key];
         });
