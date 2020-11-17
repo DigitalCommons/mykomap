@@ -96,31 +96,34 @@ define([
       .classed("sea-directory-list", true)
       .classed("colours", this.presenter.doesDirectoryHaveColours());
 
-    let registeredValues = this.presenter.getRegisteredValues();
-    // Just run om the first property for now
-    // TODO: Support user selectable fields
-    for (let field in registeredValues) {
-      let directoryField = field;
-      let valuesByName = this.presenter.getAllValuesByName(directoryField);
-      Object.keys(registeredValues[field])
+    function addItems(field, values) {
+      let valuesByName = that.presenter.getAllValuesByName(field);
+      Object.keys(values)
       // Any sorting should have been done as the initiatives were loaded
             .forEach(key => {
               list
                 .append("li")
-            .text(valuesByName ? valuesByName[key.toUpperCase()] : key)
-            .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
-            .classed("sea-directory-field", true)
-            .on("click", function () {
-              eventbus.publish({
-                topic: "Map.removeFilters",
-                data: {}
-              });
-              that.listInitiativesForSelection(directoryField, key);
-              that.resetFilterSearch();
-              d3.select(".sea-field-active").classed("sea-field-active", false);
-              d3.select(this).classed("sea-field-active", true);
-            });
-        });
+                .text(valuesByName ? valuesByName[key.toUpperCase()] : key)
+                .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
+                .classed("sea-directory-field", true)
+                .on("click", function () {
+                  eventbus.publish({
+                    topic: "Map.removeFilters",
+                    data: {}
+                  });
+                  that.listInitiativesForSelection(field, key);
+                  that.resetFilterSearch();
+                  d3.select(".sea-field-active").classed("sea-field-active", false);
+                  d3.select(that).classed("sea-field-active", true);
+                });
+            });      
+    }
+    
+    let registeredValues = this.presenter.getRegisteredValues();
+    // Just run om the first property for now
+    // TODO: Support user selectable fields
+    for (let field in registeredValues) {
+      addItems(field, registeredValues[field]);
       break;
     }
   };
