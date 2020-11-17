@@ -137,8 +137,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { fieldN: [ ... ] }
     }
   */
-  let registeredValues = {};
-
+  const registeredValues = {}; // sorted values grouped by label
+  const allRegisteredValues = []; // all values, sorted
+  
   function Initiative(e) {
     const that = this;
 
@@ -254,13 +255,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       const field = this[fieldKey];
       let values = registeredValues[labelKey];
       // Create the object that holds the registered values for the current field if it hasn't already been created
-      // Use '$$' as a rogue key value, presumed absent from actual data.
-      // Store the special case collection of all the values in it, to be unpacked later.
+      insert(this, allRegisteredValues)
       if (!values) {
-        values = registeredValues[labelKey] = { $$: [this] };
+        values = registeredValues[labelKey] = {};
         values[field] = [this];// what about undef?
       } else {
-        values["$$"] = insert(this, value["$$"]);
         if (values[field]) {
           insert(this, values[field]);
         } else {
@@ -500,8 +499,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let label = filterable.label;
       const labelValues = registeredValues[label];
       if (labelValues) {
-        const ordered = { All: labelValues["$$"] };
-        delete labelValues["$$"];
         Object.keys(labelValues).sort().forEach(function (key) {
           ordered[key] = labelValues[key];
         });
