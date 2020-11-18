@@ -51,12 +51,20 @@ define([
     return sseInitiative.getRegisteredValues();
   };
 
+  proto.getAllRegisteredValues = function () {
+    return sseInitiative.getAllRegisteredValues();
+  };
+
   proto.notifyViewToBuildDirectory = function () {
     this.view.refresh();
   };
 
+  // Gets the initiatives with a selection key, or if absent, gets all the initiatives
   proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
-    return sseInitiative.getRegisteredValues()[field][key];
+    if (key == null)
+      return sseInitiative.getAllRegisteredValues()[field];
+    else
+      return sseInitiative.getRegisteredValues()[field][key];
   };
 
   proto.getInitiativeByUniqueId = function (uid) {
