@@ -96,44 +96,64 @@ define([
       .classed("sea-directory-list", true)
       .classed("colours", this.presenter.doesDirectoryHaveColours());
 
-    function addItem(key, field, label) {
+    // key may be null, for the special 'Every item' case
+    function addItem(field, key) {
+      let valuesByName = that.presenter.getAllValuesByName(field);
+      let label = key;
+      let tag = key;
+      if (key == null) {
+        tag = 'all';
+        if (valuesByName)
+          label = valuesByName.ALL;
+        else
+          label = 'All '+field;
+      }
+      else {
+        tag = key.toLowerCase().replace(/ /g, "-")
+        if (valuesByName)
+          label = valuesByName[key.toUpperCase()];
+      }
+
       list
         .append("li")
         .text(label)
-        .classed("sea-field-" + key.toLowerCase().replace(/ /g, "-"), true)
+        .classed("sea-field-" + tag, true)
         .classed("sea-directory-field", true)
         .on("click", function () {
           eventbus.publish({
             topic: "Map.removeFilters",
             data: {}
           });
-          that.listInitiativesForSelection(field, key);
+          that.listInitiativesForSelection(field, key); // key may be null
           that.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
-          d3.select(that).classed("sea-field-active", true);
+          d3.select(this).classed("sea-field-active", true);
         });
     }
     
     function addItems(field, values) {
-      let valuesByName = that.presenter.getAllValuesByName(field);
       Object.keys(values)
       // Any sorting should have been done as the initiatives were loaded
             .forEach(key => {
-              const label = valuesByName ? valuesByName[key.toUpperCase()] : key;
-              addItem(key, field, label);
-            });      
+              addItem(field, key);
+            });
     }
-    
-    let registeredValues = this.presenter.getRegisteredValues();
+     
+    const registeredValues = this.presenter.getRegisteredValues();
+    const allRegisteredValues = this.presenter.getAllRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
+      // Deal with the special 'All' item first
+      addItem(field);
+      
       addItems(field, registeredValues[field]);
       break;
     }
   };
 
 
+  // selectionKey may be null, for the special 'Every item' case
   proto.listInitiativesForSelection = function (directoryField, selectionKey) {
     let that = this;
     let initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
@@ -141,6 +161,7 @@ define([
       selectionKey
     );
 
+    const selectionLabel = selectionKey == null? 'All' : selectionKey;
 
     //deselect all
     that.presenter.clearLatestSelection();
@@ -170,18 +191,18 @@ define([
       ""
     );
     initiativeListSidebar.classList.add(
-      "sea-field-" + selectionKey.toLowerCase().replace(/ /g, "-")
+      "sea-field-" + selectionLabel.toLowerCase().replace(/ /g, "-")
     );
 
     // Add the heading (we need to determine the title as this may be stored in the data or
     // in the list of values in the presenter)
     let title;
     if (values) {
-      // If values exists and there's nothing in it for this selectionKey then we're looking at All
-      title = values[selectionKey] || selectionKey + " " + directoryField;
+      // If values exists and there's nothing in it for this selectionLabel then we're looking at All
+      title = values[selectionLabel] || selectionLabel + " " + directoryField;
     } else {
       // If values doesn't exist then the values are coming from the data directly
-      title = selectionKey;
+      title = selectionLabel;
     }
 
     eventbus.publish({
