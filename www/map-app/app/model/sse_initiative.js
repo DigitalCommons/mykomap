@@ -137,8 +137,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { fieldN: [ ... ] }
     }
   */
-  const registeredValues = {}; // sorted values grouped by label
-  const allRegisteredValues = []; // all values, sorted
+  const registeredValues = {}; // arrays of sorted values grouped by label, then by field
+  const allRegisteredValues = {}; // arrays of sorted values, grouped by label
   
   function Initiative(e) {
     const that = this;
@@ -253,22 +253,28 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       const fieldKey = filterable.field;
       const labelKey = filterable.label;
       const field = this[fieldKey];
-      let values = registeredValues[labelKey];
-      // Create the object that holds the registered values for the current field if it hasn't already been created
-      insert(this, allRegisteredValues)
+
+      if (labelKey in allRegisteredValues)
+        insert(this, allRegisteredValues[labelKey]);
+      else
+        allRegisteredValues[labelKey] = [this];
 
       if (field == null)
-        return; // This initiative has no value for `fieldKey`, so can't be indexed.
+        return; // This initiative has no value for `fieldKey`, so can't be indexed further.
       
-      if (!values) {
-        values = registeredValues[labelKey] = {};
-        values[field] = [this];
-      } else {
-        if (values[field]) {
+      if (labelKey in registeredValues) {
+        const values = registeredValues[labelKey];
+        if (field in values) {
           insert(this, values[field]);
         } else {
           values[field] = [this];
         }
+      }
+      else {
+	      // Create the object that holds the registered values for the current
+        // field if it hasn't already been created
+        const values = registeredValues[labelKey] = {};
+        values[field] = [this];
       }
       
     });
