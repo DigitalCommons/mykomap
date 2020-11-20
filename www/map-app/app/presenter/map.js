@@ -119,6 +119,9 @@ define([
   proto.getTileUrl = function () {
     return config.getTileUrl();
   }
+  proto.getMapAttribution = function() {
+    return config.getMapAttribution();
+  }
   proto.getMapEventHandlers = function () {
     return {
       click: function (e) {
