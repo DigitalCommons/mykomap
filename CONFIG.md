@@ -110,6 +110,18 @@ the tile map url
 
 
 
+### `mapAttribution`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* `Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | Powered by <a href="https://www.geoapify.com/">Geoapify</a>`
+- *settable?:* no
+
+the attribution message to put at the bottom of the map
+
+
+
+
 ### `namedDatasets`
 
 - *type:* `{string[]}` 
