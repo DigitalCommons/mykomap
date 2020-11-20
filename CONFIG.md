@@ -86,6 +86,30 @@ The git commit-ID of the sea-map source code deployed.
 
 
 
+### `seaMapVersion`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* Defined by `variant` attribute of the consuming project's file `config/version.json`
+- *settable?:* no
+
+The git tag of the sea-map source code deployed.
+
+
+
+
+### `tileUrl`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* uses the OSM standard tile maps if nothing is provided
+- *settable?:* no
+
+the tile map url
+
+
+
+
 ### `namedDatasets`
 
 - *type:* `{string[]}` 
@@ -201,7 +225,7 @@ Defines the zoom level above which to cluster pins; passed to Leaflet.markerclus
 - *default:* `name,www`
 - *settable?:* yes
 
-A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email,qualifier
+A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email
 
 
 
