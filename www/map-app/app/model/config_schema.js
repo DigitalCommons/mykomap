@@ -130,7 +130,8 @@ define([], function () {
     maxZoomOnSearch,
     maxZoomOnOne,
     logo,
-    tileUrl
+    tileUrl,
+    mapAttribution,
   } = {}) => [
       {
         id: 'aboutHtml',
@@ -188,6 +189,18 @@ define([], function () {
         defaultDescr: "uses the OSM standard tile maps if nothing is provided",
         init: () => tileUrl,
         getter: 'getTileUrl',
+        type: types.string,
+      },
+      {
+        id: 'mapAttribution',
+        descr: 'the attribution message to put at the bottom of the map',
+        init: () => (
+          mapAttribution ||
+          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> '+
+          'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> '+
+          '| Powered by <a href="https://www.geoapify.com/">Geoapify</a>'
+        ),
+        getter: 'getMapAttribution',
         type: types.string,
       },
       {

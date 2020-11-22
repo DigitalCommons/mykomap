@@ -105,8 +105,7 @@ define([
     const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     console.log(this.presenter.getTileUrl())
     const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
-    const osmAttrib =
-      'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | Powered by <a href="https://www.geoapify.com/">Geoapify</a>';
+    const osmAttrib = this.presenter.getMapAttribution();
     var i,
       eventHandlers = this.presenter.getMapEventHandlers();
     var k = Object.keys(eventHandlers);
