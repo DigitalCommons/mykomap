@@ -5,10 +5,12 @@
   "view/sidebar/base"
    ], function(eventbus, presenter, sidebarView) {*/
 const eventbus = require('../../eventbus')
-const presenter = require('../../presenter/sidebar/mainmenu');
 const sidebarView = require('../../view/base');
 
   "use strict";
+
+function init(config) {
+  const presenter = require('../../presenter/sidebar/mainmenu')(config);
 
   // Our local Sidebar object:
   function Sidebar() {}
@@ -41,8 +43,10 @@ const sidebarView = require('../../view/base');
     sb.setPresenter(presenter.createPresenter(sb));
     return sb;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  module.exports = pub;
+}
+
+module.exports = init;
 //});

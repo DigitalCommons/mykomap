@@ -14,31 +14,15 @@ define([
   "app/model/config_schema",
 ], function (config_json, version_json, about_html, config_schema) {
   */
-  function require_opt(path, default_val) {
-    try {
-      return require(path);
-    }
-    catch(e) {
-      return default_val;
-    }
-  }
   
-  const config_json = require_opt('../../../configuration/config.json');
-  const version_json = require_opt('../../../configuration/version.json');
-  const about_html = require_opt('../../../configuration/about.html');
-  const config_schema = require('./config_schema');
-
   "use strict";
 
-  console.log(version_json);
-  console.log(about_html);
+  const config_schema = require('./config_schema');
 
+function init(inits) {
   const accessors = {}; // config setters and getters, indexed by id, then by 'get' or 'set'
   const methods = {}; // Exported methods
   const data = {}; // The config data, indexed by id
-
-  const inits = Object.assign({}, { aboutHtml: about_html }, config_json, version_json);
-  // (Avoiding ES2018 spread syntax for now)
 
   const configSchema = config_schema(inits);
 
@@ -119,6 +103,10 @@ define([
   methods.add = (cfg) => {
     if (typeof (cfg) !== 'object')
       throw new Error(`argument to add must be an object`);
+    
+    // Parse string values as approriate for the config value in question.
+    cfg = parseStrings(cfg);
+    
     console.log("add", cfg);
     Object.keys(cfg).forEach(id => {
       const def = configSchema.find((e) => id === e.id);
@@ -137,6 +125,9 @@ define([
     });
   };
 
+  return methods;
+}
+
   /** Parses an object mapping config ids to string values into an object with parsed values
    *
    * Parsing is done using the schema's type's parseString method, if present.
@@ -144,7 +135,7 @@ define([
    * @param an object containing the string ids.
    * @returns the new object containing the parsed values.
    */
-  methods.parseStrings = (cfg) => {
+  function parseStrings(cfg) {
     const result = {};
 
     Object.keys(cfg).forEach(id => {
@@ -154,6 +145,6 @@ define([
     });
     return result;
   };
-
-  module.exports = methods; // hides the data by closing over it
+ 
+  module.exports = init;
 //});

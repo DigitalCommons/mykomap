@@ -14,17 +14,18 @@
     markerView
   ) {*/
   const eventbus = require('../../eventbus');
-  const config = require('../../model/config');
-  const sseInitiative = require('../../model/sse_initiative');
   const sidebarView = require('../../view/sidebar/base');
-  const sidebarPresenter = require('../../presenter/sidebar/base');
-  const markerView = require('../../view/map/marker');
 
     "use strict";
+
+function init(config) {
+  const sseInitiative = require('../../model/sse_initiative')(config);
+  const sidebarPresenter = require('../../presenter/sidebar/base')(config);
+  const markerView = require('../../view/map/marker')(config);
   
-    function Presenter() {}
+  function Presenter() {}
   
-    var proto = Object.create(sidebarPresenter.base.prototype);
+  var proto = Object.create(sidebarPresenter.base.prototype);
   
     Presenter.prototype = proto;
 
@@ -59,9 +60,11 @@
       p.registerView(view);  
       return p;
     }
-    var pub = {
-      createPresenter: createPresenter
-        };
-module.exports = pub;
+  return {
+    createPresenter: createPresenter
+  };
+}
+
+module.exports = init;
 //  });
   

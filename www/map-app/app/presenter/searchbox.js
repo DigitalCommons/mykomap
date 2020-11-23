@@ -5,12 +5,12 @@
    "presenter"
    ], function(eventbus, config, sseInitiative, presenter) {*/
 const eventbus = require('../eventbus');
-const config = require('../model/config');
-const sseInitiative = require('../model/sse_initiative');
 const presenter = require('../presenter');
 
   "use strict";
-
+function init(config) {
+  const sseInitiative = require('../model/sse_initiative')(config);
+  
   function Presenter() {}
 
   var proto = Object.create(presenter.base.prototype);
@@ -55,8 +55,9 @@ const presenter = require('../presenter');
    
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  module.exports = pub;
+}
+module.exports = init;
 //});

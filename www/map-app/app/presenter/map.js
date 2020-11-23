@@ -6,13 +6,13 @@
    "view/map/marker"
    ], function (eventbus, sse_initiative, presenter, config, markerView) {*/
 const eventbus = require('../eventbus');
-const sse_initiative = require('../model/sse_initiative');
 const presenter = require('../presenter');
-const config = require('../model/config');
 const markerView = require('../view/map/marker');
 
   "use strict";
-
+function init(config) {
+  const sse_initiative = require('../model/sse_initiative')(config);
+  
   function Presenter() { }
 
   var proto = Object.create(presenter.base.prototype);
@@ -666,7 +666,7 @@ const markerView = require('../view/map/marker');
 
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter,
     getFiltered: getFiltered,
     getFilteredMap: getFilteredMap,
@@ -674,5 +674,6 @@ const markerView = require('../view/map/marker');
     getFiltersFull: getFiltersFull,
     getFiltersVerbose: getFiltersVerbose
   };
-  module.exports = pub;
+}
+module.exports = init;
 //});

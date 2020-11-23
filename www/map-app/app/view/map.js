@@ -20,10 +20,12 @@
   const activeArea = require('leaflet-active-area');
   const contextmenu = require('leaflet-contextmenu');
   const viewBase = require('./base');
-  const presenter = require('../presenter/map');
-  const markerView = require('../view/map/marker');
   
   "use strict";
+
+function init(_config) {
+  const presenter = require('../presenter/map')(_config);
+  const markerView = require('../view/map/marker')(_config);
 
   const config = {
     putSelectedMarkersInClusterGroup: false
@@ -471,8 +473,10 @@
     view.createMap();
     return view;
   }
-  var pub = {
+  return {
     init: init
   };
-  module.exports = pub;
+}
+
+module.exports = init;
 //});

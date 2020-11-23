@@ -11,7 +11,6 @@
 
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-const presenter = require('../../presenter/sidebar/initiatives');
 const sidebarView = require('../../view/base');
 const config = require('../../model/config');
 const sseInitiative = require('../../model/sse_initiative');
@@ -19,8 +18,12 @@ const map = require('../../presenter/sidebar/map');
 
 "use strict";
 
-    // Our local Sidebar object:
-    function Sidebar() { }
+
+function init(config) {
+  const presenter = require('../../presenter/sidebar/initiatives')(config);
+
+  // Our local Sidebar object:
+  function Sidebar() { }
 
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
@@ -436,8 +439,11 @@ const map = require('../../presenter/sidebar/map');
 
     return view;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  module.exports = pub;
+}
+
+
+module.exports = init;
 //});

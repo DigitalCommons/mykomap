@@ -4,11 +4,12 @@
   sidebarPresenter
 ) {*/
   const eventbus = require('../../eventbus');
-  const config = require('../../model/config');
-  const sidebarPresenter = require('./base');
 
   "use strict";
 
+function init(config) {
+  const sidebarPresenter = require('./base')(config);
+  
   function Presenter() { }
 
   var proto = Object.create(sidebarPresenter.base.prototype);
@@ -32,8 +33,9 @@
     p.registerView(view);
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  module.exports = pub;
+}
+module.exports = init;
 //});

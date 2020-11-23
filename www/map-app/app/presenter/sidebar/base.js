@@ -4,11 +4,11 @@
   presenter
 ) {*/
   const eventbus = require('../../eventbus');
-  const config = require('../../model/config');
   const presenter = require('../../presenter');
 
   "use strict";
 
+function init(config) {
   function Stack() {
     this.index = 0;
     this.storage = [];
@@ -214,10 +214,12 @@
 
   base.prototype = proto;
 
-  var pub = {
+  return {
     base: base,
     updateSidebarWidth: updateSidebarWidth,
     getSidebarWidth: getSidebarWidth
   };
-  module.exports = pub;
+}
+
+module.exports = init;
 //});

@@ -6,13 +6,15 @@
   "presenter/map"
    ], function (eventbus, config, sseInitiative, sidebarPresenter, map) {*/
   const eventbus = require('../../eventbus');
-  const config = require('../../model/config');
-  const sseInitiative = require('../../model/sse_initiative');
-  const sidebarPresenter = require('../../presenter/sidebar/base');
-  const map = require('../../presenter/map');
 
   "use strict";
 
+
+function init(config) {
+  const sseInitiative = require('../../model/sse_initiative')(config);
+  const sidebarPresenter = require('../../presenter/sidebar/base')(config);
+  const map = require('../../presenter/map')(config);
+  
   function StackItem(initiatives) {
     this.initiatives = initiatives;
   }
@@ -445,8 +447,10 @@
     });
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  module.exports = pub;
+}
+
+module.exports = init;
 //});

@@ -5,14 +5,14 @@
    "presenter/sidebar/base"
    ], function(eventbus, config, presenter, sidebarPresenter) {*/
 const eventbus = require('../eventbus');
-const config = require('../model/config');
 const presenter = require('../presenter');
-const sidebarPresenter = require('../presenter/sidebar/base');
 
   "use strict";
 
+function init(config) {
   // This is the presenter for the view/sidebar object.
   // Don't confuse this with the base object for all sidebar objects, which is in presenter/sidebar/base.
+  const sidebarPresenter = require('../presenter/sidebar/base')(config);
 
   function Presenter() {}
 
@@ -120,8 +120,10 @@ const sidebarPresenter = require('../presenter/sidebar/base');
 
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  module.exports = pub;
+}
+
+module.exports = init;
 //});

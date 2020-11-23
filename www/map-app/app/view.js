@@ -6,15 +6,17 @@
    "view/sidebar",
    "view/searchbox"
    ], function(config, d3, map, sidebar, searchbox) {*/
-const config = require('./model/config');
 const d3 = require('d3');
-const map = require('./view/map');
-const sidebar = require('./view/sidebar');
-const searchbox = require('./view/searchbox');
 
 
   "use strict";
 
+
+function _init(config) {
+  const map = require('./view/map')(config);
+  const sidebar = require('./view/sidebar')(config);
+  const searchbox = require('./view/searchbox')(config);
+  
   function init() {
     if (config.htmlTitle()) {
       d3.select("html")
@@ -36,8 +38,10 @@ const searchbox = require('./view/searchbox');
     //searchbox.init();
     sidebar.init();
   }
-  var pub = {
+  
+  return {
     init: init
   };
-  return pub;
+}
+module.exports = _init;
 //});

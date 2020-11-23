@@ -7,10 +7,13 @@
    ], function (d3, eventbus, presenter, sidebarView) {*/
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-const presenter = require('../../presenter/sidebar/directory');
 const view = require('../../view/base');
+const sidebarView = require('./base');
 
   "use strict";
+
+function init(config) {
+  const presenter = require('../../presenter/sidebar/directory')(config);
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -470,8 +473,11 @@ const view = require('../../view/base');
     view.setPresenter(presenter.createPresenter(view));
     return view;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  module.exports = pub;
+}
+
+
+module.exports = init;
 //});

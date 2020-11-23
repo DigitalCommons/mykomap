@@ -14,13 +14,14 @@
   markerView
 ) {*/
   const eventbus = require('../../eventbus');
-  const config = require('../../model/config');
-  const sseInitiative = require('../../model/sse_initiative');
   const sidebarView = require('../../view/sidebar/base');
-  const sidebarPresenter = require('../../presenter/sidebar/base');
-  const markerView = require('../../view/map/marker');
-  
+
   "use strict";
+
+function init(config) {
+  const sseInitiative = require('../../model/sse_initiative')(config);
+  const sidebarPresenter = require('../../presenter/sidebar/base')(config);
+  const markerView = require('../../view/map/marker')(config);
 
   function StackItem(initiatives) {
     this.initiatives = initiatives;
@@ -294,9 +295,11 @@
 
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter,
     latLngBounds: latLngBounds
   };
-  module.exports = pub;
+}
+  
+module.exports = init;
 //});

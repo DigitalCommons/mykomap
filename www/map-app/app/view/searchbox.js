@@ -6,8 +6,11 @@
 ) {*/
   const d3 = require('d3');
   const viewBase = require('./base');
-  const presenter = require('../presenter/searchbox');
   "use strict";
+
+
+function init(config) {
+  const presenter = require('../presenter/searchbox')(config);
 
   function SearchBoxView() {}
   // inherit from the standard view base object:
@@ -72,9 +75,11 @@
     view.createSearchBox();
     return view;
   }
-  var pub = {
+  return {
     init: init
   };
+}
 
-  module.exports = pub;
+
+module.exports = init;
 //});

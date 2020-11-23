@@ -9,13 +9,14 @@
    ) {*/
 const eventbus = require('../../eventbus');
 const presenter = require('../../presenter');
-const config = require('../../model/config');
-const sse_initiatives = require('../../model/sse_initiative');
 const default_popup = require('../../view/map/default_popup');
 const popup = default_popup; // FIXME
 
 
   "use strict";
+
+function init(config) {
+  const sse_initiatives = require('../../model/sse_initiative')(config);
 
   function Presenter() { }
 
@@ -84,8 +85,11 @@ const popup = default_popup; // FIXME
     return p;
   }
 
-  var pub = {
+  return  {
     createPresenter: createPresenter
   };
-  module.exports = pub;
+}
+
+
+module.exports = init;
 //});

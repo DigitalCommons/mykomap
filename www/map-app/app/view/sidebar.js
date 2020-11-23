@@ -12,12 +12,15 @@
 const eventbus = require('../eventbus');
 const d3 = require('d3');
 const viewBase = require('./base');
-const presenter = require('../presenter/sidebar');
-const about = require('../view/sidebar/about');
-const directory = require('../view/sidebar/directory');
-const datasets = require('../view/sidebar/datasets');
 
   "use strict";
+
+function _init(config) {
+  const presenter = require('../presenter/sidebar')(config);
+  const about = require('../view/sidebar/about')(config);
+  const directory = require('../view/sidebar/directory')(config);
+  const datasets = require('../view/sidebar/datasets')(config);
+  const initiatives = require('../view/sidebar/initiatives')(config);
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
@@ -355,8 +358,10 @@ const datasets = require('../view/sidebar/datasets');
     view.createSidebars();
     view.changeSidebar("directory");
   }
-  var pub = {
+  return {
     init: init
   };
-  module.exports = pub;
+}
+
+module.exports = _init;
 //});

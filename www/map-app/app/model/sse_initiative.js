@@ -4,23 +4,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   */
 
   const d3 = require('d3');
-  const config = require('./config');
   const eventbus = require('../eventbus');
   
   "use strict";
 
-  // Hardwire this for now.
-  const language = "EN";
-  
-  // Define the properties in an initiative and how to manage them. Note, thanks to JS
-  // variable hoisting semantics, we can reference initialiser functions below, if they are
-  // normal functions.
-  //
-  // - propertyName: the name of the initiative instance property. Should be unique!
-  // - paramName: the name of the constructor paramter property. Not necessarily unique.
-  // - init: a function to initialise the property, called with this property's schema
-  //   definition and a parameters object.
-  // - writable: if true, the property can be assigned to. (Defaults to `false`)
+function init(config) {
+
+    // Hardwire this for now.
+    const language = "EN";
+    
+    // Define the properties in an initiative and how to manage them. Note, thanks to JS
+    // variable hoisting semantics, we can reference initialiser functions below, if they are
+    // normal functions.
+    //
+    // - propertyName: the name of the initiative instance property. Should be unique!
+    // - paramName: the name of the constructor paramter property. Not necessarily unique.
+    // - init: a function to initialise the property, called with this property's schema
+    //   definition and a parameters object.
+    // - writable: if true, the property can be assigned to. (Defaults to `false`)
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema = [
@@ -918,7 +919,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return alternatePossibleFilterValues;
   }
 
-  var pub = {
+  return {
     loadFromWebService: loadFromWebService,
     search: search,
     latLngBounds: latLngBounds,
@@ -939,7 +940,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
     getVocabTerm, getVocabUriForProperty
   };
+}
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
-  module.exports = pub;
+  module.exports = init;
 //});
