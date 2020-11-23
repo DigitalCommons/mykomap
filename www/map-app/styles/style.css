@@ -793,16 +793,21 @@ div.leaflet-popup-content {
   }
 }
 
-#company-logo {
-  width: 200px;
-  height: 100px;
-  position: relative;
-  left: 25%;
-  bottom: 10px;
-}
-
 #logo-holder {
-  display: inline;
+  display: block;
+  height: 4rem;
+  margin: 10px; /* to match other controls */
   pointer-events: none;
   user-select: none;
+}
+
+/* Shrink the logo on small displays to avoit it overflowing */
+@media (max-device-width: 768px) {
+  #logo-holder {
+    height: 2.5rem;
+  }
+}
+
+#logo-holder .logo {
+  height: 100%;
 }
