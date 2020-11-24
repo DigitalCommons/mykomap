@@ -368,6 +368,10 @@ body {
   background-color: white;
 }
 
+.sea-main-sidebar {
+  z-index: inherit; /* attempt to stop scrollbar showing through */
+}
+
 .sea-initiatives-list-sidebar-content,
 .sea-initiative-sidebar-content {
   display: flex;
