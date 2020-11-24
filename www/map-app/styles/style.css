@@ -378,6 +378,9 @@ body {
 .sea-initiatives-list-sidebar-content {
   height: 100%;
 }
+.sea-main-sidebar-inner {
+  flex: 1 0 auto;
+}
 
 .sea-initiative-non-geo {
   color: gray;

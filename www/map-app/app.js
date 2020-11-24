@@ -168,14 +168,14 @@ requirejs(["app/main"], function(main) {
           </div>
 				</div>
 				<div class="w3-bar-block sea-main-sidebar">
-					<div style="flex: 0 1 auto;">
+					<div class="sea-main-sidebar-inner">
 						<div id="map-app-sidebar-header" class="map-app-sidebar-header">
 						</div>
 					</div>
 					<!-- Fixed part of Sidebar that may change for different types of the sidebar (e.g. Search results) -->
 					<!-- If this is not a separate flex div, then it doesn't quite render properly on iPhone:
 							the bottom of the div slightly overlaps the scrollable section of the sidebar below -->
-					<div style="flex: 0 1 auto;">
+					<div class="sea-main-sidebar-inner">
 						<div id="map-app-sidebar-fixed-section" class="map-app-sidebar-fixed-section "></div>
 					</div>
 					<!-- scrollable part of sidebar -->
