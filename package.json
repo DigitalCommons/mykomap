@@ -16,7 +16,8 @@
     "test": "mocha",
     "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
     "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
-    "serve": "php -t ext/build/out -S localhost:8080"
+    "serve": "php -t ext/build/out -S localhost:8080",
+    "serve-public": "php -t ext/build/out -S 0.0.0.0:8080"
   },
   "repository": {
     "type": "git",
