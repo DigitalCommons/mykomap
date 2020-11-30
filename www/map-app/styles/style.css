@@ -492,6 +492,10 @@ div.map-app-map-container {
   flex-wrap: nowrap;
 }
 
+input[type="search"] {
+  -webkit-appearance: none; /* avoid rounded searchbox on safari */
+}
+
 .w3-button:hover {
   color: white !important;
   background-color: var(--dark) !important;
