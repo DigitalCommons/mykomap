@@ -487,6 +487,11 @@ div.map-app-map-container {
   font-size: 1.4rem;
 }
 
+#map-app-sidebar-history-navigation {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
 .w3-button:hover {
   color: white !important;
   background-color: var(--dark) !important;

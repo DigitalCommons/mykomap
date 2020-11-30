@@ -36,15 +36,15 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
     // (e.g. moving between different search results)
     var buttons = this.presenter.historyNavigation();
     //w3-button
-    var buttonClasses = "w3-white w3-cell w3-right w3-border-0";
+    var buttonClasses = "w3-white w3-cell w3-border-0";
     var selection = this.d3selectAndClear(
       "#map-app-sidebar-history-navigation"
     );
     var that = this;
-
-    function createButton(b, faClass, hovertext) {
-      selection
-        .append("button")
+    
+      function createButton(b, faClass, hovertext) {
+        selection
+          .append("button")
         // Minor issue: if we add the class w3-mobile to these buttons, then each takes up a whole line
         // on an iPhone, instad of being next to each other on the same line.
         .attr("class", buttonClasses + (b.disabled ? " w3-disabled" : ""))
@@ -58,9 +58,8 @@ define(["app/eventbus", "d3", "view/base"], function(eventbus, d3, view) {
         .attr("class", "fa " + faClass);
     }
     if (this.hasHistoryNavigation) {
-      // inserted in this order becasue of w3-right on each button
-      createButton(buttons.forward, "fa-arrow-right", "Later search results");
-      createButton(buttons.back, "fa-arrow-left", "Earlier search results");
+	    createButton(buttons.back, "fa-arrow-left", "Earlier search results");
+	    createButton(buttons.forward, "fa-arrow-right", "Later search results");
     }
   };
   proto.refresh = function() {
