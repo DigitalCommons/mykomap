@@ -368,14 +368,22 @@ body {
   background-color: white;
 }
 
+.sea-main-sidebar {
+  z-index: inherit; /* attempt to stop scrollbar showing through */
+}
+
 .sea-initiatives-list-sidebar-content,
 .sea-initiative-sidebar-content {
   display: flex;
   flex-direction: column;
   padding: 0 0 1.4em;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   font-weight: 400;
+}
+.sea-initiatives-list-sidebar-content {
+  height: 100%;
+}
+.sea-main-sidebar-inner {
+  flex: 0 0 auto;
 }
 
 .sea-initiative-non-geo {
@@ -479,6 +487,15 @@ div.map-app-map-container {
   font-size: 1.4rem;
 }
 
+#map-app-sidebar-history-navigation {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+input[type="search"] {
+  -webkit-appearance: none; /* avoid rounded searchbox on safari */
+}
+
 .w3-button:hover {
   color: white !important;
   background-color: var(--dark) !important;
@@ -510,6 +527,8 @@ div.map-app-map-container {
 
 .sea-initiative-list {
   margin: 0;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sea-directory-list li,
@@ -786,6 +805,7 @@ div.leaflet-popup-content {
     display: flex;
     justify-content: flex-start;
     font-size: 1.4em;
+    flex: 1 0 auto;
   }
 
   .sidebar-normal-size-close-btn {

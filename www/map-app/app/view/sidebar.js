@@ -40,8 +40,10 @@ define([
 
     // This is where the navigation buttons will go.
     // These are recreated when the sidebar is changed, e.g. from MainMenu to initiatives.
-    selection.append("i").attr("id", "map-app-sidebar-history-navigation");
-
+    selection.append("span")
+	           .attr("id", "map-app-sidebar-history-navigation")
+             .classed("map-app-sidebar-history-navigation");
+    
     // The sidebar has a button that causes the main menu to be dispayed
 
 
