@@ -281,12 +281,21 @@ define([], function () {
       },
       {
         id: 'searchedFields',
-        descr: 'A list of fields that are looked at when searching ' +
-          ["name", "uri", "within", "lat", "lng", "www",
+        descr: 'A list of fields that are looked at when using the search function. Valid values for this parameter are:' +
+          ["name", "uri", "www",
             "regorg", "sameas", "desc", "street", "locality",
             "region", "postcode", "country", "primaryActivity",
             "otherActivities", "orgStructure", "tel", "email", "qualifiers"].join(",") +
-          "\nAn example of passing parameters through the url: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities",
+          "\nif non-valid values are passed, the app will fail silently (no errors will be produced)" +
+          "\nThe default values are 'name,www'" +
+          "\nUsers can pass single arguments and multiple arguments, separated with a comma" +
+          "\nPassing multiple values example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities" +
+          "\nPassing a single value example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg" +
+          "\n\nThe search functionality works by creating a 'searchstr' string parameter for every initiative," +
+          "this is populated using the values from the fields of the initiative (only the fields specified in the 'searchedFields' parameter are used)" +
+          "\nCurrently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other." +
+          "\nThe 'searchstr' is then converted into uppercase. No other string transformations are currently applied" +
+          "\nWhen a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.",
         init: () => searchedFields == undefined ? ["name", "www"] : searchedFields,
         getter: 'getSearchedFields',
         setter: 'setSearchedFields',
