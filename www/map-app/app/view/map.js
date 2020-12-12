@@ -99,6 +99,11 @@ define([
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
   proto.createMap = function () {
+    // setup map (could potentially add this to the map initialization instead)
+    //world ends corners
+    var corner1 = leaflet.latLng(-90, -180),
+      corner2 = leaflet.latLng(90, 180),
+      worldBounds = leaflet.latLngBounds(corner1, corner2);
 
     const openCycleMapUrl =
       "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png";
@@ -113,7 +118,11 @@ define([
     this.map = leaflet.map("map-app-leaflet-map", {
       // set to true to re-enable context menu.
       // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
-      contextmenu: false
+      contextmenu: false,
+      noWrap: true,
+      minZoom: 2,
+      //set max bounds - will bounce back if user attempts to cross them
+      maxBounds: worldBounds
       // contextmenuWidth: 140,
       // contextmenuItems: this.presenter.getContextmenuItems()
     });
@@ -128,8 +137,9 @@ define([
 
 
 
+
     leaflet
-      .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17 })
+      .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
       .addTo(this.map);
 
     let options = {},
@@ -154,6 +164,7 @@ define([
 
     leaflet.Map.include(SpinMapMixin);
     leaflet.Map.addInitHook(SpinMapInitHook);
+
 
     var logo = this.presenter.getLogo();
     if (logo) {
