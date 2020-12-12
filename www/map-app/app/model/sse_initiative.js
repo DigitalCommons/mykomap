@@ -175,8 +175,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         initiative.searchstr += values["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
-      if (activityCode && !initiative.activities.includes(activityCode)) {
-        initiative.activities.push(activityCode);
+      if (activityCode && !initiative.otherActivities.includes(activityCode)) {
+        initiative.otherActivities.push(activityCode);
         initiative.searchstr += values["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
@@ -213,7 +213,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: activityCode, enumerable: true, writable: true },
-      activities: { value: [], enumerable: true, writable: true },
+      otherActivities: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
       tel: { value: e.tel, enumerable: true },
       email: { value: e.email, enumerable: true },
@@ -233,7 +233,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);
-    if (this.activity) this.activities.push(this.activity);
+    if (this.activity) this.otherActivities.push(this.activity);
     if (this.qualifier) this.qualifiers.push(this.qualifier);
 
     //check if lat/lng are numbers and no letters in it
@@ -315,14 +315,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         searchedFields.splice(searchedFields.indexOf("qualifiers"), 1);
     }
 
-    if (searchedFields.includes("activity") || searchedFields.includes("activities")) {
+    if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
       val += e.activity
         ? values["Activities"][getSkosCode(e.activity)]
         : "";
       if (searchedFields.includes("activity"))
         searchedFields.splice(searchedFields.indexOf("activity"), 1);
-      if (searchedFields.includes("activities"))
-        searchedFields.splice(searchedFields.indexOf("activities"), 1);
+      if (searchedFields.includes("otherActivities"))
+        searchedFields.splice(searchedFields.indexOf("otherActivities"), 1);
     }
 
     if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {

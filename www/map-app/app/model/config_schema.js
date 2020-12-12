@@ -285,8 +285,8 @@ define([], function () {
           ["name", "uri", "within", "lat", "lng", "www",
             "regorg", "sameas", "desc", "street", "locality",
             "region", "postcode", "country", "primaryActivity",
-            "activity", "orgStructure", "tel", "email", "qualifiers"].join(",") +
-          "\nAn example of passing parameters through the url: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,activities",
+            "otherActivities", "orgStructure", "tel", "email", "qualifiers"].join(",") +
+          "\nAn example of passing parameters through the url: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities",
         init: () => searchedFields == undefined ? ["name", "www"] : searchedFields,
         getter: 'getSearchedFields',
         setter: 'setSearchedFields',
