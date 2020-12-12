@@ -39,12 +39,14 @@ define([
     if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
       const initiatives = item.initiatives;
-      if (initiatives.length === 1) {
-        //textContent = initiatives[0].name;
-        textContent = "Search: " + item.searchString;
-      } else if (item.isSearchResults()) {
-        textContent = "Search: " + item.searchString;
-      }
+      // if (initiatives.length === 1) {
+      //   //textContent = initiatives[0].name;
+      //   textContent = "Search: " + item.searchString;
+      // } else if (item.isSearchResults()) {
+      //   textContent = "Search: " + item.searchString;
+      // }
+      textContent = "Search: " + item.searchString;
+
 
       //change the text in the search bar
       eventbus.publish({
@@ -60,6 +62,7 @@ define([
 
     container
       .append("p")
+      .attr("id", "searchTooltipText")
       .text(textContent);
 
   };
@@ -248,6 +251,10 @@ define([
 
   proto.populateScrollableSelection = function (selection) {
     var that = this;
+    var noFilterTxt = "When you search, or click on map markers, you'll see the results here";
+    var freshSearchText = this.presenter.getFilterNames().length > 0 ?
+      " Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
+
     if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
       const item = this.presenter.currentItem();
       const initiatives = item == null ? [] : item.initiatives;
@@ -268,11 +275,23 @@ define([
         default:
           this.populateSelectionWithListOfInitiatives(selection, initiatives);
       }
+      // add clear button
+      if (this.presenter.getFilterNames().length > 0) {
+        selection
+          .append("div")
+          .attr("class", "w3-container w3-center")
+          .attr("id", "clearSearchFilterBtn")
+          .append("button")
+          .attr("class", "w3-button")
+          .text("Clear")
+          .on("click", function () {
+            //redo search
+            that.presenter.removeFilters();
+            that.presenter.performSearch(item.searchedFor);
+          });
+      }
     }
     else {
-      var noFilterTxt = "When you search, or click on map markers, you'll see the results here";
-      var freshSearchText = this.presenter.getFilterNames().length > 0 ?
-        " Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
       selection
         .append("div")
         .attr("class", "w3-container w3-center")
@@ -291,12 +310,14 @@ define([
           .attr("class", "w3-button")
           .text("Clear")
           .on("click", function () {
+            // only remove filters and and reset text, no re-search needed
             that.presenter.removeFilters();
-            d3.select("#searchTooltipId").text(noFilterTxt);
-            d3.select("#clearSearchFilterBtn").remove();
+            selection.select("#searchTooltipId").text(noFilterTxt);
+            selection.select("#clearSearchFilterBtn").remove();
           });
       }
     }
+
   };
   proto.getWindowHeight = function () {
     return d3.select("window").node().innerHeight;
