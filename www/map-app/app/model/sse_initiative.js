@@ -139,7 +139,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   */
   const registeredValues = {}; // arrays of sorted values grouped by label, then by field
   const allRegisteredValues = {}; // arrays of sorted values, grouped by label
-  
+
   function Initiative(e) {
     const that = this;
 
@@ -172,17 +172,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += values["Organisational Structure"][regorgCode];
+        initiative.searchstr += values["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
       if (activityCode && !initiative.activities.includes(activityCode)) {
         initiative.activities.push(activityCode);
-        initiative.searchstr += values["Activities"][activityCode];
+        initiative.searchstr += values["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
       if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
         initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += values["Activities"][qualifierCode];
+        initiative.searchstr += values["Activities"][qualifierCode].toUpperCase();
       }
 
       //update pop-up
@@ -211,10 +211,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         value: e.country ? e.country : undefined,
         enumerable: true
       },
-      searchstr: {
-        value: genSearchValues(config.getSearchedFields(), e)
-        , enumerable: true, writable: true
-      },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: activityCode, enumerable: true, writable: true },
       activities: { value: [], enumerable: true, writable: true },
@@ -229,6 +225,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       qualifier: { value: qualifierCode, enumerable: true },
       qualifiers: { value: [], enumerable: true, writable: true },
       baseMembershipType: { value: membType, enumerable: true },
+      searchstr: {
+        value: genSearchValues(config.getSearchedFields(), e)
+        , enumerable: true, writable: true
+      },
 
     });
 
@@ -261,7 +261,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
       if (field == null)
         return; // This initiative has no value for `fieldKey`, so can't be indexed further.
-      
+
       if (labelKey in registeredValues) {
         const values = registeredValues[labelKey];
         if (field in values) {
@@ -271,12 +271,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         }
       }
       else {
-	      // Create the object that holds the registered values for the current
+        // Create the object that holds the registered values for the current
         // field if it hasn't already been created
         const values = registeredValues[labelKey] = {};
         values[field] = [this];
       }
-      
+
     });
 
     insert(this, loadedInitiatives);

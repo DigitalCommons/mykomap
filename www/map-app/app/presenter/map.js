@@ -398,7 +398,7 @@ define([
   //there should not be any filters (search was on all of the data) A
   //if A you need to just hide all the data outside of the passed initiatives and reveal the ones passed
 
-  //OR B, you will recieve a subset of filtered (search was on filtered content) B
+  //OR B, you will receive a subset of filtered (search was on filtered content) B
   //if B you need to hide all the initiatives in the filter outside of the data passed
   // (i.e filter/initiatives needs to be hidden)
   //and make sure that the initiatives passed are revealed
@@ -431,7 +431,7 @@ define([
     //case a - global search
     const isCaseA = Object.keys(filtered).length == 0;
     if (isCaseA) {//no filter case
-      //hide the ones you need to hide, i.e. difference between ALL and initiativesMap
+      //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
       hidden = loadedInitiatives.filter(i => {
         return !initiativeIds.includes(i.uniqueId);
       });

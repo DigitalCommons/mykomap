@@ -196,8 +196,8 @@ define([], function () {
         descr: 'the attribution message to put at the bottom of the map',
         init: () => (
           mapAttribution ||
-          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> '+
-          'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> '+
+          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
+          'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> ' +
           '| Powered by <a href="https://www.geoapify.com/">Geoapify</a>'
         ),
         getter: 'getMapAttribution',
@@ -285,7 +285,8 @@ define([], function () {
           ["name", "uri", "within", "lat", "lng", "www",
             "regorg", "sameas", "desc", "street", "locality",
             "region", "postcode", "country", "primaryActivity",
-            "activity", "orgStructure", "tel", "email"].join(","),
+            "activity", "orgStructure", "tel", "email", "qualifiers"].join(",") +
+          "\nAn example of passing parameters through the url: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,activities",
         init: () => searchedFields == undefined ? ["name", "www"] : searchedFields,
         getter: 'getSearchedFields',
         setter: 'setSearchedFields',
