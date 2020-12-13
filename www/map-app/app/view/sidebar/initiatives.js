@@ -283,7 +283,7 @@ define([
           .attr("id", "clearSearchFilterBtn")
           .append("button")
           .attr("class", "w3-button")
-          .text("Clear")
+          .text("Clear Filters")
           .on("click", function () {
             //redo search
             that.presenter.removeFilters();
@@ -308,7 +308,7 @@ define([
           .attr("id", "clearSearchFilterBtn")
           .append("button")
           .attr("class", "w3-button")
-          .text("Clear")
+          .text("Clear Filters")
           .on("click", function () {
             // only remove filters and and reset text, no re-search needed
             that.presenter.removeFilters();
