@@ -586,7 +586,7 @@ define([
     });
 
 
-    //eventbus.subscribe({topic: "Initiative.loadComplete", callback: function(data) { p.onInitiativeLoadComplete(data); } });
+    eventbus.subscribe({topic: "Initiative.stopLoading", callback: function(data) { p.onInitiativeLoadComplete(data); } });
     eventbus.subscribe({ topic: "Initiative.loadFailed", callback: function (data) { p.onInitiativeLoadMessage(data); } });
     // TODO - strip out this mechanism from everywhere it appears:
     //eventbus.subscribe({topic: "Initiative.selected", callback: function(data) { p.onInitiativeSelected(data); } });

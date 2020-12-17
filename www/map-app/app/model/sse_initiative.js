@@ -468,7 +468,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         performance.getEntriesByName("startProcessing")[0].startTime}`
       );
       //if more left
-      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset that you just loaded
+      datasetsLoaded++;
+      if (datasetsLoaded >= datasetsToLoad)
+        eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
+      // can stop individual datasets from loading as well
+      // else {
+      //   eventbus.publish({
+      //     topic: "Initiative.stopLoading",
+      //     data: {}
+      //   });
+      // }
+
     }
   }
   function add(json) {
@@ -583,10 +593,13 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //TODO: this whole structure will be pretty glitchy when multithreaded
   //need to fix this
   let startedLoading = false;
+  let datasetsLoaded = 0;
+  let datasetsToLoad = 0;
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
     var isCached = config.useCache() == false && config.useCache() != NaN ? false : true;
+    datasetsToLoad = ds.length;
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
@@ -622,9 +635,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
       });
       startedLoading = true;
-    }
-    else {
-      //load at bottom of screen msg
     }
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:
