@@ -587,9 +587,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var ds = config.namedDatasets();
     var i;
     var isCached = config.useCache() == false && config.useCache() != NaN ? false : true;
-    console.log("logic test", isCached);
-    console.log("logic test2", config.useCache());
-    console.log("logic test3", config.useCache() == NaN);
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
