@@ -132,6 +132,7 @@ define([], function () {
     logo,
     tileUrl,
     mapAttribution,
+    useCache,
   } = {}) => [
       {
         id: 'aboutHtml',
@@ -331,6 +332,14 @@ define([], function () {
         init: () => logo,
         setter: 'setLogo',
         type: types.string,
+      },
+      {
+        id: 'useCache',
+        descr: `If this is set to false, the sparql data requested by the php script, will not be cached. All requests will be directly processed by Virtuoso`,
+        init: () => useCache,
+        defaultDescr: "True",
+        setter: 'setUseCache',
+        type: types.boolean,
       }
 
 

@@ -586,20 +586,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
+    var isCached = config.useCache() == false && config.useCache() != NaN ? false : true;
+    console.log("logic test", isCached);
+    console.log("logic test2", config.useCache());
+    console.log("logic test3", config.useCache() == NaN);
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset, false, false);
+        loadDataset(dataset, false, false, isCached);
       });
     }
     else if (ds.length == 1)
-      loadDataset(ds[0]);
+      loadDataset(ds[0], false, true, isCached);
 
   }
 
 
-  function loadDataset(dataset, mixed = false, sameas = true) {
+  function loadDataset(dataset, mixed = false, sameas = true, useCache = true) {
 
     // var service = mixed
     //   ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
@@ -608,6 +612,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //     config.getServicesPath() + "get_dataset.php?dataset=" + dataset
     //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
+    // add in the use cache param to make cache optional
+    if (useCache) {
+      service += "&useCache=true"
+    }
     console.log(service);
     var response = null;
     var message = null;

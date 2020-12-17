@@ -300,3 +300,15 @@ If set this will display the logo of the organisation. This takes in a link to a
 
 
 
+### `useCache`
+
+- *type:* `{boolean}` 
+- *in string context:* parsed as-is
+- *default:* True
+- *settable?:* yes
+
+If this is set to false, the sparql data requested by the php script, will not be cached. All requests will be directly processed by Virtuoso
+
+
+
+

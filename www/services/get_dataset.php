@@ -7,7 +7,7 @@
 $base_url = __DIR__ . "/../configuration";
 //$cacheFile = "locCache.json";
 //TODO sanitize all user input
-function report_success($response)
+function report_success($response, $use_cache)
 {
 	$result = array();
 	// API response uses JSend: https://labs.omniti.com/labs/jsend
@@ -16,7 +16,10 @@ function report_success($response)
 	$json_res = json_encode($result);
 	//make sure no one else can write and file exists only for us
 	//should be safe (i.e. writing .json and hardcoded value for name)
-	file_put_contents("locCache.json", $json_res);
+	//check if cached should be saved
+	if ($use_cache) {
+		file_put_contents("locCache.json", $json_res);
+	}
 	echo $json_res;
 }
 function report_error_and_die($msg)
@@ -157,8 +160,13 @@ if (isset($_GET["uid"])) {
 	}
 }
 
+$use_cache = false;
+if (isset($_GET["use_cache"])) {
+	$use_cache = true;
+}
 
-if (file_exists("locCache.json") && !isset($_GET["uid"]) && !needsUpdate($dataset)) {
+
+if ($use_cache && file_exists("locCache.json") && !isset($_GET["uid"]) && !needsUpdate($dataset)) {
 	$cached_res = file_get_contents("locCache.json");
 	echo $cached_res;
 } else {
@@ -192,5 +200,5 @@ if (file_exists("locCache.json") && !isset($_GET["uid"]) && !needsUpdate($datase
 	}
 
 	// echo json_encode($requestURL);
-	report_success($result);
+	report_success($result, $use_cache);
 }
