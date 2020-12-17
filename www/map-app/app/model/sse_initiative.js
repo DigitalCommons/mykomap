@@ -562,31 +562,38 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
+
+  // If datasets is literally true, loads all of them.
+  // If datasets matches an existing dataset, loads that.
+  // Otherwise, nothing is loaded.
   function reset(dataset) {
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-
-
+    
+    
     //publish reset to map markers
     eventbus.publish({
       topic: "Initiative.reset",
       data: { dataset: "all" }
     });
-
-    if (allDatasets.includes(dataset)) {
-      currentDatasets = dataset;
-      loadDataset(dataset);
-    }
-    else {
-      //return true to signal that all datasets are loaded
+    
+    if (dataset === true) {
+      // indicate that all datasets are loaded
       currentDatasets = true;
       loadFromWebService();
       console.log("loading mixed dataset");
-
+      return;
     }
-
+    
+    if (allDatasets.includes(dataset)) {
+      // indicate which dataset is loaded
+      currentDatasets = dataset;
+      loadDataset(dataset);
+      console.log("loading dataset "+dataset);
+      return;
+    }
   }
 
 

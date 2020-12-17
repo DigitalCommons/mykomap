@@ -59,7 +59,7 @@ define([
         .text(datasets[dataset]);
       btn.on("click",()=>{
           btn.classed("sea-field-active", true);
-          that.presenter.changeDatasets(dataset,false);
+          that.presenter.changeDatasets(dataset);
           
         });
     });    
@@ -73,7 +73,7 @@ define([
           .text("Mixed Sources");
       btn.on("click",()=>{
           btn.classed("sea-field-active", true);
-          that.presenter.changeDatasets("",true);
+          that.presenter.changeDatasets(true);
       });
       }
 

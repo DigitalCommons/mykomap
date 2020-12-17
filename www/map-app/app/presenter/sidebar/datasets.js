@@ -36,24 +36,25 @@ define([
       return mixedId;
     }
 
+      // This function selects one, all, or none of the datasets.
+      // If the dataset value matches the current value of sseInitiative.getCurrentDatasets(),
+      // do nothing.
+      // If the dataset is literally true, select all of them.
+      // If the dataset is a name, matching a dataset name, select just that dataset.
+      // Otherwise, select none of them.
+      //
     //set default somewhere else where it loads the initiatives
     //remove initiatives from menu on the side
     //remove initiatives from map
-    proto.changeDatasets = (dataset,getAll) => {
-        //if only one dataset no changing needed
-        if(sseInitiative.getCurrentDatasets()) return;
-        //if the currently loaded dataset is requested
-        if(dataset === sseInitiative.getCurrentDatasets()
-        //or if all are requested and the currently loaded databases are all 
-        // don't do anything
-            || (getAll && sseInitiative.getCurrentDatasets()===true)) return;
+      proto.changeDatasets = (dataset) => {
+          console.log("changeDatasets", dataset, sseInitiative.getCurrentDatasets());
 
+          // Has the requested dataset(s) been selected already?
+          if (sseInitiative.getCurrentDatasets() === dataset)
+              return; // Yes, nothing to do
 
-        //get all or get specific one
-        if(getAll)
-          sseInitiative.reset()
-        else sseInitiative.reset(dataset);          
-    };
+          sseInitiative.reset(true);
+      };
   
     function createPresenter(view) {
       var p = new Presenter();
