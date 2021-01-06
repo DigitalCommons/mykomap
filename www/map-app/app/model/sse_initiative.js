@@ -86,7 +86,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       OS140: "Employee trust",
       OS150: "Self-employed",
       OS160: "Unincorporated",
-      OS170: "Mutual",
+      OS170: "Mutual Organisation",
       OS180: "National apex",
       OS190: "National sectoral federation or union",
       OS200: "Regional, state or provincial level federation or union",
