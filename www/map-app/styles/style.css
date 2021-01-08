@@ -805,7 +805,7 @@ div.leaflet-popup-content {
     display: flex;
     justify-content: flex-start;
     font-size: 1.4em;
-    flex: 1 0 auto;
+    flex: 0 0 auto; 
   }
 
   .sidebar-normal-size-close-btn {
