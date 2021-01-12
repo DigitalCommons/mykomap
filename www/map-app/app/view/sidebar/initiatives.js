@@ -282,7 +282,7 @@ define([
           .attr("class", "w3-container w3-center")
           .attr("id", "clearSearchFilterBtn")
           .append("button")
-          .attr("class", "w3-button")
+          .attr("class", "w3-button w3-black")
           .text("Clear Filters")
           .on("click", function () {
             //redo search
@@ -307,7 +307,7 @@ define([
           .attr("class", "w3-container w3-center")
           .attr("id", "clearSearchFilterBtn")
           .append("button")
-          .attr("class", "w3-button")
+          .attr("class", "w3-button w3-black")
           .text("Clear Filters")
           .on("click", function () {
             // only remove filters and and reset text, no re-search needed
