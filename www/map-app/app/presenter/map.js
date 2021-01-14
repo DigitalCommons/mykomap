@@ -289,6 +289,9 @@ define([
 
 
   proto.addFilter = function (data) {
+    console.log("adding filter, filter data:");
+    console.log(data);
+
     let initiatives = data.initiatives;
     let filterName = data.filterName;
     let verboseName = data.verboseName;
@@ -379,6 +382,10 @@ define([
     return filteredInitiativesUIDMap;
   }
 
+  function getFilters(){
+    return Object.keys(filtered);
+  }
+
   function getFiltersVerbose() {
     return Object.values(verboseNamesMap);
   }
@@ -407,8 +414,8 @@ define([
   let hidden = [];
   let lastRequest = [];
   proto.addSearchFilter = function (data) {
-    //if no results remove the filter
-
+    
+    //if no results remove the filter, currently commented out
     if (data.initiatives != null && data.initiatives.length == 0) {
       // uncommenting this will reveal all initiatives on a failed search
       // this.removeSearchFilter();
@@ -693,6 +700,7 @@ define([
     createPresenter: createPresenter,
     getFiltered: getFiltered,
     getFilteredMap: getFilteredMap,
+    getFilters: getFilters,
     getFiltersVerbose: getFiltersVerbose
   };
   return pub;

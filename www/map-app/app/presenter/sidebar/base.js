@@ -110,10 +110,30 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //       (e.g. where it affects which initiatives are selected)
       //pres.view.refresh();
 
+      if(newContent.filters[0]){
+        eventbus.publish({
+          topic: "Map.removeFilters",
+        })
+        
+        newContent.filters.forEach(filter=>{
+          let filterData = {
+            filterName: filter.filterName,
+            initiatives: newContent.initiatives,
+            verboseName: filter.verboseName
+          };
+          console.log(filterData);
+          eventbus.publish({
+            topic: "Map.addFilter",
+            data: filterData
+          });
+        });
+      }
+
       eventbus.publish({
         topic: "Map.addSearchFilter",
         data: {initiatives: newContent.initiatives}
       }); //historySEARCH
+
       pres.historyButtonsUsed(lastContent);
     };
   };
@@ -129,6 +149,25 @@ define(["app/eventbus", "model/config", "presenter"], function(
         return;
       //pres.view.refresh();
       if(newContent){
+        if(newContent.filters[0]){
+          eventbus.publish({
+            topic: "Map.removeFilters",
+          })
+          
+          newContent.filters.forEach(filter=>{
+            let filterData = {
+              filterName: filter.filterName,
+              initiatives: newContent.initiatives,
+              verboseName: filter.verboseName
+            };
+            console.log(filterData);
+            eventbus.publish({
+              topic: "Map.addFilter",
+              data: filterData
+            });
+          });
+        }
+
         eventbus.publish({
           topic: "Map.addSearchFilter",
           data: {initiatives: newContent.initiatives}
