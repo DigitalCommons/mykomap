@@ -80,8 +80,8 @@ define([], function () {
             );
 
         }
-        if (initiative.activities && initiative.activities.length > 0) {
-            let repl = initiative.activities.map(AM => activitiesVerbose[AM]).join(", ");
+        if (initiative.otherActivities && initiative.otherActivities.length > 0) {
+            let repl = initiative.otherActivities.map(AM => activitiesVerbose[AM]).join(", ");
             popupHTML = popupHTML.replace(
                 "{initiative.secondary-activity}",
                 repl

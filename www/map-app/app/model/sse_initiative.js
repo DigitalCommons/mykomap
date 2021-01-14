@@ -86,7 +86,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       OS140: "Employee trust",
       OS150: "Self-employed",
       OS160: "Unincorporated",
-      OS170: "Mutual",
+      OS170: "Mutual Organisation",
       OS180: "National apex",
       OS190: "National sectoral federation or union",
       OS200: "Regional, state or provincial level federation or union",
@@ -139,7 +139,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   */
   const registeredValues = {}; // arrays of sorted values grouped by label, then by field
   const allRegisteredValues = {}; // arrays of sorted values, grouped by label
-  
+
   function Initiative(e) {
     const that = this;
 
@@ -172,17 +172,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += values["Organisational Structure"][regorgCode];
+        initiative.searchstr += values["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
-      if (activityCode && !initiative.activities.includes(activityCode)) {
-        initiative.activities.push(activityCode);
-        initiative.searchstr += values["Activities"][activityCode];
+      if (activityCode && !initiative.otherActivities.includes(activityCode)) {
+        initiative.otherActivities.push(activityCode);
+        initiative.searchstr += values["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
       if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
         initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += values["Activities"][qualifierCode];
+        initiative.searchstr += values["Activities"][qualifierCode].toUpperCase();
       }
 
       //update pop-up
@@ -211,13 +211,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         value: e.country ? e.country : undefined,
         enumerable: true
       },
-      searchstr: {
-        value: genSearchValues(config.getSearchedFields(), e)
-        , enumerable: true, writable: true
-      },
       primaryActivity: { value: primaryActivityCode, enumerable: true },
       activity: { value: activityCode, enumerable: true, writable: true },
-      activities: { value: [], enumerable: true, writable: true },
+      otherActivities: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
       tel: { value: e.tel, enumerable: true },
       email: { value: e.email, enumerable: true },
@@ -229,11 +225,15 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       qualifier: { value: qualifierCode, enumerable: true },
       qualifiers: { value: [], enumerable: true, writable: true },
       baseMembershipType: { value: membType, enumerable: true },
+      searchstr: {
+        value: genSearchValues(config.getSearchedFields(), e)
+        , enumerable: true, writable: true
+      },
 
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);
-    if (this.activity) this.activities.push(this.activity);
+    if (this.activity) this.otherActivities.push(this.activity);
     if (this.qualifier) this.qualifiers.push(this.qualifier);
 
     //check if lat/lng are numbers and no letters in it
@@ -261,7 +261,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
       if (field == null)
         return; // This initiative has no value for `fieldKey`, so can't be indexed further.
-      
+
       if (labelKey in registeredValues) {
         const values = registeredValues[labelKey];
         if (field in values) {
@@ -271,12 +271,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         }
       }
       else {
-	      // Create the object that holds the registered values for the current
+        // Create the object that holds the registered values for the current
         // field if it hasn't already been created
         const values = registeredValues[labelKey] = {};
         values[field] = [this];
       }
-      
+
     });
 
     insert(this, loadedInitiatives);
@@ -315,14 +315,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         searchedFields.splice(searchedFields.indexOf("qualifiers"), 1);
     }
 
-    if (searchedFields.includes("activity") || searchedFields.includes("activities")) {
+    if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
       val += e.activity
         ? values["Activities"][getSkosCode(e.activity)]
         : "";
       if (searchedFields.includes("activity"))
         searchedFields.splice(searchedFields.indexOf("activity"), 1);
-      if (searchedFields.includes("activities"))
-        searchedFields.splice(searchedFields.indexOf("activities"), 1);
+      if (searchedFields.includes("otherActivities"))
+        searchedFields.splice(searchedFields.indexOf("otherActivities"), 1);
     }
 
     if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
@@ -468,7 +468,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         performance.getEntriesByName("startProcessing")[0].startTime}`
       );
       //if more left
-      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset that you just loaded
+      datasetsLoaded++;
+      if (datasetsLoaded >= datasetsToLoad)
+        eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
+      // can stop individual datasets from loading as well
+      // else {
+      //   eventbus.publish({
+      //     topic: "Initiative.stopLoading",
+      //     data: {}
+      //   });
+      // }
+
     }
   }
   function add(json) {
@@ -583,23 +593,27 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //TODO: this whole structure will be pretty glitchy when multithreaded
   //need to fix this
   let startedLoading = false;
+  let datasetsLoaded = 0;
+  let datasetsToLoad = 0;
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
+    var isCached = config.useCache() == false && config.useCache() != NaN ? false : true;
+    datasetsToLoad = ds.length;
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset, false, false);
+        loadDataset(dataset, false, false, isCached);
       });
     }
     else if (ds.length == 1)
-      loadDataset(ds[0]);
+      loadDataset(ds[0], false, true, isCached);
 
   }
 
 
-  function loadDataset(dataset, mixed = false, sameas = true) {
+  function loadDataset(dataset, mixed = false, sameas = true, useCache = true) {
 
     // var service = mixed
     //   ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
@@ -608,6 +622,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //     config.getServicesPath() + "get_dataset.php?dataset=" + dataset
     //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
+    // add in the use cache param to make cache optional
+    if (useCache) {
+      service += "&useCache=true"
+    }
     console.log(service);
     var response = null;
     var message = null;
@@ -617,9 +635,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
       });
       startedLoading = true;
-    }
-    else {
-      //load at bottom of screen msg
     }
     // We want to allow the effects of publishing the above event to take place in the UI before
     // continuing with the loading of the data, so we allow the event queue to be processed:

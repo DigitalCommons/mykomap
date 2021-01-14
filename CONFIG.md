@@ -237,7 +237,17 @@ Defines the zoom level above which to cluster pins; passed to Leaflet.markerclus
 - *default:* `name,www`
 - *settable?:* yes
 
-A list of fields that are looked at when searching name,uri,within,lat,lng,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,activity,orgStructure,tel,email
+A list of fields that are looked at when using the search function. Valid values for this parameter are:name,uri,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,otherActivities,orgStructure,tel,email,qualifiers
+if non-valid values are passed, the app will fail silently (no errors will be produced)
+The default values are 'name,www'
+Users can pass single arguments and multiple arguments, separated with a comma
+Passing multiple values example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities
+Passing a single value example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg
+
+The search functionality works by creating a 'searchstr' string parameter for every initiative,this is populated using the values from the fields of the initiative (only the fields specified in the 'searchedFields' parameter are used)
+Currently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other.
+The 'searchstr' is then converted into uppercase. No other string transformations are currently applied
+When a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.
 
 
 
@@ -286,6 +296,18 @@ The maximum zoom in that can happen when searching any particular group, if 0 do
 - *settable?:* yes
 
 If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>
+
+
+
+
+### `useCache`
+
+- *type:* `{boolean}` 
+- *in string context:* parsed as-is
+- *default:* True
+- *settable?:* yes
+
+If this is set to false, the sparql data requested by the php script, will not be cached. All requests will be directly processed by Virtuoso
 
 
 
