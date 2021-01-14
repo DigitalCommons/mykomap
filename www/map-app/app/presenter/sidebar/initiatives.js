@@ -15,13 +15,17 @@ define([
     return this.hasOwnProperty("searchString");
   };
 
-  function SearchResults(initiatives, searchString, filters = []) {
+  function SearchResults(initiatives, searchString, filterVerboseNames, filterNames) {
     // isa StackItem
     StackItem.call(this, initiatives);
     this.searchedFor = searchString;
-    this.searchString = filters.length > 0 ?
-      "\"" + searchString + "\" in " + filters.join(", ")
+    this.searchString = filterVerboseNames.length > 0 ?
+      "\"" + searchString + "\" in " + filterVerboseNames.join(", ")
       : "\"" + searchString + "\"";
+    this.filters = filterNames.map((filterName,index)=>({
+      filterName,
+      verboseName: filterVerboseNames[index]
+    }));
   }
   SearchResults.prototype = Object.create(StackItem.prototype);
 
@@ -150,7 +154,7 @@ define([
     }
 
     //filter
-    this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose()));
+    this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose(),map.getFilters()));
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them 

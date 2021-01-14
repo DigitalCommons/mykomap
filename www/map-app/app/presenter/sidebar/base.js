@@ -114,6 +114,45 @@ define(["app/eventbus", "model/config", "presenter"], function(
         topic: "Map.addSearchFilter",
         data: {initiatives: newContent.initiatives}
       }); //historySEARCH
+
+      console.log("logging the Search Results object on back pressed")
+      console.log(newContent);
+
+      if(newContent.filters[0]){
+        eventbus.publish({
+          topic: "Map.removeFilters",
+          data: filterData
+        })
+
+        console.log("filter on newContent")
+        console.log(newContent.filters)
+
+        let filterData = {
+          filterName: newContent.filters[0].filterName,
+          initiatives: newContent.initiatives,
+          verboseName: newContent.filters[0].verboseName
+        };
+        console.log(filterData);
+        eventbus.publish({
+          topic: "Map.addFilter",
+          data: filterData
+        });
+
+        /*
+        newContent.filters.forEach(filter=>{
+          let filterData = {
+            filterName: filter.filterName,
+            initiatives: newContent.initiatives,
+            verboseName: filter.verboseName
+          };
+          console.log(filterData);
+          eventbus.publish({
+            topic: "Map.addFilter",
+            data: filterData
+          });
+        });*/
+      }
+
       pres.historyButtonsUsed(lastContent);
     };
   };
