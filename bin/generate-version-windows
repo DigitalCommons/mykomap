@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+
+/** Generates a version.json file for use by a map-app consumer site 
+ *
+ * invoke like this:
+ *
+ *      generate-version $variant_name > version.json
+ *
+ * Where `$variant_name` is a variant name to use as the `variant`
+ * property value.
+ */
+
+const spawn = require('child_process').spawnSync;
+const exec = (str) => {
+    const [ cmd, ...args ] = str.split(/ +/)
+    return spawn(cmd, args)
+}
+const shell = (str) => {
+    const result = exec(str);
+    if (result.status == 0)
+        return String(result.stdout).replace(/\n$/, '');
+    
+    console.error(`command failed: ${str}`);
+    process.exit(1)
+}
+
+const timestamp = 'fix windows timestamp';
+var commit = shell(`git rev-parse --short HEAD`);
+
+if (exec(`git diff-index --quiet HEAD`).status)
+    commit += "-modified";
+
+// When run by a dependent package P, this resolves to
+// P/node_modules/sea-map/package.json.
+//
+// When run by sea-map itself (from bin/, in debug mode), it resolves
+// to its own package.json
+const sea_map_package_json = require('../package.json');
+
+const config = {
+    variant: process.argv[2] || 'experimental',
+    timestamp: timestamp,
+    gitcommit: commit,
+    seaMapVersion: sea_map_package_json.version,
+    seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
+};
+console.log(JSON.stringify(config))
