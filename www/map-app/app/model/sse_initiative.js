@@ -624,7 +624,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
     // add in the use cache param to make cache optional
     if (useCache) {
-      service += "&useCache=true"
+      service += "&use_cache=true"
     }
     console.log(service);
     var response = null;
