@@ -471,14 +471,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       datasetsLoaded++;
       if (datasetsLoaded >= datasetsToLoad)
         eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
-      // can stop individual datasets from loading as well
-      // else {
-      //   eventbus.publish({
-      //     topic: "Initiative.stopLoading",
-      //     data: {}
-      //   });
-      // }
-
     }
   }
   function add(json) {
