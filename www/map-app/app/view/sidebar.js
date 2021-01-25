@@ -158,8 +158,14 @@ define([
 
   };
 
+  // Changes or refreshes the sidebar
+  //
+  // @param name - the sidebar to change (needs to be one of the keys
+  // of this.sidebar)
   proto.changeSidebar = function (name) {
-    this.sidebar[name].refresh();
+    if (name)
+      this.sidebarName = name;
+    this.sidebar[this.sidebarName].refresh();
   };
 
   // proto.hideSidebarIfItTakesWholeScreen = function() {
