@@ -597,7 +597,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if (allDatasets.includes(dataset)) {
       console.log("reset: loading dataset '"+dataset+"'");
       currentDatasets = dataset;
-      loadDataset(dataset);
+      loadDataset(dataset, allDatasets.length > 1);
       return;
     }
 
@@ -619,7 +619,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset, false, false, isCached);
+        loadDataset(dataset, true, false, isCached);
       });
     }
     else if (ds.length == 1)
@@ -638,7 +638,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
     // add in the use cache param to make cache optional
-    if (useCache) {
+    // Note, caching currently doesn't work correctly with multiple data sets
+    // so until that's fixed, don't use it in that case.
+    if (useCache && !mixed) {
       service += "&use_cache=true"
     }
     console.log(service);
