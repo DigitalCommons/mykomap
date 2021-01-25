@@ -213,7 +213,7 @@ define([
       d3.select(".w3-btn").attr("title", "Hide directory");
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
-    //that.changeSidebar("directory");
+    that.changeSidebar(); // Refresh the content of the sidebar
     if (document.getElementById("dir-filter") && window.outerWidth >= 1080)
       document.getElementById("dir-filter").focus();
 
