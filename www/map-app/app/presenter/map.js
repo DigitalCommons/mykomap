@@ -13,53 +13,6 @@ define([
 
   let allMarkers = [];
 
-  proto.getContextmenuItems = function () {
-    // The context menu has been disabled (in www/app/view/map.js), in accordance with
-    // https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
-    // So, don't expect this to do anything!
-    return [
-      {
-        text: "Placehoder 1 - does nothing",
-        callback: function (e) {
-          console.log("Context menu item 1 selected.");
-          console.log(e);
-        }
-      },
-      {
-        text: "Placehoder 2 - does nothing",
-        callback: function (e) {
-          console.log("Context menu item 2 selected.");
-          console.log(e);
-        }
-      },
-      {
-        text: "Launch Google maps",
-        callback: function (e) {
-          // Documentation of Google maps URL parameters from here:
-          // https://moz.com/ugc/everything-you-never-wanted-to-know-about-google-maps-parameters
-          // Example:
-          // https://www.google.co.uk/maps?q=loc:49.8764953,1.1566544&z=14&t=p
-
-          var params = [
-            // TODO - put a marker on Google maps at e.latlng.
-            //"q=loc:" puts a marker on the map, BUT ignores the z and t parameters. Hmmm.
-            //"q=loc:" + e.latlng.lat.toFixed(7) + "," + e.latlng.lng.toFixed(7),
-            "ll=" + e.latlng.lat.toFixed(7) + "," + e.latlng.lng.toFixed(7),
-            "z=14", // zoom. TODO: Consider matching with current view?
-            "t=p" // for terrain map
-          ];
-          var url = "https://www.google.co.uk/maps?" + params.join("&");
-
-          // This version of the URL also works (and is more modern?).
-          // But I have not worked out how to specify a terrain map, nor markers.
-          //var zoom = 14;
-          //var url = "https://www.google.co.uk/maps/@" + e.latlng.lat.toFixed(7) + "," + e.latlng.lng.toFixed(7) + "," + zoom + "z";
-          console.log(url);
-          window.open(url, "_blank");
-        }
-      }
-    ];
-  };
   var copyTextToClipboard = function (text) {
     var textArea = document.createElement("textarea");
     // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***

@@ -124,7 +124,6 @@ define([
       //set max bounds - will bounce back if user attempts to cross them
       maxBounds: worldBounds
       // contextmenuWidth: 140,
-      // contextmenuItems: this.presenter.getContextmenuItems()
     });
     this.map.zoomControl.setPosition("bottomright");
 
