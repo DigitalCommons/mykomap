@@ -442,6 +442,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
 
+  // Incrementally loads the initiatives in `initiativesToLoad`, in
+  // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
+  // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
+  // batches are loaded.
+  //
   //NEEDS TO BE FIXED TO WORK WITH MULTIPLE DATASETS
   function loadNextInitiatives() {
     var i, e;
@@ -473,6 +478,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
     }
   }
+
+  // Loads a set of initiatives
+  //
+  // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
+  //
+  // @param json - an array of inititive definitions
   function add(json) {
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
@@ -554,6 +565,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
+  // Reloads the active data set (or sets)
+  //
+  // @param dataset - when this matches one of `allDatasets`, that set is loaded
+  // and `currentDatasets` is set from `dataset` to reflect this. Otherwise,
+  // any other value is inferred to mean that all datasets should be selected,
+  // and `currentDatasets` is set to the value `true`, and all the data is loaded.
   function reset(dataset) {
     loadedInitiatives = [];
     initiativesToLoad = [];
@@ -651,6 +668,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log(err)
     });
   }
+  // Currently unused.
   function loadPluralObjects(query, uid, callback) {
     var ds = config.namedDatasets();
     for (let i in ds) {
@@ -681,7 +699,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
   }
 
-
+  // This returns an index of vocabularies to term IDs to term labels.
   function getVerboseValuesForFields() {
     return values;
   }
