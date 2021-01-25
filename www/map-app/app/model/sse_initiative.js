@@ -137,7 +137,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { fieldN: [ ... ] }
     }
   */
-  const registeredValues = {}; // arrays of sorted values grouped by label, then by field
+  let registeredValues = {}; // arrays of sorted values grouped by label, then by field
   const allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
