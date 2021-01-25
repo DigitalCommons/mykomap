@@ -565,13 +565,16 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
+  
   // Reloads the active data set (or sets)
   //
-  // @param dataset - when this matches one of `allDatasets`, that set is loaded
-  // and `currentDatasets` is set from `dataset` to reflect this. Otherwise,
-  // any other value is inferred to mean that all datasets should be selected,
-  // and `currentDatasets` is set to the value `true`, and all the data is loaded.
+  // @param dataset - if boolean `true`, then all datasets will be loaded.
+  // Otherwise, only the dataset with a matching name is loaded (if any).
   function reset(dataset) {
+    // If the dataset is the same as that currently selected, nothing to do
+    if(dataset === currentDatasets)
+      return;
+
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
@@ -584,18 +587,21 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       data: { dataset: "all" }
     });
 
-    if (allDatasets.includes(dataset)) {
-      currentDatasets = dataset;
-      loadDataset(dataset);
-    }
-    else {
-      //return true to signal that all datasets are loaded
+    if (dataset === true) {
+      console.log("reset: loading all datasets");
       currentDatasets = true;
       loadFromWebService();
-      console.log("loading mixed dataset");
-
+      return;
     }
 
+    if (allDatasets.includes(dataset)) {
+      console.log("reset: loading dataset '"+dataset+"'");
+      currentDatasets = dataset;
+      loadDataset(dataset);
+      return;
+    }
+
+    console.log("reset: no matching dataset '"+dataset+"'");
   }
 
 

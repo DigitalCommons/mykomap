@@ -36,23 +36,15 @@ define([
       return mixedId;
     }
 
+    // Called when the user selects a dataset in the datasets sidebar panel
+    //
+    // @param dataset - the name of the selected dataset, or boolean `true` to select all datasets
+    //
     //set default somewhere else where it loads the initiatives
     //remove initiatives from menu on the side
     //remove initiatives from map
-    proto.changeDatasets = (dataset,getAll) => {
-        //if only one dataset no changing needed
-        if(sseInitiative.getCurrentDatasets()) return;
-        //if the currently loaded dataset is requested
-        if(dataset === sseInitiative.getCurrentDatasets()
-        //or if all are requested and the currently loaded databases are all 
-        // don't do anything
-            || (getAll && sseInitiative.getCurrentDatasets()===true)) return;
-
-
-        //get all or get specific one
-        if(getAll)
-          sseInitiative.reset()
-        else sseInitiative.reset(dataset);          
+    proto.changeDatasets = (dataset) => {
+      sseInitiative.reset(dataset); // simply delegate
     };
   
     function createPresenter(view) {
