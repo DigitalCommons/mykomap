@@ -452,8 +452,7 @@ define([
     // if (!data.target.id) return;
 
     const refocusMap = true,
-      animateRefocus = true;
-    console.log(css);
+          animateRefocus = true;
     this.map.setActiveArea(css, refocusMap, animateRefocus);
   };
 
