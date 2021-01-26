@@ -643,7 +643,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if (useCache && !mixed) {
       service += "&use_cache=true"
     }
-    console.log(service);
+    console.log("loadDataset", service);
     var response = null;
     var message = null;
     if (!startedLoading) {
