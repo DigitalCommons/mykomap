@@ -8,27 +8,34 @@
  *
  * Where `$variant_name` is a variant name to use as the `variant`
  * property value.
+ * 
+ * Note, assumes it is run in the project directory of the package
+ * (i.e. website) consuming sea-map, not sea-map itself.
  */
-
+const path = require('path');
 const spawn = require('child_process').spawnSync;
-const exec = (str) => {
+const exec = (str, cwd) => {
     const [ cmd, ...args ] = str.split(/ +/)
-    return spawn(cmd, args)
+    const options = cwd? { cwd } : undefined;
+    return spawn(cmd, args, options);
 }
-const shell = (str) => {
-    const result = exec(str);
+const shell = (str, cwd) => {
+    const result = exec(str, cwd);
     if (result.status == 0)
         return String(result.stdout).replace(/\n$/, '');
     
     console.error(`command failed: ${str}`);
     process.exit(1)
 }
-
 const timestamp = shell(`/bin/date +%Y-%m-%dT%H:%M:%S%z`);
-var commit = shell(`git rev-parse --short HEAD`);
 
-if (exec(`git diff-index --quiet HEAD`).status)
-    commit += "-modified";
+function get_git_commit(cwd) {
+    var commit = shell(`git rev-parse --short HEAD`, cwd);
+
+    if (exec(`git diff-index --quiet HEAD`, cwd).status)
+	commit += "-modified";
+    return commit;
+}
 
 // When run by a dependent package P, this resolves to
 // P/node_modules/sea-map/package.json.
@@ -37,11 +44,34 @@ if (exec(`git diff-index --quiet HEAD`).status)
 // to its own package.json
 const sea_map_package_json = require('../package.json');
 
-const config = {
-    variant: process.argv[2] || 'experimental',
-    timestamp: timestamp,
-    gitcommit: commit,
-    seaMapVersion: sea_map_package_json.version,
-    seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
-};
-console.log(JSON.stringify(config))
+const variant = process.argv[2];
+if (variant == 'sea-map') {
+    // Infer development mode
+
+    // Get the linked dependency config in ext/package.json 
+    const map_package_json = require('../ext/package.json');
+    const config = {
+	variant: map_package_json.name,
+	timestamp: timestamp,
+	gitcommit: get_git_commit(path.join(process.cwd(), '/ext')),
+	seaMapVersion: sea_map_package_json.version+'_'+get_git_commit()+'-dev',
+	seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
+    };
+    console.log(JSON.stringify(config));
+}
+else {
+    // Infer production mode
+
+    // Get the sea-map git commit ID from the resolved version (we don't have
+    // access to the git repo in this case).
+    const sea_map_resolved = (sea_map_package_json._resolved || '');
+    const sea_map_commit = sea_map_resolved.replace(/^.*#/, '_').substr(0, 8);
+    const config = {
+	variant: variant,
+	timestamp: timestamp,
+	gitcommit: get_git_commit(),
+	seaMapVersion: sea_map_package_json.version+sea_map_commit,
+	seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
+    };
+    console.log(JSON.stringify(config));
+}
