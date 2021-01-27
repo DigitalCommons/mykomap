@@ -12,7 +12,7 @@
 # is in the path, and `$package_name` is defined, containing the name
 # of the NPM package.
 
-while getopts “c:m:d:” OPTION
+while getopts "c:m:d:" OPTION
 do
      case $OPTION in
          c)
