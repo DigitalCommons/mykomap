@@ -4,34 +4,85 @@ sea-map - A web application for mapping initiatives in the Solidarity & Co-opera
 
 # USAGE
 
+(Also prerequisites section below)
+
 This package is designed to supply the basic source and web assets for
 a Solidarity Economy Association map website.  This is tailored for a
 particular case by a configuration file, and an about.html page,
 supplied by the consumer site package.
 
-The consumer package should supply a script target to build itself
-like this, which uses the `sea-site-build` script exported by this
-package.
-
-The "dev" package is a suggestion for allowing local hosting of the
-site for development, using the command-line PHP executable's facility
-to launch a web server. (On Debian and related distros, you'll need
-the `php-cli` and `php-curl` packages.)
+The consumer package should supply a run-script target to build
+itself, as in the example below, which uses the `sea-site-build`
+script exported by this package.
 
 ```
   "scripts": {
-    "build": "generate-version $npm_package_name >config/version.json && sea-site-build config node_modules/sea-map node_modules/sea-dataserver build",
-    "dev": "php -t build/out -S localhost:8080"
+    "build": "sea-site-build -c config -m node_modules/sea-map -d build src/*",
+    "deploy": "sea-site-deploy",
+    "server": "php -t build/out -S localhost:8080"
   },
 ```
 
+Additionally, this illustrates two other suggested run-scripts:
+`deploy` and `server`.
+
+The `server` run-script illustrates how to run a web server for
+testing the site without deploying, for development. It uses the
+command-line PHP executable's facility to launch a web
+server. (Remember to build the site before running this.)
+
+The `deploy` run-script illustrates how to deploy the web site to a
+remote location. It uses the `sea-site-deploy` script, which
+internally uses `rsync`. (Again, remember to build first.) 
 
 Given these, basic usage of a consuming NPM package therefore would
 look like this:
 
     npm install         # Download the dependencies
     npm run build       # Build and minify the source into builds/out
-    npm run def         # Launch a development web server on http://localhost:8080
+    npm run server      # Launch a development web server on http://localhost:8080
+
+And to deploy it, either configure a target specific to your package,
+which in this example is called `mypackage`:
+
+	npm config set mypackage:deploy_to=joe@example.com:/some/path
+	npm run deploy
+	
+Or, you can override any configured values via the command line like
+this:
+
+	npm run deploy -- -f some/where -t joe@example.com:/some/path
+
+This is to support scripting the deploy step. See the inline
+documentation within [sea-site-deploy](bin/sea-site-deploy) for further
+details.
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information about
+building and deploying sea-map websites during development of sea-map.
+
+
+# PREREQUISITES
+
+Besides a modern version of NPM and NodeJS, this package needs the
+following command line tools:
+
+- `bash` - or possibly any Bourne-shell compatible shell (untested)
+- `rsync` - a file transfer utility
+- `php` - the command-line version of PHP
+
+Additionally, the PHP `curl` module needs to be installed. 
+
+On Debian and related distros, Bash comes by default, and you can
+install the others with:
+
+    apt install rsync php-cli php-curl
+	
+On Windows 10 and above, you can install these via the [Windows
+Subsystem for Linux][WSL].
+
+NPM toolchain prerequisites are listed in `package.json` and installed
+with `npm install`.
+
 
 # CONSUMING PACKAGE REQUIREMENTS
 
@@ -50,16 +101,16 @@ The NPM `sea-map` package needs to be a dependency, which exports the
 The package needs to invoke it like this(typically as an npm build
 script target):
 
-     sea-site-build $config_dir node_modules/sea-map node_modules/sea-dataserver $build_dir",
+    sea-site-build -c config -m node_modules/sea-map  -d build src/*
 
 Where:
 
-  - `$config_dir` is the path to the configuration directory mentioned above
-  - `node_modules/sea-map` is the path to the `sea-map` package directory
-  - `node_modules/sea-dataserver` is the path to the `sea-dataserver` package directory
-  - `$build_dir` is the path in which to build the site.
+ - `config` is the path to the configuration directory mentioned above
+ - `node_modules/sea-map` is the path to the `sea-map` package directory
+ - `build` is the directory in which to build the site
+ - `src/*` expands to a list of directories to include in the build
   
-`$build_dir` will be populated with two directories:
+`build` will be populated with two directories:
 
  - `in` - which contains a RequireJS `build.js` script and the assets
    it needs (linked from eleewhere)
@@ -67,6 +118,7 @@ Where:
 
 `build/out` can then be served by a (PHP enabled) web server directly,
 or packaged for deployment.
+
 
 ## CONFIG.JSON
  
@@ -81,8 +133,6 @@ This is regenerated automatically from the config schema defined in
 [www/map-app/app/model/config.js][config.js]) by running the
 `generate-config-doc` NPM run script. Run this whenever the config changes.
 
-[CONFIG.md]: ./CONFIG.md
-[config.js]: ./www/map-app/app/model/config.js
 
 ## OVERRIDING CONFIG.JSON ATTRIBUTES
 
@@ -186,6 +236,7 @@ Note, this actually bypasses any HTML attribute or URL parsing, so if
 you use this method these won't happen at all. Typically you won't be
 doing this, as it requires understanding of RequireJS.
 
+
 # DEVELOPMENT
 
 Developing `sea-map` needs a way to deploy a website using it for
@@ -200,7 +251,7 @@ to a relative path. But this also doesn't work well, because
 1. This change mustn't be checked in, but more seriously
 2. It doesn't then pull in the RequireJS dependency correctly.
 
-The latter seems to be a known problem with npm.
+The latter seems to be a known problem with `npm`.
 
 So, a suggested simpler way is to embed a simple project using
 `sea-map` within a subdirectory `ext`, either directly (from within
@@ -217,14 +268,15 @@ added to `package.json`, so given the above, you can the build and
 serve the project like this:
 
     npm install    # installs sea-map deps
-	npm run build  # builds the embedded project in ext/build/out
-	npm run serve  # serves the embedded project in ext/build/out
+	npm run build  # builds the embedded project in ext/build/out/
+	npm run server  # serves the embedded project in ext/build/out/
 
 The website, using the under-development version of `sea-map`, will
 then be accessible locally via the URL http://localhost:8080
 
 *Caveat:* the embedded project should not have any extra dependencies
 beyond `sea-map`, because the `npm install` above will not find those.
+
 
 # SCRIPT TARGETS
 
@@ -242,9 +294,7 @@ symlinked (or installed) into `ext/`, this builds that dependent
 project. Primarily for the sea-map developers' convenience, rather
 than any users of sea-map.
 
-[1]: https://github.com/SolidarityEconomyAssociation/playground
-
-    npm serve
+    npm server
 
 As above, a sea-map developers' convenience. Launches a PHP
 development web-server, publishing a project consuming sea-map in
@@ -320,3 +370,11 @@ https://oxford.solidarityeconomy.coop/map-app/configuration/config.json
 
 The location was changed to permit separation of the source code from
 the configuration files.
+
+
+
+[1]: https://github.com/SolidarityEconomyAssociation/playground
+[WSL]: https://docs.microsoft.com/en-gb/windows/wsl/install-win10
+[CONFIG.md]: ./CONFIG.md
+[config.js]: ./www/map-app/app/model/config.js
+

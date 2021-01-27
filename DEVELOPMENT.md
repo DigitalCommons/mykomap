@@ -1,4 +1,84 @@
-# Versioning sea-map
+# DEVELOPMENT
+
+## Synopsis
+
+Clone sea-map, and a website project to develop with:
+
+    git clone http://github.com/SolidarityEconomyAssociation/sea-map
+    git clone http://github.com/SolidarityEconomyAssociation/sea-site-experiment
+
+Check out the `dev` branch of sea-map and (typically) create a feature
+branch, named with the a prefix indicating the issue the branch
+addresses. Try and be consistent with the initials, see [FEATURE
+BRANCHES][#FEATURE-BRANCHES] below.
+
+	cd sea-map
+	git co dev
+	git co -b sm99-some-feature
+	
+Symlink the website project directory as `ext` (or move it here, if
+symlinks are not available).
+
+	ln -sfn ../sea-site-experiment ext
+	
+Install the prerequisites
+
+	apt install php php-curl rsync # On Debian
+	npm run install
+	
+Run the development web server in the background (do this in a separate console):
+
+    npm run build && npm run server &
+
+Hack on the code... remember to keep commits small and as
+self-explanatory as possible. Rebuild, and test in the browser. Then
+when ready to make a development deployment:
+
+    git commit -m "my latest changes..."
+	npm run dev-deploy -- -t me@example.com:/path/to/webroot 
+
+When ready to make a release, set the new semantic version number and
+push the code and the tags:
+
+    git commit -m "my latest changes..."
+	npm version $NEW_VERSION
+	git push --tags
+
+Dependant projects can then be updated to use it like this (for
+example):
+
+    npm update # you may need to specify versions if a major version increment
+    npm run build
+	npm run deploy
+
+
+## Deployment
+
+The standard way to deploy a website which uses sea-map is to execute
+the following *within the website project directory* (assuming
+run-scripts have been set up as recommended).
+
+    npm install
+	# or: `npm upgrade` if you merely wish to update deps like sea-map
+	# See https://www.npmjs.com/package/npm-upgrade
+	
+	npm run build
+	npm run deploy # this will deploy to the configured `deploy_to` URL
+
+See the [USAGE](README.md#USAGE) section of README.md and the
+documentation within [sea-site-deploy][] script for these
+recommendations and how specifying where to deploy.
+
+For development, however, the sea-map run-script `dev-deploy` is
+designed to make a deployment which is correctly labelled as a
+development build in `version.json`, and the sidebar then reports this
+version.  From *within the sea-map project directory*:
+
+    npm run build
+	npm run dev-deploy -- -t me@example.com:/path/to/webroot 
+
+
+## Versioning sea-map
 
 Currently we typically add the sea-map repository as a git
 dependency. Meaning the library is sourced directly from git, rather
@@ -85,3 +165,4 @@ committed in the dependent's repository.
 [version]: https://docs.npmjs.com/cli-commands/version.html
 [semver]: https://docs.npmjs.com/about-semantic-versioning
 [dependencies]: https://docs.npmjs.com/configuring-npm/package-json#dependencies
+[sea-site-deploy]: ./bin/sea-site-deploy
