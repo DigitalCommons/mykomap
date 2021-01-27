@@ -13,7 +13,8 @@
   },
   "bin": {
     "generate-version": "bin/generate-version",
-    "sea-site-build": "bin/sea-site-build"
+    "sea-site-build": "bin/sea-site-build",
+    "sea-site-deploy": "bin/sea-site-deploy"
   },
   "scripts": {
     "lint": "eslint www/map-app/**/*.js",
@@ -23,7 +24,7 @@
     "build-windows": "./bin/sea-site-build-windows -c ext/config -m ./ -d ext/build ext/src/*",
     "serve": "php -t ext/build/out -S localhost:8080",
     "serve-public": "php -t ext/build/out -S 0.0.0.0:8080",
-    "dev-deploy": "set -x; rsync -avzc --delete --rsync-path='sudo rsync' --usermap=\"*:$npm_package_config_deploy_user\" --groupmap=\"*:$npm_package_config_deploy_group\" --exclude=build.txt --exclude=.* ext/build/out/ \"${npm_package_config_deploy_to:?Please define the '$npm_package_name:deploy_to' npm config parameter}\""
+    "dev-deploy": "bin/sea-map-deploy"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# This script deploys a mini-website that is built/uses sea-map. It
+# uses `rsync` to synchronise a remote directory to match a local
+# directory (`rsync` is therefore obviously a requirement).
+#
+# General usage:
+#
+#     sea-site-deploy [-f <from dir> ] [-t <to url>] [-u <user>] [-g <group>]
+#  
+# It is intended to be run as an NPM run-script, both within `sea-map`
+# itself, and consuming packages.  Therefore it accepts by default
+# package.json parameters values exposed by NPM via the environment
+# variables prefixed with `npm_`, as described here:
+#
+# https://docs.npmjs.com/cli/v6/using-npm/scripts#environment
+#
+# The main parameters you must define are the defaults in the `config`
+# block, which default to:
+#
+#     "config": {
+#       "deploy_to": "",
+#       "deploy_user": "www-data",
+#       "deploy_group": "www-data"
+#     },
+#
+# These define:
+#
+#  - `deploy_to`: the destination URL to pass to `rsync`
+#  - `deploy_user`: the user who should own the deployed files
+#  - `deploy_group`: the group who should own the deployed files
+#
+# As described in the package.json documentation, these default values
+# can be overridden on a per-package basis. For example, to set
+# `deploy_to` to something else for an NPM package called `mypackage`:
+#
+#     npm config set mypackage:deploy_to=example.com:/some/path
+#
+# To support scripting, however, the parameters `-t`, `-u` and `-g`
+# can be supplied, and will override all of the above
+# configuration. The `-f` parameter will override the hardwired
+# default source directory  `build/out`.
+#
+# (As of NPM v2.0.0, any trailing parameters passed to npm when
+# invoking a run-script are passed to the script verbatim, see link
+# below.)
+#
+# https://docs.npmjs.com/cli/v6/commands/npm-run-script
+#
+# This means you can deploy to a host `joe@example.com:/some/other/path`
+# whatever the configuration, using:
+#
+#     npm run deploy -- -t joe@example.com:/some/other/path
+#
+# ...assuming the run script is named `deploy` like below:
+#
+#     "scripts": {
+#       "deploy": "bin/sea-site-deploy"
+#     },
+#
+
+# Get the defaults
+deploy_user=${npm_package_config_deploy_user:?No config.deploy_user setting in package.json}
+deploy_group=${npm_package_config_deploy_group:?No config.deploy_group setting in package.json}
+deploy_from=build/out/
+deploy_to=${npm_package_config_deploy_to:?No config.deploy_to setting in package.json}
+
+# Parse options
+while getopts "f:t:u:g:" OPTION
+do
+    case $OPTION in
+        f)
+	    deploy_from="$OPTARG"
+            ;;
+        t)
+	    deploy_to="$OPTARG"
+            ;;
+        u)
+	    deploy_user="$OPTARG"
+            ;;
+        g)
+	    deploy_group="$OPTARG"
+            ;;
+         ?)
+         printf "invalid option '$OPTION', stopping\n" >&2
+         exit 1
+         ;;
+    esac
+done
+
+# remove the options from the argument list
+shift $((OPTIND-1))
+
+if [ -n "$*" ]; then
+    printf "Unknown parameters: $*\n"
+    exit -1
+fi
+
+# Echo command with arguments expanded
+set -x
+
+rsync \
+    -avzc \
+    --delete \
+    --rsync-path='sudo rsync' \
+    --usermap="*:$deploy_user" \
+    --groupmap="*:$deploy_group" \
+    --exclude=build.txt \
+    --exclude=.* \
+    "$deploy_from" \
+    "$deploy_to"
