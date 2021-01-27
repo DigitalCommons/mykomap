@@ -23,7 +23,6 @@ define([
         }
       });
       var results = sseInitiative.search(text);
-      console.log(results);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }

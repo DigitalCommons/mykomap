@@ -660,7 +660,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       // TODO - publish events (e.g. loading, success, failure)
       //        so that the UI can display info about datasets.
       // console.log(json);
-      console.log(json);
+      console.log("loadDataset",json);
       console.info("Recording entire process");
       performance.mark("startProcessing");
       add(json.data);

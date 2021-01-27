@@ -62,9 +62,8 @@ define([
 
     try {
       var successful = document.execCommand('copy');
-      console.log('Copying text: ' + text);
     } catch (err) {
-      console.log('Oops, unable to copy');
+      console.log('Oops, unable to copy', err);
     }
 
     document.body.removeChild(textArea);
@@ -160,7 +159,6 @@ define([
   let previouslySelected = [];
   //this will manage markers pop-ing up and zooming
   proto.onMarkersNeedToShowLatestSelection = function (data) {
-    console.log(data)
     const that = this;
     previouslySelected.forEach(function (e) {
       that.view.setUnselected(e);
@@ -242,9 +240,6 @@ define([
 
 
   proto.addFilter = function (data) {
-    console.log("adding filter, filter data:");
-    console.log(data);
-
     let initiatives = data.initiatives;
     let filterName = data.filterName;
     let verboseName = data.verboseName;
