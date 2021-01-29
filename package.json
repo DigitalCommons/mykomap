@@ -23,6 +23,8 @@
     "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "build-windows": "./bin/sea-site-build-windows -c ext/config -m ./ -d ext/build ext/src/*",
     "server": "php -t ext/build/out -S localhost:8080",
+    "webpack": "webpack",
+    "server2": "php -t dist -S localhost:8080",
     "public-server": "php -t ext/build/out -S 0.0.0.0:8080",
     "dev-deploy": "bin/sea-site-deploy -f ext/build/out/"
   },
@@ -55,6 +57,8 @@
   },
   "devDependencies": {
     "eslint": "^6.7.2",
-    "mocha": "^8.2.1"
+    "mocha": "^8.2.1",
+    "webpack": "^5.18.0",
+    "webpack-cli": "^4.4.0"
   }
 }
