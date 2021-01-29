@@ -11,6 +11,23 @@ module.exports = {
     filename: 'main.js',
     path: buildDir,
   },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /\.png$/,
+        use: [
+          'file-loader'
+        ]
+      }
+    ],
+  },
   plugins: [
     new CopyPlugin({
       patterns: [
