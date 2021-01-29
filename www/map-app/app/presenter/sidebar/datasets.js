@@ -14,14 +14,15 @@
     markerView
   ) {*/
   const eventbus = require('../../eventbus');
-  const sidebarView = require('../../view/sidebar/base');
 
     "use strict";
 
-function init(config) {
-  const sseInitiative = require('../../model/sse_initiative')(config);
-  const sidebarPresenter = require('../../presenter/sidebar/base')(config);
-  const markerView = require('../../view/map/marker')(config);
+function init(registry) {
+  const config = registry('config');
+  const sidebarView = registry('view/sidebar/base');
+  const sseInitiative = registry('model/sse_initiative');
+  const sidebarPresenter = registry('presenter/sidebar/base');
+  const markerView = registry('view/map/marker');
   
   function Presenter() {}
   

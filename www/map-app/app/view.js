@@ -12,10 +12,11 @@ const d3 = require('d3');
   "use strict";
 
 
-function _init(config) {
-  const map = require('./view/map')(config);
-  const sidebar = require('./view/sidebar')(config);
-  const searchbox = require('./view/searchbox')(config);
+function _init(registry) {
+  const config = registry('config');
+  const map = registry('view/map');
+  const sidebar = registry('view/sidebar');
+  const searchbox = registry('view/searchbox');
   
   function init() {
     if (config.htmlTitle()) {

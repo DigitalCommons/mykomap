@@ -10,10 +10,11 @@
   "use strict";
 
 
-function init(config) {
-  const sseInitiative = require('../../model/sse_initiative')(config);
-  const sidebarPresenter = require('../../presenter/sidebar/base')(config);
-  const map = require('../../presenter/map')(config);
+function init(registry) {
+  const config = registry('config');
+  const sseInitiative = registry('model/sse_initiative');
+  const sidebarPresenter = registry('presenter/sidebar/base');
+  const map = registry('presenter/map');
   
   function StackItem(initiatives) {
     this.initiatives = initiatives;

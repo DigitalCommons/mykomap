@@ -5,12 +5,13 @@
   "view/sidebar/base"
    ], function(eventbus, presenter, sidebarView) {*/
 const eventbus = require('../../eventbus')
-const sidebarView = require('../../view/base');
 
   "use strict";
 
-function init(config) {
-  const presenter = require('../../presenter/sidebar/mainmenu')(config);
+function init(registry) {
+  const config = registry('config');
+  const sidebarView = registry('view/base');
+  const presenter = registry('presenter/sidebar/mainmenu');
 
   // Our local Sidebar object:
   function Sidebar() {}

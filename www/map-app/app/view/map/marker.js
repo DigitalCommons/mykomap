@@ -11,14 +11,15 @@
 const leaflet = require('leaflet');
 const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
-const viewBase = require('../base');
 const eventbus = require('../../eventbus');
 
 
   "use strict";
 
-function init(config) {
-  const presenter = require('../../presenter/map/marker')(config);
+function init(registry) {
+  const config = registry('config');
+  const viewBase = registry('view/base');
+  const presenter = registry('presenter/map/marker');
 
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset

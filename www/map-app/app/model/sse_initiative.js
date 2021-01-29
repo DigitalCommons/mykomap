@@ -8,7 +8,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   
   "use strict";
 
-function init(config) {
+function init(registry) {
+    const config = registry("config");
 
     // Hardwire this for now.
     const language = "EN";
@@ -150,7 +151,6 @@ function init(config) {
     return searchableValues.join(" ").toUpperCase();
   }
 
-  
   let loadedInitiatives = [];
   let initiativesToLoad = [];
   let initiativesByUid = {};

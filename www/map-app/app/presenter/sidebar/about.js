@@ -7,8 +7,9 @@
 
   "use strict";
 
-function init(config) {
-  const sidebarPresenter = require('./base')(config);
+function init(registry) {
+  const config = registry('config');
+  const sidebarPresenter = registry('presenter/sidebar/base');
   
   function Presenter() { }
 

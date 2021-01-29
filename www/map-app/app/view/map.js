@@ -19,13 +19,14 @@
   const leaflet = require('leaflet');
   const activeArea = require('leaflet-active-area');
   const contextmenu = require('leaflet-contextmenu');
-  const viewBase = require('./base');
   
   "use strict";
 
-function init(_config) {
-  const presenter = require('../presenter/map')(_config);
-  const markerView = require('../view/map/marker')(_config);
+function init(registry) {
+  const _config = registry('config');
+  const presenter = registry('presenter/map');
+  const markerView = registry('view/map/marker');
+  const viewBase = registry('view/base');
 
   const config = {
     putSelectedMarkersInClusterGroup: false

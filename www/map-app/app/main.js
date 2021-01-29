@@ -94,14 +94,83 @@ const debugging = require('./debug');
     // Override any config values passed.
     config.add(combined);
 
+    // Makes a registry object.
+    //
+    // This is a minimal replacement for RequireJS's dependency injection.
+    // Essentially, add pre-initialised named services first, passing
+    // the registry itself if they need this to look up other services:
+    //
+    //     registry = makeRegistry();
+    //     registry.def("myservice") = require("myservice")(registry);
+    //
+    // ...then get the pre-initialised service by name after.
+    //
+    //     myservice = registry("myservice");
+    //
+    function makeRegistry() {
+      const index = new Object();
+
+      const registry = (name) => {
+        if (!index[name]) {
+          throw new Error(`Service '${name}' not yet defined`);
+        }
+
+        return index[name];
+      };
+      
+      registry.def = (name, service) => {
+        // console.debug("registry.def", name, service);
+        if (typeof(name) != 'string') {
+          throw new Error(`Service name  is invalid: '${name}'`);
+        }
+        if (service === null || service === undefined) {
+          throw new Error(`Service value for '${name}' is invalid: ${service}`);
+        }
+        if (name in index && service !== index[name]) {
+          // console.debug(`${service} !== ${index[name]}`);
+          throw new Error(`Service '${name}' already defined with a different value`);
+        }
+
+        return index[name] = service;
+      };
+      
+      return registry;
+    }
+    
+    const registry = makeRegistry();
+    registry.def('config', config);
+    const sseInitiative = registry.def('model/sse_initiative',
+                                       require('./model/sse_initiative')(registry));
+
+    // Registrer the view/presenter modules so they can find each other.
+    // The order matters insofar that dependencies must come before dependents.
+    registry.def('view/base', require('./view/base'));
+    registry.def('presenter', require('./presenter'));
+    registry.def('view/map/default_popup', require('./view/map/default_popup'));
+    registry.def('presenter/map/marker', require('./presenter/map/marker')(registry));
+    registry.def('view/map/marker', require('./view/map/marker')(registry));
+    registry.def('presenter/map', require('./presenter/map')(registry));
+    registry.def('view/map', require('./view/map')(registry));
+    registry.def('presenter/searchbox', require('./presenter/searchbox')(registry));    
+    registry.def('view/searchbox', require('./view/searchbox')(registry));
+    registry.def('view/sidebar/base', require('./view/sidebar/base'));    
+    registry.def('presenter/sidebar/base', require('./presenter/sidebar/base')(registry));
+    registry.def('presenter/sidebar/about', require('./presenter/sidebar/about')(registry));
+    registry.def('presenter/sidebar/directory', require('./presenter/sidebar/directory')(registry));
+    registry.def('presenter/sidebar/datasets', require('./presenter/sidebar/datasets')(registry));
+    registry.def('presenter/sidebar/initiatives', require('./presenter/sidebar/initiatives')(registry));
+    registry.def('view/sidebar', require('./view/sidebar')(registry));
+    registry.def('presenter/sidebar/mainmenu', require('./presenter/sidebar/mainmenu')(registry));
+    
     // The code for each view is loaded by www/app/view.js
     // Initialize the views:
-    const view = require('./view')(config);
+    const view = registry.def('view', require('./view.js')(registry));
+    
+    
     view.init();
     // Each view will ensure that the code for its presenter is loaded.
 
     // Ask the model to load the data for the initiatives:
-    const sseInitiative = require('./model/sse_initiative')(config);
     sseInitiative.loadFromWebService();
   }
 

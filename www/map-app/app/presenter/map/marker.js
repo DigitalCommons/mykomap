@@ -7,16 +7,17 @@
    default_popup,
    popup
    ) {*/
-const eventbus = require('../../eventbus');
-const presenter = require('../../presenter');
-const default_popup = require('../../view/map/default_popup');
-const popup = default_popup; // FIXME
 
 
   "use strict";
+const eventbus = require('../../eventbus');
 
-function init(config) {
-  const sse_initiatives = require('../../model/sse_initiative')(config);
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  const default_popup = registry('view/map/default_popup');
+  const popup = default_popup; // FIXME
+  const sse_initiatives = registry('model/sse_initiative');
 
   function Presenter() { }
 

@@ -7,13 +7,14 @@
    ], function(d3, eventbus, presenter, sidebarView) {*/
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-const view = require('../../view/base');
-const sidebarView = require('./base');
 
   "use strict";
 
-function init(config) {
-  const presenter = require('../../presenter/sidebar/datasets')(config);
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter/sidebar/datasets');
+  const view = registry('view/base');
+  const sidebarView = registry('view/sidebar/base');
 
   // Our local Sidebar object:
   function Sidebar() {}

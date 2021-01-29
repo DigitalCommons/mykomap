@@ -6,12 +6,13 @@
    "view/map/marker"
    ], function (eventbus, sse_initiative, presenter, config, markerView) {*/
 const eventbus = require('../eventbus');
-const presenter = require('../presenter');
-const markerView = require('../view/map/marker');
 
   "use strict";
-function init(config) {
-  const sse_initiative = require('../model/sse_initiative')(config);
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  const markerView = registry('view/map/marker');
+  const sse_initiative = registry('model/sse_initiative');
   
   function Presenter() { }
 

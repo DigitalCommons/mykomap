@@ -5,12 +5,13 @@
   presenter
 ) {*/
   const d3 = require('d3');
-  const viewBase = require('./base');
   "use strict";
 
 
-function init(config) {
-  const presenter = require('../presenter/searchbox')(config);
+function init(registry) {
+  const config = registry('config');
+  const viewBase = registry('view/base');
+  const presenter = registry('presenter/searchbox');
 
   function SearchBoxView() {}
   // inherit from the standard view base object:

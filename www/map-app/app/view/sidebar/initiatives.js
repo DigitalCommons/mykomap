@@ -11,16 +11,16 @@
 
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-const sidebarView = require('../../view/base');
-const config = require('../../model/config');
-const sseInitiative = require('../../model/sse_initiative');
-const map = require('../../presenter/sidebar/map');
 
 "use strict";
 
 
-function init(config) {
-  const presenter = require('../../presenter/sidebar/initiatives')(config);
+function init(registry) {
+  const config = registry('config');
+  const sidebarView = registry('view/sidebar/base');
+  const presenter = registry('presenter/sidebar/initiatives');
+  const sseInitiative = registry('model/sse_initiative');
+  const map = registry('presenter/map');
 
   // Our local Sidebar object:
   function Sidebar() { }

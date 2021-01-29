@@ -4,15 +4,17 @@
    "presenter",
    "presenter/sidebar/base"
    ], function(eventbus, config, presenter, sidebarPresenter) {*/
-const eventbus = require('../eventbus');
-const presenter = require('../presenter');
 
   "use strict";
+const eventbus = require('../eventbus');
 
-function init(config) {
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  
   // This is the presenter for the view/sidebar object.
   // Don't confuse this with the base object for all sidebar objects, which is in presenter/sidebar/base.
-  const sidebarPresenter = require('../presenter/sidebar/base')(config);
+  const sidebarPresenter = registry('presenter/sidebar/base');
 
   function Presenter() {}
 

@@ -4,12 +4,14 @@
    "model/sse_initiative",
    "presenter"
    ], function(eventbus, config, sseInitiative, presenter) {*/
-const eventbus = require('../eventbus');
-const presenter = require('../presenter');
 
   "use strict";
-function init(config) {
-  const sseInitiative = require('../model/sse_initiative')(config);
+const eventbus = require('../eventbus');
+
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  const sseInitiative = registry('model/sse_initiative');
   
   function Presenter() {}
 
