@@ -1,2 +1,0 @@
-RewriteEngineOn
-RewriteCond%{HTTP_HOST} ^127.0.0.1 RewriteRule ^(.*) https://solidarityeconomy.coop/$1 [P]

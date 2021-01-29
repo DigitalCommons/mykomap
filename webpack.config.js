@@ -1,5 +1,7 @@
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
 
+const buildDir = path.resolve(__dirname, 'dist');
 module.exports = {
   entry: './www/map-app/app.js',
   mode: 'development',
@@ -7,6 +9,13 @@ module.exports = {
   devtool: 'source-map',
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: buildDir,
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "static", to: buildDir },
+      ],
+    }),
+  ],
 };
