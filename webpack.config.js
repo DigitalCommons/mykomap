@@ -3,7 +3,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 
 const buildDir = path.resolve(__dirname, 'dist');
 module.exports = {
-  entry: './www/map-app/app.js',
+  entry: './www/map-app/app/main.js',
   mode: 'development',
   target: 'web',
   devtool: 'source-map',
