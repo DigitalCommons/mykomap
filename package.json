@@ -56,6 +56,7 @@
     "postal": "^2.0.5"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^7.0.0",
     "eslint": "^6.7.2",
     "mocha": "^8.2.1",
     "webpack": "^5.18.0",
