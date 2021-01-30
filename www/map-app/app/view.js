@@ -9,8 +9,8 @@
 const d3 = require('d3');
 
 
-  "use strict";
-
+"use strict";
+const mapAppStyles = require('../map-app.css');
 
 function _init(registry) {
   const config = registry('config');

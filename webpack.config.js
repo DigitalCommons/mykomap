@@ -17,21 +17,43 @@ module.exports = {
         test: /\.css$/,
         use: [
           'style-loader',
-          'css-loader'
-        ]
+          {
+            loader: 'css-loader',
+            options: {
+              import: true,
+            },
+          },
+        ],
       },
       {
         test: /\.png$/,
         use: [
-          'file-loader'
-        ]
-      }
+          {
+            loader: 'file-loader',
+            options: {
+              outputPath: 'images/',
+            },
+          },
+        ],
+      },
+      {
+        test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              outputPath: 'fonts/',
+            },
+          },
+        ],
+      },
     ],
   },
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: "static", to: buildDir },
+        { from: "static", to: buildDir }, // FIXME exclude *~
       ],
     }),
   ],
