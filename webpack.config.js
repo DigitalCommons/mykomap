@@ -48,6 +48,13 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.php$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'services/[name][ext][query]',
+        },
+      },
     ],
   },
   plugins: [
