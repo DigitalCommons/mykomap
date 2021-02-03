@@ -15,10 +15,9 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const presenter = registry('presenter');
-  const default_popup = registry('view/map/default_popup');
-  const popup = default_popup; // FIXME
+  const popup = registry('view/map/popup');
   const sse_initiatives = registry('model/sse_initiative');
-
+  
   function Presenter() { }
 
   const proto = Object.create(presenter.base.prototype);

@@ -146,12 +146,12 @@ const debugging = require('./debug');
     // The order matters insofar that dependencies must come before dependents.
     registry.def('view/base', require('./view/base'));
     registry.def('presenter', require('./presenter'));
-    registry.def('view/map/default_popup', require('./view/map/default_popup'));
+    registry.def('view/map/popup', require('./view/map/popup'));
     registry.def('presenter/map/marker', require('./presenter/map/marker')(registry));
     registry.def('view/map/marker', require('./view/map/marker')(registry));
     registry.def('presenter/map', require('./presenter/map')(registry));
     registry.def('view/map', require('./view/map')(registry));
-    registry.def('presenter/searchbox', require('./presenter/searchbox')(registry));    
+    registry.def('presenter/searchbox', require('./presenter/searchbox')(registry));
     registry.def('view/searchbox', require('./view/searchbox')(registry));
     registry.def('view/sidebar/base', require('./view/sidebar/base'));    
     registry.def('presenter/sidebar/base', require('./presenter/sidebar/base')(registry));
