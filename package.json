@@ -46,23 +46,24 @@
   },
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.2",
+    "copy-webpack-plugin": "^7.0.0",
+    "css-loader": "^5.0.1",
     "d3": "^5.7.0",
+    "file-loader": "^6.2.0",
+    "minimist": "^1.2.5",
     "leaflet": "^1.5.1",
     "leaflet-active-area": "^1.1.0",
     "leaflet-contextmenu": "^1.4.0",
     "leaflet.awesome-markers": "^2.0.5",
     "leaflet.markercluster": "^1.4.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.18.0",
     "postal": "^2.0.5"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.15.2",
-    "copy-webpack-plugin": "^7.0.0",
-    "css-loader": "^5.0.1",
     "eslint": "^6.7.2",
-    "file-loader": "^6.2.0",
     "mocha": "^8.2.1",
-    "style-loader": "^2.0.0",
-    "webpack": "^5.18.0",
     "webpack-cli": "^4.4.0"
   }
 }
