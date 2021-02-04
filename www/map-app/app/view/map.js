@@ -124,7 +124,6 @@ define([
       //set max bounds - will bounce back if user attempts to cross them
       maxBounds: worldBounds
       // contextmenuWidth: 140,
-      // contextmenuItems: this.presenter.getContextmenuItems()
     });
     this.map.zoomControl.setPosition("bottomright");
 
@@ -453,8 +452,7 @@ define([
     // if (!data.target.id) return;
 
     const refocusMap = true,
-      animateRefocus = true;
-    console.log(css);
+          animateRefocus = true;
     this.map.setActiveArea(css, refocusMap, animateRefocus);
   };
 

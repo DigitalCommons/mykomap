@@ -258,13 +258,6 @@ define([
   function createPresenter(view) {
     var p = new Presenter();
     p.registerView(view);
-    // Populate the directory with the registered activities
-    eventbus.subscribe({
-      topic: "Initiative.complete",
-      callback: function (data) {
-        p.notifyViewToBuildDirectory();
-      }
-    });
     eventbus.subscribe({
       topic: "Initiative.reset",
       callback: function (data) {

@@ -137,7 +137,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { fieldN: [ ... ] }
     }
   */
-  const registeredValues = {}; // arrays of sorted values grouped by label, then by field
+  let registeredValues = {}; // arrays of sorted values grouped by label, then by field
   const allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
@@ -442,6 +442,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
 
+  // Incrementally loads the initiatives in `initiativesToLoad`, in
+  // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
+  // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
+  // batches are loaded.
+  //
   //NEEDS TO BE FIXED TO WORK WITH MULTIPLE DATASETS
   function loadNextInitiatives() {
     var i, e;
@@ -471,16 +476,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       datasetsLoaded++;
       if (datasetsLoaded >= datasetsToLoad)
         eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
-      // can stop individual datasets from loading as well
-      // else {
-      //   eventbus.publish({
-      //     topic: "Initiative.stopLoading",
-      //     data: {}
-      //   });
-      // }
-
     }
   }
+
+  // Loads a set of initiatives
+  //
+  // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
+  //
+  // @param json - an array of inititive definitions
   function add(json) {
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
@@ -562,7 +565,16 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
+  
+  // Reloads the active data set (or sets)
+  //
+  // @param dataset - if boolean `true`, then all datasets will be loaded.
+  // Otherwise, only the dataset with a matching name is loaded (if any).
   function reset(dataset) {
+    // If the dataset is the same as that currently selected, nothing to do
+    if(dataset === currentDatasets)
+      return;
+
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
@@ -575,18 +587,21 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       data: { dataset: "all" }
     });
 
-    if (allDatasets.includes(dataset)) {
-      currentDatasets = dataset;
-      loadDataset(dataset);
-    }
-    else {
-      //return true to signal that all datasets are loaded
+    if (dataset === true) {
+      console.log("reset: loading all datasets");
       currentDatasets = true;
       loadFromWebService();
-      console.log("loading mixed dataset");
-
+      return;
     }
 
+    if (allDatasets.includes(dataset)) {
+      console.log("reset: loading dataset '"+dataset+"'");
+      currentDatasets = dataset;
+      loadDataset(dataset, allDatasets.length > 1);
+      return;
+    }
+
+    console.log("reset: no matching dataset '"+dataset+"'");
   }
 
 
@@ -604,7 +619,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset, false, false, isCached);
+        loadDataset(dataset, true, false, isCached);
       });
     }
     else if (ds.length == 1)
@@ -623,10 +638,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
     // add in the use cache param to make cache optional
-    if (useCache) {
+    // Note, caching currently doesn't work correctly with multiple data sets
+    // so until that's fixed, don't use it in that case.
+    if (useCache && !mixed) {
       service += "&use_cache=true"
     }
-    console.log(service);
+    console.log("loadDataset", service);
     var response = null;
     var message = null;
     if (!startedLoading) {
@@ -659,6 +676,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log(err)
     });
   }
+  // Currently unused.
   function loadPluralObjects(query, uid, callback) {
     var ds = config.namedDatasets();
     for (let i in ds) {
@@ -689,7 +707,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
   }
 
-
+  // This returns an index of vocabularies to term IDs to term labels.
   function getVerboseValuesForFields() {
     return values;
   }

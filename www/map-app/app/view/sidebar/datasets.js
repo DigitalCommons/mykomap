@@ -58,10 +58,10 @@ define([
         .attr("title", "load " + datasets[dataset] + " dataset")
         .text(datasets[dataset]);
       btn.on("click",()=>{
-          btn.classed("sea-field-active", true);
-          that.presenter.changeDatasets(dataset,false);
-          
-        });
+	      d3.select(".sea-field-active").classed("sea-field-active", false);
+        btn.classed("sea-field-active", true);
+        that.presenter.changeDatasets(dataset);
+      });
     });    
     //add mixed btn
     if(Object.keys(datasets).length > 1){
@@ -72,8 +72,9 @@ define([
           .attr("title", "load mixed dataset")
           .text("Mixed Sources");
       btn.on("click",()=>{
-          btn.classed("sea-field-active", true);
-          that.presenter.changeDatasets("",true);
+        d3.select(".sea-field-active").classed("sea-field-active", false);
+        btn.classed("sea-field-active", true);
+        that.presenter.changeDatasets(true);
       });
       }
 
