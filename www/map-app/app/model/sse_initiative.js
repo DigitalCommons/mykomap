@@ -597,7 +597,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if (allDatasets.includes(dataset)) {
       console.log("reset: loading dataset '"+dataset+"'");
       currentDatasets = dataset;
-      loadDataset(dataset, allDatasets.length > 1);
+      
+      // Note, caching currently doesn't work correctly with multiple data sets
+      // so until that's fixed, don't use it in that case.
+      loadDataset(dataset);
       return;
     }
 
@@ -613,35 +616,30 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function loadFromWebService() {
     var ds = config.namedDatasets();
     var i;
-    var isCached = config.useCache() == false && config.useCache() != NaN ? false : true;
     datasetsToLoad = ds.length;
     //load all of them
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset, true, false, isCached);
+        loadDataset(dataset);
       });
     }
-    else if (ds.length == 1)
-      loadDataset(ds[0], false, true, isCached);
-
+    else if (ds.length == 1) {
+      loadDataset(ds[0]);
+    }
   }
 
 
-  function loadDataset(dataset, mixed = false, sameas = true, useCache = true) {
+  function loadDataset(dataset) {
 
-    // var service = mixed
-    //   ? config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=mixed"
-    //   :
-    //   (sameas ?
-    //     config.getServicesPath() + "get_dataset.php?dataset=" + dataset
-    //     : config.getServicesPath() + "get_dataset.php?dataset=" + dataset + "&q=nosameas");
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
-    // add in the use cache param to make cache optional
+
     // Note, caching currently doesn't work correctly with multiple data sets
     // so until that's fixed, don't use it in that case.
-    if (useCache && !mixed) {
-      service += "&use_cache=true"
+    const numDatasets = config.namedDatasets().length;
+    const noCache = numDatasets > 1? true : config.getNoLodCache();
+    if (noCache) {
+      service += "&noLodCache=true";
     }
     console.log("loadDataset", service);
     var response = null;
@@ -662,7 +660,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       // TODO - publish events (e.g. loading, success, failure)
       //        so that the UI can display info about datasets.
       // console.log(json);
-      console.log(json);
+      console.log("loadDataset",json);
       console.info("Recording entire process");
       performance.mark("startProcessing");
       add(json.data);

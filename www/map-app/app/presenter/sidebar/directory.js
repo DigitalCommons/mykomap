@@ -102,9 +102,6 @@ define([
     if (options.maxZoom == 0)
       options = {};
 
-    console.log(initiatives);
-
-
     if (initiatives.length > 0) {
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
@@ -142,9 +139,6 @@ define([
 
     if (options.maxZoom == 0)
       options = {};
-
-    console.log(options);
-
 
     if (initiatives.length > 0) {
       eventbus.publish({

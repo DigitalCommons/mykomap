@@ -84,57 +84,63 @@ define([], function () {
     },
   };
 
-  /* Define the config schema using a list of field meta-data, from
-   * which we construct the object. This allows a lot of flexibility
-   * and introspection.
-   *
-   * Schema fields:
+    /* Define the config schema using a list of field meta-data, from
+     * which we construct the object. This allows a lot of flexibility
+     * and introspection.
+     *
+     * Schema fields:
 
-   * id: A unique identifier to be used in config object attributes,
-   * amongst other places.
-   *
-   * descr: A brief description.
-   *
-   * init: An optional function to call to initialise the default
-   * value. Otherwise it is unset.
-   *
-   * getter: Optionally a string naming the value getter method, or a
-   * method function to call to get it (in which `this` is the config
-   * object). If one is defined, the name of the function will be used
-   * as the name of the getter. If this value is unset, the getter
-   * method has the same name as the id.
-   *
-   * Note, the schema is defined as a function accepting named values
-   * to initialise certain of the attributes if they are not
-   * present. These should all be supplied by config.js. If defaultDescr
-   * is defined, this is used as a documentation of the default value,
-   * else the value itself is quoted.
-   */
-  const configSchema = ({
-    aboutHtml,
-    variant,
-    timestamp,
-    gitcommit,
-    seaMapVersion,
-    namedDatasets,
-    namedDatasetsVerbose,
-    htmlTitle,
-    initialBounds,
-    defaultLatLng,
-    filterableFields,
-    doesDirectoryHaveColours,
-    disableClusteringAtZoom,
-    searchedFields,
-    showDatasetsPanel,
-    maxZoomOnGroup,
-    maxZoomOnSearch,
-    maxZoomOnOne,
-    logo,
-    tileUrl,
-    mapAttribution,
-    useCache,
-  } = {}) => [
-      {
+     * id: A unique identifier to be used in config object attributes,
+     * amongst other places.
+     *
+     * descr: A brief description.
+     *
+     * init: An optional function to call to initialise the default
+     * value. Otherwise it is unset.
+     *
+     * setter: Optionally a string naming the value setter method, or a
+     * method function to call to get it (in which `this` is the config
+     * object). If one is defined, the name of the function will be used
+     * as the name of the getter. If this value is unset, the value cannot
+     * be modified.
+     *
+     * getter: Optionally a string naming the value getter method, or a
+     * method function to call to get it (in which `this` is the config
+     * object). If one is defined, the name of the function will be used
+     * as the name of the getter. If this value is unset, the getter
+     * method has the same name as the id.
+     *
+     * Note, the schema is defined as a function accepting named values
+     * to initialise certain of the attributes if they are not
+     * present. These should all be supplied by config.js. If defaultDescr
+     * is defined, this is used as a documentation of the default value,
+     * else the value itself is quoted.
+     */
+    const configSchema = ({
+	aboutHtml,
+	variant,
+	timestamp,
+	gitcommit,
+	seaMapVersion,
+	namedDatasets,
+	namedDatasetsVerbose,
+	htmlTitle,
+	initialBounds,
+	defaultLatLng,
+	filterableFields,
+	doesDirectoryHaveColours,
+	disableClusteringAtZoom,
+	searchedFields,
+	showDatasetsPanel,
+	maxZoomOnGroup,
+	maxZoomOnSearch,
+	maxZoomOnOne,
+	logo,
+	tileUrl,
+	mapAttribution,
+	noLodCache,
+    } = {}) => [
+	{
         id: 'aboutHtml',
         descr: `Raw HTML definition of the map's "about" text.`,
         defaultDescr: "The contents of the consuming project's file `config/about.html`",
@@ -334,11 +340,16 @@ define([], function () {
         type: types.string,
       },
       {
-        id: 'useCache',
-        descr: `If this is set to false, the sparql data requested by the php script, will not be cached. All requests will be directly processed by Virtuoso`,
-        init: () => useCache,
+        id: 'noLodCache',
+        descr: `Responses to SPARQL queries will normally be cached in /services/locCache.txt `+
+	             `if this option is false or absent, with the aim of speeding up map loading time.`+
+	             `The cache file is only updated if the static linked data's top-level index.rdf `+
+	             `file is newer than the cache's timestamp. But if this option is set to true, `+
+	             `this cache is disabled and a query is made each time the map is loaded.`,
+        init: () => noLodCache,
         defaultDescr: "True",
-        setter: 'setUseCache',
+        getter: 'getNoLodCache',
+        setter: 'setNoLodCache',
         type: types.boolean,
       }
 

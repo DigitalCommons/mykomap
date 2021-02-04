@@ -120,7 +120,6 @@ define(["app/eventbus", "model/config", "presenter"], function(
             initiatives: newContent.initiatives,
             verboseName: filter.verboseName
           };
-          console.log(filterData);
           eventbus.publish({
             topic: "Map.addFilter",
             data: filterData
@@ -159,7 +158,6 @@ define(["app/eventbus", "model/config", "presenter"], function(
               initiatives: newContent.initiatives,
               verboseName: filter.verboseName
             };
-            console.log(filterData);
             eventbus.publish({
               topic: "Map.addFilter",
               data: filterData

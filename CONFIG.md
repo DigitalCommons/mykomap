@@ -300,14 +300,14 @@ If set this will display the logo of the organisation. This takes in a link to a
 
 
 
-### `useCache`
+### `noLodCache`
 
 - *type:* `{boolean}` 
 - *in string context:* parsed as-is
 - *default:* True
 - *settable?:* yes
 
-If this is set to false, the sparql data requested by the php script, will not be cached. All requests will be directly processed by Virtuoso
+Responses to SPARQL queries will normally be cached in /services/locCache.txt if this option is false or absent, with the aim of speeding up map loading time.The cache file is only updated if the static linked data's top-level index.rdf file is newer than the cache's timestamp. But if this option is set to true, this cache is disabled and a query is made each time the map is loaded.
 
 
 
