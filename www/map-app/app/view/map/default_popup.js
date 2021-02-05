@@ -12,7 +12,6 @@ define([], function () {
     };
 
     var getPopup = function (initiative, sse_initiatives) {
-        console.info("default pop-up definition used");
         let orgStructures = sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
         let activitiesVerbose = sse_initiatives.getVerboseValuesForFields()["Activities"];
         let address = "",
