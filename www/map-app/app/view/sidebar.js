@@ -335,8 +335,6 @@ define([
       )
       .classed("sea-sidebar-list-initiatives", false);
     d3.select(".w3-btn").attr("title", "Hide directory");
-    d3.select(".sea-field-active").classed("sea-field-active", false);
-
   };
   SidebarView.prototype = proto;
   var view;
