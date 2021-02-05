@@ -20,7 +20,7 @@
     "lint": "eslint www/map-app/**/*.js",
     "test": "mocha",
     "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
-    "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
+    "build": "bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "build-windows": "./bin/sea-site-build-windows -c ext/config -m ./ -d ext/build ext/src/*",
     "server": "php -t ext/build/out -S localhost:8080",
     "webpack": "webpack",
