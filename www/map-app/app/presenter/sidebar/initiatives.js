@@ -20,7 +20,7 @@ define([
     StackItem.call(this, initiatives);
     this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?
-      "\"" + searchString + "\" in " + filterVerboseNames.join(", ")
+      "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
       : "\"" + searchString + "\"";
     this.filters = filterNames.map((filterName,index)=>({
       filterName,
@@ -82,6 +82,65 @@ define([
       });
     }
   };
+
+  proto.changeFilters = (filterCategoryName,filterValue,filterValueText) => {
+    //get category of filter as used in intiatives
+    const filterCategories = {
+      "Activities":  "primaryActivity",
+      "Organisational Structure": "orgStructure",
+      "Base Membership Type": "baseMembershipType"
+    }
+    const filterCategory = filterCategories[filterCategoryName];
+
+    //remove old filter 
+    const currentFilters = map.getFiltersFull();
+
+    if(currentFilters.length > 0){
+      let oldFilter;
+      
+      currentFilters.forEach(filter => {
+        if(filter.verboseName.split(":")[0] === filterCategoryName)
+          oldFilter = filter;
+      })
+  
+      if(oldFilter){
+        eventbus.publish({
+          topic: "Map.removeFilter",
+          data: oldFilter
+        });
+      }
+    }
+    
+    //if filter is any, don't add a new filter
+    if(filterValue === "any")
+      return;
+
+    //get initiatives for new filter
+    const allInitiatives = Object.values(sseInitiative.getInitiativeUIDMap());
+    const filteredInitiatives = allInitiatives.filter(initiative => 
+        initiative[filterCategory] == filterValue
+    )
+
+    //create new filter
+    let filterData = {
+      filterName: filterValue,
+      initiatives: filteredInitiatives,
+      verboseName: filterCategoryName + ": " + filterValueText
+    };
+
+    eventbus.publish({
+      topic: "Map.addFilter",
+      data: filterData
+    });
+    
+    eventbus.publish({
+      topic: "Map.addSearchFilter",
+      data: filterData
+    });
+    
+    
+    
+  }
 
   proto.removeFilters = function () {
     eventbus.publish(
@@ -145,13 +204,24 @@ define([
     //        But still need to show the fact that there are no results.
     //get the uniquids of the applied filters
     const filterKeys = Object.keys(map.getFilteredMap());
+    console.log("filterKeys")
+    console.log(filterKeys)
+
+    console.log("data.results 1")
+    console.log(data.results)
 
     //go in if there are any filters
     if (filterKeys.length != 0) {
       //get the intersection of the filtered content and the search data
       //search results should be a subset of filtered
-      data.results = data.results.filter(i => filterKeys.includes(i.uniqueId));
+
+      data.results = data.results.filter(initiative =>
+        filterKeys.includes(initiative.uniqueId)
+      );
     }
+
+    console.log("data.results 2")
+    console.log(data.results)
 
     //filter
     this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose(),map.getFilters()));
@@ -287,6 +357,30 @@ define([
       eventbus.publish({ topic: "Sidebar.showDirectory" });
     }
   };
+
+  proto.performSearchNoText = () => {
+    console.log("perform search no text")
+
+    eventbus.publish({
+      topic: "Sidebar.hideInitiativeList"
+    });
+    eventbus.publish({
+      topic: "Markers.needToShowLatestSelection",
+      data: {
+        selected: []
+      }
+    });
+
+    //should be async
+    var results = Object.values(sseInitiative.getInitiativeUIDMap());
+
+    eventbus.publish({
+      topic: "Search.initiativeResults",
+      data: { 
+        text: "", 
+        results: results }
+    });
+  }
 
 
   proto.changeSearchText = function (txt) {

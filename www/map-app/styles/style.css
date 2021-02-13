@@ -23,6 +23,8 @@
   --brown: #b6330b;
   --dark: #363636;
   --dark-gray: #565656;
+  --white: #ffffff;
+  --black: #000000;
 
   --sea-font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
@@ -138,6 +140,25 @@ body {
 
 .awesome-marker-icon-am00 {
   background-position: -648px 0;
+}
+
+.advanced-label {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.advanced-select {
+  background-color: var(--maroon);
+  color: var(--white);
+}
+
+.advanced-option{
+  background-color: var(--white);
+  color: var(--black);
+}
+
+.sidebar-button-container{
+  margin-top: 5px;
 }
 
 /* Arts, Media, Culture & Leisure. */

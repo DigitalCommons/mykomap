@@ -4,8 +4,10 @@ define([
   "app/eventbus",
   "presenter/sidebar/initiatives",
   "view/sidebar/base",
-  "model/config"
-], function (d3, eventbus, presenter, sidebarView, config) {
+  "model/config",
+  "model/sse_initiative",
+  "presenter/map"
+], function (d3, eventbus, presenter, sidebarView, config, sseInitiative,map) {
   "use strict";
 
   // Our local Sidebar object:
@@ -32,7 +34,6 @@ define([
       .append("h1")
       .text("Search");
 
-
     this.createSearchBox(container);
 
     let textContent = ""; // default content, if no initiatives to show
@@ -47,7 +48,6 @@ define([
       // }
       textContent = "Search: " + item.searchString;
 
-
       //change the text in the search bar
       eventbus.publish({
         topic: "Search.changeSearchText",
@@ -55,16 +55,21 @@ define([
           txt: item.searchedFor
         }
       });
-
-
     }
-
 
     container
       .append("p")
       .attr("id", "searchTooltipText")
       .text(textContent);
 
+    //advanced search    
+    const advancedSearchContainer = container
+      .append("div")
+
+    const fieldsAndPossibleValues = sseInitiative.getVerboseValuesForFields();
+
+    this.createAdvancedSearch(advancedSearchContainer, fieldsAndPossibleValues,this.presenter);
+    
   };
 
 
@@ -243,11 +248,65 @@ define([
       .attr("type", "search")
       .attr("placeholder", "Search initiatives")
       .attr("autocomplete", "off");
+
     document.getElementById("search-box").focus();
 
   };
 
+  proto.createAdvancedSearch = (container,values,presenter) => {
+    const currentFilters = map.getFilters();
+    const item = presenter.currentItem();
 
+    const changeFilter = () => {
+      //create the filter from the event target
+      const filterCategoryName = d3.event.target.id.split("-")[0];
+      const filterValue = d3.event.target.value;
+      const filterValueText = d3.event.target.selectedOptions[0].text;
+      presenter.changeFilters(filterCategoryName,filterValue,filterValueText); 
+      
+      //repeat the last search after changing the filter
+      //if there is no last search, or the last search is empty, do a special search
+      if(!item)    
+        presenter.performSearchNoText();
+      else
+        if(item.searchedFor == "")
+          presenter.performSearchNoText();
+        else
+          presenter.performSearch(item.searchedFor);
+    };
+
+    for (const field in values){
+      container
+      .append("p")
+      .attr("id",field + "dropdown-label")
+      .attr("class","advanced-label")
+      .text(field)
+
+      const dropDown = container
+      .append("div")
+      .append("select")
+      .attr("id", field + "-dropdown")
+      .attr("class", "w3-input w3-border-0 w3-round w3-mobile advanced-select")
+      .on("change",()=>changeFilter());
+
+      dropDown
+          .append("option")
+          .text("- Any -")
+          .attr("value","any")
+          .attr("class","advanced-option")
+
+      for(const value in values[field]){
+        const option = dropDown
+          .append("option")
+          .text(values[field][value])
+          .attr("value",value)
+          .attr("class","advanced-option")
+        
+        if(currentFilters.includes(value))
+          option.attr("selected",true)
+      }
+    }
+  }
 
   proto.populateScrollableSelection = function (selection) {
     var that = this;
@@ -256,7 +315,24 @@ define([
       " Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
     if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
+      // add clear button
+      if (this.presenter.getFilterNames().length > 0) {
+        selection
+          .append("div")
+          .attr("class", "w3-container w3-center sidebar-button-container")
+          .attr("id", "clearSearchFilterBtn")
+          .append("button")
+          .attr("class", "w3-button w3-black")
+          .text("Clear Filters")
+          .on("click", function () {
+            //redo search
+            that.presenter.removeFilters();
+            that.presenter.performSearch(item.searchedFor);
+          });
+      }
+
       const item = this.presenter.currentItem();
+      
       const initiatives = item == null ? [] : item.initiatives;
       switch (initiatives.length) {
         case 0:
@@ -275,21 +351,7 @@ define([
         default:
           this.populateSelectionWithListOfInitiatives(selection, initiatives);
       }
-      // add clear button
-      if (this.presenter.getFilterNames().length > 0) {
-        selection
-          .append("div")
-          .attr("class", "w3-container w3-center")
-          .attr("id", "clearSearchFilterBtn")
-          .append("button")
-          .attr("class", "w3-button w3-black")
-          .text("Clear Filters")
-          .on("click", function () {
-            //redo search
-            that.presenter.removeFilters();
-            that.presenter.performSearch(item.searchedFor);
-          });
-      }
+      
     }
     else {
       selection
