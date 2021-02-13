@@ -254,12 +254,29 @@ define([
     //add the verbose name of the filter
     verboseNamesMap[filterName] = verboseName;
 
-    //add to array only new unique entries
-    initiatives.forEach(i => {
-      //rm entry from outside map
-      delete initiativesOutsideOfFilterUIDMap[i.uniqueId];
-      filteredInitiativesUIDMap[i.uniqueId] = i;
-    });
+    //if this is the first filter, add items to the filteredInitiativesUIDMap
+    if(Object.keys(filtered).length <= 1){
+      initiativesOutsideOfFilterUIDMap = Object.assign({},sse_initiative.getInitiativeUIDMap());
+      //add to array only new unique entries
+      initiatives.forEach(initiative => {
+        //rm entry from outside map
+        delete initiativesOutsideOfFilterUIDMap[initiative.uniqueId];
+        filteredInitiativesUIDMap[initiative.uniqueId] = initiative;
+      });
+    }
+    /* if this is the second or more filter, remove items from the 
+    filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
+    */
+    else{      
+      for(const initiativeUniqueId in filteredInitiativesUIDMap){
+        if(!initiatives.includes(filteredInitiativesUIDMap[initiativeUniqueId])){
+          initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},filteredInitiativesUIDMap[initiativeUniqueId]);
+          delete filteredInitiativesUIDMap[initiativeUniqueId];
+        }
+      }
+    }
+
+    console.log(filteredInitiativesUIDMap);
 
     //apply filters
     this.applyFilter();
@@ -334,6 +351,19 @@ define([
     return Object.keys(filtered);
   }
 
+  function getFiltersFull(){
+    let filterArray = []
+    
+    for(let filterName in verboseNamesMap){
+      filterArray.push({
+        "filterName": filterName,
+        "verboseName": verboseNamesMap[filterName]
+      })
+    }
+
+    return filterArray;
+  }
+
   function getFiltersVerbose() {
     return Object.values(verboseNamesMap);
   }
@@ -348,16 +378,7 @@ define([
   //SEARCH HIGHLIGHT
 
 
-  //highlights markers
-
-  //there should not be any filters (search was on all of the data) A
-  //if A you need to just hide all the data outside of the passed initiatives and reveal the ones passed
-
-  //OR B, you will receive a subset of filtered (search was on filtered content) B
-  //if B you need to hide all the initiatives in the filter outside of the data passed
-  // (i.e filter/initiatives needs to be hidden)
-  //and make sure that the initiatives passed are revealed
-  //note: filters should have already been applied to the initiatives passed (i.e. they are a subset)
+  //highlights markers, hides markers not in the current selection
 
   let hidden = [];
   let lastRequest = [];
@@ -383,21 +404,11 @@ define([
 
     //get the ids from the passed data
     const initiativeIds = data.initiatives.map(i => i.uniqueId);
-    //case a - global search
-    const isCaseA = Object.keys(filtered).length == 0;
-    if (isCaseA) {//no filter case
-      //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-      hidden = loadedInitiatives.filter(i => {
-        return !initiativeIds.includes(i.uniqueId);
-      });
-
-
-    }
-    else {//case B - filter search
-      hidden = getFiltered().filter(i => {
-        return !initiativeIds.includes(i.uniqueId);
-      });
-    }
+    
+    //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
+    hidden = loadedInitiatives.filter(i => 
+        !initiativeIds.includes(i.uniqueId)
+    );
 
     //hide all unneeded markers
     markerView.hideMarkers(hidden);
@@ -648,6 +659,7 @@ define([
     getFiltered: getFiltered,
     getFilteredMap: getFilteredMap,
     getFilters: getFilters,
+    getFiltersFull: getFiltersFull,
     getFiltersVerbose: getFiltersVerbose
   };
   return pub;
