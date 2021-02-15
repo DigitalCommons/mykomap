@@ -66,9 +66,10 @@ define([
     const advancedSearchContainer = container
       .append("div")
 
-    const fieldsAndPossibleValues = sseInitiative.getVerboseValuesForFields();
 
-    this.createAdvancedSearch(advancedSearchContainer, fieldsAndPossibleValues,this.presenter);
+    const terms = sseInitiative.getTerms();
+
+    this.createAdvancedSearch(advancedSearchContainer, terms, this.presenter);
     
   };
 
@@ -258,7 +259,7 @@ define([
     const item = presenter.currentItem();
 
     const changeFilter = () => {
-      //create the filter from the event target
+      //create the filter from the event of selecting the option
       const filterCategoryName = d3.event.target.id.split("-")[0];
       const filterValue = d3.event.target.value;
       const filterValueText = d3.event.target.selectedOptions[0].text;

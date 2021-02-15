@@ -204,11 +204,6 @@ define([
     //        But still need to show the fact that there are no results.
     //get the uniquids of the applied filters
     const filterKeys = Object.keys(map.getFilteredMap());
-    console.log("filterKeys")
-    console.log(filterKeys)
-
-    console.log("data.results 1")
-    console.log(data.results)
 
     //go in if there are any filters
     if (filterKeys.length != 0) {
@@ -219,9 +214,6 @@ define([
         filterKeys.includes(initiative.uniqueId)
       );
     }
-
-    console.log("data.results 2")
-    console.log(data.results)
 
     //filter
     this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose(),map.getFilters()));

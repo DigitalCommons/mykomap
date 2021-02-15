@@ -710,6 +710,36 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return values;
   }
 
+  function getTerms(){
+    let terms = {
+      "Activities": {},
+      "Organisational Structure": {},
+      "Base Membership Type": {}
+    }
+
+    const filterCategories = {
+      "Activities":  "primaryActivity",
+      "Organisational Structure": "orgStructure",
+      "Base Membership Type": "baseMembershipType"
+    }
+
+    //loop through the initiatives and add used term labels to the 
+    //object of identifiers and labels
+    for(const initiativeUid in initiativesByUid){
+      let initiative = initiativesByUid[initiativeUid];
+
+      for(const categoryLabel in filterCategories){
+        let termLabel = initiative[filterCategories[categoryLabel]];
+
+        if(!terms[categoryLabel][termLabel])
+          terms[categoryLabel][termLabel] = 
+            values[categoryLabel][termLabel];
+      }
+    }
+
+    return terms;
+  }
+
   var pub = {
     loadFromWebService: loadFromWebService,
     search: search,
@@ -723,7 +753,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getCurrentDatasets: getCurrentDatasets,
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
-    getVerboseValuesForFields: getVerboseValuesForFields
+    getVerboseValuesForFields: getVerboseValuesForFields,
+    getTerms: getTerms
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
