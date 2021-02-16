@@ -655,16 +655,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // continuing with the loading of the data, so we allow the event queue to be processed:
     //setTimeout(function() {
     d3.json(service).then(function (json) {
-      // This now uses d3.fetch and the fetch API.
-      // TODO - error handling
-      // TODO - publish events (e.g. loading, success, failure)
-      //        so that the UI can display info about datasets.
-      // console.log(json);
       console.log("loadDataset",json);
       console.info("Recording entire process");
       performance.mark("startProcessing");
       add(json.data);
-      //sort if this is the last dataset you are loading 
       eventbus.publish({ topic: "Initiative.datasetLoaded" });
     }).catch(err => {
       eventbus.publish({
