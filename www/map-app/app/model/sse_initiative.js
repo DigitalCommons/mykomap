@@ -668,37 +668,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log(err)
     });
   }
-  // Currently unused.
-  function loadPluralObjects(query, uid, callback) {
-    var ds = config.namedDatasets();
-    for (let i in ds) {
-      var service =
-        config.getServicesPath() +
-        "get_dataset.php?dataset=" +
-        ds[i] +
-        "&q=" +
-        query +
-        "&uid=" +
-        uid;
-      var response = null;
-      var message = null;
-      d3.json(service).then(function (json) {
-        for (let result of json.data) {
-          let initiative;
-          for (let key in result) {
-            if (!initiative) initiative = result[key];
-            else if (key !== "dataset") {
-              initiativesByUid[initiative][key].push(getSkosCode(result[key]));
-              if (key === "activity")
-                registerActivity(result[key], initiativesByUid[initiative]);
-            }
-          }
-        }
-        if (callback) callback();
-      });
-    }
-  }
-
+  
   // This returns an index of vocabularies to term IDs to term labels.
   function getVerboseValuesForFields() {
     return vocabs;
