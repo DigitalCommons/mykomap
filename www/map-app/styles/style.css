@@ -157,6 +157,10 @@ body {
   color: var(--black);
 }
 
+.advanced-option:disabled {
+  color: #ccc; 
+}
+
 .sidebar-button-container{
   margin-top: 5px;
 }

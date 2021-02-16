@@ -710,6 +710,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return values;
   }
 
+  //construct the object of terms for advanced search
   function getTerms(){
     let terms = {
       "Activities": {},
@@ -719,7 +720,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     const filterCategories = {
       "Activities":  "primaryActivity",
-      "Organisational Structure": "orgStructure",
+      "Organisational Structure": "regorg",
       "Base Membership Type": "baseMembershipType"
     }
 
@@ -729,15 +730,37 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let initiative = initiativesByUid[initiativeUid];
 
       for(const categoryLabel in filterCategories){
-        let termLabel = initiative[filterCategories[categoryLabel]];
+        let termIdentifier = initiative[filterCategories[categoryLabel]];
 
-        if(!terms[categoryLabel][termLabel])
-          terms[categoryLabel][termLabel] = 
-            values[categoryLabel][termLabel];
+        if(!terms[categoryLabel][termIdentifier])
+          terms[categoryLabel][termIdentifier] = 
+            values[categoryLabel][termIdentifier];
       }
     }
 
     return terms;
+  }
+
+  //get an array of possible filters from  a list of initiatives
+  function getPossibleFilterValues(filteredInitiatives){
+    let possibleFilterValues = [];
+
+    const filterCategories = {
+      "Activities":  "primaryActivity",
+      "Organisational Structure": "regorg",
+      "Base Membership Type": "baseMembershipType"
+    }
+
+    filteredInitiatives.forEach(initiative => {
+      for(const categoryLabel in filterCategories){
+        let termIdentifier = initiative[filterCategories[categoryLabel]];
+
+        if(!possibleFilterValues.includes(termIdentifier))
+          possibleFilterValues.push(termIdentifier);
+      }
+    })
+
+    return possibleFilterValues;
   }
 
   var pub = {
@@ -754,7 +777,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
-    getTerms: getTerms
+    getTerms: getTerms,
+    getPossibleFilterValues: getPossibleFilterValues
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});

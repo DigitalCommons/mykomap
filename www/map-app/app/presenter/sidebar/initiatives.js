@@ -87,7 +87,7 @@ define([
     //get category of filter as used in intiatives
     const filterCategories = {
       "Activities":  "primaryActivity",
-      "Organisational Structure": "orgStructure",
+      "Organisational Structure": "regorg",
       "Base Membership Type": "baseMembershipType"
     }
     const filterCategory = filterCategories[filterCategoryName];

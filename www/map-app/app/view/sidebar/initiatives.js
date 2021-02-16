@@ -275,6 +275,10 @@ define([
         else
           presenter.performSearch(item.searchedFor);
     };
+    
+    const possibleFilterValues = sseInitiative.getPossibleFilterValues(map.getFiltered());
+    const activeFilterCategories = map.getFiltersFull().map(filter =>
+      filter.verboseName.split(":")[0]);
 
     for (const field in values){
       container
@@ -302,9 +306,17 @@ define([
           .text(values[field][value])
           .attr("value",value)
           .attr("class","advanced-option")
-        
-        if(currentFilters.includes(value))
-          option.attr("selected",true)
+
+        //if there are active filters, make them selected and disable empty choices
+        if(currentFilters.length > 0){
+          if(currentFilters.includes(value))
+            option.attr("selected",true);      
+          
+          if(!activeFilterCategories.includes(field))
+            if(!possibleFilterValues.includes(value)){
+              option.attr("disabled",true);
+            }
+        }
       }
     }
   }
