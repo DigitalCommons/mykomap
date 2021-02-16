@@ -639,7 +639,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // This may be all of them, or just a single selected ones
   function loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
-    const datasets = currentDatasets === true? config.namedDatasets() : currentDatasets;
+    const datasets = currentDatasets === true? config.namedDatasets() : [currentDatasets];
     
     datasets
       .forEach(dataset => {
