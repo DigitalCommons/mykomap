@@ -605,26 +605,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       data: { dataset: "all" }
     });
 
-    if (dataset === true) {
-      console.log("reset: loading all datasets");
-      currentDatasets = true;
-      loadFromWebService();
-      return;
-    }
-
-    if (allDatasets.includes(dataset)) {
-      console.log("reset: loading dataset '"+dataset+"'");
-      currentDatasets = dataset;
-      
-      // Note, caching currently doesn't work correctly with multiple data sets
-      // so until that's fixed, don't use it in that case.
-      loadDataset(dataset)
-        .then(_loadDatasetSuccess)
-        .catch(_mkLoadDatasetFailure(dataset));
-      return;
-    }
-
-    console.log("reset: no matching dataset '"+dataset+"'");
+    currentDatasets = dataset;
+    loadFromWebService();
   }
 
 
@@ -639,14 +621,25 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // This may be all of them, or just a single selected ones
   function loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
-    const datasets = currentDatasets === true? config.namedDatasets() : [currentDatasets];
+    let datasets = [];
     
-    datasets
-      .forEach(dataset => {
-        loadDataset(dataset)
-          .then(_loadDatasetSuccess)
-          .catch(_mkLoadDatasetFailure(dataset));
-      });
+    if (currentDatasets === true) {
+      console.log("reset: loading all datasets ", config.namedDatasets());
+      datasets = config.namedDatasets();
+    }
+    else if (allDatasets.includes(currentDatasets)) {
+      console.log("reset: loading dataset '"+currentDatasets+"'");
+      datasets = [currentDatasets];
+    }
+    else {
+      console.log("reset: no matching dataset '"+currentDatasets+"'");
+    }
+
+    datasets.forEach(dataset => {
+      loadDataset(dataset)
+        .then(_loadDatasetSuccess)
+        .catch(_mkLoadDatasetFailure(dataset));
+    });
   }
 
 
