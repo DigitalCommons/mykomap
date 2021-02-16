@@ -633,24 +633,15 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   let startedLoading = false;
   let datasetsLoaded = 0;
   let datasetsToLoad = 0;
+
+  // Loads all the configured datasets
   function loadFromWebService() {
-    var ds = config.namedDatasets();
-    var i;
-    datasetsToLoad = ds.length;
-    //load all of them
-    //load all from the begining if there are more than one
-    if (ds.length > 1) {
-      ds.forEach(dataset => {
-        loadDataset(dataset)
-          .then(_loadDatasetSuccess)
-          .catch(_mkLoadDatasetFailure(dataset));
-      });
-    }
-    else if (ds.length == 1) {
-      loadDataset(ds[0])
-        .then(_loadDatasetSuccess)
-        .catch(_mkLoadDatasetFailure(dataset));
-    }
+    config.namedDatasets()
+          .forEach(dataset => {
+            loadDataset(dataset)
+              .then(_loadDatasetSuccess)
+              .catch(_mkLoadDatasetFailure(dataset));
+          });
   }
 
 
