@@ -634,14 +634,19 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   let datasetsLoaded = 0;
   let datasetsToLoad = 0;
 
-  // Loads all the configured datasets
+  // Loads the currently active dataset(s)
+  //
+  // This may be all of them, or just a single selected ones
   function loadFromWebService() {
-    config.namedDatasets()
-          .forEach(dataset => {
-            loadDataset(dataset)
-              .then(_loadDatasetSuccess)
-              .catch(_mkLoadDatasetFailure(dataset));
-          });
+    // Active datasets indicated internally through `currentDatasets`
+    const datasets = currentDatasets === true? config.namedDatasets() : currentDatasets;
+    
+    datasets
+      .forEach(dataset => {
+        loadDataset(dataset)
+          .then(_loadDatasetSuccess)
+          .catch(_mkLoadDatasetFailure(dataset));
+      });
   }
 
 
