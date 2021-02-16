@@ -18,7 +18,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       : [];
 
   // // TODO: We should get these values from the vocab, from config or from the source data
-  const values = {
+  const vocabs = {
     Activities: {
       ALL: "All Activities",
       AM10: "Arts, Media, Culture & Leisure",
@@ -172,17 +172,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += values["Organisational Structure"][regorgCode].toUpperCase();
+        initiative.searchstr += vocabs["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
       if (activityCode && !initiative.otherActivities.includes(activityCode)) {
         initiative.otherActivities.push(activityCode);
-        initiative.searchstr += values["Activities"][activityCode].toUpperCase();
+        initiative.searchstr += vocabs["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
       if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
         initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += values["Activities"][qualifierCode].toUpperCase();
+        initiative.searchstr += vocabs["Activities"][qualifierCode].toUpperCase();
       }
 
       //update pop-up
@@ -300,14 +300,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //handle special fields
     if (searchedFields.includes("primaryActivity")) {
       val += e.primaryActivity
-        ? values["Activities"][getSkosCode(e.primaryActivity)]
+        ? vocabs["Activities"][getSkosCode(e.primaryActivity)]
         : "";
       searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
     }
 
     if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
       val += e.qualifier
-        ? values["Activities"][getSkosCode(e.qualifier)]
+        ? vocabs["Activities"][getSkosCode(e.qualifier)]
         : "";
       if (searchedFields.includes("qualifier"))
         searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
@@ -317,7 +317,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
       val += e.activity
-        ? values["Activities"][getSkosCode(e.activity)]
+        ? vocabs["Activities"][getSkosCode(e.activity)]
         : "";
       if (searchedFields.includes("activity"))
         searchedFields.splice(searchedFields.indexOf("activity"), 1);
@@ -327,7 +327,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
       val += e.regorg
-        ? values["Organisational Structure"][getSkosCode(e.regorg)]
+        ? vocabs["Organisational Structure"][getSkosCode(e.regorg)]
         : "";
 
       if (searchedFields.includes("regorg"))
@@ -707,7 +707,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   // This returns an index of vocabularies to term IDs to term labels.
   function getVerboseValuesForFields() {
-    return values;
+    return vocabs;
   }
 
   //construct the object of terms for advanced search
