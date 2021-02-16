@@ -489,6 +489,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     loadNextInitiatives();
   }
 
+  function _loadDatasetSuccess(jsonResponse) {
+    console.log("loadDataset",jsonResponse);
+    console.info("Recording entire process");
+    performance.mark("startProcessing");
+    add(jsonResponse.data);
+    eventbus.publish({ topic: "Initiative.datasetLoaded" });
+  }  
+
+  function _mkLoadDatasetFailure(dataset) {
+    return (err) => {
+      eventbus.publish({
+        topic: "Initiative.loadFailed",
+        data: { error: err, dataset: dataset }
+      });
+      console.log(err);
+    };
+  }  
+
   //taken from 
   function insert(element, array) {
     array.splice(locationOf(element, array), 0, element);
@@ -600,7 +618,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       
       // Note, caching currently doesn't work correctly with multiple data sets
       // so until that's fixed, don't use it in that case.
-      loadDataset(dataset);
+      loadDataset(dataset)
+        .then(_loadDatasetSuccess)
+        .catch(_mkLoadDatasetFailure(dataset));
       return;
     }
 
@@ -621,17 +641,27 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //load all from the begining if there are more than one
     if (ds.length > 1) {
       ds.forEach(dataset => {
-        loadDataset(dataset);
+        loadDataset(dataset)
+          .then(_loadDatasetSuccess)
+          .catch(_mkLoadDatasetFailure(dataset));
       });
     }
     else if (ds.length == 1) {
-      loadDataset(ds[0]);
+      loadDataset(ds[0])
+        .then(_loadDatasetSuccess)
+        .catch(_mkLoadDatasetFailure(dataset));
     }
   }
 
 
+  // Loads the initiatives data for the given dataset (or all of them) from the server.
+  //
+  // The query is defined in the relevant dataset directory's `query.rq` file.
+  //
+  // @param dataset - the name of one of the configured datasets, or true to get all of them.
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
   function loadDataset(dataset) {
-
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
 
     // Note, caching currently doesn't work correctly with multiple data sets
@@ -651,22 +681,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       });
       startedLoading = true;
     }
-    // We want to allow the effects of publishing the above event to take place in the UI before
-    // continuing with the loading of the data, so we allow the event queue to be processed:
-    //setTimeout(function() {
-    d3.json(service).then(function (json) {
-      console.log("loadDataset",json);
-      console.info("Recording entire process");
-      performance.mark("startProcessing");
-      add(json.data);
-      eventbus.publish({ topic: "Initiative.datasetLoaded" });
-    }).catch(err => {
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: err, dataset: dataset }
-      });
-      console.log(err)
-    });
+    return d3.json(service);
   }
   
   // This returns an index of vocabularies to term IDs to term labels.
