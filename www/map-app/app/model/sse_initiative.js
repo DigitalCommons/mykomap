@@ -658,7 +658,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
         if(!terms[categoryLabel][termIdentifier])
           terms[categoryLabel][termIdentifier] = 
-            values[categoryLabel][termIdentifier];
+            vocabs[categoryLabel][termIdentifier];
       }
     }
 
