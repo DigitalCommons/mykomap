@@ -17,94 +17,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       config.namedDatasetsVerbose()
       : [];
 
-  // // TODO: We should get these values from the vocab, from config or from the source data
-  const vocabs = {
-    Activities: {
-      ALL: "All Activities",
-      AM10: "Arts, Media, Culture & Leisure",
-      AM20: "Campaigning, Activism & Advocacy",
-      AM30: "Community & Collective Spaces",
-      AM40: "Education",
-      AM50: "Energy",
-      AM60: "Food",
-      AM70: "Goods & Services",
-      AM80: "Health, Social Care & Wellbeing",
-      AM90: "Housing",
-      AM100: "Money & Finance",
-      AM110: "Nature, Conservation & Environment",
-      AM120: "Reduce, Reuse, Repair & Recycle",
-      AM130: "Agriculture",
-      AM140: "Industry",
-      AM150: "Utilities",
-      AM160: "Transport",
-      ICA10: "Agriculture",
-      ICA20: "Dairy",
-      ICA30: "Forestry",
-      ICA40: "Irrigation",
-      ICA50: "Fishing",
-      ICA60: "Artisans",
-      ICA70: "Construction",
-      ICA80: "Industry",
-      ICA90: "Manufacturing",
-      ICA100: "Mining",
-      ICA110: "Professional",
-      ICA120: "Service",
-      ICA130: "Tourism",
-      ICA140: "Financial Services",
-      ICA150: "Insurance",
-      ICA160: "Education",
-      ICA170: "Health",
-      ICA180: "Community",
-      ICA190: "Social",
-      ICA200: "Social Service",
-      ICA210: "Housing",
-      ICA220: "Transport",
-      ICA230: "Utilities",
-      ICA240: "Retail",
-      ICA250: "Production",
-      ICA260: "Wholesale and retail trade",
-      ICA270: "Education / health / social work",
-      ICA280: "Other services",
-      ICA290: "All",
-      q09: "Coop Promoter/Supporter"
-    },
-    "Organisational Structure": {
-      OS10: "Community group (formal or informal)",
-      OS20: "Not-for-profit organisation",
-      OS30: "Social enterprise",
-      OS40: "Charity",
-      OS50: "Company (Other)",
-      OS60: "Workers co-operative",
-      OS70: "Housing co-operative",
-      OS80: "Consumer co-operative",
-      OS90: "Producer co-operative",
-      OS100: "Multi-stakeholder co-operative",
-      OS110: "Secondary co-operative",
-      OS115: "Co-operative",
-      OS120: "Community Interest Company (CIC)",
-      OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
-      OS140: "Employee trust",
-      OS150: "Self-employed",
-      OS160: "Unincorporated",
-      OS170: "Mutual Organisation",
-      OS180: "National apex",
-      OS190: "National sectoral federation or union",
-      OS200: "Regional, state or provincial level federation or union",
-      OS210: "Cooperative group",
-      OS220: "Government agency/body",
-      OS230: "Supranational",
-      OS240: "Cooperative of cooperatives / mutuals"
-    },
-    "Base Membership Type": {
-      BMT10: "Consumer/Users",
-      BMT20: "Producers",
-      BMT30: "Workers",
-      BMT40: "Multi-stakeholders",
-      BMT50: "Residents",
-      BMT60: "Others"
-    }
-  };
-
+  // An index of vocabulary terms in the data, obtained from get_vocabs.php
+  let vocabs = {};
+  
   if (dsNamed.length == allDatasets.length)
     allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
   else
@@ -489,24 +404,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     loadNextInitiatives();
   }
 
-  function _loadDatasetSuccess(jsonResponse) {
-    console.log("loadDataset",jsonResponse);
-    console.info("Recording entire process");
-    performance.mark("startProcessing");
-    add(jsonResponse.data);
-    eventbus.publish({ topic: "Initiative.datasetLoaded" });
-  }  
-
-  function _mkLoadDatasetFailure(dataset) {
-    return (err) => {
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: err, dataset: dataset }
-      });
-      console.log(err);
-    };
-  }  
-
   //taken from 
   function insert(element, array) {
     array.splice(locationOf(element, array), 0, element);
@@ -610,15 +507,26 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
 
-  //TODO: this whole structure will be pretty glitchy when multithreaded
-  //need to fix this
   let startedLoading = false;
   let datasetsLoaded = 0;
   let datasetsToLoad = 0;
 
-  // Loads the currently active dataset(s)
+  
+  // Loads the configured list of vocabs from the server.
   //
-  // This may be all of them, or just a single selected ones
+  // The list is defined in `config.json`
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
+  function loadVocabs() {
+    const service = config.getServicesPath() + "get_vocabs.php";
+    return d3.json(service);
+  }  
+
+
+  // Loads the currently active dataset(s) and configured vocabs
+  //
+  // This may be all of the datasets, or just a single selected one.
+  // The vocabs are always loaded.
   function loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
     let datasets = [];
@@ -635,11 +543,59 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log("reset: no matching dataset '"+currentDatasets+"'");
     }
 
-    datasets.forEach(dataset => {
-      loadDataset(dataset)
-        .then(_loadDatasetSuccess)
-        .catch(_mkLoadDatasetFailure(dataset));
-    });
+    // Load the vocabs first, then on success or failure, load the
+    // initiatives. Handlers defined below.
+    loadVocabs()
+      .then(onVocabSuccess)
+      .catch(onVocabFailure)
+      .finally(loadInitiatives);
+
+    function loadInitiatives() {
+      datasets.forEach(dataset =>
+        loadDataset(dataset)
+          .then(onDatasetSuccess(dataset))
+          .catch(onDatasetFailure(dataset))
+      );
+    }
+
+    function onVocabSuccess(response) {
+      console.log("loaded vocabs", response);
+      
+      vocabs = response;
+      eventbus.publish({ topic: "Vocabularies.loaded" });
+    }
+
+    function onVocabFailure(error) {
+      console.error("vocabs load failed", error);
+      
+      eventbus.publish({
+        topic: "Vocabularies.loadFailed",
+        data: { error: error }
+      });     
+    }  
+
+    function onDatasetSuccess(dataset) {
+      return (response) => {
+        console.log("loaded "+dataset+" data", response);
+
+        // Record a timestamp for this dataset
+        performance.mark("startProcessing");
+        
+        add(response.data);
+        eventbus.publish({ topic: "Initiative.datasetLoaded" });
+      };
+    }
+
+    function onDatasetFailure(dataset) {
+      return (error) => {
+        console.error("load "+dataset+" data failed", error);
+      
+        eventbus.publish({
+          topic: "Initiative.loadFailed",
+          data: { error: error, dataset: dataset }
+        });
+      };
+    }
   }
 
 
