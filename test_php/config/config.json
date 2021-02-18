@@ -1,0 +1,22 @@
+{
+  "languages": ["EN", "FR"],
+  
+  "vocabularies": [
+    { "endpoint": "http:\/\/dev.data.solidarityeconomy.coop:8890/sparql",
+      "uris": [
+        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities/",
+        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/organisational-structure/"
+      ]
+    }
+  ],
+  
+  "namedDatasets": ["newbridge"],
+  "htmlTitle": "For Solidarity",
+  "defaultLatLng": ["54.973239","-1.610048"],
+  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "doesDirectoryHaveColours": true,
+  "disableClusteringAtZoom": false,
+  "maxZoomOnGroup":12,
+  "maxZoomOnOne": 14,
+  "maxZoomOnSearch": 12
+}
