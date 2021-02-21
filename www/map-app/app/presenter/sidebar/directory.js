@@ -44,7 +44,7 @@ define([
   };
 
   proto.getAllValuesByName = function (name) {
-    return sseInitiative.getVerboseValuesForFields()[name];
+    return sseInitiative.getOldStyleVerboseValuesForFields()[name];
   };
 
   proto.getRegisteredValues = function () {

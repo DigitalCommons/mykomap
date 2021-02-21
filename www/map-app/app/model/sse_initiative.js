@@ -58,6 +58,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function Initiative(e) {
     const that = this;
 
+    let oldStyleValues = getOldStyleVerboseValuesForFields();
+
     // Not all initiatives have activities
     let primaryActivityCode = e.primaryActivity
       ? getSkosCode(e.primaryActivity)
@@ -87,17 +89,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += vocabs["Organisational Structure"][regorgCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
       if (activityCode && !initiative.otherActivities.includes(activityCode)) {
         initiative.otherActivities.push(activityCode);
-        initiative.searchstr += vocabs["Activities"][activityCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
       if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
         initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += vocabs["Activities"][qualifierCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Activities"][qualifierCode].toUpperCase();
       }
 
       //update pop-up
@@ -211,18 +213,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // Not all initiatives have activities
     let val = "";
 
+    let oldStyleValues = getOldStyleVerboseValuesForFields();
+
 
     //handle special fields
     if (searchedFields.includes("primaryActivity")) {
       val += e.primaryActivity
-        ? vocabs["Activities"][getSkosCode(e.primaryActivity)]
+        ? oldStyleValues["Activities"][getSkosCode(e.primaryActivity)]
         : "";
       searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
     }
 
     if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
       val += e.qualifier
-        ? vocabs["Activities"][getSkosCode(e.qualifier)]
+        ? oldStyleValues["Activities"][getSkosCode(e.qualifier)]
         : "";
       if (searchedFields.includes("qualifier"))
         searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
@@ -232,7 +236,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
       val += e.activity
-        ? vocabs["Activities"][getSkosCode(e.activity)]
+        ? oldStyleValues["Activities"][getSkosCode(e.activity)]
         : "";
       if (searchedFields.includes("activity"))
         searchedFields.splice(searchedFields.indexOf("activity"), 1);
@@ -242,7 +246,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
       val += e.regorg
-        ? vocabs["Organisational Structure"][getSkosCode(e.regorg)]
+        ? oldStyleValues["Organisational Structure"][getSkosCode(e.regorg)]
         : "";
 
       if (searchedFields.includes("regorg"))
@@ -400,6 +404,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //
   // @param json - an array of inititive definitions
   function add(json) {
+    console.log(json)
+
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
   }
@@ -608,6 +614,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // @return the response data wrapped in a promise, direct from d3.json.
   function loadDataset(dataset) {
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
+    
 
     // Note, caching currently doesn't work correctly with multiple data sets
     // so until that's fixed, don't use it in that case.
@@ -626,6 +633,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       });
       startedLoading = true;
     }
+
     return d3.json(service);
   }
   
@@ -634,50 +642,90 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return vocabs;
   }
 
-  //construct the object of terms for advanced search
-  function getTerms(){
-    let terms = {
-      "Activities": {},
-      "Organisational Structure": {},
-      "Base Membership Type": {}
+  const stripTerms = terms => {
+    let newTerms = {};
+    for(const termId in terms ){
+      newTerms[termId.split(":")[1]] = terms[termId];
     }
 
-    const filterCategories = {
-      "Activities":  "primaryActivity",
-      "Organisational Structure": "regorg",
-      "Base Membership Type": "baseMembershipType"
+    return newTerms;
+  }
+
+  function getOldStyleVerboseValuesForFields(){
+    let oldStyleValues = {
+      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica"].EN.terms),
+      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:structure-ica"].EN.terms),
+      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-member-type"].EN.terms)
+    }
+
+    return oldStyleValues;
+  }
+
+  //construct the object of terms for advanced search
+  function getTerms(){
+
+    //find a way to generate this from the data
+    const termCategories = {
+      "Country": "country",
+      "Economic Activities":  "primaryActivity",
+      "Region": "region",
+      "Structure Type": "regorg",
+      "Typology": "baseMembershipType"
+    }
+    
+    const language = "EN";
+
+    let allTerms = {};
+    for(const vocab in vocabs.vocabs){
+      allTerms[vocabs.vocabs[vocab][language].title] = stripTerms(vocabs.vocabs[vocab][language].terms);
+    }
+    
+    let usedTerms = {};
+    for(const vocab in vocabs.vocabs){
+      usedTerms[vocabs["vocabs"][vocab][language]["title"]] = Object.assign({});
     }
 
     //loop through the initiatives and add used term labels to the 
     //object of identifiers and labels
+    
     for(const initiativeUid in initiativesByUid){
       let initiative = initiativesByUid[initiativeUid];
 
-      for(const categoryLabel in filterCategories){
-        let termIdentifier = initiative[filterCategories[categoryLabel]];
+      for(const categoryTitle in termCategories){
+        let termIdentifier = initiative[termCategories[categoryTitle]];
+     
+        if(!usedTerms[categoryTitle][termIdentifier] && termIdentifier){
 
-        if(!terms[categoryLabel][termIdentifier])
-          terms[categoryLabel][termIdentifier] = 
-            vocabs[categoryLabel][termIdentifier];
+          //country specific logic, to be removed when we have proper IDs and labels
+          if(categoryTitle == "Country"){
+            usedTerms[categoryTitle][termIdentifier] = 
+              termIdentifier;
+          }
+          else
+            usedTerms[categoryTitle][termIdentifier] = 
+              allTerms[categoryTitle][termIdentifier];
+        }
       }
     }
 
-    return terms;
+    return usedTerms;
   }
 
   //get an array of possible filters from  a list of initiatives
   function getPossibleFilterValues(filteredInitiatives){
     let possibleFilterValues = [];
 
-    const filterCategories = {
-      "Activities":  "primaryActivity",
-      "Organisational Structure": "regorg",
-      "Base Membership Type": "baseMembershipType"
+    const termCategories = {
+      "Country": "country",
+      "Economic Activities":  "primaryActivity",
+      "Region": "region",
+      "Structure Type": "regorg",
+      "Typology": "baseMembershipType"
     }
 
     filteredInitiatives.forEach(initiative => {
-      for(const categoryLabel in filterCategories){
-        let termIdentifier = initiative[filterCategories[categoryLabel]];
+      for(const categoryLabel in termCategories){
+        let termIdentifier = initiative[termCategories[categoryLabel]];
 
         if(!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
@@ -701,6 +749,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
+    getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues
   };
