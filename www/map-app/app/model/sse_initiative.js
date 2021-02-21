@@ -17,94 +17,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       config.namedDatasetsVerbose()
       : [];
 
-  // // TODO: We should get these values from the vocab, from config or from the source data
-  const values = {
-    Activities: {
-      ALL: "All Activities",
-      AM10: "Arts, Media, Culture & Leisure",
-      AM20: "Campaigning, Activism & Advocacy",
-      AM30: "Community & Collective Spaces",
-      AM40: "Education",
-      AM50: "Energy",
-      AM60: "Food",
-      AM70: "Goods & Services",
-      AM80: "Health, Social Care & Wellbeing",
-      AM90: "Housing",
-      AM100: "Money & Finance",
-      AM110: "Nature, Conservation & Environment",
-      AM120: "Reduce, Reuse, Repair & Recycle",
-      AM130: "Agriculture",
-      AM140: "Industry",
-      AM150: "Utilities",
-      AM160: "Transport",
-      ICA10: "Agriculture",
-      ICA20: "Dairy",
-      ICA30: "Forestry",
-      ICA40: "Irrigation",
-      ICA50: "Fishing",
-      ICA60: "Artisans",
-      ICA70: "Construction",
-      ICA80: "Industry",
-      ICA90: "Manufacturing",
-      ICA100: "Mining",
-      ICA110: "Professional",
-      ICA120: "Service",
-      ICA130: "Tourism",
-      ICA140: "Financial Services",
-      ICA150: "Insurance",
-      ICA160: "Education",
-      ICA170: "Health",
-      ICA180: "Community",
-      ICA190: "Social",
-      ICA200: "Social Service",
-      ICA210: "Housing",
-      ICA220: "Transport",
-      ICA230: "Utilities",
-      ICA240: "Retail",
-      ICA250: "Production",
-      ICA260: "Wholesale and retail trade",
-      ICA270: "Education / health / social work",
-      ICA280: "Other services",
-      ICA290: "All",
-      q09: "Coop Promoter/Supporter"
-    },
-    "Organisational Structure": {
-      OS10: "Community group (formal or informal)",
-      OS20: "Not-for-profit organisation",
-      OS30: "Social enterprise",
-      OS40: "Charity",
-      OS50: "Company (Other)",
-      OS60: "Workers co-operative",
-      OS70: "Housing co-operative",
-      OS80: "Consumer co-operative",
-      OS90: "Producer co-operative",
-      OS100: "Multi-stakeholder co-operative",
-      OS110: "Secondary co-operative",
-      OS115: "Co-operative",
-      OS120: "Community Interest Company (CIC)",
-      OS130: "Community Benefit Society / Industrial and Provident Society (IPS)",
-      OS140: "Employee trust",
-      OS150: "Self-employed",
-      OS160: "Unincorporated",
-      OS170: "Mutual Organisation",
-      OS180: "National apex",
-      OS190: "National sectoral federation or union",
-      OS200: "Regional, state or provincial level federation or union",
-      OS210: "Cooperative group",
-      OS220: "Government agency/body",
-      OS230: "Supranational",
-      OS240: "Cooperative of cooperatives / mutuals"
-    },
-    "Base Membership Type": {
-      BMT10: "Consumer/Users",
-      BMT20: "Producers",
-      BMT30: "Workers",
-      BMT40: "Multi-stakeholders",
-      BMT50: "Residents",
-      BMT60: "Others"
-    }
-  };
-
+  // An index of vocabulary terms in the data, obtained from get_vocabs.php
+  let vocabs = {};
+  
   if (dsNamed.length == allDatasets.length)
     allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
   else
@@ -143,6 +58,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function Initiative(e) {
     const that = this;
 
+    let oldStyleValues = getOldStyleVerboseValuesForFields();
+
     // Not all initiatives have activities
     let primaryActivityCode = e.primaryActivity
       ? getSkosCode(e.primaryActivity)
@@ -172,17 +89,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //if the orgstructure is not in the initiative then add it
       if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
         initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += values["Organisational Structure"][regorgCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Organisational Structure"][regorgCode].toUpperCase();
       }
       // if the activity is not in the initiative then add it
       if (activityCode && !initiative.otherActivities.includes(activityCode)) {
         initiative.otherActivities.push(activityCode);
-        initiative.searchstr += values["Activities"][activityCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Activities"][activityCode].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
       if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
         initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += values["Activities"][qualifierCode].toUpperCase();
+        initiative.searchstr += oldStyleValues["Activities"][qualifierCode].toUpperCase();
       }
 
       //update pop-up
@@ -296,18 +213,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // Not all initiatives have activities
     let val = "";
 
+    let oldStyleValues = getOldStyleVerboseValuesForFields();
+
 
     //handle special fields
     if (searchedFields.includes("primaryActivity")) {
       val += e.primaryActivity
-        ? values["Activities"][getSkosCode(e.primaryActivity)]
+        ? oldStyleValues["Activities"][getSkosCode(e.primaryActivity)]
         : "";
       searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
     }
 
     if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
       val += e.qualifier
-        ? values["Activities"][getSkosCode(e.qualifier)]
+        ? oldStyleValues["Activities"][getSkosCode(e.qualifier)]
         : "";
       if (searchedFields.includes("qualifier"))
         searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
@@ -317,7 +236,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
       val += e.activity
-        ? values["Activities"][getSkosCode(e.activity)]
+        ? oldStyleValues["Activities"][getSkosCode(e.activity)]
         : "";
       if (searchedFields.includes("activity"))
         searchedFields.splice(searchedFields.indexOf("activity"), 1);
@@ -327,7 +246,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
       val += e.regorg
-        ? values["Organisational Structure"][getSkosCode(e.regorg)]
+        ? oldStyleValues["Organisational Structure"][getSkosCode(e.regorg)]
         : "";
 
       if (searchedFields.includes("regorg"))
@@ -485,6 +404,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //
   // @param json - an array of inititive definitions
   function add(json) {
+    console.log(json)
+
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
   }
@@ -587,52 +508,113 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       data: { dataset: "all" }
     });
 
-    if (dataset === true) {
-      console.log("reset: loading all datasets");
-      currentDatasets = true;
-      loadFromWebService();
-      return;
-    }
-
-    if (allDatasets.includes(dataset)) {
-      console.log("reset: loading dataset '"+dataset+"'");
-      currentDatasets = dataset;
-      
-      // Note, caching currently doesn't work correctly with multiple data sets
-      // so until that's fixed, don't use it in that case.
-      loadDataset(dataset);
-      return;
-    }
-
-    console.log("reset: no matching dataset '"+dataset+"'");
+    currentDatasets = dataset;
+    loadFromWebService();
   }
 
 
-  //TODO: this whole structure will be pretty glitchy when multithreaded
-  //need to fix this
   let startedLoading = false;
   let datasetsLoaded = 0;
   let datasetsToLoad = 0;
+
+  
+  // Loads the configured list of vocabs from the server.
+  //
+  // The list is defined in `config.json`
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
+  function loadVocabs() {
+    const service = config.getServicesPath() + "get_vocabs.php";
+    return d3.json(service);
+  }  
+
+
+  // Loads the currently active dataset(s) and configured vocabs
+  //
+  // This may be all of the datasets, or just a single selected one.
+  // The vocabs are always loaded.
   function loadFromWebService() {
-    var ds = config.namedDatasets();
-    var i;
-    datasetsToLoad = ds.length;
-    //load all of them
-    //load all from the begining if there are more than one
-    if (ds.length > 1) {
-      ds.forEach(dataset => {
-        loadDataset(dataset);
-      });
+    // Active datasets indicated internally through `currentDatasets`
+    let datasets = [];
+    
+    if (currentDatasets === true) {
+      console.log("reset: loading all datasets ", config.namedDatasets());
+      datasets = config.namedDatasets();
     }
-    else if (ds.length == 1) {
-      loadDataset(ds[0]);
+    else if (allDatasets.includes(currentDatasets)) {
+      console.log("reset: loading dataset '"+currentDatasets+"'");
+      datasets = [currentDatasets];
+    }
+    else {
+      console.log("reset: no matching dataset '"+currentDatasets+"'");
+    }
+
+    // Load the vocabs first, then on success or failure, load the
+    // initiatives. Handlers defined below.
+    loadVocabs()
+      .then(onVocabSuccess)
+      .catch(onVocabFailure)
+      .finally(loadInitiatives);
+
+    function loadInitiatives() {
+      datasets.forEach(dataset =>
+        loadDataset(dataset)
+          .then(onDatasetSuccess(dataset))
+          .catch(onDatasetFailure(dataset))
+      );
+    }
+
+    function onVocabSuccess(response) {
+      console.log("loaded vocabs", response);
+      
+      vocabs = response;
+      eventbus.publish({ topic: "Vocabularies.loaded" });
+    }
+
+    function onVocabFailure(error) {
+      console.error("vocabs load failed", error);
+      
+      eventbus.publish({
+        topic: "Vocabularies.loadFailed",
+        data: { error: error }
+      });     
+    }  
+
+    function onDatasetSuccess(dataset) {
+      return (response) => {
+        console.log("loaded "+dataset+" data", response);
+
+        // Record a timestamp for this dataset
+        performance.mark("startProcessing");
+        
+        add(response.data);
+        eventbus.publish({ topic: "Initiative.datasetLoaded" });
+      };
+    }
+
+    function onDatasetFailure(dataset) {
+      return (error) => {
+        console.error("load "+dataset+" data failed", error);
+      
+        eventbus.publish({
+          topic: "Initiative.loadFailed",
+          data: { error: error, dataset: dataset }
+        });
+      };
     }
   }
 
 
+  // Loads the initiatives data for the given dataset (or all of them) from the server.
+  //
+  // The query is defined in the relevant dataset directory's `query.rq` file.
+  //
+  // @param dataset - the name of one of the configured datasets, or true to get all of them.
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
   function loadDataset(dataset) {
-
     var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
+    
 
     // Note, caching currently doesn't work correctly with multiple data sets
     // so until that's fixed, don't use it in that case.
@@ -651,109 +633,99 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       });
       startedLoading = true;
     }
-    // We want to allow the effects of publishing the above event to take place in the UI before
-    // continuing with the loading of the data, so we allow the event queue to be processed:
-    //setTimeout(function() {
-    d3.json(service).then(function (json) {
-      // This now uses d3.fetch and the fetch API.
-      // TODO - error handling
-      // TODO - publish events (e.g. loading, success, failure)
-      //        so that the UI can display info about datasets.
-      // console.log(json);
-      console.log("loadDataset",json);
-      console.info("Recording entire process");
-      performance.mark("startProcessing");
-      add(json.data);
-      //sort if this is the last dataset you are loading 
-      eventbus.publish({ topic: "Initiative.datasetLoaded" });
-    }).catch(err => {
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: err, dataset: dataset }
-      });
-      console.log(err)
-    });
-  }
-  // Currently unused.
-  function loadPluralObjects(query, uid, callback) {
-    var ds = config.namedDatasets();
-    for (let i in ds) {
-      var service =
-        config.getServicesPath() +
-        "get_dataset.php?dataset=" +
-        ds[i] +
-        "&q=" +
-        query +
-        "&uid=" +
-        uid;
-      var response = null;
-      var message = null;
-      d3.json(service).then(function (json) {
-        for (let result of json.data) {
-          let initiative;
-          for (let key in result) {
-            if (!initiative) initiative = result[key];
-            else if (key !== "dataset") {
-              initiativesByUid[initiative][key].push(getSkosCode(result[key]));
-              if (key === "activity")
-                registerActivity(result[key], initiativesByUid[initiative]);
-            }
-          }
-        }
-        if (callback) callback();
-      });
-    }
-  }
 
+    return d3.json(service);
+  }
+  
   // This returns an index of vocabularies to term IDs to term labels.
   function getVerboseValuesForFields() {
-    return values;
+    return vocabs;
+  }
+
+  const stripTerms = terms => {
+    let newTerms = {};
+    for(const termId in terms ){
+      newTerms[termId.split(":")[1]] = terms[termId];
+    }
+
+    return newTerms;
+  }
+
+  function getOldStyleVerboseValuesForFields(){
+    let oldStyleValues = {
+      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica"].EN.terms),
+      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:structure-ica"].EN.terms),
+      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-member-type"].EN.terms)
+    }
+
+    return oldStyleValues;
   }
 
   //construct the object of terms for advanced search
   function getTerms(){
-    let terms = {
-      "Activities": {},
-      "Organisational Structure": {},
-      "Base Membership Type": {}
-    }
 
-    const filterCategories = {
-      "Activities":  "primaryActivity",
-      "Organisational Structure": "regorg",
-      "Base Membership Type": "baseMembershipType"
+    //find a way to generate this from the data
+    const termCategories = {
+      "Country": "country",
+      "Economic Activities":  "primaryActivity",
+      "Region": "region",
+      "Structure Type": "regorg",
+      "Typology": "baseMembershipType"
+    }
+    
+    const language = "EN";
+
+    let allTerms = {};
+    for(const vocab in vocabs.vocabs){
+      allTerms[vocabs.vocabs[vocab][language].title] = stripTerms(vocabs.vocabs[vocab][language].terms);
+    }
+    
+    let usedTerms = {};
+    for(const vocab in vocabs.vocabs){
+      usedTerms[vocabs["vocabs"][vocab][language]["title"]] = Object.assign({});
     }
 
     //loop through the initiatives and add used term labels to the 
     //object of identifiers and labels
+    
     for(const initiativeUid in initiativesByUid){
       let initiative = initiativesByUid[initiativeUid];
 
-      for(const categoryLabel in filterCategories){
-        let termIdentifier = initiative[filterCategories[categoryLabel]];
+      for(const categoryTitle in termCategories){
+        let termIdentifier = initiative[termCategories[categoryTitle]];
+     
+        if(!usedTerms[categoryTitle][termIdentifier] && termIdentifier){
 
-        if(!terms[categoryLabel][termIdentifier])
-          terms[categoryLabel][termIdentifier] = 
-            values[categoryLabel][termIdentifier];
+          //country specific logic, to be removed when we have proper IDs and labels
+          if(categoryTitle == "Country"){
+            usedTerms[categoryTitle][termIdentifier] = 
+              termIdentifier;
+          }
+          else
+            usedTerms[categoryTitle][termIdentifier] = 
+              allTerms[categoryTitle][termIdentifier];
+        }
       }
     }
 
-    return terms;
+    return usedTerms;
   }
 
   //get an array of possible filters from  a list of initiatives
   function getPossibleFilterValues(filteredInitiatives){
     let possibleFilterValues = [];
 
-    const filterCategories = {
-      "Activities":  "primaryActivity",
-      "Organisational Structure": "regorg",
-      "Base Membership Type": "baseMembershipType"
+    const termCategories = {
+      "Country": "country",
+      "Economic Activities":  "primaryActivity",
+      "Region": "region",
+      "Structure Type": "regorg",
+      "Typology": "baseMembershipType"
     }
 
     filteredInitiatives.forEach(initiative => {
-      for(const categoryLabel in filterCategories){
-        let termIdentifier = initiative[filterCategories[categoryLabel]];
+      for(const categoryLabel in termCategories){
+        let termIdentifier = initiative[termCategories[categoryLabel]];
 
         if(!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
@@ -777,6 +749,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
+    getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues
   };

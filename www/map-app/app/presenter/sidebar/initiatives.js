@@ -85,12 +85,15 @@ define([
 
   proto.changeFilters = (filterCategoryName,filterValue,filterValueText) => {
     //get category of filter as used in intiatives
-    const filterCategories = {
-      "Activities":  "primaryActivity",
-      "Organisational Structure": "regorg",
-      "Base Membership Type": "baseMembershipType"
+    const termCategories = {
+      "Country": "country",
+      "Economic Activities":  "primaryActivity",
+      "Region": "region",
+      "Structure Type": "regorg",
+      "Typology": "baseMembershipType"
     }
-    const filterCategory = filterCategories[filterCategoryName];
+
+    const filterCategory = termCategories[filterCategoryName];
 
     //remove old filter 
     const currentFilters = map.getFiltersFull();

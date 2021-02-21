@@ -12,8 +12,8 @@ define([], function () {
     };
 
     var getPopup = function (initiative, sse_initiatives) {
-        let orgStructures = sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
-        let activitiesVerbose = sse_initiatives.getVerboseValuesForFields()["Activities"];
+        let orgStructures = sse_initiatives.getOldStyleVerboseValuesForFields()["Organisational Structure"];
+        let activitiesVerbose = sse_initiatives.getOldStyleVerboseValuesForFields()["Activities"];
         let address = "",
             street,
             locality,
@@ -43,7 +43,7 @@ define([], function () {
         // All initiatives should have a name
         popupHTML = popupHTML.replace("{initiative.name}", initiative.name);
         // TODO Add org type
-        if (initiative.orgStructure && initiative.orgStructure.length > 0) {
+        if (initiative.orgStructure && initiative.orgStructure.length > 0 && orgStructures) {
             let repl = initiative.orgStructure.map(OS => orgStructures[OS]).join(", ");
             popupHTML = popupHTML.replace(
                 "{initiative.org-structure}",
@@ -52,7 +52,7 @@ define([], function () {
         }
         //comment this out
         else {
-            if (initiative.regorg) {
+            if (initiative.regorg && orgStructures) {
                 popupHTML = popupHTML.replace(
                     "{initiative.org-structure}",
                     orgStructures[initiative.regorg]
@@ -66,7 +66,7 @@ define([], function () {
 
         }
 
-        if (initiative.primaryActivity && initiative.primaryActivity != "") {
+        if (initiative.primaryActivity && initiative.primaryActivity != "" && activitiesVerbose) {
 
             popupHTML = popupHTML.replace(
                 "{initiative.economic-activity}",
@@ -79,7 +79,7 @@ define([], function () {
             );
 
         }
-        if (initiative.otherActivities && initiative.otherActivities.length > 0) {
+        if (initiative.otherActivities && initiative.otherActivities.length > 0 && activitiesVerbose) {
             let repl = initiative.otherActivities.map(AM => activitiesVerbose[AM]).join(", ");
             popupHTML = popupHTML.replace(
                 "{initiative.secondary-activity}",
