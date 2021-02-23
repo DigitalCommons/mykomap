@@ -391,6 +391,7 @@ define([
           .on("click", function () {
             // only remove filters and and reset text, no re-search needed
             that.presenter.removeFilters();
+            that.presenter.performSearchNoText();
             selection.select("#searchTooltipId").text(noFilterTxt);
             selection.select("#clearSearchFilterBtn").remove();
           });
