@@ -20,6 +20,8 @@ function report_success($response, $disable_cache)
 	if (!$disable_cache) {
 		file_put_contents("locCache.json", $json_res);
 	}
+
+    header('Content-type: application/json');
 	echo $json_res;
 }
 function report_error_and_die($msg)
@@ -33,6 +35,7 @@ function report_error_and_die($msg)
 	} else {
 		// TODO - use header() function
 	}
+    header('Content-type: application/json');    
 	echo json_encode($result);
 	exit(1);
 }
@@ -175,6 +178,7 @@ if (array_key_exists('noLodCache', $_GET)) {
 
 if (!$disable_cache && file_exists("locCache.json") && !isset($_GET["uid"]) && !needsUpdate($dataset)) {
 	$cached_res = file_get_contents("locCache.json");
+    header('Content-type: application/json');
 	echo $cached_res;
 } else {
 	// Add a uid to get the values for a specific initiative (currently used for activities and org structure)
