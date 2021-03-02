@@ -185,23 +185,26 @@ if (!$disable_cache && file_exists("locCache.json") && !isset($_GET["uid"]) && !
 	$response = request($requestURL);
 	$res = json_decode($response, true);
 
-	// The keys correspond to two things:
-	//   1. The names of the variables used in the SPARQL query (see Initiative::create_sparql_files in generate-triples.rb)
+	// The keys of each object in the list $res["results"]["bindings"]
+    // correspond to two things:
+    //
+	//   1. The names of the variables used in the SPARQL query
+    //      (see Initiative::create_sparql_files in generate-triples.rb)
 	//   2. The names used in the JSON that is returned to the map-app
-	$keys = array("name", "uri", "within", "lat", "lng", "www", "regorg", "sameas", "desc", "street", "locality", "region", "qualifier", "baseMembershipType", "postcode", "country", "twitter", "facebook", "primaryActivity", "activity", "orgStructure", "tel", "email", "manLng", "manLat");
-	// $keys = array("name", "uri", "lat", "lng", "country");
-
-	$result = array();
+    //
+    // As well as what comes back from the SPARQL query, we manually
+    // add the name of the dataset in the key "dataset" (corresponding
+    // to the `dataset` query parameter supplied to this script, also
+    // used to infer the sub-directory which contained the details of
+    // the query).  Note that this will therefore overwrite any SPARQL
+    // query binding with the same name.
+    
+	$result = [];
 	foreach ($res["results"]["bindings"] as $item) {
-		$obj = array();
-		foreach ($keys as $key) {
-			// Some keys are optional (e.g. www and regorg). Check a key is defined before using it:
-			if (array_key_exists($key, $item)) {
-				$obj[$key] = $item[$key]["value"];
-			}
+		$obj = [];
+		foreach ($item as $name => $def) {
+            $obj[$name] = $def["value"];
 		}
-		// As well as what comes back from the SPARQL query, we manually add the name of the dataset
-		// (i.e. the sub-directory of this script which contained the details of the query)): 
 		$obj["dataset"] = $dataset;
 		array_push($result, $obj);
 	}
