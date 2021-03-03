@@ -85,13 +85,7 @@ define([
 
   proto.changeFilters = (filterCategoryName,filterValue,filterValueText) => {
     //get category of filter as used in intiatives
-    const termCategories = {
-      "Country": "country",
-      "Economic Activities":  "primaryActivity",
-      "Region": "region",
-      "Structure Type": "regorg",
-      "Typology": "baseMembershipType"
-    }
+    const termCategories = sseInitiative.getTermCategories();
 
     const filterCategory = termCategories[filterCategoryName];
 
