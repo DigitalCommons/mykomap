@@ -652,26 +652,37 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   function getOldStyleVerboseValuesForFields(){
+
     let oldStyleValues = {
-      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica"].EN.terms),
-      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:structure-ica"].EN.terms),
-      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-member-type"].EN.terms)
+      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica/"].EN.terms),
+      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:organisational-structure/"].EN.terms),
+      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-membership-type/"].EN.terms)
     }
 
     return oldStyleValues;
+  }
+
+  const getTermCategories = () => {
+
+    //what I want to do is change this to be id: variable, so replace what are
+    //currently labels, with ids. then I will need to change how getTerms and the rest
+    //work. And then Nick can add an id:variable lookup table in the config, and we 
+    //can all be happy
+
+    return {
+      "Countries": "country",
+      "Activities ICA":  "primaryActivity",
+      "Regions": "region",
+      "Legal Form Modified": "regorg",
+      "Base Membership Type": "baseMembershipType"
+    };
   }
 
   //construct the object of terms for advanced search
   function getTerms(){
 
     //find a way to generate this from the data
-    const termCategories = {
-      "Country": "country",
-      "Economic Activities":  "primaryActivity",
-      "Region": "region",
-      "Structure Type": "regorg",
-      "Typology": "baseMembershipType"
-    }
+    const termCategories = getTermCategories();
     
     const language = "EN";
 
@@ -682,7 +693,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     
     let usedTerms = {};
     for(const vocab in vocabs.vocabs){
-      usedTerms[vocabs["vocabs"][vocab][language]["title"]] = Object.assign({});
+      usedTerms[vocabs.vocabs[vocab][language]["title"]] = Object.assign({});
     }
 
     //loop through the initiatives and add used term labels to the 
@@ -697,7 +708,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         if(!usedTerms[categoryTitle][termIdentifier] && termIdentifier){
 
           //country specific logic, to be removed when we have proper IDs and labels
-          if(categoryTitle == "Country"){
+          if(categoryTitle == "Countries"){
             usedTerms[categoryTitle][termIdentifier] = 
               termIdentifier;
           }
@@ -715,13 +726,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function getPossibleFilterValues(filteredInitiatives){
     let possibleFilterValues = [];
 
-    const termCategories = {
-      "Country": "country",
-      "Economic Activities":  "primaryActivity",
-      "Region": "region",
-      "Structure Type": "regorg",
-      "Typology": "baseMembershipType"
-    }
+    const termCategories = getTermCategories();
 
     filteredInitiatives.forEach(initiative => {
       for(const categoryLabel in termCategories){
@@ -750,6 +755,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
     getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
+    getTermCategories: getTermCategories,
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues
   };

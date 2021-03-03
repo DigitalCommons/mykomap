@@ -396,11 +396,16 @@ define([
       return;
     }
 
+    /*
+    //this was causing a bug and doesn't seem to do anything useful
+
     //if the results match the previous results don't do anything
     if (data.initiatives == lastRequest)
       return;
 
     lastRequest = data.initiatives; //cache the last request
+    */
+
 
     //get the ids from the passed data
     const initiativeIds = data.initiatives.map(i => i.uniqueId);

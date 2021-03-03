@@ -258,6 +258,7 @@ define([
     const currentFilters = map.getFilters();
     const item = presenter.currentItem();
 
+    //function used in the dropdown to change the filter
     const changeFilter = () => {
       //create the filter from the event of selecting the option
       const filterCategoryName = d3.event.target.id.split("-")[0];
@@ -300,7 +301,10 @@ define([
           .attr("value","any")
           .attr("class","advanced-option")
 
-      for(const value in values[field]){
+      const valueArray = Object.keys(values[field]);
+      valueArray.sort(); //sort alphabetically
+
+      valueArray.forEach(value=>{
         const option = dropDown
           .append("option")
           .text(values[field][value])
@@ -317,7 +321,7 @@ define([
               option.attr("disabled",true);
             }
         }
-      }
+      })
     }
   }
 
@@ -387,6 +391,7 @@ define([
           .on("click", function () {
             // only remove filters and and reset text, no re-search needed
             that.presenter.removeFilters();
+            that.presenter.performSearchNoText();
             selection.select("#searchTooltipId").text(noFilterTxt);
             selection.select("#clearSearchFilterBtn").remove();
           });

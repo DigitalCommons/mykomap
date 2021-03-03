@@ -209,8 +209,8 @@ define([
       topic: "Map.addFilter",
       data: {
         initiatives: initiatives,
-        filterName: (directoryField + selectionKey),
-        verboseName: title
+        filterName: title,
+        verboseName: (directoryField + ": " + selectionKey)
       }
     });
 
