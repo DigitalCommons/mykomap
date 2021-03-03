@@ -663,6 +663,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   const getTermCategories = () => {
+
+    //what I want to do is change this to be id: variable, so replace what are
+    //currently labels, with ids. then I will need to change how getTerms and the rest
+    //work. And then Nick can add an id:variable lookup table in the config, and we 
+    //can all be happy
+
     return {
       "Countries": "country",
       "Activities ICA":  "primaryActivity",
