@@ -249,9 +249,12 @@ function main() {
         "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities-ica/" => "aci",
         "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities-modified/" => "acm",
         "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/base-membership-type/" => "bmt",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/ISO-3166-1/" => "coun",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/region-ica/" => "reg",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/super-region-ica/" => "sreg",
+        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/countries/" => "coun",
+        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/regions/" => "reg",
+        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/super-regions/" => "sreg",
+#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/ISO-3166-1/" => "coun",
+#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/region-ica/" => "reg",
+#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/super-region-ica/" => "sreg",
     ];
 
     // allow override in tests
