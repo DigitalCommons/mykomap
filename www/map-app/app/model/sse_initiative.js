@@ -702,7 +702,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         if(!usedTerms[categoryTitle][termIdentifier] && termIdentifier){
 
           //country specific logic, to be removed when we have proper IDs and labels
-          if(categoryTitle == "Country"){
+          if(categoryTitle == "Countries"){
             usedTerms[categoryTitle][termIdentifier] = 
               termIdentifier;
           }
