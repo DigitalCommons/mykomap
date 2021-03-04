@@ -662,62 +662,60 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return oldStyleValues;
   }
 
-  const getTermCategories = () => {
-
-    //what I want to do is change this to be id: variable, so replace what are
-    //currently labels, with ids. then I will need to change how getTerms and the rest
-    //work. And then Nick can add an id:variable lookup table in the config, and we 
-    //can all be happy
-
-    return {
-      "Countries": "country",
-      "Activities ICA":  "primaryActivity",
-      "Regions": "region",
-      "Legal Form Modified": "regorg",
-      "Base Membership Type": "baseMembershipType"
+  const getVocabIDsAndInitiativeVariables = () => {
+    const vocabIDsAndInitiativeVariables = {
+      "essglobal:countries/": "country",
+      "essglobal:activities-ica/": "primaryActivity",
+      "essglobal:regions/": "region",
+      "essglobal:super-regions/":"superRegion",
+      "essglobal:organisational-structure/": "regorg",
+      "essglobal:base-membership-type/": "baseMembershipType"
     };
+
+    return vocabIDsAndInitiativeVariables;
+  }
+
+  const getVocabTitlesAndVocabIDs = () => {
+    const language = "EN";
+
+    const vocabTitlesAndVocabIDs = {}
+
+    for(const vocabID in vocabs.vocabs){
+      vocabTitlesAndVocabIDs[vocabs.vocabs[vocabID][language].title] = vocabID;
+    }
+
+    return vocabTitlesAndVocabIDs;
   }
 
   //construct the object of terms for advanced search
   function getTerms(){
+    const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
-    //find a way to generate this from the data
-    const termCategories = getTermCategories();
-    
     const language = "EN";
 
-    let allTerms = {};
-    for(const vocab in vocabs.vocabs){
-      allTerms[vocabs.vocabs[vocab][language].title] = stripTerms(vocabs.vocabs[vocab][language].terms);
-    }
-    
     let usedTerms = {};
-    for(const vocab in vocabs.vocabs){
-      usedTerms[vocabs.vocabs[vocab][language]["title"]] = Object.assign({});
+
+    for(const vocabID in vocabIDsAndInitiativeVariables){
+      const vocabTitle = vocabs.vocabs[vocabID][language].title;
+      usedTerms[vocabTitle] = {};
+
+      console.log(vocabs)
     }
 
-    //loop through the initiatives and add used term labels to the 
-    //object of identifiers and labels
-    
-    for(const initiativeUid in initiativesByUid){
-      let initiative = initiativesByUid[initiativeUid];
+    for(const initiativeUid in initiativesByUid ) {
+      const initiative = initiativesByUid[initiativeUid];
 
-      for(const categoryTitle in termCategories){
-        let termIdentifier = initiative[termCategories[categoryTitle]];
-     
-        if(!usedTerms[categoryTitle][termIdentifier] && termIdentifier){
+	    for(const vocabID in vocabIDsAndInitiativeVariables){
+		    const vocabTitle = vocabs.vocabs[vocabID][language].title;
+        const prefix = vocabs.prefixes["https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/" + vocabID.split(":")[1]] //if the vocabId was the full URI, this wouldn't be an issue, and I'm not sure it would cause any other problems.
+		    const termID = initiative[vocabIDsAndInitiativeVariables[vocabID]];
 
-          //country specific logic, to be removed when we have proper IDs and labels
-          if(categoryTitle == "Countries"){
-            usedTerms[categoryTitle][termIdentifier] = 
-              termIdentifier;
-          }
-          else
-            usedTerms[categoryTitle][termIdentifier] = 
-              allTerms[categoryTitle][termIdentifier];
-        }
+		    if(!usedTerms[vocabTitle][termID] && termID)
+			    usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[prefix + ":" + termID];
       }
-    }
+    } 
+
+    console.log(usedTerms)
 
     return usedTerms;
   }
@@ -726,11 +724,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function getPossibleFilterValues(filteredInitiatives){
     let possibleFilterValues = [];
 
-    const termCategories = getTermCategories();
+    const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
     filteredInitiatives.forEach(initiative => {
-      for(const categoryLabel in termCategories){
-        let termIdentifier = initiative[termCategories[categoryLabel]];
+      for(const vocabID in vocabIDsAndInitiativeVariables){
+        let termIdentifier = initiative[vocabIDsAndInitiativeVariables[vocabID]];
 
         if(!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
@@ -755,7 +753,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
     getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
-    getTermCategories: getTermCategories,
+    getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
+    getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues
   };
