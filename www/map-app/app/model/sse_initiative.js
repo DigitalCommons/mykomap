@@ -663,14 +663,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
-    const vocabIDsAndInitiativeVariables = {
-      "essglobal:countries/": "country",
-      "essglobal:activities-ica/": "primaryActivity",
-      "essglobal:regions/": "region",
-      "essglobal:super-regions/":"superRegion",
-      "essglobal:organisational-structure/": "regorg",
-      "essglobal:base-membership-type/": "baseMembershipType"
-    };
+    let vocabIDsAndInitiativeVariables = {};
+
+    //generated from filterableFields in the config
+    filterableFields.forEach(filterableField => {
+      vocabIDsAndInitiativeVariables[filterableField.vocabID] = filterableField.field;
+    })
 
     return vocabIDsAndInitiativeVariables;
   }
@@ -698,8 +696,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     for(const vocabID in vocabIDsAndInitiativeVariables){
       const vocabTitle = vocabs.vocabs[vocabID][language].title;
       usedTerms[vocabTitle] = {};
-
-      console.log(vocabs)
     }
 
     for(const initiativeUid in initiativesByUid ) {
@@ -713,9 +709,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 		    if(!usedTerms[vocabTitle][termID] && termID)
 			    usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[prefix + ":" + termID];
       }
-    } 
-
-    console.log(usedTerms)
+    }
 
     return usedTerms;
   }
