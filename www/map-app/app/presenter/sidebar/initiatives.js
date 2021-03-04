@@ -85,9 +85,11 @@ define([
 
   proto.changeFilters = (filterCategoryName,filterValue,filterValueText) => {
     //get category of filter as used in intiatives
-    const termCategories = sseInitiative.getTermCategories();
+    const vocabTitlesAndVocabIDs = sseInitiative.getVocabTitlesAndVocabIDs();
+    const vocabIDsAndInitiativeVariables = sseInitiative.getVocabIDsAndInitiativeVariables();
 
-    const filterCategory = termCategories[filterCategoryName];
+    const filterCategory =
+      vocabIDsAndInitiativeVariables[vocabTitlesAndVocabIDs[filterCategoryName]];
 
     //remove old filter 
     const currentFilters = map.getFiltersFull();
