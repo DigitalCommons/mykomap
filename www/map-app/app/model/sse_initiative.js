@@ -134,43 +134,50 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //TODO: decide if then you index the secondary activities
     }
 
+    // Initialiser which uses the appropriate parameter name
+    const fromParam = (def) => e[def.paramName];
+    // Initialiser which uses the appropriate code number
+    const fromCode = (def) => codes[def.paramName];
+    // Initialiser which returns an empty array
+    const asList = (def) => [];
+    
     const classSchema2 = [
-      { propertyName: 'activity', value: codes.activity, writable: true },
-      { propertyName: 'baseMembershipType', value: codes.baseMembershipType },
-      { propertyName: 'country', value: e.country ? e.country : undefined },
-      { propertyName: 'dataset', value: e.dataset },
-      { propertyName: 'desc', value: e.desc },
-      { propertyName: 'email', value: e.email },
-      { propertyName: 'facebook', value: e.facebook },
-      { propertyName: 'lat', value: e.lat, writable: true },
-      { propertyName: 'lng', value: e.lng, writable: true },
-      { propertyName: 'locality', value: e.locality },
-      { propertyName: 'manLat', value: e.manLat, writable: true },
-      { propertyName: 'manLng', value: e.manLng, writable: true },
-      { propertyName: 'name', value: e.name },
-      { propertyName: 'nongeoLat', value: config.getDefaultLatLng()[0] },
-      { propertyName: 'nongeoLng', value: config.getDefaultLatLng()[1] },
-      { propertyName: 'orgStructure', value: [], writable: true },
-      { propertyName: 'otherActivities', value: [], writable: true },
-      { propertyName: 'postcode', value: e.postcode },
-      { propertyName: 'primaryActivity', value: codes.primaryActivity },
-      { propertyName: 'qualifier', value: codes.qualifier },
-      { propertyName: 'qualifiers', value: [], writable: true },
-      { propertyName: 'region', value: e.region },
-      { propertyName: 'regorg', value: codes.regorg },
-      { propertyName: 'searchstr', value: genSearchValues(config.getSearchedFields(), e), writable: true },
-      { propertyName: 'street', value: e.street },
-      { propertyName: 'tel', value: e.tel },
-      { propertyName: 'twitter', value: e.twitter },
-      { propertyName: 'uniqueId', value: e.uri },
-      { propertyName: 'uri', value: e.uri },
-      { propertyName: 'within', value: e.within },
-      { propertyName: 'www', value: e.www },
+      { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
+      { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
+      { propertyName: 'country', paramName: 'country', init: fromParam },
+      { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
+      { propertyName: 'desc', paramName: 'desc', init: fromParam },
+      { propertyName: 'email', paramName: 'email', init: fromParam },
+      { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
+      { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
+      { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+      { propertyName: 'locality', paramName: 'locality', init: fromParam },
+      { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
+      { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
+      { propertyName: 'name', paramName: 'name', init: fromParam },
+      { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
+      { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
+      { propertyName: 'orgStructure', init: asList, writable: true },
+      { propertyName: 'otherActivities', init: asList, writable: true },
+      { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+      { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
+      { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode },
+      { propertyName: 'qualifiers', init: asList, writable: true },
+      { propertyName: 'region', paramName: 'region', init: fromParam },
+      { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
+      { propertyName: 'searchstr', init: def => genSearchValues(config.getSearchedFields(), e), writable: true },
+      { propertyName: 'street', paramName: 'street', init: fromParam },
+      { propertyName: 'tel', paramName: 'tel', init: fromParam },
+      { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
+      { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
+      { propertyName: 'uri', paramName: 'uri', init: fromParam },
+      { propertyName: 'within', paramName: 'within', init: fromParam },
+      { propertyName: 'www', paramName: 'www', init: fromParam },
     ];
 
     classSchema2.forEach(p => {
       Object.defineProperty(this, p.propertyName, {
-        value: p.value,
+        value: p.init(p),
         enumerable: true,
         writable: !!p.writable,
       });
