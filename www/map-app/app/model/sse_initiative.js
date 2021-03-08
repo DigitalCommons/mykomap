@@ -2,6 +2,113 @@
 define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
+  // Initialiser which uses the appropriate parameter name
+  const fromParam = (def, params) => params[def.paramName];
+
+  // Initialiser which uses the appropriate code
+  const fromCode = (def, params) => {
+    const code = params[def.paramName];
+    if (code)
+      return getSkosCode(code);
+    return undefined;
+  };
+
+  // Initialiser which returns an empty array
+  const asList = (def, params) => [];
+
+  // Initialiser for the search string
+  const asSearchStr = (def, params) => {
+    const srch = config.getSearchedFields();
+    let searchedFields = [...srch]
+    // Not all initiatives have activities
+    let val = "";
+
+    const oldStyleValues = getOldStyleVerboseValuesForFields();
+
+    //handle special fields
+    [
+      { fieldNames: ['primaryActivity'],
+        paramName: 'primaryActivity',
+        oldStyleKey: 'Activities' }, 
+      { fieldNames: ['qualifier', 'qualifiers'],
+        paramName: 'qualifier',
+        oldStyleKey: 'Activities' }, 
+      { fieldNames: ['activity', 'otherActivities'],
+        paramName: 'activity',
+        oldStyleKey: 'Activities' }, 
+      { fieldNames: ['regorg', 'orgStructure'],
+        paramName: 'regorg',
+        oldStyleKey: 'Organisational Structure' }, 
+    ].forEach(p => {
+      const anyFieldFound = p.fieldNames.some(
+        fieldName => searchedFields.includes(fieldName)
+      );
+      if (!anyFieldFound) return;
+      
+      val += params[p.paramName]
+           ? oldStyleValues[p.oldStyleKey][getSkosCode(params[p.paramName])]
+           : "";
+      
+      p.fieldNames.forEach(fieldName => {
+        if (searchedFields.includes(fieldName))
+          searchedFields.splice(searchedFields.indexOf(fieldName), 1);
+      });
+    });
+
+    //handle other fields
+    val += searchedFields.map(x => params[x]).join("");
+
+    //format
+    val = val.toUpperCase();
+
+    return val;
+
+  }
+  
+  // Define the properties in an initiative and how to manage them.
+  //
+  // - propertyName: the name of the initiative instance property. Should be unique!
+  // - paramName: the name of the constructor paramter property. Not necessarily unique.
+  // - init: a function to initialise the property, called with this property's schema
+  //   definition and a parameters object.
+  // - writable: if true, the property can be assigned to. (Defaults to `false`)
+  // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+  //
+  const classSchema = [
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
+    { propertyName: 'country', paramName: 'country', init: fromParam },
+    { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
+    { propertyName: 'desc', paramName: 'desc', init: fromParam },
+    { propertyName: 'email', paramName: 'email', init: fromParam },
+    { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
+    { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
+    { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+    { propertyName: 'locality', paramName: 'locality', init: fromParam },
+    { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
+    { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
+    { propertyName: 'name', paramName: 'name', init: fromParam },
+    { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
+    { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
+    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
+    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
+    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'region', paramName: 'region', init: fromParam },
+    { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
+    { propertyName: 'searchstr', init: asSearchStr, writable: true },
+    { propertyName: 'street', paramName: 'street', init: fromParam },
+    { propertyName: 'tel', paramName: 'tel', init: fromParam },
+    { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
+    { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
+    { propertyName: 'uri', paramName: 'uri', init: fromParam },
+    { propertyName: 'within', paramName: 'within', init: fromParam },
+    { propertyName: 'www', paramName: 'www', init: fromParam },
+  ];
+
+  
   let loadedInitiatives = [];
   let initiativesToLoad = [];
   let initiativesByUid = {};
@@ -59,110 +166,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     const that = this;
 
     // Not all initiatives have activities
-
-    // Initialiser which uses the appropriate parameter name
-    const fromParam = (def, params) => params[def.paramName];
-    // Initialiser which uses the appropriate code
-    const fromCode = (def, params) => {
-      const code = params[def.paramName];
-      if (code)
-        return getSkosCode(code);
-      return undefined;
-    };
-    // Initialiser which returns an empty array
-    const asList = (def, params) => [];
-    // Initialiser for the search string
-    const asSearchStr = (def, params) => {
-      const srch = config.getSearchedFields();
-      let searchedFields = [...srch]
-      // Not all initiatives have activities
-      let val = "";
-
-      const oldStyleValues = getOldStyleVerboseValuesForFields();
-
-      //handle special fields
-      [
-        { fieldNames: ['primaryActivity'],
-          paramName: 'primaryActivity',
-          oldStyleKey: 'Activities' }, 
-        { fieldNames: ['qualifier', 'qualifiers'],
-          paramName: 'qualifier',
-          oldStyleKey: 'Activities' }, 
-        { fieldNames: ['activity', 'otherActivities'],
-          paramName: 'activity',
-          oldStyleKey: 'Activities' }, 
-        { fieldNames: ['regorg', 'orgStructure'],
-          paramName: 'regorg',
-          oldStyleKey: 'Organisational Structure' }, 
-      ].forEach(p => {
-        const anyFieldFound = p.fieldNames.some(
-          fieldName => searchedFields.includes(fieldName)
-        );
-        if (!anyFieldFound) return;
-        
-        val += params[p.paramName]
-             ? oldStyleValues[p.oldStyleKey][getSkosCode(params[p.paramName])]
-             : "";
-        
-        p.fieldNames.forEach(fieldName => {
-          if (searchedFields.includes(fieldName))
-            searchedFields.splice(searchedFields.indexOf(fieldName), 1);
-        });
-      });
-
-      //handle other fields
-      val += searchedFields.map(x => params[x]).join("");
-
-      //format
-      val = val.toUpperCase();
-
-      return val;
-
-    }
-    
-    // Define (some of) the properties we manage.
-    //
-    // - propertyName: the name of the initiative instance property. Should be unique!
-    // - paramName: the name of the constructor paramter property. Not necessarily unique.
-    // - init: a function to initialise the property, called with this property's schema
-    //   definition and a parameters object.
-    // - writable: if true, the property can be assigned to. (Defaults to `false`)
-    // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
-    //
-    const classSchema = [
-      { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
-      { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
-      { propertyName: 'country', paramName: 'country', init: fromParam },
-      { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
-      { propertyName: 'desc', paramName: 'desc', init: fromParam },
-      { propertyName: 'email', paramName: 'email', init: fromParam },
-      { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
-      { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
-      { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
-      { propertyName: 'locality', paramName: 'locality', init: fromParam },
-      { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
-      { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
-      { propertyName: 'name', paramName: 'name', init: fromParam },
-      { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
-      { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
-      { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
-      { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
-      { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-      { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
-      { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
-      { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
-      { propertyName: 'region', paramName: 'region', init: fromParam },
-      { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
-      { propertyName: 'searchstr', init: asSearchStr, writable: true },
-      { propertyName: 'street', paramName: 'street', init: fromParam },
-      { propertyName: 'tel', paramName: 'tel', init: fromParam },
-      { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
-      { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
-      { propertyName: 'uri', paramName: 'uri', init: fromParam },
-      { propertyName: 'within', paramName: 'within', init: fromParam },
-      { propertyName: 'www', paramName: 'www', init: fromParam },
-    ];
-
     
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
