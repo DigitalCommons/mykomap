@@ -60,26 +60,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     let oldStyleValues = getOldStyleVerboseValuesForFields();
 
+    function getCode(paramName) {
+      const code = e[paramName];
+      if (code)
+        return getSkosCode(code);
+      return undefined;
+    }
+    
     // Not all initiatives have activities
-    let primaryActivityCode = e.primaryActivity
-      ? getSkosCode(e.primaryActivity)
-      : undefined;
 
-    let qualifierCode = e.qualifier
-      ? getSkosCode(e.qualifier)
-      : undefined;
-
-    let activityCode = e.activity
-      ? getSkosCode(e.activity)
-      : undefined;
-
-    let regorgCode = e.regorg
-      ? getSkosCode(e.regorg)
-      : undefined;
-
-    let membType = e.baseMembershipType
-      ? getSkosCode(e.baseMembershipType)
-      : undefined;
+    // Compute the codes for certain fields
+    const codes = Object.fromEntries(
+      ['primaryActivity',
+       'qualifier',
+       'activity',
+       'regorg',
+       'baseMembershipType']
+        .map(p => [p, getCode(p)])
+    );
 
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
@@ -87,19 +85,19 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
 
       //if the orgstructure is not in the initiative then add it
-      if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
-        initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += oldStyleValues["Organisational Structure"][regorgCode].toUpperCase();
+      if (codes.regorg && !initiative.orgStructure.includes(codes.regorg)) {
+        initiative.orgStructure.push(codes.regorg);
+        initiative.searchstr += oldStyleValues["Organisational Structure"][codes.regorg].toUpperCase();
       }
       // if the activity is not in the initiative then add it
-      if (activityCode && !initiative.otherActivities.includes(activityCode)) {
-        initiative.otherActivities.push(activityCode);
-        initiative.searchstr += oldStyleValues["Activities"][activityCode].toUpperCase();
+      if (codes.activity && !initiative.otherActivities.includes(codes.activity)) {
+        initiative.otherActivities.push(codes.activity);
+        initiative.searchstr += oldStyleValues["Activities"][codes.activity].toUpperCase();
       }
       // if the qualifier is not in the initiative then add it
-      if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
-        initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += oldStyleValues["Activities"][qualifierCode].toUpperCase();
+      if (codes.qualifier && !initiative.qualifiers.includes(codes.qualifier)) {
+        initiative.qualifiers.push(codes.qualifier);
+        initiative.searchstr += oldStyleValues["Activities"][codes.qualifier].toUpperCase();
       }
 
       //update pop-up
@@ -120,7 +118,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       manLat: { value: e.manLat, enumerable: true, writable: true },
       manLng: { value: e.manLng, enumerable: true, writable: true },
       www: { value: e.www, enumerable: true },
-      regorg: { value: regorgCode, enumerable: true },
+      regorg: { value: codes.regorg, enumerable: true },
       street: { value: e.street, enumerable: true },
       locality: { value: e.locality, enumerable: true },
       postcode: { value: e.postcode, enumerable: true },
@@ -128,8 +126,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         value: e.country ? e.country : undefined,
         enumerable: true
       },
-      primaryActivity: { value: primaryActivityCode, enumerable: true },
-      activity: { value: activityCode, enumerable: true, writable: true },
+      primaryActivity: { value: codes.primaryActivity, enumerable: true },
+      activity: { value: codes.activity, enumerable: true, writable: true },
       otherActivities: { value: [], enumerable: true, writable: true },
       orgStructure: { value: [], enumerable: true, writable: true },
       tel: { value: e.tel, enumerable: true },
@@ -139,9 +137,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       twitter: { value: e.twitter, enumerable: true },
       facebook: { value: e.facebook, enumerable: true },
       region: { value: e.region, enumerable: true },
-      qualifier: { value: qualifierCode, enumerable: true },
+      qualifier: { value: codes.qualifier, enumerable: true },
       qualifiers: { value: [], enumerable: true, writable: true },
-      baseMembershipType: { value: membType, enumerable: true },
+      baseMembershipType: { value:codes.baseMembershipType, enumerable: true },
       searchstr: {
         value: genSearchValues(config.getSearchedFields(), e)
         , enumerable: true, writable: true
