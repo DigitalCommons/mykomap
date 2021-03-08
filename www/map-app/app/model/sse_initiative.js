@@ -60,16 +60,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     let oldStyleValues = getOldStyleVerboseValuesForFields();
 
-    function getCode(paramName) {
-      const code = e[paramName];
+    // Not all initiatives have activities
+
+    // Initialiser which uses the appropriate parameter name
+    const fromParam = (def) => e[def.paramName];
+    // Initialiser which uses the appropriate code
+    const fromCode = (def) => {
+      const code = e[def.paramName];
       if (code)
         return getSkosCode(code);
       return undefined;
-    }
+    };
+    // Initialiser which returns an empty array
+    const asList = (def) => [];
     
-    // Not all initiatives have activities
-
-
     // Define (some of) the properties we manage.
     //
     // - paramName: the name of the constructor paramter property
@@ -98,44 +102,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         paramName: 'baseMembershipType',
       },
     ];
-    
-    //if initiative exists already, just add properties
-    if (initiativesByUid[e.uri] != undefined) {
-      let initiative = initiativesByUid[e.uri];
-
-      // If properties with oldStyleKey attributes are not present,
-      // add them to the initiative. (Evidently this signifies,
-      // or requires, a list property)
-      classSchema
-        .forEach(p => {
-          if (!p.oldStyleKey)
-            return;
-
-          const code = getCode(p.paramName);
-          if (!code)
-            return;
-          
-          const list = initiative[p.propertyName];
-          if (list.includes(code))
-            return;
-          
-          list.push(code);
-          initiative.searchstr += oldStyleValues[p.oldStyleKey][code].toUpperCase();
-        });
-
-      //update pop-up
-      eventbus.publish({ topic: "Initiative.refresh", data: initiative });
-      return;
-      //TODO: decide if then you index the secondary activities
-    }
-
-    // Initialiser which uses the appropriate parameter name
-    const fromParam = (def) => e[def.paramName];
-    // Initialiser which uses the appropriate code number
-    const fromCode = (def) => getCode(def.paramName);
-    // Initialiser which returns an empty array
-    const asList = (def) => [];
-    
     const classSchema2 = [
       { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
       { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
@@ -169,6 +135,37 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { propertyName: 'within', paramName: 'within', init: fromParam },
       { propertyName: 'www', paramName: 'www', init: fromParam },
     ];
+
+    
+    //if initiative exists already, just add properties
+    if (initiativesByUid[e.uri] != undefined) {
+      let initiative = initiativesByUid[e.uri];
+
+      // If properties with oldStyleKey attributes are not present,
+      // add them to the initiative. (Evidently this signifies,
+      // or requires, a list property)
+      classSchema
+        .forEach(p => {
+          if (!p.oldStyleKey)
+            return;
+
+          const code = fromCode(p);
+          if (!code)
+            return;
+          
+          const list = initiative[p.propertyName];
+          if (list.includes(code))
+            return;
+          
+          list.push(code);
+          initiative.searchstr += oldStyleValues[p.oldStyleKey][code].toUpperCase();
+        });
+
+      //update pop-up
+      eventbus.publish({ topic: "Initiative.refresh", data: initiative });
+      return;
+      //TODO: decide if then you index the secondary activities
+    }
 
     classSchema2.forEach(p => {
       Object.defineProperty(this, p.propertyName, {
