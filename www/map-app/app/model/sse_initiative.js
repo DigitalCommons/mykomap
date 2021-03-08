@@ -58,8 +58,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function Initiative(e) {
     const that = this;
 
-    let oldStyleValues = getOldStyleVerboseValuesForFields();
-
     // Not all initiatives have activities
 
     // Initialiser which uses the appropriate parameter name
@@ -80,7 +78,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       // Not all initiatives have activities
       let val = "";
 
-      let oldStyleValues = getOldStyleVerboseValuesForFields();
+      const oldStyleValues = getOldStyleVerboseValuesForFields();
 
       //handle special fields
       [
@@ -169,7 +167,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
-
+      const oldStyleValues = getOldStyleVerboseValuesForFields();
+      
       // If properties with oldStyleKey attributes are not present,
       // add them to the initiative. (Evidently this signifies,
       // or requires, a list property)
