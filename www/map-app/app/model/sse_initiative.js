@@ -82,45 +82,35 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
       let oldStyleValues = getOldStyleVerboseValuesForFields();
 
-
       //handle special fields
-      if (searchedFields.includes("primaryActivity")) {
-        val += e.primaryActivity
-             ? oldStyleValues["Activities"][getSkosCode(e.primaryActivity)]
+      [
+        { fieldNames: ['primaryActivity'],
+          paramName: 'primaryActivity',
+          oldStyleKey: 'Activities' }, 
+        { fieldNames: ['qualifier', 'qualifiers'],
+          paramName: 'qualifier',
+          oldStyleKey: 'Activities' }, 
+        { fieldNames: ['activity', 'otherActivities'],
+          paramName: 'activity',
+          oldStyleKey: 'Activities' }, 
+        { fieldNames: ['regorg', 'orgStructure'],
+          paramName: 'regorg',
+          oldStyleKey: 'Organisational Structure' }, 
+      ].forEach(p => {
+        const anyFieldFound = p.fieldNames.some(
+          fieldName => searchedFields.includes(fieldName)
+        );
+        if (!anyFieldFound) return;
+        
+        val += e[p.paramName]
+             ? oldStyleValues[p.oldStyleKey][getSkosCode(e[p.paramName])]
              : "";
-        searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
-      }
-
-      if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
-        val += e.qualifier
-             ? oldStyleValues["Activities"][getSkosCode(e.qualifier)]
-             : "";
-        if (searchedFields.includes("qualifier"))
-          searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
-        if (searchedFields.includes("qualifiers"))
-          searchedFields.splice(searchedFields.indexOf("qualifiers"), 1);
-      }
-
-      if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
-        val += e.activity
-             ? oldStyleValues["Activities"][getSkosCode(e.activity)]
-             : "";
-        if (searchedFields.includes("activity"))
-          searchedFields.splice(searchedFields.indexOf("activity"), 1);
-        if (searchedFields.includes("otherActivities"))
-          searchedFields.splice(searchedFields.indexOf("otherActivities"), 1);
-      }
-
-      if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
-        val += e.regorg
-             ? oldStyleValues["Organisational Structure"][getSkosCode(e.regorg)]
-             : "";
-
-        if (searchedFields.includes("regorg"))
-          searchedFields.splice(searchedFields.indexOf("regorg"), 1);
-        if (searchedFields.includes("orgStructure"))
-          searchedFields.splice(searchedFields.indexOf("orgStructure"), 1);
-      }
+        
+        p.fieldNames.forEach(fieldName => {
+          if (searchedFields.includes(fieldName))
+            searchedFields.splice(searchedFields.indexOf(fieldName), 1);
+        });
+      });
 
       //handle other fields
       val += searchedFields.map(x => e[x]).join("");
