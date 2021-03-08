@@ -99,11 +99,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       },
     ];
     
-    // Compute the codes for certain fields
-    const codes = Object.fromEntries(
-      classSchema.map(p => [p.paramName, getCode(p.paramName)])
-    );
-
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
@@ -116,7 +111,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
           if (!p.oldStyleKey)
             return;
 
-          const code = codes[p.paramName];
+          const code = getCode(p.paramName);
           if (!code)
             return;
           
@@ -137,7 +132,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // Initialiser which uses the appropriate parameter name
     const fromParam = (def) => e[def.paramName];
     // Initialiser which uses the appropriate code number
-    const fromCode = (def) => codes[def.paramName];
+    const fromCode = (def) => getCode(def.paramName);
     // Initialiser which returns an empty array
     const asList = (def) => [];
     
