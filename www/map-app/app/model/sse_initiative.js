@@ -135,44 +135,37 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
 
     Object.defineProperties(this, {
-      name: { value: e.name, enumerable: true },
-      desc: { value: e.desc, enumerable: true },
+      activity: { value: codes.activity, enumerable: true, writable: true },
+      baseMembershipType: { value:codes.baseMembershipType, enumerable: true },
+      country: { value: e.country ? e.country : undefined, enumerable: true },
       dataset: { value: e.dataset, enumerable: true },
-      uri: { value: e.uri, enumerable: true },
-      uniqueId: { value: e.uri, enumerable: true },
-      within: { value: e.within, enumerable: true },
+      desc: { value: e.desc, enumerable: true },
+      email: { value: e.email, enumerable: true },
+      facebook: { value: e.facebook, enumerable: true },
       lat: { value: e.lat, enumerable: true, writable: true },
       lng: { value: e.lng, enumerable: true, writable: true },
+      locality: { value: e.locality, enumerable: true },
       manLat: { value: e.manLat, enumerable: true, writable: true },
       manLng: { value: e.manLng, enumerable: true, writable: true },
-      www: { value: e.www, enumerable: true },
-      regorg: { value: codes.regorg, enumerable: true },
-      street: { value: e.street, enumerable: true },
-      locality: { value: e.locality, enumerable: true },
-      postcode: { value: e.postcode, enumerable: true },
-      country: {
-        value: e.country ? e.country : undefined,
-        enumerable: true
-      },
-      primaryActivity: { value: codes.primaryActivity, enumerable: true },
-      activity: { value: codes.activity, enumerable: true, writable: true },
-      otherActivities: { value: [], enumerable: true, writable: true },
-      orgStructure: { value: [], enumerable: true, writable: true },
-      tel: { value: e.tel, enumerable: true },
-      email: { value: e.email, enumerable: true },
+      name: { value: e.name, enumerable: true },
       nongeoLat: { value: config.getDefaultLatLng()[0], enumerable: true },
       nongeoLng: { value: config.getDefaultLatLng()[1], enumerable: true },
-      twitter: { value: e.twitter, enumerable: true },
-      facebook: { value: e.facebook, enumerable: true },
-      region: { value: e.region, enumerable: true },
+      orgStructure: { value: [], enumerable: true, writable: true },
+      otherActivities: { value: [], enumerable: true, writable: true },
+      postcode: { value: e.postcode, enumerable: true },
+      primaryActivity: { value: codes.primaryActivity, enumerable: true },
       qualifier: { value: codes.qualifier, enumerable: true },
       qualifiers: { value: [], enumerable: true, writable: true },
-      baseMembershipType: { value:codes.baseMembershipType, enumerable: true },
-      searchstr: {
-        value: genSearchValues(config.getSearchedFields(), e)
-        , enumerable: true, writable: true
-      },
-
+      region: { value: e.region, enumerable: true },
+      regorg: { value: codes.regorg, enumerable: true },
+      searchstr: { value: genSearchValues(config.getSearchedFields(), e), enumerable: true, writable: true },
+      street: { value: e.street, enumerable: true },
+      tel: { value: e.tel, enumerable: true },
+      twitter: { value: e.twitter, enumerable: true },
+      uniqueId: { value: e.uri, enumerable: true },
+      uri: { value: e.uri, enumerable: true },
+      within: { value: e.within, enumerable: true },
+      www: { value: e.www, enumerable: true },
     });
 
     if (this.regorg) this.orgStructure.push(this.regorg);
