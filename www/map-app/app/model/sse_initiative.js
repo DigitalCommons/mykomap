@@ -76,33 +76,13 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     
     // Define (some of) the properties we manage.
     //
-    // - paramName: the name of the constructor paramter property
-    // - propertyName: the name of the initiative instance property
-    // - oldStyleValues: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+    // - propertyName: the name of the initiative instance property. Should be unique!
+    // - paramName: the name of the constructor paramter property. Not necessarily unique.
+    // - init: a function to initialise the property, called with this property's schema definition.
+    // - writable: if true, the property can be assigned to. (Defaults to `false`)
+    // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+    //
     const classSchema = [
-      {
-        paramName: 'primaryActivity',
-      },
-      {
-        paramName: 'qualifier',
-        propertyName: 'qualifiers',
-        oldStyleKey: 'Activities',
-      },
-      {
-        paramName: 'activity',
-        propertyName: 'otherActivities',
-        oldStyleKey: 'Activities',
-      },
-      {
-        paramName: 'regorg',
-        propertyName: 'orgStructure',
-        oldStyleKey: 'Organisational Structure',
-      },
-      {
-        paramName: 'baseMembershipType',
-      },
-    ];
-    const classSchema2 = [
       { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
       { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
       { propertyName: 'country', paramName: 'country', init: fromParam },
@@ -118,12 +98,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       { propertyName: 'name', paramName: 'name', init: fromParam },
       { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
       { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
-      { propertyName: 'orgStructure', init: asList, writable: true },
-      { propertyName: 'otherActivities', init: asList, writable: true },
+      { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
+      { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
       { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
       { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
-      { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode },
-      { propertyName: 'qualifiers', init: asList, writable: true },
+      { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
+      { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
       { propertyName: 'region', paramName: 'region', init: fromParam },
       { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
       { propertyName: 'searchstr', init: def => genSearchValues(config.getSearchedFields(), e), writable: true },
@@ -167,7 +147,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //TODO: decide if then you index the secondary activities
     }
 
-    classSchema2.forEach(p => {
+    classSchema.forEach(p => {
       Object.defineProperty(this, p.propertyName, {
         value: p.init(p),
         enumerable: true,
