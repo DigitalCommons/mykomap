@@ -61,7 +61,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     searchedFields.forEach(name => searchableValues.push(params[name]));
 
     // Join searchable values, squash case
-    return searchableValues.join("").toUpperCase();
+    return searchableValues.join(" ").toUpperCase();
   }
   
   // Define the properties in an initiative and how to manage them.
@@ -188,7 +188,10 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
             return;
           
           list.push(code);
-          initiative.searchstr += oldStyleValues[p.oldStyleKey][code].toUpperCase();
+          initiative.searchstr = [
+            initiative.searchstr,
+            oldStyleValues[p.oldStyleKey][code].toUpperCase(),
+          ].join(" ");
         });
 
       //update pop-up
