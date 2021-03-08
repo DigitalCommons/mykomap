@@ -69,36 +69,64 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     
     // Not all initiatives have activities
 
+
+    // Define (some of) the properties we manage.
+    //
+    // - paramName: the name of the constructor paramter property
+    // - propertyName: the name of the initiative instance property
+    // - oldStyleValues: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+    const classSchema = [
+      {
+        paramName: 'primaryActivity',
+      },
+      {
+        paramName: 'qualifier',
+        propertyName: 'qualifiers',
+        oldStyleKey: 'Activities',
+      },
+      {
+        paramName: 'activity',
+        propertyName: 'otherActivities',
+        oldStyleKey: 'Activities',
+      },
+      {
+        paramName: 'regorg',
+        propertyName: 'orgStructure',
+        oldStyleKey: 'Organisational Structure',
+      },
+      {
+        paramName: 'baseMembershipType',
+      },
+    ];
+    
     // Compute the codes for certain fields
     const codes = Object.fromEntries(
-      ['primaryActivity',
-       'qualifier',
-       'activity',
-       'regorg',
-       'baseMembershipType']
-        .map(p => [p, getCode(p)])
+      classSchema.map(p => [p.paramName, getCode(p.paramName)])
     );
 
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
 
+      // If properties with oldStyleKey attributes are not present,
+      // add them to the initiative. (Evidently this signifies,
+      // or requires, a list property)
+      classSchema
+        .forEach(p => {
+          if (!p.oldStyleKey)
+            return;
 
-      //if the orgstructure is not in the initiative then add it
-      if (codes.regorg && !initiative.orgStructure.includes(codes.regorg)) {
-        initiative.orgStructure.push(codes.regorg);
-        initiative.searchstr += oldStyleValues["Organisational Structure"][codes.regorg].toUpperCase();
-      }
-      // if the activity is not in the initiative then add it
-      if (codes.activity && !initiative.otherActivities.includes(codes.activity)) {
-        initiative.otherActivities.push(codes.activity);
-        initiative.searchstr += oldStyleValues["Activities"][codes.activity].toUpperCase();
-      }
-      // if the qualifier is not in the initiative then add it
-      if (codes.qualifier && !initiative.qualifiers.includes(codes.qualifier)) {
-        initiative.qualifiers.push(codes.qualifier);
-        initiative.searchstr += oldStyleValues["Activities"][codes.qualifier].toUpperCase();
-      }
+          const code = codes[p.paramName];
+          if (!code)
+            return;
+          
+          const list = initiative[p.propertyName];
+          if (list.includes(code))
+            return;
+          
+          list.push(code);
+          initiative.searchstr += oldStyleValues[p.oldStyleKey][code].toUpperCase();
+        });
 
       //update pop-up
       eventbus.publish({ topic: "Initiative.refresh", data: initiative });
