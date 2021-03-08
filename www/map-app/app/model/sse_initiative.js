@@ -63,18 +63,18 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     // Not all initiatives have activities
 
     // Initialiser which uses the appropriate parameter name
-    const fromParam = (def) => e[def.paramName];
+    const fromParam = (def, params) => params[def.paramName];
     // Initialiser which uses the appropriate code
-    const fromCode = (def) => {
-      const code = e[def.paramName];
+    const fromCode = (def, params) => {
+      const code = params[def.paramName];
       if (code)
         return getSkosCode(code);
       return undefined;
     };
     // Initialiser which returns an empty array
-    const asList = (def) => [];
+    const asList = (def, params) => [];
     // Initialiser for the search string
-    const asSearchStr = (def) => {
+    const asSearchStr = (def, params) => {
       const srch = config.getSearchedFields();
       let searchedFields = [...srch]
       // Not all initiatives have activities
@@ -102,8 +102,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         );
         if (!anyFieldFound) return;
         
-        val += e[p.paramName]
-             ? oldStyleValues[p.oldStyleKey][getSkosCode(e[p.paramName])]
+        val += params[p.paramName]
+             ? oldStyleValues[p.oldStyleKey][getSkosCode(params[p.paramName])]
              : "";
         
         p.fieldNames.forEach(fieldName => {
@@ -113,7 +113,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       });
 
       //handle other fields
-      val += searchedFields.map(x => e[x]).join("");
+      val += searchedFields.map(x => params[x]).join("");
 
       //format
       val = val.toUpperCase();
@@ -126,7 +126,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //
     // - propertyName: the name of the initiative instance property. Should be unique!
     // - paramName: the name of the constructor paramter property. Not necessarily unique.
-    // - init: a function to initialise the property, called with this property's schema definition.
+    // - init: a function to initialise the property, called with this property's schema
+    //   definition and a parameters object.
     // - writable: if true, the property can be assigned to. (Defaults to `false`)
     // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
     //
@@ -177,7 +178,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
           if (!p.oldStyleKey)
             return;
 
-          const code = fromCode(p);
+          const code = fromCode(p, e);
           if (!code)
             return;
           
@@ -197,7 +198,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     classSchema.forEach(p => {
       Object.defineProperty(this, p.propertyName, {
-        value: p.init(p),
+        value: p.init(p, e),
         enumerable: true,
         writable: !!p.writable,
       });
