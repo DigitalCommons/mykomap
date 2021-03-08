@@ -19,13 +19,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // Initialiser for the search string
   const asSearchStr = (def, params) => {
     const srch = config.getSearchedFields();
-    let searchedFields = [...srch]
-    // Not all initiatives have activities
-    let val = "";
-
+    const searchedFields = [...srch]; // Copy list, we will modify it
+    
+    const searchableValues = [];
     const oldStyleValues = getOldStyleVerboseValuesForFields();
 
-    //handle special fields
+    // Handle special fields
     [
       { fieldNames: ['primaryActivity'],
         paramName: 'primaryActivity',
@@ -44,25 +43,25 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         fieldName => searchedFields.includes(fieldName)
       );
       if (!anyFieldFound) return;
+
+      if (params[p.paramName]) {
+        const termsIDs = oldStyleValues[p.oldStyleKey];
+        const code = getSkosCode(params[p.paramName]);
+        searchableValues.push(termsIDs[code]);
+      }
       
-      val += params[p.paramName]
-           ? oldStyleValues[p.oldStyleKey][getSkosCode(params[p.paramName])]
-           : "";
-      
+      // Remove fieldNames from searchedFields
       p.fieldNames.forEach(fieldName => {
         if (searchedFields.includes(fieldName))
           searchedFields.splice(searchedFields.indexOf(fieldName), 1);
       });
     });
 
-    //handle other fields
-    val += searchedFields.map(x => params[x]).join("");
+    // Handle other fields
+    searchedFields.forEach(name => searchableValues.push(params[name]));
 
-    //format
-    val = val.toUpperCase();
-
-    return val;
-
+    // Join searchable values, squash case
+    return searchableValues.join("").toUpperCase();
   }
   
   // Define the properties in an initiative and how to manage them.
