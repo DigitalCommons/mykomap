@@ -566,6 +566,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log("loaded vocabs", response);
       
       vocabs = response;
+      
+      // Add an inverted look-up `abbrevs` mapping abbreviations to uris
+      vocabs.abbrevs = Object.keys(vocabs.prefixes).reduce((acc, key) => {
+        const val = vocabs.prefixes[key];
+        acc[val] = key;
+        return acc;
+      }, {});
+      
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
 
@@ -699,13 +707,21 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     for(const initiativeUid in initiativesByUid ) {
       const initiative = initiativesByUid[initiativeUid];
 
-	    for(const vocabID in vocabIDsAndInitiativeVariables){
-		    const vocabTitle = vocabs.vocabs[vocabID][language].title;
-        const prefix = vocabs.prefixes["https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/" + vocabID.split(":")[1]] //if the vocabId was the full URI, this wouldn't be an issue, and I'm not sure it would cause any other problems.
-		    const termID = initiative[vocabIDsAndInitiativeVariables[vocabID]];
-
-		    if(!usedTerms[vocabTitle][termID] && termID)
-			    usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[prefix + ":" + termID];
+      for(const vocabID in vocabIDsAndInitiativeVariables){
+        const vocabTitle = vocabs.vocabs[vocabID][language].title;
+        const [abbrev, postfix] = vocabID.split(":");
+        // Find the prefix needed to expand the vocabID
+        const prefix = vocabs.abbrevs[abbrev];
+        if (!prefix)
+          throw new Error(`No prefix defined for abbreviation '${abbrev}:' in vocab ID ${vocabID}`);
+        const propName = vocabIDsAndInitiativeVariables[vocabID];
+        const termID = initiative[propName];
+        const termAbbrev = vocabs.prefixes[prefix+postfix];
+        // abbreviate the URI if possible with the defined prefixes
+        const termURI = termAbbrev? termAbbrev+":"+termID : prefix + postfix + termID;
+        
+        if(!usedTerms[vocabTitle][termID] && termID)
+          usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[termURI];
       }
     }
 
