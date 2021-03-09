@@ -202,9 +202,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let initiative = initiativesByUid[e.uri];
       const oldStyleValues = getOldStyleVerboseValuesForFields();
       
-      // If properties with oldStyleKey attributes are not present,
+      // If properties with oldStyleKey attributes are present,
       // add them to the initiative. (Evidently this signifies,
-      // or requires, a list property)
+      // or requires, a list property). This is to handle
+      // cases where the SPARQL resultset contains multple
+      // rows for a multi-value field with multiple values.
       classSchema
         .forEach(p => {
           if (!p.oldStyleKey)
@@ -231,6 +233,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //TODO: decide if then you index the secondary activities
     }
 
+    // Define and initialise the instance properties.
     classSchema.forEach(p => {
       Object.defineProperty(this, p.propertyName, {
         value: p.init(p, e),
@@ -238,6 +241,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         writable: !!p.writable,
       });
     });
+
+    // Post-initialisation adjustments, typically requiring
+    // a birds-eye view of the instance.
 
     if (this.regorg) this.orgStructure.push(this.regorg);
     if (this.activity) this.otherActivities.push(this.activity);
