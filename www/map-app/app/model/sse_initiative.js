@@ -14,8 +14,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
   //
   const classSchema = [
-    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
-    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, oldStyleKey: 'Activities', writable: true },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, oldStyleKey: 'Base Membership Type' },
     { propertyName: 'country', paramName: 'country', init: fromParam },
     { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
     { propertyName: 'desc', paramName: 'desc', init: fromParam },
@@ -32,11 +32,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
     { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
-    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, oldStyleKey: 'Activities' },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, oldStyleKey: 'Activities' }, // note dupe paramName following
     { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
     { propertyName: 'region', paramName: 'region', init: fromParam },
-    { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
+    { propertyName: 'regorg', paramName: 'regorg', init: fromCode, oldStyleKey: 'Organisational Structure' },
     { propertyName: 'searchstr', init: asSearchStr, writable: true },
     { propertyName: 'street', paramName: 'street', init: fromParam },
     { propertyName: 'tel', paramName: 'tel', init: fromParam },
@@ -101,6 +101,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       
       const value = def.init === fromCode ? // Does this field contains an ID?
                     lookupIdentifier() :
+                    def.init === asList ? // Is it a list of IDs (currently IDs implied by list)
+                    lookupIdentifier() : // Singular - just need to do this param
                     lookupValue();
 
       if (value !== undefined)
