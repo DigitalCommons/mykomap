@@ -202,16 +202,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       let initiative = initiativesByUid[e.uri];
       const oldStyleValues = getOldStyleVerboseValuesForFields();
       
-      // If properties with oldStyleKey attributes are present,
-      // add them to the initiative. (Evidently this signifies,
-      // or requires, a list property). This is to handle
-      // cases where the SPARQL resultset contains multple
-      // rows for a multi-value field with multiple values.
+      // If properties with are multi-valued, add new values to the
+      // initiative.  This is to handle cases where the SPARQL
+      // resultset contains multple rows for a multi-value field with
+      // multiple values.
       classSchema
         .forEach(p => {
-          if (!p.oldStyleKey)
+          if (p.init !== asList)
             return;
 
+          // Assume these are always ID fields (enums) for now,
+          // although this is not necessarily always true, just
+          // because this has historically been assumed. We can
+          // generalise this later.
+          
           const code = fromCode(p, e);
           if (!code)
             return;
