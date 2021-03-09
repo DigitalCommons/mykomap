@@ -147,7 +147,6 @@ define([
     }
      
     const registeredValues = this.presenter.getRegisteredValues();
-    const allRegisteredValues = this.presenter.getAllRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
