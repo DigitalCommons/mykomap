@@ -3,21 +3,25 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
   // Initialiser which uses the appropriate parameter name
-  const fromParam = (def, params) => params[def.paramName];
-
+  function fromParam(def, params) {
+    return params[def.paramName];
+  }
+  
   // Initialiser which uses the appropriate code
-  const fromCode = (def, params) => {
+  function fromCode(def, params) {
     const code = params[def.paramName];
     if (code)
       return getSkosCode(code);
     return undefined;
-  };
+  }
 
   // Initialiser which returns an empty array
-  const asList = (def, params) => [];
+  function asList(def, params) {
+    return [];
+  }
 
   // Initialiser for the search string
-  const asSearchStr = (def, params) => {
+  function asSearchStr(def, params) {
     const srch = config.getSearchedFields();
     const searchedFields = [...srch]; // Copy list, we will modify it
     
