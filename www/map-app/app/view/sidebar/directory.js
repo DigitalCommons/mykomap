@@ -10,9 +10,16 @@ define([
   // Our local Sidebar object:
   function Sidebar() { }
 
+  function uriToTag(uri) {
+    return uri.toLowerCase().replace(/ /g, "-");
+  }
+  function labelToTag(uri) {
+    return uri.toLowerCase().replace(/ /g, "-");
+  }
+  
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
-
+  
   // And adds some overrides and new properties of it's own:
   proto.title = "Directory";
   proto.hasHistoryNavigation = false;
@@ -109,9 +116,9 @@ define([
           label = 'All '+field;
       }
       else {
-        tag = key.toLowerCase().replace(/ /g, "-")
+        tag = uriToTag(key);
         if (valuesByName)
-          label = valuesByName[key.toUpperCase()];
+          label = valuesByName[key];
       }
 
       list
@@ -191,7 +198,7 @@ define([
       ""
     );
     initiativeListSidebar.classList.add(
-      "sea-field-" + selectionLabel.toLowerCase().replace(/ /g, "-")
+      "sea-field-" + labelToTag(selectionLabel)
     );
 
     // Add the heading (we need to determine the title as this may be stored in the data or
