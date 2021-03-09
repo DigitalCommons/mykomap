@@ -11,11 +11,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // - init: a function to initialise the property, called with this property's schema
   //   definition and a parameters object.
   // - writable: if true, the property can be assigned to. (Defaults to `false`)
-  // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+  // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema = [
-    { propertyName: 'activity', paramName: 'activity', init: fromCode, oldStyleKey: 'Activities', writable: true },
-    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, oldStyleKey: 'Base Membership Type' },
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'essglobal:activities-ica/' },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'essglobal:base-membership-type/' },
     { propertyName: 'country', paramName: 'country', init: fromParam },
     { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
     { propertyName: 'desc', paramName: 'desc', init: fromParam },
@@ -29,14 +29,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     { propertyName: 'name', paramName: 'name', init: fromParam },
     { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
     { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
-    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
-    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'essglobal:organisational-structure/' },
+    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'essglobal:activities-ica/' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, oldStyleKey: 'Activities' },
-    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, oldStyleKey: 'Activities' }, // note dupe paramName following
-    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'essglobal:activities-ica/' },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'essglobal:activities-ica/' }, // note dupe paramName following
+    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'essglobal:activities-ica/' },
     { propertyName: 'region', paramName: 'region', init: fromParam },
-    { propertyName: 'regorg', paramName: 'regorg', init: fromCode, oldStyleKey: 'Organisational Structure' },
+    { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'essglobal:organisational-structure/' },
     { propertyName: 'searchstr', init: asSearchStr, writable: true },
     { propertyName: 'street', paramName: 'street', init: fromParam },
     { propertyName: 'tel', paramName: 'tel', init: fromParam },
@@ -54,9 +54,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   
   // Initialiser which uses the appropriate code
   function fromCode(def, params) {
-    const code = params[def.paramName];
-    if (code)
-      return getSkosCode(code);
+    const uri = params[def.paramName];
+    if (uri)
+      return abbrevUri(uri);
     return undefined;
   }
 
@@ -89,7 +89,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     const searchedFields = config.getSearchedFields();
     
     const searchableValues = [];
-    const oldStyleValues = getOldStyleVerboseValuesForFields();
 
     searchedFields.forEach(fieldName => {
       // Get the right schema for this field (AKA property)
@@ -112,13 +111,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       function lookupIdentifier() {
         // Add any parameter values named
         const id = params[def.paramName];
-        if (!def.oldStyleKey) {
-          console.warn(`missing oldStyleKey for property '${def.propertyName}'`);
+        if (!def.vocabUri) {
+          console.warn(`missing vocabUri for property '${def.propertyName}'`);
           return undefined;
         }
-        const values = oldStyleValues[def.oldStyleKey];
-        const code = getSkosCode(id);
-        const value = values[code];
+        const value = getVocabTerm(def.vocabUri, id);
         if (value === undefined) {
           console.warn(`no value defined for ID '${id}' in property '${def.propertyName}'`);
           return undefined;
@@ -202,7 +199,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
-      const oldStyleValues = getOldStyleVerboseValuesForFields();
       
       // If properties with are multi-valued, add new values to the
       // initiative.  This is to handle cases where the SPARQL
@@ -227,9 +223,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
             return;
           
           list.push(code);
+          const uri = e[p.paramName];
+          const value = getVocabTerm(p.vocabUri, uri);
+          if (value === undefined) {
+            console.warn(`can't add term '${uri}' to search, `+
+                         `it is not part of the vocab '${p.vocabUri}'`);
+            return;
+          }
+          
           initiative.searchstr = [
             initiative.searchstr,
-            oldStyleValues[p.oldStyleKey][code].toUpperCase(),
+            value.toUpperCase() 
           ].join(" ");
         });
 
@@ -492,11 +496,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   }
 
-  function getSkosCode(originalValue) {
-    let split = originalValue.split("/");
-    return split[split.length - 1];
-  }
-
   function errorMessage(response) {
     // Extract error message from parsed JSON response.
     // Returns error string, or null if no error.
@@ -689,21 +688,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return vocabs;
   }
 
-  const stripTerms = terms => {
-    let newTerms = {};
-    for(const termId in terms ){
-      newTerms[termId.split(":")[1]] = terms[termId];
-    }
-
-    return newTerms;
-  }
-
   function getOldStyleVerboseValuesForFields(){
 
     let oldStyleValues = {
-      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica/"].EN.terms),
-      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:organisational-structure/"].EN.terms),
-      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-membership-type/"].EN.terms)
+      "Activities": vocabs.vocabs["essglobal:activities-ica/"].EN.terms,
+      "Organisational Structure": vocabs.vocabs["essglobal:organisational-structure/"].EN.terms,
+      "Base Membership Type": vocabs.vocabs["essglobal:base-membership-type/"].EN.terms
     }
 
     return oldStyleValues;
@@ -732,6 +722,50 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return vocabTitlesAndVocabIDs;
   }
 
+  // Expands a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all expansions applied.
+  function expandUri(uri) {
+    while (true) {
+      const delimIx = uri.indexOf(':');
+      if (delimIx < 0)
+        return uri; // Shouldn't normally happen... expanded URIs have `http(s):`
+      
+      const abbrev = uri.substring(0, delimIx);
+      if (abbrev == 'http' || abbrev == 'https')
+        return uri; // No more expansion needed
+
+      if (abbrev in vocabs.abbrevs) // Expand this abbreviation
+        uri = vocabs.abbrevs[abbrev]+uri.substring(delimIx+1);
+    }
+  }
+
+  // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all abbreviations applied.
+  function abbrevUri(uri) {
+    uri = expandUri(uri); // first expand it, if necessary
+
+    // Find a prefix match
+    const prefix = Object
+      .keys(vocabs.prefixes) // NOTE: assumes this object is sorted largest-key first
+      .find(p => uri.startsWith(p));
+
+    // Substitute the match with the abbreviation.
+    if (prefix)
+      return vocabs.prefixes[prefix]+':'+uri.substring(prefix.length);
+
+    return uri; // No abbreviation possible.
+  }
+
+  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  function getVocabTerm(vocabUri, termUri) {
+    const language = "EN";
+    termUri = abbrevUri(termUri);
+    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
+    return vocabs.vocabs[vocabUri][language].terms[termUri];
+  }
+
   //construct the object of terms for advanced search
   function getTerms(){
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
@@ -750,19 +784,14 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
       for(const vocabID in vocabIDsAndInitiativeVariables){
         const vocabTitle = vocabs.vocabs[vocabID][language].title;
-        const [abbrev, postfix] = vocabID.split(":");
-        // Find the prefix needed to expand the vocabID
-        const prefix = vocabs.abbrevs[abbrev];
-        if (!prefix)
-          throw new Error(`No prefix defined for abbreviation '${abbrev}:' in vocab ID ${vocabID}`);
         const propName = vocabIDsAndInitiativeVariables[vocabID];
-        const termID = initiative[propName];
-        const termAbbrev = vocabs.prefixes[prefix+postfix];
-        // abbreviate the URI if possible with the defined prefixes
-        const termURI = termAbbrev? termAbbrev+":"+termID : prefix + postfix + termID;
-        
-        if(!usedTerms[vocabTitle][termID] && termID)
-          usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[termURI];
+        const id = initiative[propName];
+        const propDef = classSchema.find(p => p.propertyName === propName);
+        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
+
+        // Currently still keeping the output data strucutre the same, so use id not term
+        if(!usedTerms[vocabTitle][id] && id)
+          usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][language].terms[id];
       }
     }
 

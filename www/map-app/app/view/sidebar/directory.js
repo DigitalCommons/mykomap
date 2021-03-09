@@ -11,7 +11,7 @@ define([
   function Sidebar() { }
 
   function uriToTag(uri) {
-    return uri.toLowerCase().replace(/ /g, "-");
+    return uri.toLowerCase().replace(/^.*[:\/]/, "");
   }
   function labelToTag(uri) {
     return uri.toLowerCase().replace(/ /g, "-");
