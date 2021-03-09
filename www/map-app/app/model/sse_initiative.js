@@ -507,15 +507,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return split[split.length - 1];
   }
 
-  function registerActivity(activity, initiative) {
-    activity = getSkosCode(activity);
-    if (registeredActivities[activity])
-      registeredActivities[activity].push(initiative);
-    else {
-      delete registeredActivities.loading;
-      registeredActivities[activity] = [initiative];
-    }
-  }
   function errorMessage(response) {
     // Extract error message from parsed JSON response.
     // Returns error string, or null if no error.
