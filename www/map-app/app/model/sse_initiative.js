@@ -2,6 +2,51 @@
 define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
+  // Define the properties in an initiative and how to manage them. Note, thanks to JS
+  // variable hoisting semantics, we can reference initialiser functions below, if they are
+  // normal functions.
+  //
+  // - propertyName: the name of the initiative instance property. Should be unique!
+  // - paramName: the name of the constructor paramter property. Not necessarily unique.
+  // - init: a function to initialise the property, called with this property's schema
+  //   definition and a parameters object.
+  // - writable: if true, the property can be assigned to. (Defaults to `false`)
+  // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
+  //
+  const classSchema = [
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
+    { propertyName: 'country', paramName: 'country', init: fromParam },
+    { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
+    { propertyName: 'desc', paramName: 'desc', init: fromParam },
+    { propertyName: 'email', paramName: 'email', init: fromParam },
+    { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
+    { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
+    { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+    { propertyName: 'locality', paramName: 'locality', init: fromParam },
+    { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
+    { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
+    { propertyName: 'name', paramName: 'name', init: fromParam },
+    { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
+    { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
+    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
+    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
+    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
+    { propertyName: 'region', paramName: 'region', init: fromParam },
+    { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
+    { propertyName: 'searchstr', init: asSearchStr, writable: true },
+    { propertyName: 'street', paramName: 'street', init: fromParam },
+    { propertyName: 'tel', paramName: 'tel', init: fromParam },
+    { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
+    { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
+    { propertyName: 'uri', paramName: 'uri', init: fromParam },
+    { propertyName: 'within', paramName: 'within', init: fromParam },
+    { propertyName: 'www', paramName: 'www', init: fromParam },
+  ];
+
   // Initialiser which uses the appropriate parameter name
   function fromParam(def, params) {
     return params[def.paramName];
@@ -68,49 +113,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return searchableValues.join(" ").toUpperCase();
   }
   
-  // Define the properties in an initiative and how to manage them.
-  //
-  // - propertyName: the name of the initiative instance property. Should be unique!
-  // - paramName: the name of the constructor paramter property. Not necessarily unique.
-  // - init: a function to initialise the property, called with this property's schema
-  //   definition and a parameters object.
-  // - writable: if true, the property can be assigned to. (Defaults to `false`)
-  // - oldStyleKey: a legacy look-up key in `oldStyleValues`, also implies the property is a list.
-  //
-  const classSchema = [
-    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true },
-    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode },
-    { propertyName: 'country', paramName: 'country', init: fromParam },
-    { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
-    { propertyName: 'desc', paramName: 'desc', init: fromParam },
-    { propertyName: 'email', paramName: 'email', init: fromParam },
-    { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
-    { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
-    { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
-    { propertyName: 'locality', paramName: 'locality', init: fromParam },
-    { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
-    { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
-    { propertyName: 'name', paramName: 'name', init: fromParam },
-    { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
-    { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
-    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, oldStyleKey: 'Organisational Structure' },
-    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, oldStyleKey: 'Activities' },
-    { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode },
-    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode }, // note dupe paramName following
-    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, oldStyleKey: 'Activities' },
-    { propertyName: 'region', paramName: 'region', init: fromParam },
-    { propertyName: 'regorg', paramName: 'regorg', init: fromCode },
-    { propertyName: 'searchstr', init: asSearchStr, writable: true },
-    { propertyName: 'street', paramName: 'street', init: fromParam },
-    { propertyName: 'tel', paramName: 'tel', init: fromParam },
-    { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
-    { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
-    { propertyName: 'uri', paramName: 'uri', init: fromParam },
-    { propertyName: 'within', paramName: 'within', init: fromParam },
-    { propertyName: 'www', paramName: 'www', init: fromParam },
-  ];
-
   
   let loadedInitiatives = [];
   let initiativesToLoad = [];
