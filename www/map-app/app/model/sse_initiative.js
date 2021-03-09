@@ -65,54 +65,79 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return [];
   }
 
-  // Initialiser for the search string
+  // Initialiser for the search string.
+  //
+  // Scans the searchedFields, using the classSchema to extract
+  // the relevant values from the parameters, which are combined
+  // together as an uppercased string for matching against later.
+  //
+  // Note, we match searchedFields to the *propertyNames* (of the
+  // initiative object), not the *paramNames* (from the query).
+  // This distinction is important as they sometimes differ.
+  //
+  // Note: as multiple properties *can be* (and currently are) constructed
+  // from the same constructor parameter, this means in these cases that
+  // the same parameter value can be added to the searchabe string twice.
+  // This should not be a problem for searching, it just makes the strings
+  // in these cases a bit longer than they strictly need to be,
+  //
+  // Assumption: no parameters are transformed during the initialisation
+  // of the equivalent properties. i.e. We are constructing the string
+  // from parameter values, not object property values. If they do differ
+  // this means the search results may not be what we expect.
   function asSearchStr(def, params) {
-    const srch = config.getSearchedFields();
-    const searchedFields = [...srch]; // Copy list, we will modify it
+    const searchedFields = config.getSearchedFields();
     
     const searchableValues = [];
     const oldStyleValues = getOldStyleVerboseValuesForFields();
 
-    // Handle special fields
-    [
-      { fieldNames: ['primaryActivity'],
-        paramName: 'primaryActivity',
-        oldStyleKey: 'Activities' }, 
-      { fieldNames: ['qualifier', 'qualifiers'],
-        paramName: 'qualifier',
-        oldStyleKey: 'Activities' }, 
-      { fieldNames: ['activity', 'otherActivities'],
-        paramName: 'activity',
-        oldStyleKey: 'Activities' }, 
-      { fieldNames: ['regorg', 'orgStructure'],
-        paramName: 'regorg',
-        oldStyleKey: 'Organisational Structure' }, 
-    ].forEach(p => {
-      const anyFieldFound = p.fieldNames.some(
-        fieldName => searchedFields.includes(fieldName)
-      );
-      if (!anyFieldFound) return;
-
-      if (params[p.paramName]) {
-        const termsIDs = oldStyleValues[p.oldStyleKey];
-        const code = getSkosCode(params[p.paramName]);
-        searchableValues.push(termsIDs[code]);
+    searchedFields.forEach(fieldName => {
+      // Get the right schema for this field (AKA property)
+      const def = classSchema.find(p => p.propertyName === fieldName);
+      if (!def) {
+        console.warn(`searchable field '${fieldName}' is not a recognised field name`)
+        return;
       }
       
-      // Remove fieldNames from searchedFields
-      p.fieldNames.forEach(fieldName => {
-        if (searchedFields.includes(fieldName))
-          searchedFields.splice(searchedFields.indexOf(fieldName), 1);
-      });
+      const value = def.init === fromCode ? // Does this field contains an ID?
+                    lookupIdentifier() :
+                    lookupValue();
+
+      if (value !== undefined)
+        searchableValues.push(value);
+      return; // Done. Only functions below.
+      
+      function lookupIdentifier() {
+        // Add any parameter values named
+        const id = params[def.paramName];
+        if (!def.oldStyleKey) {
+          console.warn(`missing oldStyleKey for property '${def.propertyName}'`);
+          return undefined;
+        }
+        const values = oldStyleValues[def.oldStyleKey];
+        const code = getSkosCode(id);
+        const value = values[code];
+        if (value === undefined) {
+          console.warn(`no value defined for ID '${id}' in property '${def.propertyName}'`);
+          return undefined;
+        }
+        return value;
+      }
+      function lookupValue() {
+        const value = params[def.paramName]; 
+        if (value === undefined) {
+          console.warn(`no value for searchable field '${fieldName}' in initiative ${params.uri}`)
+          return;
+        }
+        return value;
+      }
     });
-
-    // Handle other fields
-    searchedFields.forEach(name => searchableValues.push(params[name]));
-
+    
     // Join searchable values, squash case
+    // console.log(params.name, searchableValues.join(" ").toUpperCase()); // DEBUG
     return searchableValues.join(" ").toUpperCase();
   }
-  
+
   
   let loadedInitiatives = [];
   let initiativesToLoad = [];
