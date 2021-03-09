@@ -348,10 +348,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }).sort((a, b) => sortInitiatives(a, b));
   }
 
-  function filter(filter) {
-
-  }
-
   function getLoadedInitiatives() {
     return loadedInitiatives;
   }
