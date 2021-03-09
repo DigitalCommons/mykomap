@@ -613,11 +613,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       vocabs = response;
       
       // Add an inverted look-up `abbrevs` mapping abbreviations to uris
-      vocabs.abbrevs = Object.keys(vocabs.prefixes).reduce((acc, key) => {
-        const val = vocabs.prefixes[key];
-        acc[val] = key;
-        return acc;
-      }, {});
+      // obtained from `prefixes`.
+      //
+      // Sort it and `prefixes` so that longer prefixes are listed
+      // first (Ecmascript objects preserve the order of addition).
+      // This is to make matching the longest prefix simpler later.
+      const prefixes = {};
+      const abbrevs = {};
+      Object
+        .keys(vocabs.prefixes)
+        .sort((a,b) => b.length - a.length)
+        .forEach(prefix => {
+          const abbrev = vocabs.prefixes[prefix];
+          abbrevs[abbrev] = prefix;
+          prefixes[prefix] = abbrev;
+        });
+
+      vocabs.prefixes = prefixes;
+      vocabs.abbrevs = abbrevs;
       
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
