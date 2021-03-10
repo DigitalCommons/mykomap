@@ -257,9 +257,10 @@ define([], function () {
         setter: 'setDefaultLatLng',
         type: types.latLng,
       },
-      {
+	    {
         id: 'filterableFields',
-        descr: 'Defines the fields that can populate the directory',
+        descr: 'Defines the instance properties that can populate the directory. Must be '+
+		           'a list of instance property names which are associated with vocabularies.',
         init: () => filterableFields,
         getter: 'getFilterableFields',
         setter: 'setFilterableFields',

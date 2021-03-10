@@ -278,8 +278,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
-      const fieldKey = filterable.field;
-      const labelKey = filterable.label;
+      const fieldKey = filterable;
+      // Look up the title via the vocab.... first get the vocab.
+      let vocab;
+      try {
+        vocab = getVocabForProperty(fieldKey);
+      }
+      catch(e) {
+        e.message = `invalid filterableFields config for '${fieldKey}' - ${e.message}`;
+        throw e; // rethrow.
+      }
+
+      // Get the title to use as a label.
+      const labelKey = vocab.title;
+      
       const field = this[fieldKey];
 
       if (labelKey in allRegisteredValues)
@@ -487,7 +499,15 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function sortLoadedData() {
     // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
-      let label = filterable.label;
+      let vocab;
+      try {
+        vocab = getVocabForProperty(filterable);
+      }
+      catch(e) {
+        e.message = `invalid filterableFields config for '${filterable}' - ${e.message}`;
+        throw e; // rethrow.
+      }
+      const label = vocab.title;
       const labelValues = registeredValues[label];
       if (labelValues) {
         const ordered = {};
@@ -695,7 +715,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       .map(([vocabUri, vocab]) => {
         const vocabLang = vocab[language];
         if (!vocabLang)
-          throw new Error(`No vocab terms for language ID ${language}`);
+          throw new Error(`No ${language} localisation for vocab '${language}'`);
         return [vocabLang.title, vocabLang.terms];
       });
 
@@ -705,11 +725,13 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   const getVocabIDsAndInitiativeVariables = () => {
     let vocabIDsAndInitiativeVariables = {};
 
-    //generated from filterableFields in the config
+    // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
-      vocabIDsAndInitiativeVariables[filterableField.vocabID] = filterableField.field;
+      const vocabUri = getVocabUriForProperty(filterableField);
+      if (!vocabUri)
+        throw new Error(`property does not reference a vocabulary`);
+      vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
     })
-
     return vocabIDsAndInitiativeVariables;
   }
 
@@ -764,6 +786,42 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     termUri = abbrevUri(termUri);
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
     return vocabs.vocabs[vocabUri][language].terms[termUri];
+  }
+
+  // Gets the vocab URI for a property, if it has one.
+  //
+  // Returns a vocab URI, or null if it does not have one.  The URI may be abbreviated.
+  //
+  // Throws an exception if there is no such property. 
+  function getVocabUriForProperty(propName) {
+    const propDef = classSchema.find(p => p.propertyName === propName)
+    if (!propDef) {
+      throw new Error(`unrecognised property name: '${propName}'`);
+    }
+    
+    return propDef.vocabUri;
+  }
+
+  // Gets the vocab for a property.
+  //
+  // Returns a vocab index (for the currently set language).
+  //
+  // Throws an exception if there is some reason this fails. The
+  // exception will have a short description indicating the problem.
+  function getVocabForProperty(propName) {
+    const vocabUri = getVocabUriForProperty(propName);
+    if (!vocabUri) {
+      throw new Error(`property does not reference a vocabulary: '${propName}'`);
+    }
+    
+    // Assume classSchema's vocabUris are validated. But language availability can't be
+    // checked so easily.
+    const vocab = vocabs.vocabs[vocabUri][language];
+    if (!vocab) {
+      throw new Error(`no title in lang ${language} for property: '${propName}'`);
+    }
+    
+    return vocab;
   }
 
   //construct the object of terms for advanced search
