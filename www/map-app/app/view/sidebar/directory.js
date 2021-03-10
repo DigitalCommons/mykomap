@@ -105,7 +105,7 @@ define([
 
     // key may be null, for the special 'Every item' case
     function addItem(field, key) {
-      let valuesByName = that.presenter.getAllValuesByName(field);
+      let valuesByName = that.presenter.getVerboseValuesForFields()[field];
       let label = key;
       let tag = key;
       if (key == null) {
@@ -189,7 +189,7 @@ define([
     let selection = this.d3selectAndClear(
       "#sea-initiatives-list-sidebar-content"
     );
-    let values = this.presenter.getAllValuesByName(directoryField);
+    let values = this.presenter.getVerboseValuesForFields()[directoryField];
     let list;
     initiativeListSidebar.insertBefore(sidebarButton, selection.node());
     initiativeListSidebar.className = initiativeListSidebar.className.replace(

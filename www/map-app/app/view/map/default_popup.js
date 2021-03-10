@@ -12,8 +12,9 @@ define([], function () {
     };
 
     var getPopup = function (initiative, sse_initiatives) {
-        let orgStructures = sse_initiatives.getOldStyleVerboseValuesForFields()["Organisational Structure"];
-        let activitiesVerbose = sse_initiatives.getOldStyleVerboseValuesForFields()["Activities"];
+        const values = sse_initiatives.getVerboseValuesForFields()
+        let orgStructures = values["Organisational Structure"];
+        let activitiesVerbose = values["Activities"];
         let address = "",
             street,
             locality,
@@ -50,7 +51,7 @@ define([], function () {
                 repl
             );
         }
-        //comment this out
+        //comment this out 
         else {
             if (initiative.regorg && orgStructures) {
                 popupHTML = popupHTML.replace(

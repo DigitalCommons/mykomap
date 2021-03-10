@@ -43,8 +43,8 @@ define([
     return typeof this.contentStack.current() !== "undefined";
   };
 
-  proto.getAllValuesByName = function (name) {
-    return sseInitiative.getOldStyleVerboseValuesForFields()[name];
+  proto.getVerboseValuesForFields = function () {
+    return sseInitiative.getVerboseValuesForFields();
   };
 
   proto.getRegisteredValues = function () {

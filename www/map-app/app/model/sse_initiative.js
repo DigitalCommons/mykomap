@@ -683,12 +683,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return d3.json(service);
   }
   
-  // This returns an index of vocabularies to term IDs to term labels.
-  function getVerboseValuesForFields() {
-    return vocabs;
-  }
-
-  function getOldStyleVerboseValuesForFields(){
+  function getVerboseValuesForFields(){
 
     const language = "EN";
     const entries = Object
@@ -834,7 +829,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
-    getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
     getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
     getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
     getTerms: getTerms,
