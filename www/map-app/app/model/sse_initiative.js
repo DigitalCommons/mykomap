@@ -690,13 +690,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   function getOldStyleVerboseValuesForFields(){
 
-    let oldStyleValues = {
-      "Activities": vocabs.vocabs["essglobal:activities-ica/"].EN.terms,
-      "Organisational Structure": vocabs.vocabs["essglobal:organisational-structure/"].EN.terms,
-      "Base Membership Type": vocabs.vocabs["essglobal:base-membership-type/"].EN.terms
-    }
+    const language = "EN";
+    const entries = Object
+      .entries(vocabs.vocabs)
+      .map(([vocabUri, vocab]) => {
+        const vocabLang = vocab[language];
+        if (!vocabLang)
+          throw new Error(`No vocab terms for language ID ${language}`);
+        return [vocabLang.title, vocabLang.terms];
+      });
 
-    return oldStyleValues;
+    return Object.fromEntries(entries);
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
