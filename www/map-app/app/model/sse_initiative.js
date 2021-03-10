@@ -16,7 +16,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   const classSchema = [
     { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'essglobal:activities-ica/' },
     { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'essglobal:base-membership-type/' },
-    { propertyName: 'country', paramName: 'country', init: fromParam },
+    { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'essglobal:countries-iso/' },
     { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
     { propertyName: 'desc', paramName: 'desc', init: fromParam },
     { propertyName: 'email', paramName: 'email', init: fromParam },
@@ -36,9 +36,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'essglobal:activities-ica/' }, // note dupe paramName following
     { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'essglobal:activities-ica/' },
     { propertyName: 'region', paramName: 'region', init: fromParam },
+    { propertyName: 'regionId', paramName: 'regionId', init: fromCode, vocabUri: 'essglobal:regions-ica/' },
     { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'essglobal:organisational-structure/' },
     { propertyName: 'searchstr', init: asSearchStr, writable: true },
     { propertyName: 'street', paramName: 'street', init: fromParam },
+    { propertyName: 'superRegionId', paramName: 'superRegionId', init: fromCode, vocabUri: 'essglobal:super-regions-ica/' },
     { propertyName: 'tel', paramName: 'tel', init: fromParam },
     { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
     { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },

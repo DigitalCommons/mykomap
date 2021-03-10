@@ -142,8 +142,8 @@ define([], function () {
         if (initiative.postcode) {
             address += (address.length ? "<br/>" : "") + initiative.postcode;
         }
-        if (initiative.country) {
-            address += (address.length ? "<br/>" : "") + initiative.country;
+        if (initiative.countryId) {
+            address += (address.length ? "<br/>" : "") + initiative.countryId;
         }
         if (initiative.nongeo == 1 || !initiative.lat || !initiative.lng) {
             address += (address.length ? "<br/>" : "") + "<i>NO LOCATION AVAILABLE</i>";
