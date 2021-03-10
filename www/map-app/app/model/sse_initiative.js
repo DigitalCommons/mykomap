@@ -2,6 +2,9 @@
 define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
+  // Hardwire this for now.
+  const language = "EN";
+  
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
   // normal functions.
@@ -687,7 +690,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   
   function getVerboseValuesForFields(){
 
-    const language = "EN";
     const entries = Object
       .entries(vocabs.vocabs)
       .map(([vocabUri, vocab]) => {
@@ -712,8 +714,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   }
 
   const getVocabTitlesAndVocabIDs = () => {
-    const language = "EN";
-
     const vocabTitlesAndVocabIDs = {}
 
     for(const vocabID in vocabs.vocabs){
@@ -761,7 +761,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   function getVocabTerm(vocabUri, termUri) {
-    const language = "EN";
     termUri = abbrevUri(termUri);
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
     return vocabs.vocabs[vocabUri][language].terms[termUri];
@@ -770,8 +769,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //construct the object of terms for advanced search
   function getTerms(){
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
-
-    const language = "EN";
 
     let usedTerms = {};
 
