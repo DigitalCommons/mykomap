@@ -163,7 +163,7 @@ function query($endpoint, $query, $graph = NULL) {
 }
 
 // $graph is optional
-function generate_query($vocab_uris, $langs, $graph = NULL) {
+function generate_query($vocabs, $langs, $graph = NULL) {
     $graph = escape_uri($graph);
     $quote = function($uri) {
         return '<'.escape_uri($uri).'>';
@@ -176,6 +176,7 @@ function generate_query($vocab_uris, $langs, $graph = NULL) {
         return 'langMatches(lang(?label), "'.addslashes(strtolower($str)).'")';
     };
 
+    $vocab_uris = array_keys($vocabs);
     $scheme_constraints = join("\n    UNION\n    ", array_map($in_scheme, $vocab_uris));
     $scheme_list = join(",\n    ", array_map($quote, $vocab_uris));
     $scheme_filter = "FILTER(?scheme IN (\n    $scheme_list\n    ))";
@@ -239,20 +240,9 @@ function add_query_data($result, $query_results) {
 
 function main() {
     // Predefined prefixes commonly seen in the data.  Any inferred
-    // prefixes not in this list will have names generated starting
-    // with an '_'
-    $prefixes = [
-        "https://dev.lod.coop/essglobal/2.1/standard/" => "essglobal",
-        "https://dev.lod.coop/essglobal/2.1/standard/organisational-structure/" => "os",
-        "https://dev.lod.coop/essglobal/2.1/standard/qualifier/" => "q",
-        "https://dev.lod.coop/essglobal/2.1/standard/activities/" => "ac",
-        "https://dev.lod.coop/essglobal/2.1/standard/activities-ica/" => "aci",
-        "https://dev.lod.coop/essglobal/2.1/standard/activities-modified/" => "acm",
-        "https://dev.lod.coop/essglobal/2.1/standard/base-membership-type/" => "bmt",
-        "https://dev.lod.coop/essglobal/2.1/standard/countries-iso/" => "coun",
-        "https://dev.lod.coop/essglobal/2.1/standard/regions-ica/" => "reg",
-        "https://dev.lod.coop/essglobal/2.1/standard/super-regions-ica/" => "sreg",
-    ];
+    // prefixes not in this list, or obtained from config.json, will
+    // have names generated starting with an '_'
+    $prefixes = [];
 
     // allow override in tests
     $config_dir = getenv('SEA_MAP_CONFIG_DIR');
@@ -271,13 +261,14 @@ function main() {
 
     $vocab_srcs = $config['vocabularies'];
     $languages = $config['languages'];
-    $result = ['prefixes' => $prefixes];
+    $result = ['prefixes' => &$prefixes];
 
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
-        
+
+        $prefixes = array_merge($uris);
         $query = generate_query($uris, $languages);
         #echo $query; # DEBUG
         $query_results = query($endpoint, $query);
