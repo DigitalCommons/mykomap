@@ -17,9 +17,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema = [
-    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'essglobal:activities-ica/' },
-    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'essglobal:base-membership-type/' },
-    { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'essglobal:countries-iso/' },
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'aci:' },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'bmt:' },
+    { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'coun:' },
     { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
     { propertyName: 'desc', paramName: 'desc', init: fromParam },
     { propertyName: 'email', paramName: 'email', init: fromParam },
@@ -33,11 +33,11 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
     { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'essglobal:organisational-structure/' },
-    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'essglobal:activities-ica/' },
+    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'essglobal:activities-ica/' },
-    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'essglobal:activities-ica/' }, // note dupe paramName following
-    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'essglobal:activities-ica/' },
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'aci:' }, // note dupe paramName following
+    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'region', paramName: 'region', init: fromParam },
     { propertyName: 'regionId', paramName: 'regionId', init: fromCode, vocabUri: 'essglobal:regions-ica/' },
     { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'essglobal:organisational-structure/' },
