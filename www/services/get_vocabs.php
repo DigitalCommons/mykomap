@@ -86,7 +86,7 @@ function croak_no_attr($attr) {
 
 function abbrev(&$prefixes, $item) {
     $matches = [];
-    if (false === preg_match('{^(https?://.*[#/])(.+)}i', $item, $matches)) {
+    if (false === preg_match('{^(https?://.*[#/])(.*)}i', $item, $matches)) {
         return $item;
     }
 
