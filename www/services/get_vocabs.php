@@ -242,19 +242,16 @@ function main() {
     // prefixes not in this list will have names generated starting
     // with an '_'
     $prefixes = [
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/" => "essglobal",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/organisational-structure/" => "os",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/qualifier/" => "q",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities/" => "ac",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities-ica/" => "aci",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities-modified/" => "acm",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/base-membership-type/" => "bmt",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/countries/" => "coun",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/regions/" => "reg",
-        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/super-regions/" => "sreg",
-#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/ISO-3166-1/" => "coun",
-#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/region-ica/" => "reg",
-#        "https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/super-region-ica/" => "sreg",
+        "https://dev.lod.coop/essglobal/2.1/standard/" => "essglobal",
+        "https://dev.lod.coop/essglobal/2.1/standard/organisational-structure/" => "os",
+        "https://dev.lod.coop/essglobal/2.1/standard/qualifier/" => "q",
+        "https://dev.lod.coop/essglobal/2.1/standard/activities/" => "ac",
+        "https://dev.lod.coop/essglobal/2.1/standard/activities-ica/" => "aci",
+        "https://dev.lod.coop/essglobal/2.1/standard/activities-modified/" => "acm",
+        "https://dev.lod.coop/essglobal/2.1/standard/base-membership-type/" => "bmt",
+        "https://dev.lod.coop/essglobal/2.1/standard/countries-iso/" => "coun",
+        "https://dev.lod.coop/essglobal/2.1/standard/regions-ica/" => "reg",
+        "https://dev.lod.coop/essglobal/2.1/standard/super-regions-ica/" => "sreg",
     ];
 
     // allow override in tests
