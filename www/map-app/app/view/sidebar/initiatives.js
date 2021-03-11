@@ -306,20 +306,20 @@ define([
       entryArray.sort((a,b) => String(a[1]).localeCompare(String(b[1])));
 
       entryArray.forEach(entry=>{
-        const [key, value] = entry;
+        const [id, label] = entry;
         const option = dropDown
           .append("option")
-          .text(value)
-          .attr("value",value)
+          .text(label)
+          .attr("value",id)
           .attr("class","advanced-option")
 
         //if there are active filters, make them selected and disable empty choices
         if(currentFilters.length > 0){
-          if(currentFilters.includes(value)) 
+          if(currentFilters.includes(id)) 
             option.attr("selected",true);      
           
           if(!activeFilterCategories.includes(field))
-            if(!possibleFilterValues.includes(value)){
+            if(!possibleFilterValues.includes(id)){
               option.attr("disabled",true);
             }
         }
