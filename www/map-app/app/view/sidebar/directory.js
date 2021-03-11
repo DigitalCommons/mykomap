@@ -216,7 +216,7 @@ define([
       data: {
         initiatives: initiatives,
         filterName: title,
-        verboseName: (directoryField + ": " + selectionKey)
+        verboseName: (directoryField + ": " + title)
       }
     });
 
