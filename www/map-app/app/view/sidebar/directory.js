@@ -110,7 +110,7 @@ define([
       let tag = key;
       if (key == null) {
         tag = 'all';
-        if (valuesByName)
+        if (valuesByName && valuesByName.ALL)
           label = valuesByName.ALL;
         else
           label = 'All '+field;
