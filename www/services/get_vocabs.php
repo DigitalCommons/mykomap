@@ -228,7 +228,8 @@ function add_query_data($result, $query_results) {
             $result['vocabs'][$shortVocab][$lang]['terms'][$shortTerm] = $label;
 
             // Ensure title is present, even if null
-            $result['vocabs'][$shortVocab][$lang]['title'] ??= NULL;
+            $vocab = $result['vocabs'][$shortVocab][$lang];
+            $vocab['title'] = $vocab['title'] ?? NULL;
         }
         else { // vocabulary info
             $result['vocabs'][$shortVocab][$lang]['title'] = $label;
