@@ -397,6 +397,7 @@ body {
 
 .sea-main-sidebar {
   z-index: inherit; /* attempt to stop scrollbar showing through */
+  overflow-y: auto;
 }
 
 .sea-initiatives-list-sidebar-content,
