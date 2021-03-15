@@ -510,12 +510,18 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       const label = vocab.title;
       const labelValues = registeredValues[label];
       if (labelValues) {
-        const ordered = {};
-        Object.keys(labelValues).sort().forEach(function (key) {
-          ordered[key] = labelValues[key];
-        });
-        //finished
-        registeredValues[label] = ordered;
+        const ordered = Object
+          .entries(labelValues)
+          .sort(sortByVocabLabel)
+
+        registeredValues[label] = Object.fromEntries(ordered);
+      }
+
+      // Sort entries by the vocab label for the ID used as the key
+      function sortByVocabLabel(a,b) {
+        const alab = vocab.terms[a[0]];
+        const blab = vocab.terms[b[0]];
+        return String(alab).localeCompare(String(blab));
       }
     });
 

@@ -110,7 +110,7 @@ define([
       let tag = key;
       if (key == null) {
         tag = 'all';
-        if (valuesByName)
+        if (valuesByName && valuesByName.ALL)
           label = valuesByName.ALL;
         else
           label = 'All '+field;
@@ -215,8 +215,8 @@ define([
       topic: "Map.addFilter",
       data: {
         initiatives: initiatives,
-        filterName: title,
-        verboseName: (directoryField + ": " + selectionKey)
+        filterName: selectionKey,
+        verboseName: (directoryField + ": " + title)
       }
     });
 

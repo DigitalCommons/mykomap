@@ -301,23 +301,25 @@ define([
           .attr("value","any")
           .attr("class","advanced-option")
 
-      const valueArray = Object.keys(values[field]);
-      valueArray.sort(); //sort alphabetically
+      const entryArray = Object.entries(values[field]);
+      // Sort entries alphabetically by value (the human-readable labels)
+      entryArray.sort((a,b) => String(a[1]).localeCompare(String(b[1])));
 
-      valueArray.forEach(value=>{
+      entryArray.forEach(entry=>{
+        const [id, label] = entry;
         const option = dropDown
           .append("option")
-          .text(values[field][value])
-          .attr("value",value)
+          .text(label)
+          .attr("value",id)
           .attr("class","advanced-option")
 
         //if there are active filters, make them selected and disable empty choices
         if(currentFilters.length > 0){
-          if(currentFilters.includes(value))
+          if(currentFilters.includes(id)) 
             option.attr("selected",true);      
           
           if(!activeFilterCategories.includes(field))
-            if(!possibleFilterValues.includes(value)){
+            if(!possibleFilterValues.includes(id)){
               option.attr("disabled",true);
             }
         }
