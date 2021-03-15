@@ -12,8 +12,9 @@ define([], function () {
     };
 
     var getPopup = function (initiative, sse_initiatives) {
-        let orgStructures = sse_initiatives.getOldStyleVerboseValuesForFields()["Organisational Structure"];
-        let activitiesVerbose = sse_initiatives.getOldStyleVerboseValuesForFields()["Activities"];
+        const values = sse_initiatives.getVerboseValuesForFields()
+        let orgStructures = values["Organisational Structure"];
+        let activitiesVerbose = values["Activities"];
         let address = "",
             street,
             locality,
@@ -50,7 +51,7 @@ define([], function () {
                 repl
             );
         }
-        //comment this out
+        //comment this out 
         else {
             if (initiative.regorg && orgStructures) {
                 popupHTML = popupHTML.replace(
@@ -141,8 +142,8 @@ define([], function () {
         if (initiative.postcode) {
             address += (address.length ? "<br/>" : "") + initiative.postcode;
         }
-        if (initiative.country) {
-            address += (address.length ? "<br/>" : "") + initiative.country;
+        if (initiative.countryId) {
+            address += (address.length ? "<br/>" : "") + initiative.countryId;
         }
         if (initiative.nongeo == 1 || !initiative.lat || !initiative.lng) {
             address += (address.length ? "<br/>" : "") + "<i>NO LOCATION AVAILABLE</i>";

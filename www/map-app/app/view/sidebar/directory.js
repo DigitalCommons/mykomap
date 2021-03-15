@@ -10,9 +10,16 @@ define([
   // Our local Sidebar object:
   function Sidebar() { }
 
+  function uriToTag(uri) {
+    return uri.toLowerCase().replace(/^.*[:\/]/, "");
+  }
+  function labelToTag(uri) {
+    return uri.toLowerCase().replace(/ /g, "-");
+  }
+  
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
-
+  
   // And adds some overrides and new properties of it's own:
   proto.title = "Directory";
   proto.hasHistoryNavigation = false;
@@ -98,7 +105,7 @@ define([
 
     // key may be null, for the special 'Every item' case
     function addItem(field, key) {
-      let valuesByName = that.presenter.getAllValuesByName(field);
+      let valuesByName = that.presenter.getVerboseValuesForFields()[field];
       let label = key;
       let tag = key;
       if (key == null) {
@@ -109,9 +116,9 @@ define([
           label = 'All '+field;
       }
       else {
-        tag = key.toLowerCase().replace(/ /g, "-")
+        tag = uriToTag(key);
         if (valuesByName)
-          label = valuesByName[key.toUpperCase()];
+          label = valuesByName[key];
       }
 
       list
@@ -140,7 +147,6 @@ define([
     }
      
     const registeredValues = this.presenter.getRegisteredValues();
-    const allRegisteredValues = this.presenter.getAllRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
@@ -183,7 +189,7 @@ define([
     let selection = this.d3selectAndClear(
       "#sea-initiatives-list-sidebar-content"
     );
-    let values = this.presenter.getAllValuesByName(directoryField);
+    let values = this.presenter.getVerboseValuesForFields()[directoryField];
     let list;
     initiativeListSidebar.insertBefore(sidebarButton, selection.node());
     initiativeListSidebar.className = initiativeListSidebar.className.replace(
@@ -191,7 +197,7 @@ define([
       ""
     );
     initiativeListSidebar.classList.add(
-      "sea-field-" + selectionLabel.toLowerCase().replace(/ /g, "-")
+      "sea-field-" + labelToTag(selectionLabel)
     );
 
     // Add the heading (we need to determine the title as this may be stored in the data or

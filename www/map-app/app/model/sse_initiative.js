@@ -2,6 +2,147 @@
 define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   "use strict";
 
+  // Hardwire this for now.
+  const language = "EN";
+  
+  // Define the properties in an initiative and how to manage them. Note, thanks to JS
+  // variable hoisting semantics, we can reference initialiser functions below, if they are
+  // normal functions.
+  //
+  // - propertyName: the name of the initiative instance property. Should be unique!
+  // - paramName: the name of the constructor paramter property. Not necessarily unique.
+  // - init: a function to initialise the property, called with this property's schema
+  //   definition and a parameters object.
+  // - writable: if true, the property can be assigned to. (Defaults to `false`)
+  // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
+  //
+  const classSchema = [
+    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'aci:' },
+    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'bmt:' },
+    { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'coun:' },
+    { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
+    { propertyName: 'desc', paramName: 'desc', init: fromParam },
+    { propertyName: 'email', paramName: 'email', init: fromParam },
+    { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
+    { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
+    { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+    { propertyName: 'locality', paramName: 'locality', init: fromParam },
+    { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
+    { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
+    { propertyName: 'name', paramName: 'name', init: fromParam },
+    { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
+    { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
+    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
+    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
+    { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
+    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'aci:' }, // note dupe paramName following
+    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'aci:' },
+    { propertyName: 'region', paramName: 'region', init: fromParam },
+    { propertyName: 'regionId', paramName: 'regionId', init: fromCode, vocabUri: 'reg:' },
+    { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'os:' },
+    { propertyName: 'searchstr', init: asSearchStr, writable: true },
+    { propertyName: 'street', paramName: 'street', init: fromParam },
+    { propertyName: 'superRegionId', paramName: 'superRegionId', init: fromCode, vocabUri: 'sreg:' },
+    { propertyName: 'tel', paramName: 'tel', init: fromParam },
+    { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
+    { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
+    { propertyName: 'uri', paramName: 'uri', init: fromParam },
+    { propertyName: 'within', paramName: 'within', init: fromParam },
+    { propertyName: 'www', paramName: 'www', init: fromParam },
+  ];
+
+  // Initialiser which uses the appropriate parameter name
+  function fromParam(def, params) {
+    return params[def.paramName];
+  }
+  
+  // Initialiser which uses the appropriate code
+  function fromCode(def, params) {
+    const uri = params[def.paramName];
+    if (uri)
+      return abbrevUri(uri);
+    return undefined;
+  }
+
+  // Initialiser which returns an empty array
+  function asList(def, params) {
+    return [];
+  }
+
+  // Initialiser for the search string.
+  //
+  // Scans the searchedFields, using the classSchema to extract
+  // the relevant values from the parameters, which are combined
+  // together as an uppercased string for matching against later.
+  //
+  // Note, we match searchedFields to the *propertyNames* (of the
+  // initiative object), not the *paramNames* (from the query).
+  // This distinction is important as they sometimes differ.
+  //
+  // Note: as multiple properties *can be* (and currently are) constructed
+  // from the same constructor parameter, this means in these cases that
+  // the same parameter value can be added to the searchabe string twice.
+  // This should not be a problem for searching, it just makes the strings
+  // in these cases a bit longer than they strictly need to be,
+  //
+  // Assumption: no parameters are transformed during the initialisation
+  // of the equivalent properties. i.e. We are constructing the string
+  // from parameter values, not object property values. If they do differ
+  // this means the search results may not be what we expect.
+  function asSearchStr(def, params) {
+    const searchedFields = config.getSearchedFields();
+    
+    const searchableValues = [];
+
+    searchedFields.forEach(fieldName => {
+      // Get the right schema for this field (AKA property)
+      const def = classSchema.find(p => p.propertyName === fieldName);
+      if (!def) {
+        console.warn(`searchable field '${fieldName}' is not a recognised field name`)
+        return;
+      }
+      
+      const value = def.init === fromCode ? // Does this field contains an ID?
+                    lookupIdentifier() :
+                    def.init === asList ? // Is it a list of IDs (currently IDs implied by list)
+                    lookupIdentifier() : // Singular - just need to do this param
+                    lookupValue();
+
+      if (value !== undefined)
+        searchableValues.push(value);
+      return; // Done. Only functions below.
+      
+      function lookupIdentifier() {
+        // Add any parameter values named
+        const id = params[def.paramName];
+        if (!def.vocabUri) {
+          console.warn(`missing vocabUri for property '${def.propertyName}'`);
+          return undefined;
+        }
+        const value = getVocabTerm(def.vocabUri, id);
+        if (value === undefined) {
+          console.warn(`no value defined for ID '${id}' in property '${def.propertyName}'`);
+          return undefined;
+        }
+        return value;
+      }
+      function lookupValue() {
+        const value = params[def.paramName]; 
+        if (value === undefined) {
+          console.warn(`no value for searchable field '${fieldName}' in initiative ${params.uri}`)
+          return;
+        }
+        return value;
+      }
+    });
+    
+    // Join searchable values, squash case
+    // console.log(params.name, searchableValues.join(" ").toUpperCase()); // DEBUG
+    return searchableValues.join(" ").toUpperCase();
+  }
+
+  
   let loadedInitiatives = [];
   let initiativesToLoad = [];
   let initiativesByUid = {};
@@ -58,49 +199,48 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function Initiative(e) {
     const that = this;
 
-    let oldStyleValues = getOldStyleVerboseValuesForFields();
-
     // Not all initiatives have activities
-    let primaryActivityCode = e.primaryActivity
-      ? getSkosCode(e.primaryActivity)
-      : undefined;
-
-    let qualifierCode = e.qualifier
-      ? getSkosCode(e.qualifier)
-      : undefined;
-
-    let activityCode = e.activity
-      ? getSkosCode(e.activity)
-      : undefined;
-
-    let regorgCode = e.regorg
-      ? getSkosCode(e.regorg)
-      : undefined;
-
-    let membType = e.baseMembershipType
-      ? getSkosCode(e.baseMembershipType)
-      : undefined;
-
+    
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
+      
+      // If properties with are multi-valued, add new values to the
+      // initiative.  This is to handle cases where the SPARQL
+      // resultset contains multple rows for a multi-value field with
+      // multiple values.
+      classSchema
+        .forEach(p => {
+          if (p.init !== asList)
+            return;
 
-
-      //if the orgstructure is not in the initiative then add it
-      if (regorgCode && !initiative.orgStructure.includes(regorgCode)) {
-        initiative.orgStructure.push(regorgCode);
-        initiative.searchstr += oldStyleValues["Organisational Structure"][regorgCode].toUpperCase();
-      }
-      // if the activity is not in the initiative then add it
-      if (activityCode && !initiative.otherActivities.includes(activityCode)) {
-        initiative.otherActivities.push(activityCode);
-        initiative.searchstr += oldStyleValues["Activities"][activityCode].toUpperCase();
-      }
-      // if the qualifier is not in the initiative then add it
-      if (qualifierCode && !initiative.qualifiers.includes(qualifierCode)) {
-        initiative.qualifiers.push(qualifierCode);
-        initiative.searchstr += oldStyleValues["Activities"][qualifierCode].toUpperCase();
-      }
+          // Assume these are always ID fields (enums) for now,
+          // although this is not necessarily always true, just
+          // because this has historically been assumed. We can
+          // generalise this later.
+          
+          const code = fromCode(p, e);
+          if (!code)
+            return;
+          
+          const list = initiative[p.propertyName];
+          if (list.includes(code))
+            return;
+          
+          list.push(code);
+          const uri = e[p.paramName];
+          const value = getVocabTerm(p.vocabUri, uri);
+          if (value === undefined) {
+            console.warn(`can't add term '${uri}' to search, `+
+                         `it is not part of the vocab '${p.vocabUri}'`);
+            return;
+          }
+          
+          initiative.searchstr = [
+            initiative.searchstr,
+            value.toUpperCase() 
+          ].join(" ");
+        });
 
       //update pop-up
       eventbus.publish({ topic: "Initiative.refresh", data: initiative });
@@ -108,46 +248,17 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       //TODO: decide if then you index the secondary activities
     }
 
-    Object.defineProperties(this, {
-      name: { value: e.name, enumerable: true },
-      desc: { value: e.desc, enumerable: true },
-      dataset: { value: e.dataset, enumerable: true },
-      uri: { value: e.uri, enumerable: true },
-      uniqueId: { value: e.uri, enumerable: true },
-      within: { value: e.within, enumerable: true },
-      lat: { value: e.lat, enumerable: true, writable: true },
-      lng: { value: e.lng, enumerable: true, writable: true },
-      manLat: { value: e.manLat, enumerable: true, writable: true },
-      manLng: { value: e.manLng, enumerable: true, writable: true },
-      www: { value: e.www, enumerable: true },
-      regorg: { value: regorgCode, enumerable: true },
-      street: { value: e.street, enumerable: true },
-      locality: { value: e.locality, enumerable: true },
-      postcode: { value: e.postcode, enumerable: true },
-      country: {
-        value: e.country ? e.country : undefined,
-        enumerable: true
-      },
-      primaryActivity: { value: primaryActivityCode, enumerable: true },
-      activity: { value: activityCode, enumerable: true, writable: true },
-      otherActivities: { value: [], enumerable: true, writable: true },
-      orgStructure: { value: [], enumerable: true, writable: true },
-      tel: { value: e.tel, enumerable: true },
-      email: { value: e.email, enumerable: true },
-      nongeoLat: { value: config.getDefaultLatLng()[0], enumerable: true },
-      nongeoLng: { value: config.getDefaultLatLng()[1], enumerable: true },
-      twitter: { value: e.twitter, enumerable: true },
-      facebook: { value: e.facebook, enumerable: true },
-      region: { value: e.region, enumerable: true },
-      qualifier: { value: qualifierCode, enumerable: true },
-      qualifiers: { value: [], enumerable: true, writable: true },
-      baseMembershipType: { value: membType, enumerable: true },
-      searchstr: {
-        value: genSearchValues(config.getSearchedFields(), e)
-        , enumerable: true, writable: true
-      },
-
+    // Define and initialise the instance properties.
+    classSchema.forEach(p => {
+      Object.defineProperty(this, p.propertyName, {
+        value: p.init(p, e),
+        enumerable: true,
+        writable: !!p.writable,
+      });
     });
+
+    // Post-initialisation adjustments, typically requiring
+    // a birds-eye view of the instance.
 
     if (this.regorg) this.orgStructure.push(this.regorg);
     if (this.activity) this.otherActivities.push(this.activity);
@@ -167,8 +278,20 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
-      const fieldKey = filterable.field;
-      const labelKey = filterable.label;
+      const fieldKey = filterable;
+      // Look up the title via the vocab.... first get the vocab.
+      let vocab;
+      try {
+        vocab = getVocabForProperty(fieldKey);
+      }
+      catch(e) {
+        e.message = `invalid filterableFields config for '${fieldKey}' - ${e.message}`;
+        throw e; // rethrow.
+      }
+
+      // Get the title to use as a label.
+      const labelKey = vocab.title;
+      
       const field = this[fieldKey];
 
       if (labelKey in allRegisteredValues)
@@ -199,70 +322,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     insert(this, loadedInitiatives);
     initiativesByUid[this.uniqueId] = this;
 
-    // Run new query to get activities
-    // loadPluralObjects("activities", this.uniqueId);
-    // Run new query to get organisational structure
-    // loadPluralObjects("orgStructure", this.uniqueId); //, function() {
     eventbus.publish({ topic: "Initiative.new", data: that });
-    // });
-    // loadPluralObjects("orgStructure", this.uniqueId);
-  }
-
-  function genSearchValues(srch, e) {
-    let searchedFields = [...srch]
-    // Not all initiatives have activities
-    let val = "";
-
-    let oldStyleValues = getOldStyleVerboseValuesForFields();
-
-
-    //handle special fields
-    if (searchedFields.includes("primaryActivity")) {
-      val += e.primaryActivity
-        ? oldStyleValues["Activities"][getSkosCode(e.primaryActivity)]
-        : "";
-      searchedFields.splice(searchedFields.indexOf("primaryActivity"), 1);
-    }
-
-    if (searchedFields.includes("qualifier") || searchedFields.includes("qualifiers")) {
-      val += e.qualifier
-        ? oldStyleValues["Activities"][getSkosCode(e.qualifier)]
-        : "";
-      if (searchedFields.includes("qualifier"))
-        searchedFields.splice(searchedFields.indexOf("qualifier"), 1);
-      if (searchedFields.includes("qualifiers"))
-        searchedFields.splice(searchedFields.indexOf("qualifiers"), 1);
-    }
-
-    if (searchedFields.includes("activity") || searchedFields.includes("otherActivities")) {
-      val += e.activity
-        ? oldStyleValues["Activities"][getSkosCode(e.activity)]
-        : "";
-      if (searchedFields.includes("activity"))
-        searchedFields.splice(searchedFields.indexOf("activity"), 1);
-      if (searchedFields.includes("otherActivities"))
-        searchedFields.splice(searchedFields.indexOf("otherActivities"), 1);
-    }
-
-    if (searchedFields.includes("regorg") || searchedFields.includes("orgStructure")) {
-      val += e.regorg
-        ? oldStyleValues["Organisational Structure"][getSkosCode(e.regorg)]
-        : "";
-
-      if (searchedFields.includes("regorg"))
-        searchedFields.splice(searchedFields.indexOf("regorg"), 1);
-      if (searchedFields.includes("orgStructure"))
-        searchedFields.splice(searchedFields.indexOf("orgStructure"), 1);
-    }
-
-    //handle other fields
-    val += searchedFields.map(x => e[x]).join("");
-
-    //format
-    val = val.toUpperCase();
-
-    return val;
-
   }
 
   function isAlpha(str) {
@@ -301,10 +361,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return loadedInitiatives.filter(function (i) {
       return i.searchstr.includes(up);
     }).sort((a, b) => sortInitiatives(a, b));
-  }
-
-  function filter(filter) {
-
   }
 
   function getLoadedInitiatives() {
@@ -443,7 +499,15 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   function sortLoadedData() {
     // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
-      let label = filterable.label;
+      let vocab;
+      try {
+        vocab = getVocabForProperty(filterable);
+      }
+      catch(e) {
+        e.message = `invalid filterableFields config for '${filterable}' - ${e.message}`;
+        throw e; // rethrow.
+      }
+      const label = vocab.title;
       const labelValues = registeredValues[label];
       if (labelValues) {
         const ordered = {};
@@ -457,20 +521,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
   }
 
-  function getSkosCode(originalValue) {
-    let split = originalValue.split("/");
-    return split[split.length - 1];
-  }
-
-  function registerActivity(activity, initiative) {
-    activity = getSkosCode(activity);
-    if (registeredActivities[activity])
-      registeredActivities[activity].push(initiative);
-    else {
-      delete registeredActivities.loading;
-      registeredActivities[activity] = [initiative];
-    }
-  }
   function errorMessage(response) {
     // Extract error message from parsed JSON response.
     // Returns error string, or null if no error.
@@ -568,6 +618,27 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       console.log("loaded vocabs", response);
       
       vocabs = response;
+      
+      // Add an inverted look-up `abbrevs` mapping abbreviations to uris
+      // obtained from `prefixes`.
+      //
+      // Sort it and `prefixes` so that longer prefixes are listed
+      // first (Ecmascript objects preserve the order of addition).
+      // This is to make matching the longest prefix simpler later.
+      const prefixes = {};
+      const abbrevs = {};
+      Object
+        .keys(vocabs.prefixes)
+        .sort((a,b) => b.length - a.length)
+        .forEach(prefix => {
+          const abbrev = vocabs.prefixes[prefix];
+          abbrevs[abbrev] = prefix;
+          prefixes[prefix] = abbrev;
+        });
+
+      vocabs.prefixes = prefixes;
+      vocabs.abbrevs = abbrevs;
+      
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
 
@@ -637,45 +708,34 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return d3.json(service);
   }
   
-  // This returns an index of vocabularies to term IDs to term labels.
-  function getVerboseValuesForFields() {
-    return vocabs;
-  }
+  function getVerboseValuesForFields(){
 
-  const stripTerms = terms => {
-    let newTerms = {};
-    for(const termId in terms ){
-      newTerms[termId.split(":")[1]] = terms[termId];
-    }
+    const entries = Object
+      .entries(vocabs.vocabs)
+      .map(([vocabUri, vocab]) => {
+        const vocabLang = vocab[language];
+        if (!vocabLang)
+          throw new Error(`No ${language} localisation for vocab '${language}'`);
+        return [vocabLang.title, vocabLang.terms];
+      });
 
-    return newTerms;
-  }
-
-  function getOldStyleVerboseValuesForFields(){
-
-    let oldStyleValues = {
-      "Activities": stripTerms(vocabs.vocabs["essglobal:activities-ica/"].EN.terms),
-      "Organisational Structure": stripTerms(vocabs.vocabs["essglobal:organisational-structure/"].EN.terms),
-      "Base Membership Type": stripTerms(vocabs.vocabs["essglobal:base-membership-type/"].EN.terms)
-    }
-
-    return oldStyleValues;
+    return Object.fromEntries(entries);
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
     let vocabIDsAndInitiativeVariables = {};
 
-    //generated from filterableFields in the config
+    // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
-      vocabIDsAndInitiativeVariables[filterableField.vocabID] = filterableField.field;
+      const vocabUri = getVocabUriForProperty(filterableField);
+      if (!vocabUri)
+        throw new Error(`property does not reference a vocabulary`);
+      vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
     })
-
     return vocabIDsAndInitiativeVariables;
   }
 
   const getVocabTitlesAndVocabIDs = () => {
-    const language = "EN";
-
     const vocabTitlesAndVocabIDs = {}
 
     for(const vocabID in vocabs.vocabs){
@@ -685,11 +745,88 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return vocabTitlesAndVocabIDs;
   }
 
+  // Expands a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all expansions applied.
+  function expandUri(uri) {
+    while (true) {
+      const delimIx = uri.indexOf(':');
+      if (delimIx < 0)
+        return uri; // Shouldn't normally happen... expanded URIs have `http(s):`
+      
+      const abbrev = uri.substring(0, delimIx);
+      if (abbrev == 'http' || abbrev == 'https')
+        return uri; // No more expansion needed
+
+      if (abbrev in vocabs.abbrevs) // Expand this abbreviation
+        uri = vocabs.abbrevs[abbrev]+uri.substring(delimIx+1);
+    }
+  }
+
+  // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all abbreviations applied.
+  function abbrevUri(uri) {
+    uri = expandUri(uri); // first expand it, if necessary
+
+    // Find a prefix match
+    const prefix = Object
+      .keys(vocabs.prefixes) // NOTE: assumes this object is sorted largest-key first
+      .find(p => uri.startsWith(p));
+
+    // Substitute the match with the abbreviation.
+    if (prefix)
+      return vocabs.prefixes[prefix]+':'+uri.substring(prefix.length);
+
+    return uri; // No abbreviation possible.
+  }
+
+  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  function getVocabTerm(vocabUri, termUri) {
+    termUri = abbrevUri(termUri);
+    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
+    return vocabs.vocabs[vocabUri][language].terms[termUri];
+  }
+
+  // Gets the vocab URI for a property, if it has one.
+  //
+  // Returns a vocab URI, or null if it does not have one.  The URI may be abbreviated.
+  //
+  // Throws an exception if there is no such property. 
+  function getVocabUriForProperty(propName) {
+    const propDef = classSchema.find(p => p.propertyName === propName)
+    if (!propDef) {
+      throw new Error(`unrecognised property name: '${propName}'`);
+    }
+    
+    return propDef.vocabUri;
+  }
+
+  // Gets the vocab for a property.
+  //
+  // Returns a vocab index (for the currently set language).
+  //
+  // Throws an exception if there is some reason this fails. The
+  // exception will have a short description indicating the problem.
+  function getVocabForProperty(propName) {
+    const vocabUri = getVocabUriForProperty(propName);
+    if (!vocabUri) {
+      throw new Error(`property does not reference a vocabulary: '${propName}'`);
+    }
+    
+    // Assume classSchema's vocabUris are validated. But language availability can't be
+    // checked so easily.
+    const vocab = vocabs.vocabs[vocabUri][language];
+    if (!vocab) {
+      throw new Error(`no title in lang ${language} for property: '${propName}'`);
+    }
+    
+    return vocab;
+  }
+
   //construct the object of terms for advanced search
   function getTerms(){
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
-
-    const language = "EN";
 
     let usedTerms = {};
 
@@ -701,13 +838,16 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     for(const initiativeUid in initiativesByUid ) {
       const initiative = initiativesByUid[initiativeUid];
 
-	    for(const vocabID in vocabIDsAndInitiativeVariables){
-		    const vocabTitle = vocabs.vocabs[vocabID][language].title;
-        const prefix = vocabs.prefixes["https://w3id.solidarityeconomy.coop/essglobal/V2a/standard/" + vocabID.split(":")[1]] //if the vocabId was the full URI, this wouldn't be an issue, and I'm not sure it would cause any other problems.
-		    const termID = initiative[vocabIDsAndInitiativeVariables[vocabID]];
+      for(const vocabID in vocabIDsAndInitiativeVariables){
+        const vocabTitle = vocabs.vocabs[vocabID][language].title;
+        const propName = vocabIDsAndInitiativeVariables[vocabID];
+        const id = initiative[propName];
+        const propDef = classSchema.find(p => p.propertyName === propName);
+        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
 
-		    if(!usedTerms[vocabTitle][termID] && termID)
-			    usedTerms[vocabTitle][termID] = vocabs.vocabs[vocabID][language].terms[prefix + ":" + termID];
+        // Currently still keeping the output data strucutre the same, so use id not term
+        if(!usedTerms[vocabTitle][id] && id)
+          usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][language].terms[id];
       }
     }
 
@@ -746,7 +886,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getLoadedInitiatives: getLoadedInitiatives,
     getInitiativeUIDMap: getInitiativeUIDMap,
     getVerboseValuesForFields: getVerboseValuesForFields,
-    getOldStyleVerboseValuesForFields: getOldStyleVerboseValuesForFields,
     getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
     getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
     getTerms: getTerms,
