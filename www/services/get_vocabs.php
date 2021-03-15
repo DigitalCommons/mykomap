@@ -9,21 +9,20 @@
 
   The `config.json` file is read for definitions of:
 
-  1. A list of vocabularies to index, and
+  1. A list of SKOS vocabulary schemes to index, and
   2. A list language identifiers to obtain labels for.
 
-  See [CONFIG](#CONFIG) for details of this.
+  (See [CONFIG](#CONFIG) for details of this.)
 
-  Then the SPARQL endpoint FIXME is queried for the vocabulary labels,
-  and this data is transformed into indexes (rather than a flat list).
+  Then, each item in the `vocabularies` array is used to create a
+  SPARQL query for the given endpoints, that retrieves the vocabulary
+  URIs and their `skos:prefLabel` properties in the languages defined
+  by `languages`, where available.
 
-  Given the resulting index datastructure in `$config`, to access the
-  label in English (i.e. `$lang == 'EN'`) for a term `$term1` in the
-  vocabulary `$vocab1`, use:
+  The resulting query data is then aggregated into an index of
+  vocabulary term URIs and their labels in the requested languages.
 
-      $label = $config['vocabularies'][$vocab1]['language'][$lang]['terms'][$term1];
-
-  FIXME case sensitivity?
+  (See [OUTPUT DATA FORMAT](#OUTPUT-DATA-FORMAT) for details of this.)
 
   # CONFIG
 
@@ -33,20 +32,146 @@
       {
         ...
 
-        "languages": ["EN", "FR"],
+        "languages": ["EN", ... ],
 
-        "vocabularies": {
-          "https://lod.coop/essglobal/V2a/standard/activities":
-            "http://data.solidarityeconomy.coop:8890/sparql",
-          "https://lod.coop/essglobal/V2a/standard/organisational-structure":
-            "http://data.solidarityeconomy.coop:8890/sparql"
-        },
+        "vocabularies": [
+          { "endpoint": "http:\/\/dev.data.solidarityeconomy.coop:8890/sparql",
+            "uris": {
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/activities-ica/": "aci",
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/countries-iso/": "coun",
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/regions-ica/": "reg",
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/super-regions-ica/": "sreg",
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/organisational-structure/": "os",
+              "https:\/\/dev.lod.coop/essglobal/2.1/standard/base-membership-type/": "bmt",
+               ...
+            }
+          }
+          ...
+        ],
 
         ...
       }
 
- FIXME continue
+  Notice that there can be more than one endpoint, and each endpoint
+  has a set of vocabularies associated. This is because each dataset
+  *could* come from a separate endpoint, because each has its own
+  `endpoint.txt` configuration file within the datasets' subdirectory
+  (as well as its own request and default graph URI, therefore the
+  vocabs could differ too.).
+
+  Notice also that each vocabulary URL, assumed to be a SKOS
+  vocabulary scheme, has an associated abbreviation. Currently these
+  MUST match the abbreviations hardwired in the code. The example
+  above shows the requried prefixes at the time of writing. The URLs
+  themselves can be whatever required to match the data being queried.
+
+  Later, the fields defined for initiatives will be configurable, and
+  then the prefixes will be too.
+
+
+  # OUTPUT DATA FORMAT
+
+  A slimmed-down example of the JSON data returned given the CONFIG
+  example above.
+
+      {
+        "prefixes": {
+          "https://dev.lod.coop/essglobal/2.1/standard/organisational-structure/": "os",
+          "https://dev.lod.coop/essglobal/2.1/standard/activities-ica/": "aci",
+          "https://dev.lod.coop/essglobal/2.1/standard/base-membership-type/": "bmt",
+          "https://dev.lod.coop/essglobal/2.1/standard/countries-iso/": "coun",
+          "https://dev.lod.coop/essglobal/2.1/standard/regions-ica/": "reg",
+          "https://dev.lod.coop/essglobal/2.1/standard/super-regions-ica/": "sreg"
+        },
+        "vocabs": {
+          "bmt:": {
+            "EN": {
+              "title": "Typology",
+              "terms": {
+                "bmt:BMT20": "Producers",
+                 ... other terms here ...
+              },
+              ... other languages here ...
+            }
+          },
+          "os:": {
+            "EN": {
+              "title": "Structure Type",
+              "terms": {
+                "os:OS115": "Co-operative",
+                 ... other terms here ...
+              },
+              ... other languages here ...
+            }
+          },
+          "sreg:": {
+            "EN": {
+              "title": "Super Regions",
+              "terms": {
+                "sreg:I-AP": "Asia+Pacific",
+                 ... other terms here ...
+              },
+              ... other languages here ...
+            }
+          },
+          "reg:": {
+            "EN": {
+              "title": "Regions",
+              "terms": {
+                "reg:I-AM-CE": "Central America",
+                 ... other terms here ...
+              },
+              ... other languages here ...
+            }
+          },
+          "aci:": {
+            "EN": {
+              "title": "Economic Activities",
+              "terms": {
+                "aci:ICA140": "Financial Services",
+                 ... other terms here ...
+              },
+              ... other languages here ...
+            }
+          }
+        }
+      }
+
+  Note that some or all vocabulary terms may be missing if they do not
+  have `prefLabels` with the required language. The data needs to be
+  provisioned with a full set to avoid this.
+
+  When terms are present but the vocabulary `dc:title` is not
+  localised, the title falls back to the un-localised title, if
+  present (mainly because current data does not define localisations
+  for these).
+
+  URIs in the resulting data are also abbreviated whenever possibly by
+  using the abbreviations defined in the `uris` section. So a term
+  with the URI:
+
+      https://dev.lod.coop/essglobal/2.1/standard/countries-iso/US
+
+  Would be abbreviated to:
+
+      coun:US
+
+  The prefixes and abbreviations for them are supplied with the term
+  data.
+
 */
+
+/** Log/respond following an error
+ *
+ * Logs the message `$msg` with `error_log`, and returns a JSON object
+ * in the response body defining properties for `message` (set by
+ * `$msg`), and `status` (always "error").
+ * 
+ * Then calls `exit($msg)`.
+ *
+ * @param $msg  A message to include in the log and response.
+ * @param $code A HTTP return code to set in the response.
+ */
 function croak($msg, $code = 500) {
     // Log the error before trying anything else
     error_log($msg);
@@ -80,10 +205,22 @@ if (version_compare(phpversion(), $require_php, '<')) {
     croak("php version needs to be >= $require_php but is: " . phpversion());
 }
 
+/** Specialised croak wrapper for reporting missing attributes in `config.json`.
+ *
+ * Calls `croak` with the appropriate parameters.
+ *
+ * @param $attr The name of the attribute.
+ */
 function croak_no_attr($attr) {
     croak("config.json is missing the attribute `$attr`");
 }
 
+/** Abbreviate a URI using the defined prefixes, if possible.
+ *
+ * @param &$prefixes The currently defined prefixes to use
+ * @param $itme      The URI to abbreviate.
+ * @return The URI, possibly abbreviated.
+ */
 function abbrev(&$prefixes, $item) {
     $matches = [];
     if (false === preg_match('{^(https?://.*[#/])(.*)}i', $item, $matches)) {
@@ -102,11 +239,20 @@ function abbrev(&$prefixes, $item) {
 }
 
 
+/** Escape any `<` and `>` characters in a URI for use in a SPARQL query.
+ *
+ * @param $uri  A string to escape.
+ * @return The escaped form of the URI.
 function escape_uri($uri) {
     return str_replace(['<', '>'], ['%3C', '%3E'], $uri);
 }
 
-// $graph is optional
+/** Constructs a SPARQL query URL, incorporating a query and a default graph
+ *
+ * @param $endpoint  The base URL for the SPARQL endpoint we want to address
+ * @param $query     A SPARQL query, which will be escaped
+ * @param $graph     An optional default graph URI to pass
+ */
 function mk_sparql_url($endpoint, $query, $graph = NULL) {
     $dgu_param = '';
     if (isset($graph))
@@ -115,6 +261,13 @@ function mk_sparql_url($endpoint, $query, $graph = NULL) {
 	return "$endpoint?$dgu_param$query_param";
 }
 
+/** Post a GET request to the given URL, returning the response.
+ *
+ * On failure, calls `croak` with the error.
+ *
+ * @param $url  The URL to post to
+ * @return A PHP Reponse instance on success.
+ */
 function request($url) {
 	// is curl installed?
 	if (!function_exists('curl_init')) {
@@ -155,14 +308,31 @@ function request($url) {
     }
 }
 
-// $graph is optional
+/** Posts a query to the given SPARQL endpoint, gets the result
+ *
+ * Calls `croak` on failure.
+ *
+ * @param $endpoint  The SPARQL endpoint URL
+ * @param $query     The SPARQL query to post
+ * @param $graph     An optional default graph URI to specify.
+ * @return On success, the query response decoded from JSON format into a PHP datastructure.
+ */
 function query($endpoint, $query, $graph = NULL) {
     $url = mk_sparql_url($endpoint, $query, $graph);
 	$response = request($url);
 	return json_decode($response, true);
 }
 
-// $graph is optional
+/** Constructs a SPARQL query to get the vocab terms
+ *
+ * @param $vocabs A datastructure equivalent to the `vocabularies`
+ * attribute of `config.json`, containing a list of objects. Each
+ * object defines an endpoint URI, and an index of vocabulary scheme
+ * URIs mapped to their abbreviation.
+ * @param $langs  An array of one or more language identifier codes.
+ * @param $graph  An optional default graph URI for the query.
+ * @return  On success, a SPARQL query string.
+ */
 function generate_query($vocabs, $langs, $graph = NULL) {
     $graph = escape_uri($graph);
     $quote = function($uri) {
@@ -209,6 +379,15 @@ WHERE {
 QUERY;
 }
 
+/** Aggregates the raw JSON results of a SPARQL query into an index datastructure
+ *
+ * 
+ * @param $result  An array into which to add the results. Should consist of at minimum
+ * an array with a single element `prefixes` referencing an empty array.
+ * @param $query_results The raw JSON obtained from a SPARQL query
+ * generated by `generate_query`.
+ * @return The updated version of `$result`
+ */
 function add_query_data($result, $query_results) {
     $data = $query_results['results']['bindings'];
     $prefixes = &$result['prefixes'];
@@ -239,6 +418,13 @@ function add_query_data($result, $query_results) {
     return $result;
 }
 
+
+/** The main entry-point for this script
+ *
+ * Reads the config, constructs and posts the queries, returns the
+ * aggregated result as the response body, with content-type
+ * `application/json`.
+ */
 function main() {
     // Predefined prefixes commonly seen in the data.  Any inferred
     // prefixes not in this list, or obtained from config.json, will
@@ -281,18 +467,6 @@ function main() {
     echo json_encode($result);
 }
 
+// Call the entrypoint.
 main();
 
-/* 
-Caveats/To do: 
-- vocab titles are not internationalised in the data FIXME 
-- undefed-defined prefix abbreviations will have underscore names creates
-- config.json should be able to define prefix abbrevs.
-- config.json should be able to define DGU?
-- vocab data probably needs to be in the default graph
-- language IDs are assumed simple (primary only), if not may need simplifying?
-- Missing labels in the target languages may result in nulls / blanks / missing lang attrs? 
-- query result data is assumed UTF8? likewise script output
-- may need to think about ramifications of querying multiple endpoints/graphs? namespace clashes.
-- allow config to define canned vocabs?
-*/
