@@ -243,6 +243,7 @@ function abbrev(&$prefixes, $item) {
  *
  * @param $uri  A string to escape.
  * @return The escaped form of the URI.
+ */
 function escape_uri($uri) {
     return str_replace(['<', '>'], ['%3C', '%3E'], $uri);
 }
