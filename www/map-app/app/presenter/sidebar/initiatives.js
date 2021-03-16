@@ -341,12 +341,14 @@ define([
         data: { text: text, results: results }
       });
     }
+    /*
     else {
       //TODO: do other stuff like panning
       //causes err?
       eventbus.publish({ topic: "Map.removeSearchFilter" });
       eventbus.publish({ topic: "Sidebar.showDirectory" });
     }
+    */
   };
 
   proto.performSearchNoText = () => {
