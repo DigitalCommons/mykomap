@@ -397,6 +397,7 @@ body {
 
 .sea-main-sidebar {
   z-index: inherit; /* attempt to stop scrollbar showing through */
+  overflow-y: auto;
 }
 
 .sea-initiatives-list-sidebar-content,
@@ -542,7 +543,6 @@ input[type="search"] {
 .map-app-sidebar-scrollable-section {
   position: relative;
   flex: 1 1 auto;
-  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
