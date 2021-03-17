@@ -357,7 +357,8 @@ define([
     for(let filterName in verboseNamesMap){
       filterArray.push({
         "filterName": filterName,
-        "verboseName": verboseNamesMap[filterName]
+        "verboseName": verboseNamesMap[filterName],
+        "initiatives": filtered[filterName]
       })
     }
 
