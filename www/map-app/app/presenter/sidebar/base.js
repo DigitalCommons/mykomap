@@ -109,11 +109,11 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //       (e.g. where it affects which initiatives are selected)
       //pres.view.refresh();
 
-      if(newContent.filters[0]){
-        eventbus.publish({
-          topic: "Map.removeFilters",
-        })
-        
+      eventbus.publish({
+        topic: "Map.removeFilters",
+      });
+
+      if(newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
           let filterData = {
             filterName: filter.filterName,
@@ -147,11 +147,11 @@ define(["app/eventbus", "model/config", "presenter"], function(
         return;
       //pres.view.refresh();
       if(newContent){
-        if(newContent.filters[0]){
-          eventbus.publish({
-            topic: "Map.removeFilters",
-          })
-          
+        eventbus.publish({
+          topic: "Map.removeFilters",
+        });
+
+        if(newContent.filters[0]){     
           newContent.filters.forEach(filter=>{
             let filterData = {
               filterName: filter.filterName,
