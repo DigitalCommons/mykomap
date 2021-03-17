@@ -7,7 +7,7 @@ define(["app/eventbus", "model/config", "presenter"], function(
 
   function Stack() {
     this.index = 0;
-    this.storage = [null];
+    this.storage = [];
   }
   Stack.prototype = {
     append: function(obj) {
@@ -23,10 +23,10 @@ define(["app/eventbus", "model/config", "presenter"], function(
       //   this.storage[this.storage.length] = obj;
       //   this.index = this.storage.length - 1;
       // }
+
       // This implementation adds things to the very end, so the stack grows and grows:
-      this.storage[this.storage.length] = null;
-      this.storage[this.storage.length-2] = obj;
-      this.index = this.storage.length - 2;
+      this.storage.push(obj);
+      this.index = this.storage.length - 1;
     },
     current: function() {
       // returns undefined if the stack is empty
