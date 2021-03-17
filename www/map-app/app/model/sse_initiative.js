@@ -878,6 +878,39 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return possibleFilterValues;
   }
 
+  function getAlternatePossibleFilterValues(filters, field){
+    //construct an array of the filters that aren't the one matching the field
+    let otherFilters = [];
+    filters.forEach(filter=>{
+      if(filter.verboseName.split(":")[0] !== field)
+        otherFilters.push(filter);
+    });
+
+    //find the set of shared initiatives from the other filters
+    let sharedInitiatives = [];
+    otherFilters.forEach((filter,i) => {
+      if(i < 1)
+        sharedInitiatives = Object.values(filter.initiatives);
+      else
+        //loop through sharedInitiatives and remove ones without a match in filter.initiatives
+        sharedInitiatives = sharedInitiatives.filter(initiative => 
+          filter.initiatives.includes(initiative)
+        );
+    });
+
+    //find the initiative variable associated with the field
+    const vocabID = getVocabTitlesAndVocabIDs()[field];
+    const initiativeVariable = getVocabIDsAndInitiativeVariables()[vocabID];
+
+    //loop through the initiatives and get the possible values for the initiative variable
+    let alternatePossibleFilterValues = [];
+    sharedInitiatives.forEach(initiative => {
+      alternatePossibleFilterValues.push(initiative[initiativeVariable])
+    })
+
+    return alternatePossibleFilterValues;
+  }
+
   var pub = {
     loadFromWebService: loadFromWebService,
     search: search,
@@ -895,7 +928,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
     getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
     getTerms: getTerms,
-    getPossibleFilterValues: getPossibleFilterValues
+    getPossibleFilterValues: getPossibleFilterValues,
+    getAlternatePossibleFilterValues, getAlternatePossibleFilterValues
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});

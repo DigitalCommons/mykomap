@@ -305,6 +305,12 @@ define([
       // Sort entries alphabetically by value (the human-readable labels)
       entryArray.sort((a,b) => String(a[1]).localeCompare(String(b[1])));
 
+      //find alternative possible filters for an active filter
+      let alternatePossibleFilterValues;
+      if(currentFilters.length > 0 && activeFilterCategories.includes(field))
+        alternatePossibleFilterValues = sseInitiative.getAlternatePossibleFilterValues(
+          map.getFiltersFull(),field);
+
       entryArray.forEach(entry=>{
         const [id, label] = entry;
         const option = dropDown
@@ -318,7 +324,11 @@ define([
           if(currentFilters.includes(id)) 
             option.attr("selected",true);      
           
-          if(!activeFilterCategories.includes(field))
+          if(activeFilterCategories.includes(field)){
+            if(currentFilters.length > 1 && !alternatePossibleFilterValues.includes(id))
+              option.attr("disabled",true);
+          }
+          else
             if(!possibleFilterValues.includes(id)){
               option.attr("disabled",true);
             }
