@@ -355,8 +355,12 @@ define([
           .text("Clear Filters")
           .on("click", function () {
             //redo search
+            console.log("this one")
             that.presenter.removeFilters();
-            that.presenter.performSearch(item.searchedFor);
+            if(item.searchedFor)
+              that.presenter.performSearch(item.searchedFor);
+            else
+              that.presenter.performSearchNoText();
           });
       }
 
