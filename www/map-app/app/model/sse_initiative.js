@@ -929,7 +929,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues,
-    getAlternatePossibleFilterValues, getAlternatePossibleFilterValues
+    getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
+    getVocabTerm, getVocabUriForProperty
   };
   // Automatically load the data when the app is ready:
   //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
