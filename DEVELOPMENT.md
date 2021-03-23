@@ -42,7 +42,7 @@ push the code and the tags:
 
     git commit -m "my latest changes..."
 	npm version $NEW_VERSION
-	git push --tags
+	git push --tags                # <-- DON'T FORGET THIS STEP!
 
 Dependant projects can then be updated to use it like this (for
 example):
