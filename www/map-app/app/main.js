@@ -1,6 +1,4 @@
 const config_builder = require('./model/config');
-const myconsole = require('./console');
-const debugging = require('./debug');
 
 "use strict";
 
@@ -68,12 +66,6 @@ function parseUrlParameters(search) {
 }
 
 function init(base_config, attrs, urlParams) {
-  console.log(
-    "TODO - Check the use of console here. Is this the mechanism by which app/console gets used by the rest of the app?"
-  );
-  console.log(
-    "TODO - Check why is app/debug being loaded here - probably a leftover from clone origin."
-  );
   console.log(
     "header, footer and left column have been reduce to zero in style.css."
   );
