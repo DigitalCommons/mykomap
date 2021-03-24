@@ -2,7 +2,7 @@
   "name": "sea-map",
   "version": "0.1.65",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
-  "main": "www/map-app/app.js",
+  "main": "www/map-app/app/main.js",
   "config": {
     "deploy_to": "",
     "deploy_user": "www-data",
@@ -20,9 +20,11 @@
     "lint": "eslint www/map-app/**/*.js",
     "test": "mocha",
     "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
-    "build": "PATH=$PATH:$PWD/bin; sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
+    "build": "bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "build-windows": "./bin/sea-site-build-windows -c ext/config -m ./ -d ext/build ext/src/*",
     "server": "php -t ext/build/out -S localhost:8080",
+    "webpack": "webpack",
+    "server2": "php -t dist -S localhost:8080",
     "public-server": "php -t ext/build/out -S 0.0.0.0:8080",
     "dev-deploy": "bin/sea-site-deploy -f ext/build/out/"
   },
@@ -44,10 +46,25 @@
   },
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
-    "requirejs": "^2.3.6"
+    "@fortawesome/fontawesome-free": "^5.15.2",
+    "copy-webpack-plugin": "^7.0.0",
+    "css-loader": "^5.0.1",
+    "d3": "^5.7.0",
+    "file-loader": "^6.2.0",
+    "leaflet": "^1.5.1",
+    "leaflet-active-area": "^1.1.0",
+    "leaflet-contextmenu": "^1.4.0",
+    "leaflet.awesome-markers": "^2.0.5",
+    "leaflet.markercluster": "^1.4.1",
+    "mini-css-extract-plugin": "^1.3.5",
+    "minimist": "^1.2.5",
+    "postal": "^2.0.5",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.18.0"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
-    "mocha": "^8.2.1"
+    "mocha": "^8.2.1",
+    "webpack-cli": "^4.4.0"
   }
 }

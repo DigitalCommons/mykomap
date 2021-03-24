@@ -1,15 +1,15 @@
 // Set up the various sidebars
-define([
-  "app/eventbus",
-  "d3",
-  "view/base",
-  "presenter/sidebar",
-  "view/sidebar/initiatives",
-  "view/sidebar/about",
-  "view/sidebar/directory",
-  "view/sidebar/datasets"
-], function (eventbus, d3, viewBase, presenter, initiatives, about, directory, datasets) {
-  "use strict";
+"use strict";
+const eventbus = require('../eventbus');
+const d3 = require('d3');
+const viewBase = require('./base');
+
+function _init(config) {
+  const presenter = require('../presenter/sidebar')(config);
+  const about = require('../view/sidebar/about')(config);
+  const directory = require('../view/sidebar/directory')(config);
+  const datasets = require('../view/sidebar/datasets')(config);
+  const initiatives = require('../view/sidebar/initiatives')(config);
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
@@ -22,14 +22,14 @@ define([
     // d3 selection redefines this, so hang onto it here:
     var that = this;
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
-      .append("button")
-      .attr("class", "w3-btn")
-      .attr("title", "Show directory")
-      .on("click", function () {
-        that.showSidebar();
-      })
-      .append("i")
-      .attr("class", "fa fa-angle-right");
+                        .append("button")
+                        .attr("class", "w3-btn")
+                        .attr("title", "Show directory")
+                        .on("click", function () {
+                          that.showSidebar();
+                        })
+                        .append("i")
+                        .attr("class", "fa fa-angle-right");
 
   };
 
@@ -41,7 +41,7 @@ define([
     // This is where the navigation buttons will go.
     // These are recreated when the sidebar is changed, e.g. from MainMenu to initiatives.
     selection.append("span")
-	           .attr("id", "map-app-sidebar-history-navigation")
+             .attr("id", "map-app-sidebar-history-navigation")
              .classed("map-app-sidebar-history-navigation");
     
     // The sidebar has a button that causes the main menu to be dispayed
@@ -347,8 +347,9 @@ define([
     view.createSidebars();
     view.changeSidebar("directory");
   }
-  var pub = {
+  return {
     init: init
   };
-  return pub;
-});
+}
+
+module.exports = _init;

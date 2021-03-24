@@ -1,13 +1,13 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "presenter",
-  "presenter/sidebar/base"
-], function(eventbus, config, presenter, sidebarPresenter) {
-  "use strict";
+"use strict";
+const eventbus = require('../eventbus');
 
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  
   // This is the presenter for the view/sidebar object.
   // Don't confuse this with the base object for all sidebar objects, which is in presenter/sidebar/base.
+  const sidebarPresenter = registry('presenter/sidebar/base');
 
   function Presenter() {}
 
@@ -41,12 +41,12 @@ define([
     var p = new Presenter();
     p.registerView(view);
 
-     eventbus.subscribe({
-       topic: "Sidebar.showInitiatives",
-       callback: function() {
-         p.changeSidebar("initiatives");
-       }
-     });
+    eventbus.subscribe({
+      topic: "Sidebar.showInitiatives",
+      callback: function() {
+        p.changeSidebar("initiatives");
+      }
+    });
 
     eventbus.subscribe({
       topic: "Sidebar.showAbout",
@@ -115,8 +115,9 @@ define([
 
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  return pub;
-});
+}
+
+module.exports = init;

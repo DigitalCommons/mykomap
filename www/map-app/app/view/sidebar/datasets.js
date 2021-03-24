@@ -1,11 +1,13 @@
 // The view aspects of the datasets sidebar
-define([
-  "d3",
-  "app/eventbus",
-  "presenter/sidebar/datasets",
-  "view/sidebar/base"
-], function(d3, eventbus, presenter, sidebarView) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+const eventbus = require('../../eventbus')
+
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter/sidebar/datasets');
+  const view = registry('view/base');
+  const sidebarView = registry('view/sidebar/base');
 
   // Our local Sidebar object:
   function Sidebar() {}
@@ -45,10 +47,10 @@ define([
 
     //create new div for buttons
     const datasetBtns = selection.append("ul")
-        .attr("class","sea-directory-list colours capitalized");
+                                 .attr("class","sea-directory-list colours capitalized");
 
     const color_class = function(i) {
-        return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
+      return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
     };
     Object.keys(datasets).forEach((dataset, i) => {
       let btn = datasetBtns
@@ -58,7 +60,7 @@ define([
         .attr("title", "load " + datasets[dataset] + " dataset")
         .text(datasets[dataset]);
       btn.on("click",()=>{
-	      d3.select(".sea-field-active").classed("sea-field-active", false);
+        d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(dataset);
       });
@@ -66,21 +68,21 @@ define([
     //add mixed btn
     if(Object.keys(datasets).length > 1){
       let btn = datasetBtns
-          .append("li")
-          .attr("class", color_class(Object.keys(datasets).length))
-          .attr("id",`${defaultIdMixed}-btn`)
-          .attr("title", "load mixed dataset")
-          .text("Mixed Sources");
+        .append("li")
+        .attr("class", color_class(Object.keys(datasets).length))
+        .attr("id",`${defaultIdMixed}-btn`)
+        .attr("title", "load mixed dataset")
+        .text("Mixed Sources");
       btn.on("click",()=>{
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(true);
       });
-      }
+    }
 
-      //set the default active button (currently loaded dataset)
-      selection.select(`#${defaultActive}-btn`)
-          .classed("sea-field-active", true);
+    //set the default active button (currently loaded dataset)
+    selection.select(`#${defaultActive}-btn`)
+             .classed("sea-field-active", true);
   };
 
 
@@ -94,8 +96,9 @@ define([
     view.setPresenter(presenter.createPresenter(view));
     return view;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  return pub;
-});
+}
+
+module.exports = init;

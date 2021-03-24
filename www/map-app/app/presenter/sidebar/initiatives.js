@@ -1,12 +1,13 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "presenter/sidebar/base",
-  "presenter/map"
-], function (eventbus, config, sseInitiative, sidebarPresenter, map) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
+
+function init(registry) {
+  const config = registry('config');
+  const sseInitiative = registry('model/sse_initiative');
+  const sidebarPresenter = registry('presenter/sidebar/base');
+  const map = registry('presenter/map');
+  
   function StackItem(initiatives) {
     this.initiatives = initiatives;
   }
@@ -20,8 +21,8 @@ define([
     StackItem.call(this, initiatives);
     this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?
-      "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
-      : "\"" + searchString + "\"";
+                                                    "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
+                                                  : "\"" + searchString + "\"";
     this.filters = filterNames.map((filterName,index)=>({
       filterName,
       verboseName: filterVerboseNames[index]
@@ -101,7 +102,7 @@ define([
         if(filter.verboseName.split(":")[0] === filterCategoryName)
           oldFilter = filter;
       })
-  
+      
       if(oldFilter){
         eventbus.publish({
           topic: "Map.removeFilter",
@@ -117,7 +118,7 @@ define([
     //get initiatives for new filter
     const allInitiatives = Object.values(sseInitiative.getInitiativeUIDMap());
     const filteredInitiatives = allInitiatives.filter(initiative => 
-        initiative[filterCategory] == filterValue
+      initiative[filterCategory] == filterValue
     )
 
     //create new filter
@@ -146,7 +147,7 @@ define([
       {
         topic: "Directory.removeFilters",
         data: null
-      });
+    });
   }
 
   proto.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative = function (initiative, sidebarWidth) {
@@ -390,13 +391,13 @@ define([
       }
     });
     /*
-    eventbus.subscribe({
-      topic: "Datasets.filterDataset",
-      callback: function(data) {
-        //p.onInitiativeResults(data);
-      }
-    });
-    */
+       eventbus.subscribe({
+       topic: "Datasets.filterDataset",
+       callback: function(data) {
+       //p.onInitiativeResults(data);
+       }
+       });
+     */
 
     eventbus.subscribe({
       topic: "Marker.SelectionToggled",
@@ -439,8 +440,9 @@ define([
     });
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  return pub;
-});
+}
+
+module.exports = init;

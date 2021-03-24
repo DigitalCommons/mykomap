@@ -81,7 +81,7 @@ body {
 }
 
 .sea-marker {
-  background-image: url("../lib/images/markers-sea.png");
+  background-image: url("../images/markers-sea.png");
 }
 
 .sea-non-geo-marker {
@@ -97,7 +97,7 @@ body {
 }
 
 .awesome-marker-shadow {
-  background-image: url("../lib/images/markers-shadow.png");
+  background-image: url("../images/markers-shadow.png");
   background-size: 35px 16px;
 }
 
@@ -107,12 +107,12 @@ body {
 (min-device-pixel-ratio: 1.5),
 (min-resolution: 1.5dppx) {
   .sea-marker {
-    background-image: url(../lib/images/markers-sea@2x.png);
+    background-image: url(../images/markers-sea@2x.png);
     background-size: 720px 46px;
   }
 
   .awesome-marker-shadow {
-    background-image: url(../lib/images/markers-shadow@2x.png);
+    background-image: url(../images/markers-shadow@2x.png);
     background-size: 35px 16px;
   }
 }

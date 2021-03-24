@@ -1,13 +1,13 @@
-define([
-  "leaflet",
-  "leafletMarkerCluster",
-  "leafletAwesomeMarkers",
-  "view/base",
-  "presenter/map/marker",
-  "app/eventbus",
-  "model/sse_initiative"
-], function (leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus, sse_initiatives) {
-  "use strict";
+"use strict";
+const leaflet = require('leaflet');
+const leafletMarkerCluster = require('leaflet.markercluster');
+const leafletAwesomeMarkers = require('leaflet.awesome-markers');
+const eventbus = require('../../eventbus');
+
+function init(registry) {
+  const config = registry('config');
+  const viewBase = registry('view/base');
+  const presenter = registry('presenter/map/marker');
 
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
@@ -81,8 +81,8 @@ define([
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
         markerColor: this.initiative.primaryActivity
-          ? this.initiative.primaryActivity.toLowerCase()
-          : "ALL",
+                   ? this.initiative.primaryActivity.toLowerCase()
+                   : "ALL",
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-marker",
@@ -163,8 +163,8 @@ define([
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: this.initiative.primaryActivity
-            ? this.initiative.primaryActivity.toLowerCase()
-            : "AM00",
+                     ? this.initiative.primaryActivity.toLowerCase()
+                     : "AM00",
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker",
@@ -184,8 +184,8 @@ define([
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: initiative.primaryActivity
-            ? initiative.primaryActivity.toLowerCase()
-            : "ALL",
+                     ? initiative.primaryActivity.toLowerCase()
+                     : "ALL",
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker sea-selected",
@@ -203,7 +203,7 @@ define([
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
           unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-          initiative.marker
+            initiative.marker
         ) {
           if (initiative.marker.__parent) //if it has a parent
           {
@@ -218,7 +218,7 @@ define([
     else {
       if (
         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-        initiative.marker
+          initiative.marker
       ) {
 
         initiative.marker.__parent.spiderfy();
@@ -450,7 +450,7 @@ define([
   }
 
 
-  var pub = {
+  return {
     createMarker: createMarker,
     setSelectedClusterGroup: setSelectedClusterGroup,
     setUnselectedClusterGroup: setUnselectedClusterGroup,
@@ -465,5 +465,6 @@ define([
     showMarkers: showMarkers,
     refreshMarker: refreshMarker
   };
-  return pub;
-});
+}
+
+module.exports = init;

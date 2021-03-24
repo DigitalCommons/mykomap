@@ -1,19 +1,12 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "view/sidebar/base",
-  "presenter/sidebar/base",
-  "view/map/marker"
-], function (
-  eventbus,
-  config,
-  sseInitiative,
-  sidebarView,
-  sidebarPresenter,
-  markerView
-) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
+
+function init(registry) {
+  const config = registry('config');
+  const sidebarView = registry('view/sidebar/base');
+  const sseInitiative = registry('model/sse_initiative');
+  const sidebarPresenter = registry('presenter/sidebar/base');
+  const markerView = registry('view/map/marker');
 
   function StackItem(initiatives) {
     this.initiatives = initiatives;
@@ -287,9 +280,10 @@ define([
 
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter,
     latLngBounds: latLngBounds
   };
-  return pub;
-});
+}
+
+module.exports = init;

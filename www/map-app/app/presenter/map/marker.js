@@ -1,14 +1,12 @@
-define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
-        "app/view/map/default_popup", "optional!configuration/popup",], function (
-  eventbus,
-  presenter,
-  config,
-  sse_initiatives,
-  default_popup,
-  popup
-) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  const popup = registry('view/map/popup');
+  const sse_initiatives = registry('model/sse_initiative');
+  
   function Presenter() { }
 
   const proto = Object.create(presenter.base.prototype);
@@ -76,8 +74,10 @@ define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
     return p;
   }
 
-  var pub = {
+  return  {
     createPresenter: createPresenter
   };
-  return pub;
-});
+}
+
+
+module.exports = init;

@@ -1,13 +1,13 @@
-// This is the place where the various views are pulled into the application.
-define([
-  "model/config",
-  "d3",
-  "view/map",
-  "view/sidebar",
-  "view/searchbox"
-], function(config, d3, map, sidebar, searchbox) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+const mapAppStyles = require('../map-app.css');
 
+function _init(registry) {
+  const config = registry('config');
+  const map = registry('view/map');
+  const sidebar = registry('view/sidebar');
+  const searchbox = registry('view/searchbox');
+  
   function init() {
     if (config.htmlTitle()) {
       d3.select("html")
@@ -29,8 +29,9 @@ define([
     //searchbox.init();
     sidebar.init();
   }
-  var pub = {
+  
+  return {
     init: init
   };
-  return pub;
-});
+}
+module.exports = _init;
