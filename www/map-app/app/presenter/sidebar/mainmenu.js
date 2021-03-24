@@ -1,11 +1,5 @@
-/*define(["app/eventbus", "model/config", "presenter/sidebar/base"], function(
-  eventbus,
-  config,
-  sidebarPresenter
-) {*/
-  const eventbus = require('../../eventbus');
-
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
 function init(registry) {
   const config = registry('config');
@@ -57,4 +51,3 @@ function init(registry) {
 }
 
 module.exports = init;
-//});

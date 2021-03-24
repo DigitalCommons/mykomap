@@ -1,14 +1,7 @@
 // The view aspects of the datasets sidebar
-/*define([
-  "d3",
-  "app/eventbus",
-  "presenter/sidebar/datasets",
-  "view/sidebar/base"
-   ], function(d3, eventbus, presenter, sidebarView) {*/
+"use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-
-  "use strict";
 
 function init(registry) {
   const config = registry('config');
@@ -54,10 +47,10 @@ function init(registry) {
 
     //create new div for buttons
     const datasetBtns = selection.append("ul")
-        .attr("class","sea-directory-list colours capitalized");
+                                 .attr("class","sea-directory-list colours capitalized");
 
     const color_class = function(i) {
-        return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
+      return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
     };
     Object.keys(datasets).forEach((dataset, i) => {
       let btn = datasetBtns
@@ -67,7 +60,7 @@ function init(registry) {
         .attr("title", "load " + datasets[dataset] + " dataset")
         .text(datasets[dataset]);
       btn.on("click",()=>{
-	      d3.select(".sea-field-active").classed("sea-field-active", false);
+        d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(dataset);
       });
@@ -75,21 +68,21 @@ function init(registry) {
     //add mixed btn
     if(Object.keys(datasets).length > 1){
       let btn = datasetBtns
-          .append("li")
-          .attr("class", color_class(Object.keys(datasets).length))
-          .attr("id",`${defaultIdMixed}-btn`)
-          .attr("title", "load mixed dataset")
-          .text("Mixed Sources");
+        .append("li")
+        .attr("class", color_class(Object.keys(datasets).length))
+        .attr("id",`${defaultIdMixed}-btn`)
+        .attr("title", "load mixed dataset")
+        .text("Mixed Sources");
       btn.on("click",()=>{
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(true);
       });
-      }
+    }
 
-      //set the default active button (currently loaded dataset)
-      selection.select(`#${defaultActive}-btn`)
-          .classed("sea-field-active", true);
+    //set the default active button (currently loaded dataset)
+    selection.select(`#${defaultActive}-btn`)
+             .classed("sea-field-active", true);
   };
 
 
@@ -109,4 +102,3 @@ function init(registry) {
 }
 
 module.exports = init;
-//});

@@ -1,13 +1,6 @@
-/*define([
-   "app/eventbus",
-   "model/sse_initiative",
-   "presenter",
-   "model/config",
-   "view/map/marker"
-   ], function (eventbus, sse_initiative, presenter, config, markerView) {*/
 const eventbus = require('../eventbus');
 
-  "use strict";
+"use strict";
 function init(registry) {
   const config = registry('config');
   const presenter = registry('presenter');
@@ -108,7 +101,7 @@ function init(registry) {
   };
   proto.onInitiativeNew = function (data) {
     const initiative = data,
-      marker = this.view.addMarker(initiative).marker;
+          marker = this.view.addMarker(initiative).marker;
 
     if (marker.hasPhysicalLocation) allMarkers.push(marker);
   };
@@ -186,13 +179,13 @@ function init(registry) {
   proto.onNeedToHideInitiativeTooltip = function (data) {
     this.view.hideTooltip(data);
   };
-  //	proto.onInitiativeSelected = function(data) {
-  //		const initiative = data;
-  //		console.log('onInitiativeSelected');
-  //		console.log(initiative);
-  //		this.view.setSelected(initiative);
-  //		this.view.zoomAndPanTo({lon: initiative.lng, lat: initiative.lat});
-  //	};
+  //  proto.onInitiativeSelected = function(data) {
+  //    const initiative = data;
+  //    console.log('onInitiativeSelected');
+  //    console.log(initiative);
+  //    this.view.setSelected(initiative);
+  //    this.view.zoomAndPanTo({lon: initiative.lng, lat: initiative.lat});
+  //  };
   proto.onMapNeedsToBeZoomedAndPanned = function (data) {
     console.log("onMapNeedsToBeZoomedAndPanned ", data);
     const latLngBounds = data;
@@ -213,7 +206,7 @@ function init(registry) {
 
   proto.getInitialBounds = function () {
     return config.getInitialBounds() == undefined ?
-      sse_initiative.latLngBounds(null) : config.getInitialBounds();
+           sse_initiative.latLngBounds(null) : config.getInitialBounds();
   };
 
   proto.getInitialZoom = function () { };
@@ -272,8 +265,8 @@ function init(registry) {
       });
     }
     /* if this is the second or more filter, remove items from the 
-    filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
-    */
+       filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
+     */
     else{      
       for(const initiativeUniqueId in filteredInitiativesUIDMap){
         if(!initiatives.includes(filteredInitiativesUIDMap[initiativeUniqueId])){
@@ -405,14 +398,14 @@ function init(registry) {
     }
 
     /*
-    //this was causing a bug and doesn't seem to do anything useful
+       //this was causing a bug and doesn't seem to do anything useful
 
-    //if the results match the previous results don't do anything
-    if (data.initiatives == lastRequest)
-      return;
+       //if the results match the previous results don't do anything
+       if (data.initiatives == lastRequest)
+       return;
 
-    lastRequest = data.initiatives; //cache the last request
-    */
+       lastRequest = data.initiatives; //cache the last request
+     */
 
 
     //get the ids from the passed data
@@ -420,7 +413,7 @@ function init(registry) {
     
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
     hidden = loadedInitiatives.filter(i => 
-        !initiativeIds.includes(i.uniqueId)
+      !initiativeIds.includes(i.uniqueId)
     );
 
     //hide all unneeded markers
@@ -677,4 +670,3 @@ function init(registry) {
   };
 }
 module.exports = init;
-//});

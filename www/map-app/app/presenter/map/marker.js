@@ -1,15 +1,4 @@
-/*define(["app/eventbus", "presenter", "model/config", "model/sse_initiative",
-   "app/view/map/default_popup", "optional!configuration/popup",], function (
-   eventbus,
-   presenter,
-   config,
-   sse_initiatives,
-   default_popup,
-   popup
-   ) {*/
-
-
-  "use strict";
+"use strict";
 const eventbus = require('../../eventbus');
 
 function init(registry) {
@@ -92,4 +81,3 @@ function init(registry) {
 
 
 module.exports = init;
-//});

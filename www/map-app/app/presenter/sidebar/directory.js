@@ -1,21 +1,5 @@
-/*define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "view/sidebar/base",
-  "presenter/sidebar/base",
-  "view/map/marker"
-], function (
-  eventbus,
-  config,
-  sseInitiative,
-  sidebarView,
-  sidebarPresenter,
-  markerView
-) {*/
-  const eventbus = require('../../eventbus');
-
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
 function init(registry) {
   const config = registry('config');
@@ -301,6 +285,5 @@ function init(registry) {
     latLngBounds: latLngBounds
   };
 }
-  
+
 module.exports = init;
-//});

@@ -1,14 +1,7 @@
 // The view aspects of the About sidebar
-/*define([
-   "d3",
-   "app/eventbus",
-   "presenter/sidebar/about",
-   "view/sidebar/base"
-   ], function (d3, eventbus, presenter, sidebarView) {*/
+"use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus');
-
-  "use strict";
 
 function init(registry) {
   const config = registry('config');
@@ -77,4 +70,3 @@ function init(registry) {
 }
 
 module.exports = init;
-//});

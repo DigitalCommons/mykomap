@@ -1,15 +1,5 @@
-// This is the place where the various views are pulled into the application.
-/*define([
-   "model/config",
-   "d3",
-   "view/map",
-   "view/sidebar",
-   "view/searchbox"
-   ], function(config, d3, map, sidebar, searchbox) {*/
-const d3 = require('d3');
-
-
 "use strict";
+const d3 = require('d3');
 const mapAppStyles = require('../map-app.css');
 
 function _init(registry) {
@@ -45,4 +35,3 @@ function _init(registry) {
   };
 }
 module.exports = _init;
-//});

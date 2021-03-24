@@ -1,11 +1,4 @@
-/*define([
-   "app/eventbus",
-   "model/config",
-   "model/sse_initiative",
-   "presenter"
-   ], function(eventbus, config, sseInitiative, presenter) {*/
-
-  "use strict";
+"use strict";
 const eventbus = require('../eventbus');
 
 function init(registry) {
@@ -54,7 +47,7 @@ function init(registry) {
     var p = new Presenter();
     p.registerView(view);
 
-   
+    
     return p;
   }
   return {
@@ -62,4 +55,3 @@ function init(registry) {
   };
 }
 module.exports = init;
-//});

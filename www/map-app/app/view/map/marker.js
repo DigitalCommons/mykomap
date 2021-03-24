@@ -1,20 +1,8 @@
-/*define([
-   "leaflet",
-   "leafletMarkerCluster",
-   "leafletAwesomeMarkers",
-   "view/base",
-   "presenter/map/marker",
-   "app/eventbus",
-   "model/sse_initiative"
-   ], function (leaflet, cluster, awesomeMarkers, viewBase, presenter, eventbus, sse_initiatives) {*/
-
+"use strict";
 const leaflet = require('leaflet');
 const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
 const eventbus = require('../../eventbus');
-
-
-  "use strict";
 
 function init(registry) {
   const config = registry('config');
@@ -93,8 +81,8 @@ function init(registry) {
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
         markerColor: this.initiative.primaryActivity
-          ? this.initiative.primaryActivity.toLowerCase()
-          : "ALL",
+                   ? this.initiative.primaryActivity.toLowerCase()
+                   : "ALL",
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-marker",
@@ -175,8 +163,8 @@ function init(registry) {
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: this.initiative.primaryActivity
-            ? this.initiative.primaryActivity.toLowerCase()
-            : "AM00",
+                     ? this.initiative.primaryActivity.toLowerCase()
+                     : "AM00",
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker",
@@ -196,8 +184,8 @@ function init(registry) {
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: initiative.primaryActivity
-            ? initiative.primaryActivity.toLowerCase()
-            : "ALL",
+                     ? initiative.primaryActivity.toLowerCase()
+                     : "ALL",
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker sea-selected",
@@ -215,7 +203,7 @@ function init(registry) {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
           unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-          initiative.marker
+            initiative.marker
         ) {
           if (initiative.marker.__parent) //if it has a parent
           {
@@ -230,7 +218,7 @@ function init(registry) {
     else {
       if (
         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-        initiative.marker
+          initiative.marker
       ) {
 
         initiative.marker.__parent.spiderfy();
@@ -480,4 +468,3 @@ function init(registry) {
 }
 
 module.exports = init;
-//});

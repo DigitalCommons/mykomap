@@ -1,14 +1,7 @@
 // The view aspects of the Main Menu sidebar
-/*define([
-  "d3",
-  "app/eventbus",
-  "presenter/sidebar/directory",
-  "view/sidebar/base"
-   ], function (d3, eventbus, presenter, sidebarView) {*/
+"use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-
-  "use strict";
 
 function init(registry) {
   const config = registry('config');
@@ -41,16 +34,16 @@ function init(registry) {
       .append("div");
 
     container.append("h1")
-      .text(sidebarTitle)
-      .attr("id", "dir-title");
+             .text(sidebarTitle)
+             .attr("id", "dir-title");
 
     container.append("input")
-      .attr("id", "dir-filter")
-      //.classed("w3-center",true)
-      .attr("type", "text")
-      .on("keyup", function () {
-        that.handleFilter(this.value);
-      });
+             .attr("id", "dir-filter")
+    //.classed("w3-center",true)
+             .attr("type", "text")
+             .on("keyup", function () {
+               that.handleFilter(this.value);
+             });
 
     d3.select(".sea-main-sidebar").on("click", function () {
       if (document.getElementById("dir-filter") && window.outerWidth >= 1080) {
@@ -154,7 +147,7 @@ function init(registry) {
               addItem(field, key);
             });
     }
-     
+    
     const registeredValues = this.presenter.getRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
@@ -481,4 +474,3 @@ function init(registry) {
 
 
 module.exports = init;
-//});

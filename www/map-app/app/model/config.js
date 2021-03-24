@@ -6,18 +6,9 @@
  * It returns an object with accessor methods for obtaining configured data.
  */
 
-/*
-define([
-  "json!configuration/config",
-  "json!configuration/version.json",
-  "text!configuration/about.html!strip",
-  "app/model/config_schema",
-], function (config_json, version_json, about_html, config_schema) {
-  */
-  
-  "use strict";
+"use strict";
 
-  const config_schema = require('./config_schema');
+const config_schema = require('./config_schema');
 
 function init(inits) {
   const accessors = {}; // config setters and getters, indexed by id, then by 'get' or 'set'
@@ -40,7 +31,7 @@ function init(inits) {
       // A function, bind it's `this` to data.
       getter = def.getter.bind(data);
       if (getter.name
-        && getter.name !== 'anonymous') {
+          && getter.name !== 'anonymous') {
         // A named function, use its name.
         getterName = def.getter.name;
       }
@@ -72,7 +63,7 @@ function init(inits) {
         // A function, bind it's `this` to data.
         setter = setter.bind(data);
         if (setter.name
-          && setter.name !== 'anonymous') {
+            && setter.name !== 'anonymous') {
           // A named function, use its name.
           setterName = setter.name;
         }
@@ -128,23 +119,22 @@ function init(inits) {
   return methods;
 }
 
-  /** Parses an object mapping config ids to string values into an object with parsed values
-   *
-   * Parsing is done using the schema's type's parseString method, if present.
-   * Otherwise the value is left as a string.
-   * @param an object containing the string ids.
-   * @returns the new object containing the parsed values.
-   */
-  function parseStrings(cfg) {
-    const result = {};
+/** Parses an object mapping config ids to string values into an object with parsed values
+ *
+ * Parsing is done using the schema's type's parseString method, if present.
+ * Otherwise the value is left as a string.
+ * @param an object containing the string ids.
+ * @returns the new object containing the parsed values.
+ */
+function parseStrings(cfg) {
+  const result = {};
 
-    Object.keys(cfg).forEach(id => {
-      const def = configSchema.find((e) => id === e.id);
-      result[id] = (def && def.type && def.type.parseString) ?
-        def.type.parseString(cfg[id]) : cfg[id];
-    });
-    return result;
-  };
- 
-  module.exports = init;
-//});
+  Object.keys(cfg).forEach(id => {
+    const def = configSchema.find((e) => id === e.id);
+    result[id] = (def && def.type && def.type.parseString) ?
+                 def.type.parseString(cfg[id]) : cfg[id];
+  });
+  return result;
+};
+
+module.exports = init;

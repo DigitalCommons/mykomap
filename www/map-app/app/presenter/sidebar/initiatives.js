@@ -1,13 +1,5 @@
-/*define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "presenter/sidebar/base",
-  "presenter/map"
-   ], function (eventbus, config, sseInitiative, sidebarPresenter, map) {*/
-  const eventbus = require('../../eventbus');
-
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
 
 function init(registry) {
@@ -29,8 +21,8 @@ function init(registry) {
     StackItem.call(this, initiatives);
     this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?
-      "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
-      : "\"" + searchString + "\"";
+                                                    "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
+                                                  : "\"" + searchString + "\"";
     this.filters = filterNames.map((filterName,index)=>({
       filterName,
       verboseName: filterVerboseNames[index]
@@ -110,7 +102,7 @@ function init(registry) {
         if(filter.verboseName.split(":")[0] === filterCategoryName)
           oldFilter = filter;
       })
-  
+      
       if(oldFilter){
         eventbus.publish({
           topic: "Map.removeFilter",
@@ -126,7 +118,7 @@ function init(registry) {
     //get initiatives for new filter
     const allInitiatives = Object.values(sseInitiative.getInitiativeUIDMap());
     const filteredInitiatives = allInitiatives.filter(initiative => 
-        initiative[filterCategory] == filterValue
+      initiative[filterCategory] == filterValue
     )
 
     //create new filter
@@ -155,7 +147,7 @@ function init(registry) {
       {
         topic: "Directory.removeFilters",
         data: null
-      });
+    });
   }
 
   proto.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative = function (initiative, sidebarWidth) {
@@ -399,13 +391,13 @@ function init(registry) {
       }
     });
     /*
-    eventbus.subscribe({
-      topic: "Datasets.filterDataset",
-      callback: function(data) {
-        //p.onInitiativeResults(data);
-      }
-    });
-    */
+       eventbus.subscribe({
+       topic: "Datasets.filterDataset",
+       callback: function(data) {
+       //p.onInitiativeResults(data);
+       }
+       });
+     */
 
     eventbus.subscribe({
       topic: "Marker.SelectionToggled",
@@ -454,4 +446,3 @@ function init(registry) {
 }
 
 module.exports = init;
-//});

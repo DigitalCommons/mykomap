@@ -1,12 +1,6 @@
 // The view aspects of the Main Menu sidebar
-/*define(["d3", "view/base", "presenter/searchbox"], function(
-  d3,
-  viewBase,
-  presenter
-) {*/
-  const d3 = require('d3');
-  "use strict";
-
+"use strict";
+const d3 = require('d3');
 
 function init(registry) {
   const config = registry('config');
@@ -23,7 +17,7 @@ function init(registry) {
   };
 
   proto.searchSubmitted = function() {
-   
+    
   };
   proto.createSearchBox = function() {
     // d3 selection redefines this, so hang onto it here:
@@ -62,10 +56,10 @@ function init(registry) {
       .attr("placeholder", "Search initiatives")
       .attr("autocomplete","off");
 
-      //search (addr/domains)
-      //
+    //search (addr/domains)
+    //
 
-     
+    
   };
   SearchBoxView.prototype = proto;
   //var view;
@@ -83,4 +77,3 @@ function init(registry) {
 
 
 module.exports = init;
-//});
