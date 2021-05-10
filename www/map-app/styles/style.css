@@ -615,6 +615,10 @@ input[type="search"] {
 }
 
 /* Sidebar & Popup */
+.sea-initiative-popup{
+  left: -25vw!important;
+}
+
 .sea-initiative-popup .sea-initiative-details,
 .sea-initiative-sidebar .sea-initiative-details {
   padding: 1em 1.5em;
@@ -638,7 +642,8 @@ div.leaflet-popup-content {
   /* NB also requires setting maxWidth in leaflet Marker bindpopup, to make popup wide enough for big text */
   /* 200% works well for presentations: */
   /*font-size: 200%; */
-  max-height: 210px;
+  height: 300px;
+  width: 50vw!important;
 }
 
 .sea-initiative-popup .leaflet-popup-content-wrapper {
@@ -654,7 +659,7 @@ div.leaflet-popup-content {
 }
 
 .sea-initiative-popup .sea-initiative-details {
-  max-height: 400px;
+  max-height: 600px;
   width: 66%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -668,6 +673,7 @@ div.leaflet-popup-content {
   padding: 1em 1.5em 1.5em;
   border-radius: 0 6px 6px 0;
   background: #f0f0f0;
+  width: 33%;
 }
 
 .sea-initiative-popup h2,

@@ -101,8 +101,8 @@ function init(registry) {
       // maxWidth:800 is needed if the font-size is set to 200% in CSS:
       this.marker.bindPopup(opts.popuptext, {
         autoPan: false,
-        minWidth: "472",
-        maxWidth: "472",
+        //minWidth: "472",
+        //maxWidth: "800",
         closeButton: false,
         className: "sea-initiative-popup"
       });
