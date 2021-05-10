@@ -687,6 +687,10 @@ div.leaflet-popup-content {
   margin-bottom: 0.3rem;
 }
 
+.sea-initiative-contact a{
+  word-break: break-all;
+}
+
 .sea-initiative-popup h3,
 .sea-initiative-sidebar-content h3 {
   font-weight: 600;
