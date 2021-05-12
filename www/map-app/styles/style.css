@@ -423,6 +423,7 @@ body {
   padding: 0;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  overflow-y: scroll;
 }
 
 .sea-initiative-sidebar {
@@ -632,10 +633,6 @@ input[type="search"] {
 }
 
 /* Sidebar */
-.sea-initiative-sidebar{
-  overflow-y: scroll;
-}
-
 .sea-initiative-sidebar .sea-initiative-details {
   padding-top: 0;
 }
