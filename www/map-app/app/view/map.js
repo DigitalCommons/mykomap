@@ -356,8 +356,10 @@ function init(registry) {
     }
     let centre = leaflet.latLngBounds(bounds[0], bounds[1]).getCenter();
 
-    //make sure you pan to center initiative 
-    this.map.panTo(centre, { animate: true });
+    let lngCentre = {lat: this.map.getCenter().lat, lng: centre.lng};
+
+    //make sure you pan to center the initiative on the x axis, or longitudanally.
+    this.map.panTo(lngCentre, { animate: true });
 
     //trigger refresh if the marker is outside of the screen or if it's clustered
     if (!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives))

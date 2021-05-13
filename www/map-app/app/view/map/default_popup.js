@@ -23,6 +23,7 @@ var getPopup = function (initiative, sse_initiatives) {
       popupHTML =
         '<div class="sea-initiative-details">' +
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
+        "{initiative.www}" +
         '<h4 class="sea-initiative-org-structure">{initiative.org-structure}</h4>' +
         '<h4 class="sea-initiative-economic-activity">Activity: {initiative.economic-activity}</h4>' +
         '<h5 class="sea-initiative-secondary-activity">Secondary Activities: {initiative.secondary-activity}</h5>' +
@@ -34,7 +35,6 @@ var getPopup = function (initiative, sse_initiatives) {
         "{initiative.address}" +
         "{initiative.tel}" +
         '<div class="sea-initiative-links">' +
-        "{initiative.www}" +
         "{initiative.email}" +
         "{initiative.facebook}" +
         "{initiative.twitter}" +
