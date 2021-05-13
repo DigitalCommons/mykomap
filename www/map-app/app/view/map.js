@@ -356,7 +356,18 @@ function init(registry) {
     }
     let centre = leaflet.latLngBounds(bounds[0], bounds[1]).getCenter();
 
-    let lngCentre = {lat: this.map.getCenter().lat, lng: centre.lng};
+    //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
+    let lat = this.map.getCenter().lat;
+
+    //get a latitude that shows the whole dialogue on screen
+    if(this.map.project(centre).y - this.map.getPixelBounds().min.y < 300){
+      lat = this.map.unproject({
+        x: this.map.project(centre).x,
+        y: this.map.project(centre).y - 150
+      }).lat;
+    }
+
+    let lngCentre = {lat: lat, lng: centre.lng};
 
     //make sure you pan to center the initiative on the x axis, or longitudanally.
     this.map.panTo(lngCentre, { animate: true });
