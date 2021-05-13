@@ -643,6 +643,7 @@ div.leaflet-popup-content {
   /* NB also requires setting maxWidth in leaflet Marker bindpopup, to make popup wide enough for big text */
   /* 200% works well for presentations: */
   /*font-size: 200%; */
+  /* If you change the height, be sure to change the height in view/map.js ln 363 */
   height: 300px;
   width: 50vw!important;
 }
