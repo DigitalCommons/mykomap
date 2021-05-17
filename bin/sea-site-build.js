@@ -69,12 +69,14 @@ const debug = variant == 'sea-map' || process.env.NODE_ENV !== "production";
 const versionJson = path.join(configPath, 'version.json');
 let versionInfo;
 let srcDir;
+let servicesDir;
 let entry;
 if (variant == 'sea-map') {
   // Infer development mode from sea-map package
 
   entry = "./www/map-app/app.js";
   srcDir = "./www/map-app"; // locally
+  servicesDir = "./www/services";
   
   // Get the linked dependency config in ext/package.json 
   const mapPackageJson = require(path.join(cwd, 'ext/package.json'));
@@ -91,6 +93,7 @@ else {
 
   entry = "sea-map/www/map-app/app.js";
   srcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
+  servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
   
   // Get the sea-map git commit ID from the resolved version (we don't have
   // access to the git repo in this case).
@@ -192,6 +195,7 @@ const webpackConfig = {
         { from: configPath, to: "configuration",
           globOptions: { ignore: ["**/*~"] },
         },
+        { context: servicesDir, from: "**/*.php", to: "services" },
         ...copyPaths.map(p => {
           let { dir, base } = path.parse(p);
           if (!fs.statSync(p).isFile())
