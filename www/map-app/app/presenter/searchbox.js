@@ -1,11 +1,11 @@
-define([
-  "app/eventbus",
-  "model/config",
-  "model/sse_initiative",
-  "presenter"
-], function(eventbus, config, sseInitiative, presenter) {
-  "use strict";
+"use strict";
+const eventbus = require('../eventbus');
 
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  const sseInitiative = registry('model/sse_initiative');
+  
   function Presenter() {}
 
   var proto = Object.create(presenter.base.prototype);
@@ -47,11 +47,11 @@ define([
     var p = new Presenter();
     p.registerView(view);
 
-   
+    
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  return pub;
-});
+}
+module.exports = init;

@@ -1,10 +1,11 @@
 // The view aspects of the Main Menu sidebar
-define([
-  "app/eventbus",
-  "presenter/sidebar/mainmenu",
-  "view/sidebar/base"
-], function(eventbus, presenter, sidebarView) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus')
+
+function init(registry) {
+  const config = registry('config');
+  const sidebarView = registry('view/base');
+  const presenter = registry('presenter/sidebar/mainmenu');
 
   // Our local Sidebar object:
   function Sidebar() {}
@@ -23,7 +24,7 @@ define([
         .attr(
           "class",
           "w3-bar-item w3-button w3-mobile" +
-            (button.disabled ? " w3-disabled" : "")
+             (button.disabled ? " w3-disabled" : "")
         )
         .attr("title", button.hovertext)
         .on("click", button.onClick)
@@ -37,8 +38,9 @@ define([
     sb.setPresenter(presenter.createPresenter(sb));
     return sb;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  return pub;
-});
+}
+
+module.exports = init;

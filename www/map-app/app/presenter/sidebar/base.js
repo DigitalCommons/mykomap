@@ -1,10 +1,10 @@
-define(["app/eventbus", "model/config", "presenter"], function(
-  eventbus,
-  config,
-  presenter
-) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
+function init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter');
+  
   function Stack() {
     this.index = 0;
     this.storage = [];
@@ -70,16 +70,16 @@ define(["app/eventbus", "model/config", "presenter"], function(
 
   function updateSidebarWidth(data) {
     const directoryBounds = data.directoryBounds,
-      initiativeListBounds = data.initiativeListBounds;
+          initiativeListBounds = data.initiativeListBounds;
     this.sidebarWidth =
       directoryBounds.x -
       window.seaMap.getContainer().getBoundingClientRect().x +
       directoryBounds.width +
-      (initiativeListBounds.x -
+       (initiativeListBounds.x -
         window.seaMap.getContainer().getBoundingClientRect().x >
-      0
-        ? initiativeListBounds.width
-        : 0);
+         0
+         ? initiativeListBounds.width
+         : 0);
 
     eventbus.publish({
       topic: "Map.setActiveArea",
@@ -210,10 +210,11 @@ define(["app/eventbus", "model/config", "presenter"], function(
 
   base.prototype = proto;
 
-  var pub = {
+  return {
     base: base,
     updateSidebarWidth: updateSidebarWidth,
     getSidebarWidth: getSidebarWidth
   };
-  return pub;
-});
+}
+
+module.exports = init;

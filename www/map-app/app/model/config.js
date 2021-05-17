@@ -6,24 +6,14 @@
  * It returns an object with accessor methods for obtaining configured data.
  */
 
+"use strict";
 
-define([
-  "json!configuration/config",
-  "json!configuration/version.json",
-  "text!configuration/about.html!strip",
-  "app/model/config_schema",
-], function (config_json, version_json, about_html, config_schema) {
-  "use strict";
+const config_schema = require('./config_schema');
 
-  console.log(version_json);
-  console.log(about_html);
-
+function init(inits) {
   const accessors = {}; // config setters and getters, indexed by id, then by 'get' or 'set'
   const methods = {}; // Exported methods
   const data = {}; // The config data, indexed by id
-
-  const inits = Object.assign({}, { aboutHtml: about_html }, config_json, version_json);
-  // (Avoiding ES2018 spread syntax for now)
 
   const configSchema = config_schema(inits);
 
@@ -41,7 +31,7 @@ define([
       // A function, bind it's `this` to data.
       getter = def.getter.bind(data);
       if (getter.name
-        && getter.name !== 'anonymous') {
+          && getter.name !== 'anonymous') {
         // A named function, use its name.
         getterName = def.getter.name;
       }
@@ -73,7 +63,7 @@ define([
         // A function, bind it's `this` to data.
         setter = setter.bind(data);
         if (setter.name
-          && setter.name !== 'anonymous') {
+            && setter.name !== 'anonymous') {
           // A named function, use its name.
           setterName = setter.name;
         }
@@ -104,6 +94,10 @@ define([
   methods.add = (cfg) => {
     if (typeof (cfg) !== 'object')
       throw new Error(`argument to add must be an object`);
+    
+    // Parse string values as approriate for the config value in question.
+    cfg = parseStrings(cfg);
+    
     console.log("add", cfg);
     Object.keys(cfg).forEach(id => {
       const def = configSchema.find((e) => id === e.id);
@@ -122,23 +116,25 @@ define([
     });
   };
 
-  /** Parses an object mapping config ids to string values into an object with parsed values
-   *
-   * Parsing is done using the schema's type's parseString method, if present.
-   * Otherwise the value is left as a string.
-   * @param an object containing the string ids.
-   * @returns the new object containing the parsed values.
-   */
-  methods.parseStrings = (cfg) => {
-    const result = {};
+  return methods;
+}
 
-    Object.keys(cfg).forEach(id => {
-      const def = configSchema.find((e) => id === e.id);
-      result[id] = (def && def.type && def.type.parseString) ?
-        def.type.parseString(cfg[id]) : cfg[id];
-    });
-    return result;
-  };
+/** Parses an object mapping config ids to string values into an object with parsed values
+ *
+ * Parsing is done using the schema's type's parseString method, if present.
+ * Otherwise the value is left as a string.
+ * @param an object containing the string ids.
+ * @returns the new object containing the parsed values.
+ */
+function parseStrings(cfg) {
+  const result = {};
 
-  return methods; // hides the data by closing over it
-});
+  Object.keys(cfg).forEach(id => {
+    const def = configSchema.find((e) => id === e.id);
+    result[id] = (def && def.type && def.type.parseString) ?
+                 def.type.parseString(cfg[id]) : cfg[id];
+  });
+  return result;
+};
+
+module.exports = init;

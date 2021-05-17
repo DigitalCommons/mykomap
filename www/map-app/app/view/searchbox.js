@@ -1,10 +1,11 @@
 // The view aspects of the Main Menu sidebar
-define(["d3", "view/base", "presenter/searchbox"], function(
-  d3,
-  viewBase,
-  presenter
-) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+
+function init(registry) {
+  const config = registry('config');
+  const viewBase = registry('view/base');
+  const presenter = registry('presenter/searchbox');
 
   function SearchBoxView() {}
   // inherit from the standard view base object:
@@ -16,7 +17,7 @@ define(["d3", "view/base", "presenter/searchbox"], function(
   };
 
   proto.searchSubmitted = function() {
-   
+    
   };
   proto.createSearchBox = function() {
     // d3 selection redefines this, so hang onto it here:
@@ -55,10 +56,10 @@ define(["d3", "view/base", "presenter/searchbox"], function(
       .attr("placeholder", "Search initiatives")
       .attr("autocomplete","off");
 
-      //search (addr/domains)
-      //
+    //search (addr/domains)
+    //
 
-     
+    
   };
   SearchBoxView.prototype = proto;
   //var view;
@@ -69,9 +70,10 @@ define(["d3", "view/base", "presenter/searchbox"], function(
     view.createSearchBox();
     return view;
   }
-  var pub = {
+  return {
     init: init
   };
+}
 
-  return pub;
-});
+
+module.exports = init;

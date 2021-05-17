@@ -1,10 +1,11 @@
-define(["app/eventbus", "model/config", "presenter/sidebar/base"], function (
-  eventbus,
-  config,
-  sidebarPresenter
-) {
-  "use strict";
+"use strict";
+const eventbus = require('../../eventbus');
 
+
+function init(registry) {
+  const config = registry('config');
+  const sidebarPresenter = registry('presenter/sidebar/base');
+  
   function Presenter() { }
 
   var proto = Object.create(sidebarPresenter.base.prototype);
@@ -28,8 +29,8 @@ define(["app/eventbus", "model/config", "presenter/sidebar/base"], function (
     p.registerView(view);
     return p;
   }
-  var pub = {
+  return {
     createPresenter: createPresenter
   };
-  return pub;
-});
+}
+module.exports = init;

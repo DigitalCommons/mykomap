@@ -1,11 +1,13 @@
 // The view aspects of the Main Menu sidebar
-define([
-  "d3",
-  "app/eventbus",
-  "presenter/sidebar/directory",
-  "view/sidebar/base"
-], function (d3, eventbus, presenter, sidebarView) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+const eventbus = require('../../eventbus')
+
+function init(registry) {
+  const config = registry('config');
+  const view = registry('view/base');
+  const sidebarView = registry('view/sidebar/base');
+  const presenter = registry('presenter/sidebar/directory');
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -32,16 +34,16 @@ define([
       .append("div");
 
     container.append("h1")
-      .text(sidebarTitle)
-      .attr("id", "dir-title");
+             .text(sidebarTitle)
+             .attr("id", "dir-title");
 
     container.append("input")
-      .attr("id", "dir-filter")
-      //.classed("w3-center",true)
-      .attr("type", "text")
-      .on("keyup", function () {
-        that.handleFilter(this.value);
-      });
+             .attr("id", "dir-filter")
+    //.classed("w3-center",true)
+             .attr("type", "text")
+             .on("keyup", function () {
+               that.handleFilter(this.value);
+             });
 
     d3.select(".sea-main-sidebar").on("click", function () {
       if (document.getElementById("dir-filter") && window.outerWidth >= 1080) {
@@ -145,7 +147,7 @@ define([
               addItem(field, key);
             });
     }
-     
+    
     const registeredValues = this.presenter.getRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
@@ -465,8 +467,10 @@ define([
     view.setPresenter(presenter.createPresenter(view));
     return view;
   }
-  var pub = {
+  return {
     createSidebar: createSidebar
   };
-  return pub;
-});
+}
+
+
+module.exports = init;

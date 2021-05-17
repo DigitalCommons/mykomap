@@ -1,6 +1,13 @@
 // Model for SSE Initiatives.
-define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+const eventbus = require('../eventbus');  
+const getDatasetPhp = require("../../../services/get_dataset.php");
+const getVocabsPhp = require("../../../services/get_vocabs.php");
+
+
+function init(registry) {
+  const config = registry("config");
 
   // Hardwire this for now.
   const language = "EN";
@@ -142,7 +149,6 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return searchableValues.join(" ").toUpperCase();
   }
 
-  
   let loadedInitiatives = [];
   let initiativesToLoad = [];
   let initiativesByUid = {};
@@ -155,8 +161,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   let verboseDatasets = {}
   const dsNamed =
     (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length) ?
-      config.namedDatasetsVerbose()
-      : [];
+    config.namedDatasetsVerbose()
+    : [];
 
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   let vocabs = {};
@@ -174,25 +180,24 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
 
   // Need to record all instances of any of the fields that are specified in the config
-  /* Format will be:
-    [{
-      "field": field,
-      "label": label
-    }]
-  */
+  // Expects an array of strings which are initiative field names.
   const filterableFields = config.getFilterableFields();
+  if (typeof(filterableFields) !== 'object' || !(filterableFields instanceof Array))
+    throw new Error(`invalid filterableFields config for 'filterableFields' - not an array`);
+  if (filterableFields.findIndex(e => typeof(e) !== 'string') >= 0)
+    throw new Error(`invalid filterableFields config for 'filterableFields' - contains non-strings`);
 
   /* Format will be:
-    {label :
-      { field1: [ val1, val2 ... valN ] }
-      ...
-      { fieldN: [ ... ] },
-    label2 :
-      { field1: [ val1, val2 ... valN ] }
-      ...
-      { fieldN: [ ... ] }
-    }
-  */
+     {label :
+     { field1: [ val1, val2 ... valN ] }
+     ...
+     { fieldN: [ ... ] },
+     label2 :
+     { field1: [ val1, val2 ... valN ] }
+     ...
+     { fieldN: [ ... ] }
+     }
+   */
   let registeredValues = {}; // arrays of sorted values grouped by label, then by field
   const allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
@@ -332,7 +337,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     for (i = 0, len = str.length; i < len; i++) {
       code = str.charCodeAt(i);
       if (!(code > 64 && code < 91) && // upper alpha (A-Z)
-        !(code > 96 && code < 123)) { // lower alpha (a-z)
+          !(code > 96 && code < 123)) { // lower alpha (a-z)
         return false;
       }
     }
@@ -482,7 +487,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
         return sortInitiatives(array[0], element) == 1 ? 0 : 1;
       }
       else if
-        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+      (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
       else
         return pivot + 1;
     }
@@ -580,8 +585,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   function loadVocabs() {
-    const service = config.getServicesPath() + "get_vocabs.php";
-    return d3.json(service);
+    return d3.json(getVocabsPhp);
   }  
 
 
@@ -644,6 +648,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
 
       vocabs.prefixes = prefixes;
       vocabs.abbrevs = abbrevs;
+      if (!vocabs.vocabs)
+        vocabs.vocabs = []; // Ensure this is here
       
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
@@ -672,7 +678,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     function onDatasetFailure(dataset) {
       return (error) => {
         console.error("load "+dataset+" data failed", error);
-      
+        
         eventbus.publish({
           topic: "Initiative.loadFailed",
           data: { error: error, dataset: dataset }
@@ -690,9 +696,9 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   function loadDataset(dataset) {
-    var service = config.getServicesPath() + "get_dataset.php?dataset=" + dataset;
-    
 
+    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset)}`;
+    
     // Note, caching currently doesn't work correctly with multiple data sets
     // so until that's fixed, don't use it in that case.
     const numDatasets = config.namedDatasets().length;
@@ -911,7 +917,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     return alternatePossibleFilterValues;
   }
 
-  var pub = {
+  return {
     loadFromWebService: loadFromWebService,
     search: search,
     latLngBounds: latLngBounds,
@@ -932,7 +938,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
     getVocabTerm, getVocabUriForProperty
   };
-  // Automatically load the data when the app is ready:
-  //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
-  return pub;
-});
+}
+// Automatically load the data when the app is ready:
+//eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
+module.exports = init;

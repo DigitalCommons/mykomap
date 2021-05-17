@@ -1,21 +1,27 @@
-define([
-  "d3",
-  "leaflet",
-  "leafletActiveArea",
-  "leaflet.contextmenu",
-  "view/base",
-  "presenter/map",
-  "view/map/marker"
-], function (
-  d3,
-  leaflet,
-  activeArea,
-  contextmenu,
-  viewBase,
-  presenter,
-  markerView
-) {
-  "use strict";
+"use strict";
+const d3 = require('d3');
+const leaflet = require('leaflet');
+const activeArea = require('leaflet-active-area');
+const contextmenu = require('leaflet-contextmenu');
+
+
+
+/* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
+const leafletCss = require('leaflet/dist/leaflet.css');
+delete leaflet.Icon.Default.prototype._getIconUrl;
+leaflet.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
+
+
+function init(registry) {
+  const _config = registry('config');
+  const presenter = registry('presenter/map');
+  const markerView = registry('view/map/marker');
+  const viewBase = registry('view/base');
 
   const config = {
     putSelectedMarkersInClusterGroup: false
@@ -102,8 +108,8 @@ define([
     // setup map (could potentially add this to the map initialization instead)
     //world ends corners
     var corner1 = leaflet.latLng(-90, -180),
-      corner2 = leaflet.latLng(90, 180),
-      worldBounds = leaflet.latLngBounds(corner1, corner2);
+        corner2 = leaflet.latLng(90, 180),
+        worldBounds = leaflet.latLngBounds(corner1, corner2);
 
     const openCycleMapUrl =
       "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png";
@@ -112,7 +118,7 @@ define([
     const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
     const osmAttrib = this.presenter.getMapAttribution();
     var i,
-      eventHandlers = this.presenter.getMapEventHandlers();
+        eventHandlers = this.presenter.getMapEventHandlers();
     var k = Object.keys(eventHandlers);
     // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
     this.map = leaflet.map("map-app-leaflet-map", {
@@ -142,7 +148,7 @@ define([
       .addTo(this.map);
 
     let options = {},
-      disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
+        disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
     if (disableClusteringAtZoom)
       options.disableClusteringAtZoom = disableClusteringAtZoom;
 
@@ -214,7 +220,7 @@ define([
   };
   proto.fitBounds = function (data) {
     let bounds = data,
-      options = {};
+        options = {};
     if (!Array.isArray(data)) {
       bounds = data.bounds;
       options = data.options;
@@ -239,11 +245,11 @@ define([
   // }
   proto.setView = function (data) {
     let latlng = data,
-      zoom = this.map.getZoom(),
-      options = {
-        duration: 0.25
-        // maxZoom: this.map.getZoom()
-      };
+        zoom = this.map.getZoom(),
+        options = {
+          duration: 0.25
+          // maxZoom: this.map.getZoom()
+        };
     if (!Array.isArray(data)) {
       latlng = data.latlng;
       options = Object.assign(options, data.options);
@@ -280,10 +286,10 @@ define([
 
   proto.flyTo = function (data) {
     let latlng = data,
-      options = {
-        duration: 0.25
-        // maxZoom: this.map.getZoom()
-      };
+        options = {
+          duration: 0.25
+          // maxZoom: this.map.getZoom()
+        };
     if (!Array.isArray(data)) {
       latlng = data.latlng;
       options = Object.assign(options, data.options);
@@ -296,7 +302,7 @@ define([
   let flag = false;
   proto.flyToBounds = function (data) {
     let bounds = data,
-      options = { duration: 0.25, maxZoom: this.map.getZoom() };
+        options = { duration: 0.25, maxZoom: this.map.getZoom() };
 
     if (!Array.isArray(data)) {
       bounds = data.bounds;
@@ -308,7 +314,7 @@ define([
     //2. Multiple markers - Markers are visisible (no clusters) - pan to markers if you can without zoom, else just do the usual and zoom
     //3. Clusters within clusters
     if (data.initiatives && this.isVisible(data.initiatives)
-      && this.boundsWithinCurrentBounds(bounds)) {// all are visible
+        && this.boundsWithinCurrentBounds(bounds)) {// all are visible
       //case 1 and 2
       //if you can contain the markers within the screen, then just pan
       // this.map.panTo(this.map.getBounds().getCenter())  ; // get center 
@@ -343,15 +349,28 @@ define([
   //pass array of 1 initiative in data.initiative
   proto.selectAndZoomOnInitiative = function (data) {
     let bounds = data,
-      options = { duration: 0.25, maxZoom: this.map.getZoom() };
+        options = { duration: 0.25, maxZoom: this.map.getZoom() };
     if (!Array.isArray(data)) {
       bounds = data.bounds;
       options = Object.assign(options, data.options);
     }
     let centre = leaflet.latLngBounds(bounds[0], bounds[1]).getCenter();
 
-    //make sure you pan to center initiative 
-    this.map.panTo(centre, { animate: true });
+    //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
+    let lat = this.map.getCenter().lat;
+
+    //get a latitude that shows the whole dialogue on screen
+    if(this.map.project(centre).y - this.map.getPixelBounds().min.y < 300){
+      lat = this.map.unproject({
+        x: this.map.project(centre).x,
+        y: this.map.project(centre).y - 150
+      }).lat;
+    }
+
+    let lngCentre = {lat: lat, lng: centre.lng};
+
+    //make sure you pan to center the initiative on the x axis, or longitudanally.
+    this.map.panTo(lngCentre, { animate: true });
 
     //trigger refresh if the marker is outside of the screen or if it's clustered
     if (!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives))
@@ -463,8 +482,9 @@ define([
     view.createMap();
     return view;
   }
-  var pub = {
+  return {
     init: init
   };
-  return pub;
-});
+}
+
+module.exports = init;
