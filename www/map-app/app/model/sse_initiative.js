@@ -180,13 +180,12 @@ function init(registry) {
 
 
   // Need to record all instances of any of the fields that are specified in the config
-  /* Format will be:
-     [{
-     "field": field,
-     "label": label
-     }]
-   */
+  // Expects an array of strings which are initiative field names.
   const filterableFields = config.getFilterableFields();
+  if (typeof(filterableFields) !== 'object' || !(filterableFields instanceof Array))
+    throw new Error(`invalid filterableFields config for 'filterableFields' - not an array`);
+  if (filterableFields.findIndex(e => typeof(e) !== 'string') >= 0)
+    throw new Error(`invalid filterableFields config for 'filterableFields' - contains non-strings`);
 
   /* Format will be:
      {label :
