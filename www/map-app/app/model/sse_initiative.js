@@ -648,6 +648,8 @@ function init(registry) {
 
       vocabs.prefixes = prefixes;
       vocabs.abbrevs = abbrevs;
+      if (!vocabs.vocabs)
+        vocabs.vocabs = []; // Ensure this is here
       
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
