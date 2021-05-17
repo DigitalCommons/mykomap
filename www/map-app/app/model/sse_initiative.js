@@ -19,7 +19,7 @@ function init(registry) {
     EN: {
       directory: "Directory",
       showDirectory: "Show directory",
-      showSearch: "show search",
+      showSearch: "Show search",
       showInfo: "Show info",
       hideDirectory: "Hide directory",
       close: "Close ",

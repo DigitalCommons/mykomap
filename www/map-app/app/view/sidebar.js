@@ -10,6 +10,10 @@ function _init(config) {
   const directory = require('../view/sidebar/directory')(config);
   const datasets = require('../view/sidebar/datasets')(config);
   const initiatives = require('../view/sidebar/initiatives')(config);
+  const sseInitiative = require('../model/sse_initiative')(config);
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
@@ -24,7 +28,7 @@ function _init(config) {
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
                         .append("button")
                         .attr("class", "w3-btn")
-                        .attr("title", "Show directory")
+                        .attr("title", labels.showDirectory)
                         .on("click", function () {
                           that.showSidebar();
                         })
@@ -50,7 +54,7 @@ function _init(config) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
-      .attr("title", "Show directory")
+      .attr("title", labels.showDirectory)
       .on("click", function () {
         eventbus.publish({
           topic: "Map.removeSearchFilter",
@@ -74,7 +78,7 @@ function _init(config) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", "Show search")
+      .attr("title", labels.showSearch)
       .on("click", function () {
         that.hideInitiativeList();
         //deselect
@@ -95,7 +99,7 @@ function _init(config) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", "Show info")
+      .attr("title", labels.showSearch)
       .on("click", function () {
         that.hideInitiativeList();
         // eventbus.publish({
@@ -115,7 +119,7 @@ function _init(config) {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", "Show Datasets")
+        .attr("title", labels.showDatasets)
         .on("click", function () {
           that.hideInitiativeList();
           // eventbus.publish({
@@ -210,7 +214,7 @@ function _init(config) {
       )
       .classed("sea-sidebar-open", true);
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
-      d3.select(".w3-btn").attr("title", "Hide directory");
+      d3.select(".w3-btn").attr("title", labels.hideDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     that.changeSidebar(); // Refresh the content of the sidebar
@@ -253,7 +257,7 @@ function _init(config) {
         false
       )
       .classed("sea-sidebar-open", false);
-    d3.select(".w3-btn").attr("title", "Show directory");
+    d3.select(".w3-btn").attr("title", labels.showDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
 
   };
@@ -275,7 +279,7 @@ function _init(config) {
     //else show it
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", "Hide directory");
+    d3.select(".w3-btn").attr("title", labels.hideDirectory);
 
     let initiativeListSidebar = document.getElementById(
       "sea-initiatives-list-sidebar"
@@ -334,7 +338,7 @@ function _init(config) {
         false
       )
       .classed("sea-sidebar-list-initiatives", false);
-    d3.select(".w3-btn").attr("title", "Hide directory");
+    d3.select(".w3-btn").attr("title", labels.hideDirectory);
   };
   SidebarView.prototype = proto;
   var view;
