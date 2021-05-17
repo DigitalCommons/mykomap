@@ -17,13 +17,61 @@ function init(registry) {
 
   let functionalLabels = {
     EN: {
-      directory: "Directory"
+      directory: "Directory",
+      showDirectory: "Show directory",
+      showSearch: "show search",
+      showInfo: "Show info",
+      hideDirectory: "Hide directory",
+      close: "Close ",
+      zoomIn: "Zoom in",
+      zoomOut: "Zoom out",
+      search: "Search",
+      whenSearch: "When you search, or click on map markers, you'll see the results here",
+      loading: "Loading ...",
+      showDatasets: "Show datasets",
+      searchInitiatives: "Search initiatives",
+      any: "Any",
+      searchIn: "Search in ?",
+      clearFilters: "Clear Filters",
+      contact: "Contact"
     },
     FR: {
-      directory: "Annuaire"
+      directory: "Annuaire",
+      showDirectory: "Afficher l’annuaire",
+      showSearch: "Afficher la recherche",
+      showInfo: "Afficher les informations",
+      hideDirectory: "Masquer l’annuaire",
+      close: "Fermer ",
+      zoomIn: "Zoom avant",
+      zoomOut: "Zoom arrière",
+      search: "Rechercher",
+      whenSearch: "Lorsque vous effectuez une recherche ou cliquez sur les repères de la carte, les résultats s’affichent ici.",
+      loading: "Chargement des données",
+      showDatasets: "Afficher les ensembles de données",
+      searchInitiatives: "Rechercher des initiatives",
+      any: "Tout afficher",
+      searchIn: "Rechercher dans ?",
+      clearFilters: "Réinitialiser les filtres",
+      contact: "Contact"
     },
     ES: {
-      directory: "Directorio"
+      directory: "Directorio",
+      showDirectory: "Mostrar directorio",
+      showSearch: "Mostrar búsqueda",
+      showInfo: "Mostrar información",
+      hideDirectory: "Ocultar directorio",
+      close: "Cerrar ",
+      zoomIn: "Acercar",
+      zoomOut: "Alejar",
+      search: "Buscar",
+      whenSearch: "Los resultados de la búsqueda o selección en los marcadores del mapa se mostrarán aquí.",
+      loading: "Cargando…",
+      showDatasets: "Mostrar conjuntos de datos",
+      searchInitiatives: "Buscar iniciativas",
+      any: "Qualquiera",
+      searchIn: "Buscar en…",
+      clearFilters: "Borrar filtros",
+      contact: "Contacto"
     }
   }
   
