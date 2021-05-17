@@ -6,6 +6,8 @@ function init(registry) {
   const presenter = registry('presenter');
   const popup = registry('view/map/popup');
   const sse_initiatives = registry('model/sse_initiative');
+
+  const labels = sse_initiatives.getFunctionalLabels();
   
   function Presenter() { }
 
@@ -37,10 +39,10 @@ function init(registry) {
   // };
   proto.getInitiativeContent = function (initiative) {
     if (popup && popup.getPopup)
-      return popup.getPopup(initiative, sse_initiatives);
+      return popup.getPopup(initiative, sse_initiatives,labels);
     else
       // use this if there is no popup.js file in the configuration folder
-      return default_popup.getPopup(initiative, sse_initiatives);
+      return default_popup.getPopup(initiative, sse_initiatives,labels);
   };
 
 
