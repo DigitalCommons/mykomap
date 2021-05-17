@@ -56,7 +56,7 @@ function getGitCommit(cwd) {
   var commit = shell(`git rev-parse --short HEAD`, cwd);
 
   if (exec(`git diff-index --quiet HEAD`, cwd).status)
-	  commit += "-modified";
+    commit += "-modified";
   return commit;
 }
 
@@ -79,11 +79,11 @@ if (variant == 'sea-map') {
   // Get the linked dependency config in ext/package.json 
   const mapPackageJson = require(path.join(cwd, 'ext/package.json'));
   versionInfo = {
-	  variant: mapPackageJson.name,
-	  timestamp: timestamp,
-	  gitcommit: getGitCommit(path.join(cwd, '/ext')),
-	  seaMapVersion: seaMapPackageJson.version+'_'+getGitCommit()+'-dev',
-	  seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    variant: mapPackageJson.name,
+    timestamp: timestamp,
+    gitcommit: getGitCommit(path.join(cwd, '/ext')),
+    seaMapVersion: seaMapPackageJson.version+'_'+getGitCommit()+'-dev',
+    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
   };
 }
 else {
@@ -97,11 +97,11 @@ else {
   const seaMapResolved = (seaMapPackageJson._resolved || '');
   const seaMapCommit = seaMapResolved.replace(/^.*#/, '_').substr(0, 8);
   versionInfo = {
-	  variant: variant,
-	  timestamp: timestamp,
-	  gitcommit: getGitCommit(),
-	  seaMapVersion: seaMapPackageJson.version+seaMapCommit,
-	  seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    variant: variant,
+    timestamp: timestamp,
+    gitcommit: getGitCommit(),
+    seaMapVersion: seaMapPackageJson.version+seaMapCommit,
+    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
   };
 }
 fs.writeFileSync(versionJson,
@@ -187,19 +187,19 @@ const webpackConfig = {
     new MiniCssExtractPlugin({
       filename: 'map-app/map-app.css',
     }),
-	  new CopyPlugin({
-	    patterns: [
-		    { from: configPath, to: "configuration",
-		      globOptions: { ignore: ["**/*~"] },
-		    },
-		    ...copyPaths.map(p => {
-	        let { dir, base } = path.parse(p);
+    new CopyPlugin({
+      patterns: [
+        { from: configPath, to: "configuration",
+          globOptions: { ignore: ["**/*~"] },
+        },
+        ...copyPaths.map(p => {
+          let { dir, base } = path.parse(p);
           if (!fs.statSync(p).isFile())
             base += '/**';
           console.log(`copying: ${dir}/${base}`);
-	        return { from: base, to: ".", context: dir,
+          return { from: base, to: ".", context: dir,
                    globOptions: { ignore: ["**/*~"] } }
-	      })
+        })
       ],
     }),
   ],
@@ -208,8 +208,8 @@ const webpackConfig = {
 webpack(
   webpackConfig,
   (err, stats) => {
-	  if (err || stats.hasErrors()) {
-	    die(`webpack error: ${stats}`);
+    if (err || stats.hasErrors()) {
+      die(`webpack error: ${stats}`);
     }
     else
       console.log(`webpack: ${stats}`);
