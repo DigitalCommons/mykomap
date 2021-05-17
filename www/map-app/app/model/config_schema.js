@@ -137,6 +137,7 @@ const configSchema = ({
   tileUrl,
   mapAttribution,
   noLodCache,
+  language,
 } = {}) => [
   {
     id: 'aboutHtml',
@@ -350,6 +351,14 @@ const configSchema = ({
     getter: 'getNoLodCache',
     setter: 'setNoLodCache',
     type: types.boolean,
+  },
+  {
+    id: 'language',
+    descr: 'The language that will be displayed in the absence of a url argument',
+    init: () => language,
+    getter: 'getLanguage',
+    setter: 'setLanguage',
+    type: types.string
   }
 
 
