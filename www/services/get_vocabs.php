@@ -403,11 +403,15 @@ function main() {
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
+        if (empty($uris)) {
+            continue; // Don't make a query if there are no URIs!
+        }
 
         $prefixes = array_merge($uris);
         $query = generate_query($uris, $languages);
         #echo $query; # DEBUG
         $query_results = query($endpoint, $query);
+        croak(var_export($query, true));
         #echo json_encode($query_results); # DEBUG
         $result = add_query_data($result, $query_results);
     }
