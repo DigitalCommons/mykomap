@@ -47,7 +47,9 @@ push the code and the tags:
 Dependant projects can then be updated to use it like this (for
 example):
 
-    npm update # you may need to specify versions if a major version increment
+    npm update # You may need to specify versions if a major version increment,
+    # like this (where $NEW_VERSION is for example '1.0.0')
+    # npm install github:SolidarityEconomyAssociation/sea-map#semver:^$NEW_VERION 
     npm run build
 	npm run deploy
 
