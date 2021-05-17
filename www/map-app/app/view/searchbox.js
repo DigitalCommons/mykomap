@@ -6,6 +6,10 @@ function init(registry) {
   const config = registry('config');
   const viewBase = registry('view/base');
   const presenter = registry('presenter/searchbox');
+  const sseInitiative = registry('model/sse_initiative');
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
 
   function SearchBoxView() {}
   // inherit from the standard view base object:
@@ -53,7 +57,7 @@ function init(registry) {
       .attr("id", "search-box")
       .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
       .attr("type", "search")
-      .attr("placeholder", "Search initiatives")
+      .attr("placeholder", labels.searchInitiatives)
       .attr("autocomplete","off");
 
     //search (addr/domains)

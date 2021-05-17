@@ -1,5 +1,6 @@
 // The view aspects of the Main Menu sidebar
 "use strict";
+const { lab } = require('d3');
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
 
@@ -9,6 +10,9 @@ function init(registry) {
   const presenter = registry('presenter/sidebar/initiatives');
   const sseInitiative = registry('model/sse_initiative');
   const map = registry('presenter/map');
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -32,7 +36,7 @@ function init(registry) {
 	    .attr("class", "w3-container");
 	  container
 	    .append("h1")
-	    .text("Search");
+	    .text(labels.search);
 
 	  this.createSearchBox(container);
 
@@ -247,7 +251,7 @@ function init(registry) {
 	    .attr("id", "search-box")
 	    .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
 	    .attr("type", "search")
-	    .attr("placeholder", "Search initiatives")
+	    .attr("placeholder", labels.searchInitiatives)
 	    .attr("autocomplete", "off");
 
 	  document.getElementById("search-box").focus();
@@ -297,7 +301,7 @@ function init(registry) {
 
 	    dropDown
 		    .append("option")
-		    .text("- Any -")
+		    .text(`- ${labels.any} -`)
 		    .attr("value","any")
 		    .attr("class","advanced-option")
 
@@ -339,7 +343,7 @@ function init(registry) {
 
   proto.populateScrollableSelection = function (selection) {
 	  var that = this;
-	  var noFilterTxt = "When you search, or click on map markers, you'll see the results here";
+	  var noFilterTxt = labels.whenSearch;
 	  var freshSearchText = this.presenter.getFilterNames().length > 0 ?
 								                                                   " Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
@@ -352,7 +356,7 @@ function init(registry) {
 		      .attr("id", "clearSearchFilterBtn")
 		      .append("button")
 		      .attr("class", "w3-button w3-black")
-		      .text("Clear Filters")
+		      .text(labels.clearFilters)
 		      .on("click", function () {
 			      //redo search
 			      console.log("this one")
@@ -403,7 +407,7 @@ function init(registry) {
 		      .attr("id", "clearSearchFilterBtn")
 		      .append("button")
 		      .attr("class", "w3-button w3-black")
-		      .text("Clear Filters")
+		      .text(labels.clearFilters)
 		      .on("click", function () {
 			      // only remove filters and and reset text, no re-search needed
 			      that.presenter.removeFilters();
