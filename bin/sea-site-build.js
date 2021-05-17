@@ -108,7 +108,7 @@ fs.writeFileSync(versionJson,
                  JSON.stringify(versionInfo, null, 2));
 
 const customPopupModulePath = path.join(configPath, 'popup.js');
-const defaultPopupModulePath = path.join(srcDir, 'app/view/map/default_popup.js');
+const defaultPopupModulePath = path.join(path.resolve(cwd, srcDir), 'app/view/map/default_popup.js');
 const popupModulePath = fs.existsSync(customPopupModulePath) ?
                         customPopupModulePath : defaultPopupModulePath;
 console.log("popup.js:", popupModulePath);
