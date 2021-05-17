@@ -10,7 +10,7 @@ var prettyPhone = function (tel) {
   return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
 };
 
-var getPopup = function (initiative, sse_initiatives) {
+var getPopup = function (initiative, sse_initiatives, labels) {
   const values = sse_initiatives.getVerboseValuesForFields()
   let orgStructures = values["Organisational Structure"];
   let activitiesVerbose = values["Activities"];
@@ -31,7 +31,7 @@ var getPopup = function (initiative, sse_initiatives) {
         "{dotcoop.domains}" +
         "</div>" +
         '<div class="sea-initiative-contact">' +
-        "<h3>Contact</h3>" +
+        `<h3>${labels.contact}</h3>` +
         "{initiative.address}" +
         "{initiative.tel}" +
         '<div class="sea-initiative-links">' +
