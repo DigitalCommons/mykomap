@@ -9,8 +9,23 @@ const getVocabsPhp = require("../../../services/get_vocabs.php");
 function init(registry) {
   const config = registry("config");
 
-  // Hardwire this for now.
-  const language = "EN";
+  let language;
+  if(config.getLanguage())
+    language = config.getLanguage();
+  else
+    language = "EN";
+
+  let functionalLabels = {
+    EN: {
+      directory: "Directory"
+    },
+    FR: {
+      directory: "Annuaire"
+    },
+    ES: {
+      directory: "Directorio"
+    }
+  }
   
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
@@ -916,6 +931,11 @@ function init(registry) {
     return alternatePossibleFilterValues;
   }
 
+  function getFunctionalLabels () {
+    return functionalLabels[language];
+  }
+
+
   return {
     loadFromWebService: loadFromWebService,
     search: search,
@@ -935,7 +955,8 @@ function init(registry) {
     getTerms: getTerms,
     getPossibleFilterValues: getPossibleFilterValues,
     getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
-    getVocabTerm, getVocabUriForProperty
+    getVocabTerm, getVocabUriForProperty,
+    getFunctionalLabels: getFunctionalLabels,
   };
 }
 // Automatically load the data when the app is ready:
