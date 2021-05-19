@@ -4,6 +4,10 @@
 // Website: http://johnwright.me/blog
 // This code is live @ 
 // http://johnwright.me/code-examples/sparql-query-in-code-rest-php-and-json-tutorial.php
+
+require("./common.php");
+
+
 $base_url = __DIR__ . "/../configuration";
 //$cacheFile = "locCache.json";
 //TODO sanitize all user input
@@ -24,21 +28,6 @@ function report_success($response, $disable_cache)
     header('Content-type: application/json');
 	echo $json_res;
 }
-function report_error_and_die($msg)
-{
-	$result = array();
-	// API response uses JSend: https://labs.omniti.com/labs/jsend
-	$result["status"] = "error";
-	$result["message"] = $msg;
-	if (function_exists('http_response_code')) {
-		http_response_code(500);
-	} else {
-		// TODO - use header() function
-	}
-    header('Content-type: application/json');    
-	echo json_encode($result);
-	exit(1);
-}
 function needsUpdate($dataset)
 {
 	global $base_url;
@@ -51,7 +40,7 @@ function needsUpdate($dataset)
 	//get the timestamp
 	// is curl installed?
 	if (!function_exists('curl_init')) {
-		report_error_and_die("PHP can't find function curl_init. Is CURL installed?");
+		croak("PHP can't find function curl_init. Is CURL installed?");
 	}
 	$ch = curl_init();
 
@@ -110,7 +99,7 @@ function request($url)
 
 	// is curl installed?
 	if (!function_exists('curl_init')) {
-		report_error_and_die("PHP can't find function curl_init. Is CURL installed?");
+		croak("PHP can't find function curl_init. Is CURL installed?");
 	}
 	$ch = curl_init();
 
@@ -137,7 +126,7 @@ function request($url)
 	// See curl docs: http://www.php.net/curl_setopt
 	$response = curl_exec($ch);
 	if (curl_errno($ch)) {
-		report_error_and_die("PHP curl_exec produces error: " . curl_error($ch));
+		croak("PHP curl_exec produces error: " . curl_error($ch));
 	}
 
 	curl_close($ch);
@@ -171,7 +160,7 @@ if (array_key_exists('noLodCache', $_GET)) {
     }
     else if ($disable_cache !== "false") {
         // Invalid value
-        report_error_and_die("Invalid option value for noLodCache parameter: if present, must be 'true' or 'false'");
+        croak("Invalid option value for noLodCache parameter: if present, must be 'true' or 'false'");
     }
 }
 

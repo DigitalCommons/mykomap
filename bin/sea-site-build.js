@@ -56,7 +56,7 @@ function getGitCommit(cwd) {
   var commit = shell(`git rev-parse --short HEAD`, cwd);
 
   if (exec(`git diff-index --quiet HEAD`, cwd).status)
-	  commit += "-modified";
+    commit += "-modified";
   return commit;
 }
 
@@ -69,21 +69,23 @@ const debug = variant == 'sea-map' || process.env.NODE_ENV !== "production";
 const versionJson = path.join(configPath, 'version.json');
 let versionInfo;
 let srcDir;
+let servicesDir;
 let entry;
 if (variant == 'sea-map') {
   // Infer development mode from sea-map package
 
   entry = "./www/map-app/app.js";
   srcDir = "./www/map-app"; // locally
+  servicesDir = "./www/services";
   
   // Get the linked dependency config in ext/package.json 
   const mapPackageJson = require(path.join(cwd, 'ext/package.json'));
   versionInfo = {
-	  variant: mapPackageJson.name,
-	  timestamp: timestamp,
-	  gitcommit: getGitCommit(path.join(cwd, '/ext')),
-	  seaMapVersion: seaMapPackageJson.version+'_'+getGitCommit()+'-dev',
-	  seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    variant: mapPackageJson.name,
+    timestamp: timestamp,
+    gitcommit: getGitCommit(path.join(cwd, '/ext')),
+    seaMapVersion: seaMapPackageJson.version+'_'+getGitCommit()+'-dev',
+    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
   };
 }
 else {
@@ -91,24 +93,25 @@ else {
 
   entry = "sea-map/www/map-app/app.js";
   srcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
+  servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
   
   // Get the sea-map git commit ID from the resolved version (we don't have
   // access to the git repo in this case).
   const seaMapResolved = (seaMapPackageJson._resolved || '');
   const seaMapCommit = seaMapResolved.replace(/^.*#/, '_').substr(0, 8);
   versionInfo = {
-	  variant: variant,
-	  timestamp: timestamp,
-	  gitcommit: getGitCommit(),
-	  seaMapVersion: seaMapPackageJson.version+seaMapCommit,
-	  seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    variant: variant,
+    timestamp: timestamp,
+    gitcommit: getGitCommit(),
+    seaMapVersion: seaMapPackageJson.version+seaMapCommit,
+    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
   };
 }
 fs.writeFileSync(versionJson,
                  JSON.stringify(versionInfo, null, 2));
 
 const customPopupModulePath = path.join(configPath, 'popup.js');
-const defaultPopupModulePath = path.join(srcDir, 'app/view/map/default_popup.js');
+const defaultPopupModulePath = path.join(path.resolve(cwd, srcDir), 'app/view/map/default_popup.js');
 const popupModulePath = fs.existsSync(customPopupModulePath) ?
                         customPopupModulePath : defaultPopupModulePath;
 console.log("popup.js:", popupModulePath);
@@ -187,19 +190,20 @@ const webpackConfig = {
     new MiniCssExtractPlugin({
       filename: 'map-app/map-app.css',
     }),
-	  new CopyPlugin({
-	    patterns: [
-		    { from: configPath, to: "configuration",
-		      globOptions: { ignore: ["**/*~"] },
-		    },
-		    ...copyPaths.map(p => {
-	        let { dir, base } = path.parse(p);
+    new CopyPlugin({
+      patterns: [
+        { from: configPath, to: "configuration",
+          globOptions: { ignore: ["**/*~"] },
+        },
+        { context: servicesDir, from: "**/*.php", to: "services" },
+        ...copyPaths.map(p => {
+          let { dir, base } = path.parse(p);
           if (!fs.statSync(p).isFile())
             base += '/**';
           console.log(`copying: ${dir}/${base}`);
-	        return { from: base, to: ".", context: dir,
+          return { from: base, to: ".", context: dir,
                    globOptions: { ignore: ["**/*~"] } }
-	      })
+        })
       ],
     }),
   ],
@@ -208,8 +212,8 @@ const webpackConfig = {
 webpack(
   webpackConfig,
   (err, stats) => {
-	  if (err || stats.hasErrors()) {
-	    die(`webpack error: ${stats}`);
+    if (err || stats.hasErrors()) {
+      die(`webpack error: ${stats}`);
     }
     else
       console.log(`webpack: ${stats}`);
