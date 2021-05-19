@@ -1,5 +1,6 @@
 // The view aspects of the Main Menu sidebar
 "use strict";
+const { lab } = require('d3');
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
 
@@ -8,6 +9,10 @@ function init(registry) {
   const view = registry('view/base');
   const sidebarView = registry('view/sidebar/base');
   const presenter = registry('presenter/sidebar/directory');
+  const sseInitiative = registry('model/sse_initiative');
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -23,7 +28,7 @@ function init(registry) {
   var proto = Object.create(sidebarView.base.prototype);
   
   // And adds some overrides and new properties of it's own:
-  proto.title = "Directory";
+  proto.title = labels.directory;
   proto.hasHistoryNavigation = false;
 
   proto.populateFixedSelection = function (selection) {
@@ -184,7 +189,7 @@ function init(registry) {
 
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", "Hide directory");
+    d3.select(".w3-btn").attr("title", labels.hideDirectory);
     let initiativeListSidebar = document.getElementById(
       "sea-initiatives-list-sidebar"
     );
@@ -232,7 +237,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
-      .attr("title", "Show search")
+      .attr("title", labels.showSearch)
       .on("click", function () {
 
         eventbus.publish({
@@ -260,7 +265,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", "Show info")
+      .attr("title", labels.showInfo)
       .on("click", function () {
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList",
@@ -292,7 +297,7 @@ function init(registry) {
       sidebarBtnHolder
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", "Show Datasets")
+        .attr("title", labels.showDatasets)
         .on("click", function () {
           eventbus.publish({
             topic: "Sidebar.hideInitiativeList",
@@ -320,7 +325,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", "Close " + title)
+      .attr("title", labels.close + title)
       .on("click", function () {
         that.presenter.removeFilters(directoryField + selectionKey);
       })
@@ -332,7 +337,7 @@ function init(registry) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
-      .attr("title", "Close " + title)
+      .attr("title", labels.close + title)
       .on("click", function () {
         that.presenter.removeFilters(directoryField + selectionKey);
       })
@@ -422,7 +427,7 @@ function init(registry) {
     initiativeContentElement
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", "Close " + initiative.name)
+      .attr("title", labels.close + initiative.name)
       .on("click", function () {
         eventbus.publish({
           topic: "Directory.InitiativeClicked"

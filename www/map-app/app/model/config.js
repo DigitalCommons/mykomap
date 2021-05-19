@@ -128,6 +128,7 @@ function init(inits) {
  */
 function parseStrings(cfg) {
   const result = {};
+  const configSchema = config_schema();
 
   Object.keys(cfg).forEach(id => {
     const def = configSchema.find((e) => id === e.id);

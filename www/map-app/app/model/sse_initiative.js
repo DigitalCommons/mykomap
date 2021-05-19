@@ -9,8 +9,71 @@ const getVocabsPhp = require("../../../services/get_vocabs.php");
 function init(registry) {
   const config = registry("config");
 
-  // Hardwire this for now.
-  const language = "EN";
+  let language;
+  if(config.getLanguage())
+    language = config.getLanguage();
+  else
+    language = "EN";
+
+  let functionalLabels = {
+    EN: {
+      directory: "Directory",
+      showDirectory: "Show directory",
+      showSearch: "Show search",
+      showInfo: "Show info",
+      hideDirectory: "Hide directory",
+      close: "Close ",
+      zoomIn: "Zoom in",
+      zoomOut: "Zoom out",
+      search: "Search",
+      whenSearch: "When you search, or click on map markers, you'll see the results here",
+      loading: "Loading ...",
+      showDatasets: "Show datasets",
+      searchInitiatives: "Search initiatives",
+      any: "Any",
+      searchIn: "Search in ?",
+      clearFilters: "Clear Filters",
+      contact: "Contact"
+    },
+    FR: {
+      directory: "Annuaire",
+      showDirectory: "Afficher l’annuaire",
+      showSearch: "Afficher la recherche",
+      showInfo: "Afficher les informations",
+      hideDirectory: "Masquer l’annuaire",
+      close: "Fermer ",
+      zoomIn: "Zoom avant",
+      zoomOut: "Zoom arrière",
+      search: "Rechercher",
+      whenSearch: "Lorsque vous effectuez une recherche ou cliquez sur les repères de la carte, les résultats s’affichent ici.",
+      loading: "Chargement des données",
+      showDatasets: "Afficher les ensembles de données",
+      searchInitiatives: "Rechercher des initiatives",
+      any: "Tout afficher",
+      searchIn: "Rechercher dans ?",
+      clearFilters: "Réinitialiser les filtres",
+      contact: "Contact"
+    },
+    ES: {
+      directory: "Directorio",
+      showDirectory: "Mostrar directorio",
+      showSearch: "Mostrar búsqueda",
+      showInfo: "Mostrar información",
+      hideDirectory: "Ocultar directorio",
+      close: "Cerrar ",
+      zoomIn: "Acercar",
+      zoomOut: "Alejar",
+      search: "Buscar",
+      whenSearch: "Los resultados de la búsqueda o selección en los marcadores del mapa se mostrarán aquí.",
+      loading: "Cargando…",
+      showDatasets: "Mostrar conjuntos de datos",
+      searchInitiatives: "Buscar iniciativas",
+      any: "Qualquiera",
+      searchIn: "Buscar en…",
+      clearFilters: "Borrar filtros",
+      contact: "Contacto"
+    }
+  }
   
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
@@ -585,8 +648,18 @@ function init(registry) {
   // The list is defined in `config.json`
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  function loadVocabs() {
-    return d3.json(getVocabsPhp);
+  async function loadVocabs() {
+    let result = await d3.json(getVocabsPhp);
+
+    result.vocabs["aci:"].ES.terms["aci:ICA140"] = "Servicios financieros";
+    result.vocabs["aci:"].ES.terms["aci:ICA150"] = "Seguros";
+    result.vocabs["aci:"].FR.terms["aci:ICA140"] = "Services financiers";
+    result.vocabs["aci:"].FR.terms["aci:ICA150"] = "Assurance";
+
+    console.log("helloooo!")
+    console.log(result)
+
+    return result;
   }  
 
 
@@ -731,6 +804,15 @@ function init(registry) {
       });
 
     return Object.fromEntries(entries);
+  }
+
+  function getLocalisedVocabs(){
+    let verboseValues = {};
+    verboseValues["aci:"] = vocabs.vocabs["aci:"][language];
+    verboseValues["bmt:"] = vocabs.vocabs["bmt:"][language];
+    verboseValues["os:"] = vocabs.vocabs["os:"][language];
+
+    return verboseValues;
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
@@ -916,26 +998,34 @@ function init(registry) {
     return alternatePossibleFilterValues;
   }
 
+  function getFunctionalLabels () {
+    return functionalLabels[language];
+  }
+
+
   return {
-    loadFromWebService: loadFromWebService,
-    search: search,
-    latLngBounds: latLngBounds,
-    getRegisteredValues: getRegisteredValues,
-    getAllRegisteredValues: getAllRegisteredValues,
-    getInitiativeByUniqueId: getInitiativeByUniqueId,
-    filterDatabases: filterDatabases,
+    loadFromWebService,
+    search,
+    latLngBounds,
+    getRegisteredValues,
+    getAllRegisteredValues,
+    getInitiativeByUniqueId,
+    filterDatabases,
     getAllDatasets: getDatasets,
-    reset: reset,
-    getCurrentDatasets: getCurrentDatasets,
-    getLoadedInitiatives: getLoadedInitiatives,
-    getInitiativeUIDMap: getInitiativeUIDMap,
-    getVerboseValuesForFields: getVerboseValuesForFields,
-    getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
-    getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
-    getTerms: getTerms,
-    getPossibleFilterValues: getPossibleFilterValues,
-    getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
-    getVocabTerm, getVocabUriForProperty
+    reset,
+    getCurrentDatasets,
+    getLoadedInitiatives,
+    getInitiativeUIDMap,
+    getVerboseValuesForFields,
+    getLocalisedVocabs,
+    getVocabIDsAndInitiativeVariables,
+    getVocabTitlesAndVocabIDs,
+    getTerms,
+    getPossibleFilterValues,
+    getAlternatePossibleFilterValues,
+    getVocabTerm, 
+    getVocabUriForProperty,
+    getFunctionalLabels,
   };
 }
 // Automatically load the data when the app is ready:

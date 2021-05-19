@@ -11,9 +11,10 @@ var prettyPhone = function (tel) {
 };
 
 var getPopup = function (initiative, sse_initiatives) {
-  const values = sse_initiatives.getVerboseValuesForFields()
-  let orgStructures = values["Organisational Structure"];
-  let activitiesVerbose = values["Activities"];
+  const values = sse_initiatives.getLocalisedVocabs();
+  const labels = sse_initiatives.getFunctionalLabels();
+  let orgStructures = values["os:"].terms;
+  let activitiesVerbose = values["aci:"].terms;
   let address = "",
       street,
       locality,
@@ -24,14 +25,14 @@ var getPopup = function (initiative, sse_initiatives) {
         '<div class="sea-initiative-details">' +
         '<h2 class="sea-initiative-name">{initiative.name}</h2>' +
         "{initiative.www}" +
-        '<h4 class="sea-initiative-org-structure">{initiative.org-structure}</h4>' +
-        '<h4 class="sea-initiative-economic-activity">Activity: {initiative.economic-activity}</h4>' +
+        `<h4 class="sea-initiative-org-structure">${values["os:"].title}: ${orgStructures[initiative.regorg]}</h4>` +
+        `<h4 class="sea-initiative-economic-activity">${values["aci:"].title}: ${activitiesVerbose[initiative.primaryActivity]}</h4>` +
         '<h5 class="sea-initiative-secondary-activity">Secondary Activities: {initiative.secondary-activity}</h5>' +
         "<p>{initiative.desc}</p>" +
         "{dotcoop.domains}" +
         "</div>" +
         '<div class="sea-initiative-contact">' +
-        "<h3>Contact</h3>" +
+        `<h3>${labels.contact}</h3>` +
         "{initiative.address}" +
         "{initiative.tel}" +
         '<div class="sea-initiative-links">' +
