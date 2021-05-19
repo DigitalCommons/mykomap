@@ -648,8 +648,18 @@ function init(registry) {
   // The list is defined in `config.json`
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  function loadVocabs() {
-    return d3.json(getVocabsPhp);
+  async function loadVocabs() {
+    let result = await d3.json(getVocabsPhp);
+
+    result.vocabs["aci:"].ES.terms["aci:ICA140"] = "Servicios financieros";
+    result.vocabs["aci:"].ES.terms["aci:ICA150"] = "Seguros";
+    result.vocabs["aci:"].FR.terms["aci:ICA140"] = "Services financiers";
+    result.vocabs["aci:"].FR.terms["aci:ICA150"] = "Assurance";
+
+    console.log("helloooo!")
+    console.log(result)
+
+    return result;
   }  
 
 
@@ -794,6 +804,15 @@ function init(registry) {
       });
 
     return Object.fromEntries(entries);
+  }
+
+  function getLocalisedVocabs(){
+    let verboseValues = {};
+    verboseValues["aci:"] = vocabs.vocabs["aci:"][language];
+    verboseValues["bmt:"] = vocabs.vocabs["bmt:"][language];
+    verboseValues["os:"] = vocabs.vocabs["os:"][language];
+
+    return verboseValues;
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
@@ -985,26 +1004,28 @@ function init(registry) {
 
 
   return {
-    loadFromWebService: loadFromWebService,
-    search: search,
-    latLngBounds: latLngBounds,
-    getRegisteredValues: getRegisteredValues,
-    getAllRegisteredValues: getAllRegisteredValues,
-    getInitiativeByUniqueId: getInitiativeByUniqueId,
-    filterDatabases: filterDatabases,
+    loadFromWebService,
+    search,
+    latLngBounds,
+    getRegisteredValues,
+    getAllRegisteredValues,
+    getInitiativeByUniqueId,
+    filterDatabases,
     getAllDatasets: getDatasets,
-    reset: reset,
-    getCurrentDatasets: getCurrentDatasets,
-    getLoadedInitiatives: getLoadedInitiatives,
-    getInitiativeUIDMap: getInitiativeUIDMap,
-    getVerboseValuesForFields: getVerboseValuesForFields,
-    getVocabIDsAndInitiativeVariables: getVocabIDsAndInitiativeVariables,
-    getVocabTitlesAndVocabIDs: getVocabTitlesAndVocabIDs,
-    getTerms: getTerms,
-    getPossibleFilterValues: getPossibleFilterValues,
-    getAlternatePossibleFilterValues, getAlternatePossibleFilterValues,
-    getVocabTerm, getVocabUriForProperty,
-    getFunctionalLabels: getFunctionalLabels,
+    reset,
+    getCurrentDatasets,
+    getLoadedInitiatives,
+    getInitiativeUIDMap,
+    getVerboseValuesForFields,
+    getLocalisedVocabs,
+    getVocabIDsAndInitiativeVariables,
+    getVocabTitlesAndVocabIDs,
+    getTerms,
+    getPossibleFilterValues,
+    getAlternatePossibleFilterValues,
+    getVocabTerm, 
+    getVocabUriForProperty,
+    getFunctionalLabels,
   };
 }
 // Automatically load the data when the app is ready:
