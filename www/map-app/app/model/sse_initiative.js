@@ -648,17 +648,7 @@ function init(registry) {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   async function loadVocabs() {
-    let result = await d3.json(getVocabsPhp);
-
-    result.vocabs["aci:"].ES.terms["aci:ICA140"] = "Servicios financieros";
-    result.vocabs["aci:"].ES.terms["aci:ICA150"] = "Seguros";
-    result.vocabs["aci:"].FR.terms["aci:ICA140"] = "Services financiers";
-    result.vocabs["aci:"].FR.terms["aci:ICA150"] = "Assurance";
-
-    console.log("helloooo!")
-    console.log(result)
-
-    return result;
+    return d3.json(getVocabsPhp);
   }  
 
 
