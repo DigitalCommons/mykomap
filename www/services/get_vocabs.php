@@ -411,7 +411,7 @@ function main() {
         $query = generate_query($uris, $languages);
         #echo $query; # DEBUG
         $query_results = query($endpoint, $query);
-        croak(var_export($query, true));
+        
         #echo json_encode($query_results); # DEBUG
         $result = add_query_data($result, $query_results);
     }
