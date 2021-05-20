@@ -338,11 +338,15 @@ function init(registry) {
       that.lng = undefined;
     }
 
+    console.log(that.lat) // returns correct number
+
     //overwrite with manually added lat lng
-    if (this.manLat || this.manLng) {
+    if (this.manLat && this.manLat!="0" || this.manLng && this.manLng!="0" ) {
       this.lat = this.manLat;
       this.lng = this.manLng;
     }
+
+    console.log(that.lat) // returns 0
 
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
