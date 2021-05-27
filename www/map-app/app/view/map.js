@@ -37,7 +37,7 @@ function init(registry) {
   dialogueSizeStyles.innerHTML = `
   div.leaflet-popup-content {
       height: ${dialogueSize.height};
-      width: ${dialogueSize.width};
+      width: ${dialogueSize.width}!important;
   }
   
   .sea-initiative-popup .sea-initiative-details {
