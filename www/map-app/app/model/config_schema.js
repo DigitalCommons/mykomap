@@ -79,7 +79,7 @@ const types = {
     stringDescr: 'A comma-delimited list of strings. No escaping is used, ' +
                  "so no commas can exist in the strings. Spaces are not trimmed.",
     parseString: (val) => val.split(/,/),
-  },
+  }
 };
 
 /* Define the config schema using a list of field meta-data, from
@@ -138,6 +138,7 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
+  dialogueSize
 } = {}) => [
   {
     id: 'aboutHtml',
@@ -359,6 +360,14 @@ const configSchema = ({
     getter: 'getLanguage',
     setter: 'setLanguage',
     type: types.string
+  },
+  {
+    id: 'dialogueSize',
+    desc: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
+          'descriptionRatio is how many times larger the description section is than the ' +
+          'contact section. These values are used in view/map.js',
+    init: () => dialogueSize,
+    getter: 'getDialogueSize',
   }
 
 
