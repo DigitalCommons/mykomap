@@ -33,7 +33,8 @@ function init(registry) {
       any: "Any",
       searchIn: "Search in ?",
       clearFilters: "Clear Filters",
-      contact: "Contact"
+      contact: "Contact",
+      all: "All"
     },
     FR: {
       directory: "Annuaire",
@@ -52,7 +53,8 @@ function init(registry) {
       any: "Tout afficher",
       searchIn: "Rechercher dans ?",
       clearFilters: "Réinitialiser les filtres",
-      contact: "Contact"
+      contact: "Contact",
+      all: "Tous"
     },
     ES: {
       directory: "Directorio",
@@ -71,7 +73,8 @@ function init(registry) {
       any: "Qualquiera",
       searchIn: "Buscar en…",
       clearFilters: "Borrar filtros",
-      contact: "Contacto"
+      contact: "Contacto",
+      all: "Todos"
     }
   }
   
@@ -338,11 +341,15 @@ function init(registry) {
       that.lng = undefined;
     }
 
+    console.log(that.lat) // returns correct number
+
     //overwrite with manually added lat lng
-    if (this.manLat || this.manLng) {
+    if (this.manLat && this.manLat!="0" || this.manLng && this.manLng!="0" ) {
       this.lat = this.manLat;
       this.lng = this.manLng;
     }
+
+    console.log(that.lat) // returns 0
 
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
