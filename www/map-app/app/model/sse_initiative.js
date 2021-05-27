@@ -4,6 +4,7 @@ const d3 = require('d3');
 const eventbus = require('../eventbus');  
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
+const { json } = require('d3');
 
 
 function init(registry) {
@@ -341,15 +342,11 @@ function init(registry) {
       that.lng = undefined;
     }
 
-    console.log(that.lat) // returns correct number
-
     //overwrite with manually added lat lng
     if (this.manLat && this.manLat!="0" || this.manLng && this.manLng!="0" ) {
       this.lat = this.manLat;
       this.lng = this.manLng;
     }
-
-    console.log(that.lat) // returns 0
 
     // loop through the filterable fields and register
     filterableFields.forEach(filterable => {
@@ -791,7 +788,12 @@ function init(registry) {
   }
 
   function getDialogueSize(){
-    return config.getDialogueSize();
+    const dialogueSize = config.getDialogueSize();
+    
+    if(typeof(dialogueSize) == "string")
+      return JSON.parse(dialogueSize);
+    else 
+      return dialogueSize;
   }
   
   function getVerboseValuesForFields(){
