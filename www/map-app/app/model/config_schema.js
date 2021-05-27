@@ -368,6 +368,7 @@ const configSchema = ({
           'contact section. These values are used in view/map.js',
     init: () => dialogueSize,
     getter: 'getDialogueSize',
+    setter: 'setDialogueSize'
   }
 
 
