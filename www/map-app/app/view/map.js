@@ -22,10 +22,33 @@ function init(registry) {
   const presenter = registry('presenter/map');
   const markerView = registry('view/map/marker');
   const viewBase = registry('view/base');
+  const sseInitiative = registry('model/sse_initiative');
 
   const config = {
     putSelectedMarkersInClusterGroup: false
   };
+
+  const dialogueSize = sseInitiative.getDialogueSize();
+
+  const descriptionRatio = parseInt(dialogueSize.descriptionRatio);
+  const descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
+
+  const dialogueSizeStyles = document.createElement('style');
+  dialogueSizeStyles.innerHTML = `
+  div.leaflet-popup-content {
+      height: ${dialogueSize.height};
+      width: ${dialogueSize.width};
+  }
+  
+  .sea-initiative-popup .sea-initiative-details {
+      width: ${descriptionPercentage}%;
+  }
+  
+  .sea-initiative-popup .sea-initiative-contact {
+      width: ${100 - descriptionPercentage}%;
+  }`;
+
+  document.body.appendChild(dialogueSizeStyles);
 
   function loader(config) {
     return function () {
@@ -359,11 +382,14 @@ function init(registry) {
     //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
     let lat = this.map.getCenter().lat;
 
+    //this is from the config, so if you change the unit there you need to change it here
+    const dialogueHeight = parseInt(dialogueSize.height.split("px"));
+
     //get a latitude that shows the whole dialogue on screen
-    if(this.map.project(centre).y - this.map.getPixelBounds().min.y < 300){
+    if(this.map.project(centre).y - this.map.getPixelBounds().min.y < dialogueHeight){
       lat = this.map.unproject({
         x: this.map.project(centre).x,
-        y: this.map.project(centre).y - 150
+        y: this.map.project(centre).y - (dialogueHeight / 2)
       }).lat;
     }
 

@@ -363,7 +363,9 @@ const configSchema = ({
   },
   {
     id: 'dialogueSize',
-    desc: 'Set the dimensions of the dialogue box',
+    desc: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
+          'descriptionRatio is how many times larger the description section is than the ' +
+          'contact section',
     init: () => dialogueSize,
     getter: 'getDialogueSize',
   }
