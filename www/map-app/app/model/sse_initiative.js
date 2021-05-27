@@ -789,6 +789,10 @@ function init(registry) {
 
     return d3.json(service);
   }
+
+  function getDialogueSize(){
+    return config.getDialogueSize();
+  }
   
   function getVerboseValuesForFields(){
 
@@ -1014,6 +1018,7 @@ function init(registry) {
     getCurrentDatasets,
     getLoadedInitiatives,
     getInitiativeUIDMap,
+    getDialogueSize,
     getVerboseValuesForFields,
     getLocalisedVocabs,
     getVocabIDsAndInitiativeVariables,
