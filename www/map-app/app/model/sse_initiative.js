@@ -33,7 +33,8 @@ function init(registry) {
       any: "Any",
       searchIn: "Search in ?",
       clearFilters: "Clear Filters",
-      contact: "Contact"
+      contact: "Contact",
+      all: "All"
     },
     FR: {
       directory: "Annuaire",
@@ -52,7 +53,8 @@ function init(registry) {
       any: "Tout afficher",
       searchIn: "Rechercher dans ?",
       clearFilters: "Réinitialiser les filtres",
-      contact: "Contact"
+      contact: "Contact",
+      all: "Tous"
     },
     ES: {
       directory: "Directorio",
@@ -71,7 +73,8 @@ function init(registry) {
       any: "Qualquiera",
       searchIn: "Buscar en…",
       clearFilters: "Borrar filtros",
-      contact: "Contacto"
+      contact: "Contacto",
+      all: "Todos"
     }
   }
   
