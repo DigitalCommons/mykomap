@@ -46,6 +46,10 @@ function init(registry) {
   
   .sea-initiative-popup .sea-initiative-contact {
       width: ${100 - descriptionPercentage}%;
+  }
+  
+  .sea-initiative-popup{
+    left: ${-parseInt(dialogueSize.width.split("v")[0])/2}vw!important;
   }`;
 
   document.body.appendChild(dialogueSizeStyles);
