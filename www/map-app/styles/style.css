@@ -616,9 +616,6 @@ input[type="search"] {
 }
 
 /* Sidebar & Popup */
-.sea-initiative-popup{
-  left: -25vw!important;
-}
 
 .sea-initiative-popup .sea-initiative-details,
 .sea-initiative-sidebar .sea-initiative-details {
