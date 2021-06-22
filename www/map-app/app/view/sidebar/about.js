@@ -6,7 +6,10 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const sidebarView = registry('view/sidebar/base');
+  const sseInitiative = registry('model/sse_initiative');
   const presenter = registry('presenter/sidebar/about');
+
+  const labels = sseInitiative.getFunctionalLabels();
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -28,7 +31,7 @@ function init(registry) {
   const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
   proto.populateFixedSelection = function (selection) {
-    let textContent = "About";
+    let textContent = labels.aboutTitle;
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -40,11 +43,34 @@ function init(registry) {
     const that = this;
     //selection.append('div').attr("class", "w3-container w3-center").append('p').text("Information about this map will be available here soon.");
     //selection.append('div').attr("class", "w3-container w3-center").html(that.presenter.aboutHtml());
-    selection
-      .append("div")
-      .attr("class", "w3-container")
-      .html(that.presenter.aboutHtml());
-    //if version is available display it
+    
+    const aboutSection = selection.append('div')
+      .attr("class", "w3-container");
+
+    aboutSection.append('h3')
+      .text(labels.underConstruction);
+
+    const sourceSentence = aboutSection.append('p')
+      .text(labels.source);
+
+    sourceSentence.append('a')
+      .text(labels.here)
+      .attr('href','https://dev.lod.coop/ica/');
+
+    sourceSentence.append('span')
+      .text('.');
+
+    const furtherInfo = aboutSection.append('p')
+      .text(labels.technicalInfo);
+    
+    furtherInfo.append('a')
+      .text(labels.here)
+      .attr('href','https://github.com/SolidarityEconomyAssociation/sea-map/wiki');
+
+    furtherInfo.append('span')
+      .text('.');
+
+     //if version is available display it
     if (that.presenter.getSoftwareVersion().version) {
       selection
         .append("div")

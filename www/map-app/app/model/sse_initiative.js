@@ -35,7 +35,12 @@ function init(registry) {
       searchIn: "Search in ?",
       clearFilters: "Clear Filters",
       contact: "Contact",
-      all: "All"
+      all: "All",
+      aboutTitle: "About",
+      underConstruction: "This section is under construction.",
+      source: "The source data of this content is ",
+      technicalInfo: "Technical information about the technology behind this map and directory can be found ",
+      here: "here"
     },
     FR: {
       directory: "Annuaire",
@@ -55,7 +60,12 @@ function init(registry) {
       searchIn: "Rechercher dans ?",
       clearFilters: "Réinitialiser les filtres",
       contact: "Contact",
-      all: "Tous"
+      all: "Tous",
+      aboutTitle: "À propos",
+      underConstruction: "Cette section est en construction.",
+      source: "Les données sources de ce contenu se trouvent ",
+      technicalInfo: "Des informations techniques sur la technologie qui sous-tend cette carte et ce répertoire sont disponibles ",
+      here: "ici"
     },
     ES: {
       directory: "Directorio",
@@ -75,7 +85,12 @@ function init(registry) {
       searchIn: "Buscar en…",
       clearFilters: "Borrar filtros",
       contact: "Contacto",
-      all: "Todos"
+      all: "Todos",
+      aboutTitle: "Sobre este mapa",
+      underConstruction: "Esta sección está en construcción.",
+      source: "Los datos de origen de este contenido están ",
+      technicalInfo: "La información técnica sobre la tecnología que hay detrás de este mapa y directorio se puede encontrar ",
+      here: "aquí"
     }
   }
   
