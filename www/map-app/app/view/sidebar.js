@@ -57,7 +57,7 @@ function _init(config) {
     
     // The sidebar has a button that causes the main menu to be dispayed
 
-
+    if (this.presenter.showingDirectory()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
@@ -81,7 +81,9 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-bars");
-
+    }
+    
+    if (this.presenter.showingSearch()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
@@ -102,11 +104,13 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-search");
+    }
 
+    if (this.presenter.showingAbout()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showSearch)
+      .attr("title", labels.showInfo)
       .on("click", function () {
         that.hideInitiativeList();
         // eventbus.publish({
@@ -121,6 +125,7 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-info-circle");
+    }
 
     if (this.presenter.showingDatasets()) {
       selection
@@ -149,6 +154,21 @@ function _init(config) {
 
   proto.createSidebars = function () {
 
+    this.sidebar = {};
+
+    if(this.presenter.showingDirectory())
+      this.sidebar.directory = directory.createSidebar();
+
+    if(this.presenter.showingSearch())
+      this.sidebar.initiatives = initiatives.createSidebar();
+
+    if(this.presenter.showingAbout())
+      this.sidebar.about = about.createSidebar();
+
+    if(this.presenter.showingDatasets())
+      this.sidebar.datasets = datasets.createSidebar();
+
+    /*
 
     if (this.presenter.showingDatasets()) {
       this.sidebar = {
@@ -165,7 +185,7 @@ function _init(config) {
         // mainMenu: mainMenu.createSidebar(),
         directory: directory.createSidebar(),
       };
-    }
+    }*/
 
   };
 
