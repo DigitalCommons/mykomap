@@ -138,7 +138,8 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
-  dialogueSize
+  dialogueSize,
+  defaultOpenSidebar
 } = {}) => [
   {
     id: 'aboutHtml',
@@ -369,8 +370,14 @@ const configSchema = ({
     init: () => dialogueSize,
     getter: 'getDialogueSize',
     setter: 'setDialogueSize'
-  }
-
+  },
+  {
+    id: 'defaultOpenSidebar',
+    desc: 'Set whether the sidebar is by default open on starting the app.',
+    init: () => defaultOpenSidebar,
+    getter: 'getDefaultOpenSidebar',
+    type: types.boolean
+  } 
 
 ];
 

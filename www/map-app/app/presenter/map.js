@@ -92,6 +92,13 @@ function init(registry) {
       },
       load: function (e) {
         console.log("Map loaded");
+
+        const sidebarView = registry('view/sidebar');
+
+        let defaultOpenSidebar = config.getDefaultOpenSidebar();
+
+        if(defaultOpenSidebar)
+          sidebarView.showSidebar();        
       },
       resize: function (e) {
         window.seaMap.invalidateSize();

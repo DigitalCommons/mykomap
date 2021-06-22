@@ -18,6 +18,13 @@ function _init(config) {
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
 
+  /*
+  const sidebarDefaultOpen = true;
+
+  if(sidebarDefaultOpen)
+    this.showSidebar();
+    */
+
   function SidebarView() { }
   // inherit from the standard view base object:
   var proto = Object.create(viewBase.base.prototype);
@@ -351,8 +358,14 @@ function _init(config) {
     view.createSidebars();
     view.changeSidebar("directory");
   }
+
+  function showSidebar(){
+    view.showSidebar();
+  }
+
   return {
-    init: init
+    init: init,
+    showSidebar
   };
 }
 
