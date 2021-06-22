@@ -142,7 +142,8 @@ const configSchema = ({
   noLodCache,
   language,
   dialogueSize,
-  defaultOpenSidebar
+  defaultOpenSidebar,
+  sidebarButtonColour
 } = {}) => [
   {
     id: 'aboutHtml',
@@ -404,6 +405,13 @@ const configSchema = ({
     init: () => defaultOpenSidebar,
     getter: 'getDefaultOpenSidebar',
     type: types.boolean
+  },
+  {
+    id: "sidebarButtonColour",
+    desc: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
+    init: () => sidebarButtonColour || "#39cccc",
+    getter: 'getSidebarButtonColour',
+    type: types.string
   } 
 
 ];

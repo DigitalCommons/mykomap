@@ -1033,6 +1033,10 @@ function init(registry) {
     return functionalLabels[language];
   }
 
+  function getSidebarButtonColour () {
+    return config.getSidebarButtonColour();
+  }
+
 
   return {
     loadFromWebService,
@@ -1058,6 +1062,7 @@ function init(registry) {
     getVocabTerm, 
     getVocabUriForProperty,
     getFunctionalLabels,
+    getSidebarButtonColour
   };
 }
 // Automatically load the data when the app is ready:

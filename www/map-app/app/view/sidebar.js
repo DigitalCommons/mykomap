@@ -11,9 +11,11 @@ function _init(config) {
   const datasets = require('../view/sidebar/datasets')(config);
   const initiatives = require('../view/sidebar/initiatives')(config);
   const sseInitiative = require('../model/sse_initiative')(config);
+  
 
   //get labels for buttons and titles
   const labels = sseInitiative.getFunctionalLabels();
+  const sidebarButtonColour = sseInitiative.getSidebarButtonColour();
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
@@ -35,6 +37,7 @@ function _init(config) {
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
                         .append("button")
                         .attr("class", "w3-btn")
+                        .attr("style","background-color: " + sidebarButtonColour)
                         .attr("title", labels.showDirectory)
                         .on("click", function () {
                           that.showSidebar();
