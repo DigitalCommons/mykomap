@@ -43,7 +43,8 @@ function init(registry) {
       here: "here",
       contributers: "contributers",
       otherData: "Other data",
-      poweredBy: "Powered by"
+      poweredBy: "Powered by",
+      mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
     },
     FR: {
       directory: "Annuaire",
@@ -71,7 +72,8 @@ function init(registry) {
       here: "ici",
       contributers: "Contributeurs",
       otherData: "Autres données",
-      poweredBy: "Créé par"
+      poweredBy: "Créé par",
+      mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
     },
     ES: {
       directory: "Directorio",
@@ -99,7 +101,8 @@ function init(registry) {
       here: "aquí",
       contributers: "Colaboradores",
       otherData: "Otros datos",
-      poweredBy: "Desarrollado por"
+      poweredBy: "Desarrollado por",
+      mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
     }
   }
   

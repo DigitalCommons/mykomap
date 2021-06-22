@@ -150,6 +150,7 @@ function init(registry) {
     mapAttribution = mapAttribution.replace('contributors',labels.contributers);
     mapAttribution = mapAttribution.replace('Other data',labels.otherData);
     mapAttribution = mapAttribution.replace('Powered by',labels.poweredBy);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.',labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
     
     var i,
