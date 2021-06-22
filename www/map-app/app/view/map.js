@@ -24,6 +24,8 @@ function init(registry) {
   const viewBase = registry('view/base');
   const sseInitiative = registry('model/sse_initiative');
 
+  const labels = sseInitiative.getFunctionalLabels();
+
   const config = {
     putSelectedMarkersInClusterGroup: false
   };
@@ -143,7 +145,14 @@ function init(registry) {
     const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     console.log(this.presenter.getTileUrl())
     const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
-    const osmAttrib = this.presenter.getMapAttribution();
+
+    let mapAttribution = this.presenter.getMapAttribution();
+    mapAttribution = mapAttribution.replace('contributors',labels.contributers);
+    mapAttribution = mapAttribution.replace('Other data',labels.otherData);
+    mapAttribution = mapAttribution.replace('Powered by',labels.poweredBy);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.',labels.mapDisclaimer);
+    const osmAttrib = mapAttribution;
+    
     var i,
         eventHandlers = this.presenter.getMapEventHandlers();
     var k = Object.keys(eventHandlers);

@@ -120,7 +120,7 @@ function init(registry) {
         if (valuesByName && valuesByName.ALL)
           label = valuesByName.ALL;
         else
-          label = labels.all + ' '+field;
+          label = labels.allEntries
       }
       else {
         tag = uriToTag(key);

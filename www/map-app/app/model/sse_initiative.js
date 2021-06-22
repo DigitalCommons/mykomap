@@ -35,7 +35,16 @@ function init(registry) {
       searchIn: "Search in ?",
       clearFilters: "Clear Filters",
       contact: "Contact",
-      all: "All"
+      allEntries: "All Entries",
+      aboutTitle: "About",
+      underConstruction: "This section is under construction.",
+      source: "The source data of this content is ",
+      technicalInfo: "Technical information about the technology behind this map and directory can be found ",
+      here: "here",
+      contributers: "contributers",
+      otherData: "Other data",
+      poweredBy: "Powered by",
+      mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
     },
     FR: {
       directory: "Annuaire",
@@ -55,7 +64,16 @@ function init(registry) {
       searchIn: "Rechercher dans ?",
       clearFilters: "Réinitialiser les filtres",
       contact: "Contact",
-      all: "Tous"
+      allEntries: "Toutes les entrées",
+      aboutTitle: "À propos",
+      underConstruction: "Cette section est en construction.",
+      source: "Les données sources de ce contenu se trouvent ",
+      technicalInfo: "Des informations techniques sur la technologie qui sous-tend cette carte et ce répertoire sont disponibles ",
+      here: "ici",
+      contributers: "Contributeurs",
+      otherData: "Autres données",
+      poweredBy: "Créé par",
+      mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
     },
     ES: {
       directory: "Directorio",
@@ -75,7 +93,16 @@ function init(registry) {
       searchIn: "Buscar en…",
       clearFilters: "Borrar filtros",
       contact: "Contacto",
-      all: "Todos"
+      allEntries: "Todas las entradas",
+      aboutTitle: "Sobre este mapa",
+      underConstruction: "Esta sección está en construcción.",
+      source: "Los datos de origen de este contenido están ",
+      technicalInfo: "La información técnica sobre la tecnología que hay detrás de este mapa y directorio se puede encontrar ",
+      here: "aquí",
+      contributers: "Colaboradores",
+      otherData: "Otros datos",
+      poweredBy: "Desarrollado por",
+      mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
     }
   }
   
