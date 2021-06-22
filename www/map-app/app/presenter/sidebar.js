@@ -21,6 +21,9 @@ function init(registry) {
     this.view.showSidebar();
   };
 
+  proto.showingDirectory = () => config.getShowDirectoryPanel();
+  proto.showingSearch = () => config.getShowSearchPanel();
+  proto.showingAbout = () => config.getShowAboutPanel();
   proto.showingDatasets = () => config.getShowDatasetsPanel();
 
   proto.hideSidebar = function(name) {

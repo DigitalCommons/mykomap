@@ -493,7 +493,6 @@ div.map-app-map-container {
 .map-app-sidebar-button button {
   padding: 0 0.45em;
   font-size: 2.4em;
-  background-color: var(--teal);
   color: white;
   transition: all 0.16s;
   transform: translateX(-3px);

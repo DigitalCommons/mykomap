@@ -11,12 +11,21 @@ function _init(config) {
   const datasets = require('../view/sidebar/datasets')(config);
   const initiatives = require('../view/sidebar/initiatives')(config);
   const sseInitiative = require('../model/sse_initiative')(config);
+  
 
   //get labels for buttons and titles
   const labels = sseInitiative.getFunctionalLabels();
+  const sidebarButtonColour = sseInitiative.getSidebarButtonColour();
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type
+
+  /*
+  const sidebarDefaultOpen = true;
+
+  if(sidebarDefaultOpen)
+    this.showSidebar();
+    */
 
   function SidebarView() { }
   // inherit from the standard view base object:
@@ -28,6 +37,7 @@ function _init(config) {
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
                         .append("button")
                         .attr("class", "w3-btn")
+                        .attr("style","background-color: " + sidebarButtonColour)
                         .attr("title", labels.showDirectory)
                         .on("click", function () {
                           that.showSidebar();
@@ -50,7 +60,7 @@ function _init(config) {
     
     // The sidebar has a button that causes the main menu to be dispayed
 
-
+    if (this.presenter.showingDirectory()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
@@ -74,7 +84,9 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-bars");
-
+    }
+    
+    if (this.presenter.showingSearch()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
@@ -95,11 +107,13 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-search");
+    }
 
+    if (this.presenter.showingAbout()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showSearch)
+      .attr("title", labels.showInfo)
       .on("click", function () {
         that.hideInitiativeList();
         // eventbus.publish({
@@ -114,6 +128,7 @@ function _init(config) {
       })
       .append("i")
       .attr("class", "fa fa-info-circle");
+    }
 
     if (this.presenter.showingDatasets()) {
       selection
@@ -142,6 +157,21 @@ function _init(config) {
 
   proto.createSidebars = function () {
 
+    this.sidebar = {};
+
+    if(this.presenter.showingDirectory())
+      this.sidebar.directory = directory.createSidebar();
+
+    if(this.presenter.showingSearch())
+      this.sidebar.initiatives = initiatives.createSidebar();
+
+    if(this.presenter.showingAbout())
+      this.sidebar.about = about.createSidebar();
+
+    if(this.presenter.showingDatasets())
+      this.sidebar.datasets = datasets.createSidebar();
+
+    /*
 
     if (this.presenter.showingDatasets()) {
       this.sidebar = {
@@ -158,7 +188,7 @@ function _init(config) {
         // mainMenu: mainMenu.createSidebar(),
         directory: directory.createSidebar(),
       };
-    }
+    }*/
 
   };
 
@@ -351,8 +381,14 @@ function _init(config) {
     view.createSidebars();
     view.changeSidebar("directory");
   }
+
+  function showSidebar(){
+    view.showSidebar();
+  }
+
   return {
-    init: init
+    init: init,
+    showSidebar
   };
 }
 

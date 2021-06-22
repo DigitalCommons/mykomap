@@ -129,6 +129,9 @@ const configSchema = ({
   doesDirectoryHaveColours,
   disableClusteringAtZoom,
   searchedFields,
+  showDirectoryPanel,
+  showSearchPanel,
+  showAboutPanel,
   showDatasetsPanel,
   maxZoomOnGroup,
   maxZoomOnSearch,
@@ -138,7 +141,9 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
-  dialogueSize
+  dialogueSize,
+  defaultOpenSidebar,
+  sidebarButtonColour
 } = {}) => [
   {
     id: 'aboutHtml',
@@ -230,6 +235,30 @@ const configSchema = ({
     init: () => htmlTitle,
     setter: 'setHtmlTitle',
     type: types.string,
+  },
+  {
+    id: 'showDirectoryPanel',
+    descr: `If true this will load the datasets panel`,
+    init: () => showDirectoryPanel == undefined ? true : showDirectoryPanel,
+    getter: 'getShowDirectoryPanel',
+    setter: 'setShowDirectoryPanel',
+    type: types.boolean,
+  },
+  {
+    id: 'showSearchPanel',
+    descr: `If true this will load the datasets panel`,
+    init: () => showSearchPanel == undefined ? true : showSearchPanel,
+    getter: 'getShowSearchPanel',
+    setter: 'setShowSearchPanel',
+    type: types.boolean,
+  },
+  {
+    id: 'showAboutPanel',
+    descr: `If true this will load the datasets panel`,
+    init: () => showAboutPanel == undefined ? true : showAboutPanel,
+    getter: 'getShowAboutPanel',
+    setter: 'setShowAboutPanel',
+    type: types.boolean,
   },
   {
     id: 'showDatasetsPanel',
@@ -369,8 +398,21 @@ const configSchema = ({
     init: () => dialogueSize,
     getter: 'getDialogueSize',
     setter: 'setDialogueSize'
-  }
-
+  },
+  {
+    id: 'defaultOpenSidebar',
+    desc: 'Set whether the sidebar is by default open on starting the app.',
+    init: () => defaultOpenSidebar,
+    getter: 'getDefaultOpenSidebar',
+    type: types.boolean
+  },
+  {
+    id: "sidebarButtonColour",
+    desc: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
+    init: () => sidebarButtonColour || "#39cccc",
+    getter: 'getSidebarButtonColour',
+    type: types.string
+  } 
 
 ];
 
