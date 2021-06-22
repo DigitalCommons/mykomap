@@ -40,7 +40,10 @@ function init(registry) {
       underConstruction: "This section is under construction.",
       source: "The source data of this content is ",
       technicalInfo: "Technical information about the technology behind this map and directory can be found ",
-      here: "here"
+      here: "here",
+      contributers: "contributers",
+      otherData: "Other data",
+      poweredBy: "Powered by"
     },
     FR: {
       directory: "Annuaire",
@@ -65,7 +68,10 @@ function init(registry) {
       underConstruction: "Cette section est en construction.",
       source: "Les données sources de ce contenu se trouvent ",
       technicalInfo: "Des informations techniques sur la technologie qui sous-tend cette carte et ce répertoire sont disponibles ",
-      here: "ici"
+      here: "ici",
+      contributers: "Contributeurs",
+      otherData: "Autres données",
+      poweredBy: "Créé par"
     },
     ES: {
       directory: "Directorio",
@@ -90,7 +96,10 @@ function init(registry) {
       underConstruction: "Esta sección está en construcción.",
       source: "Los datos de origen de este contenido están ",
       technicalInfo: "La información técnica sobre la tecnología que hay detrás de este mapa y directorio se puede encontrar ",
-      here: "aquí"
+      here: "aquí",
+      contributers: "Colaboradores",
+      otherData: "Otros datos",
+      poweredBy: "Desarrollado por"
     }
   }
   
