@@ -138,7 +138,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
   */
   let registeredValues = {}; // arrays of sorted values grouped by label, then by field
-  const allRegisteredValues = {}; // arrays of sorted values, grouped by label
+  let allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
     const that = this;
@@ -579,7 +579,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-
+    allRegisteredValues = {};
 
     //publish reset to map markers
     eventbus.publish({
