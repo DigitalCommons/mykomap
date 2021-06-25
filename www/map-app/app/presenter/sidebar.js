@@ -120,6 +120,20 @@ define([
       }
     });
 
+    eventbus.subscribe({
+      topic: "Initiative.reset",
+      callback: function(data) {
+        p.changeSidebar();
+      }
+    });
+    
+    eventbus.subscribe({
+      topic: "Initiative.complete",
+      callback: function(data) {
+        p.changeSidebar();
+      }
+    });
+
     // eventbus.subscribe({
     //   topic: "Initiative.selected",
     //   callback: function() {
