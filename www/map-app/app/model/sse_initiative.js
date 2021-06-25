@@ -392,6 +392,8 @@ function init(registry) {
       const labelKey = vocab.title;
       
       const field = this[fieldKey];
+      if (field == null)
+        console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
 
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
