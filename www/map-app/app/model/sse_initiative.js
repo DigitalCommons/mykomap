@@ -293,7 +293,7 @@ function init(registry) {
      }
    */
   let registeredValues = {}; // arrays of sorted values grouped by label, then by field
-  const allRegisteredValues = {}; // arrays of sorted values, grouped by label
+  let allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
     const that = this;
@@ -655,7 +655,7 @@ function init(registry) {
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-
+    allRegisteredValues = {};
 
     //publish reset to map markers
     eventbus.publish({
