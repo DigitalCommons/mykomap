@@ -767,6 +767,9 @@ input[type="search"] {
 #dir-title {
   padding: 0px 0px 0px 16px;
 }
+#loadingCircle * {
+  z-index: 400;
+}
 
 #loadingCirclespin {
   border: 16px solid #f3f3f3;

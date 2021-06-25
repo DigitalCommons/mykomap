@@ -653,6 +653,7 @@ function init(registry) {
     if(dataset === currentDatasets)
       return;
 
+    startedLoading = false;
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
