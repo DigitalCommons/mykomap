@@ -577,6 +577,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if(dataset === currentDatasets)
       return;
 
+    startedLoading = false;
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};

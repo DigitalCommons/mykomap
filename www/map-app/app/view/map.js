@@ -27,24 +27,25 @@ define([
       //with css
       //could look a lot better, with svgs
       if (config.error) {
-        d3.select("#" + config.id).remove();
-        d3.select("#" + config.id + "spin").remove();
-        d3.select("#" + config.id + "txt").text("Error loading " + config.text + " data :(");
+        d3.select("#" + config.id).style('display', 'none');
+        d3.select("#" + config.id + "txt").text("Error loading: " + config.text);
       }
       else {
-        if (d3.select(config.id).empty()) {
-          //create new
-          let loading = d3.select(config.container).append("div");
+        let loading =  d3.select('#'+config.id);
+        if (!loading.node()) {
+          // Create the node if it is missing
+          loading = d3.select(config.container).append("div");
+          loading.attr("id", config.id);
           loading.append("div").attr("id", config.id + "spin");
-          loading.append("p").text("Loading " + config.text + " Data..").attr("id", config.id + "txt");
+          loading.append("p").attr("id", config.id + "txt");
         }
-        else {
-          //edit text
-          d3.select(config.id + "txt").text(config.text);
-        }
+
+        // Ensure node is displayed
+        loading.style('display', 'block');
+        
+        //edit text
+        d3.select("#"+ config.id + "txt").text(config.text);
       }
-
-
     };
   }
 
@@ -53,10 +54,7 @@ define([
       //example loading
       //with css
       //could look a lot better
-      d3.select(config.id).remove();
-      d3.select(config.id + "spin").remove();
-      d3.select(config.id + "txt").remove();
-
+      d3.select('#'+config.id).style('display', 'none');
     };
   }
 
@@ -66,11 +64,15 @@ define([
         options.datasetLoading =
           options.datasetLoading.charAt(0).toUpperCase() + options.datasetLoading.slice(1);
 
-        var myLoader = loader({ error: options.error, text: options.datasetLoading, container: "#map-app-leaflet-map", id: "loadingCircle" });
+        var myLoader = loader({
+          error: options.error,
+          text: `Loading ${options.datasetLoading} data set...`,
+          container: "#map-app-leaflet-map", id: "loadingCircle",
+        });
         myLoader();
       }
       else {
-        var myStopLoader = stopLoader({ id: "#loadingCircle" });
+        var myStopLoader = stopLoader({ id: "loadingCircle" });
         myStopLoader();
       }
     }
