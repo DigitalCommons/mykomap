@@ -253,6 +253,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       const fieldKey = filterable.field;
       const labelKey = filterable.label;
       const field = this[fieldKey];
+      if (field == null)
+        console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
 
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
