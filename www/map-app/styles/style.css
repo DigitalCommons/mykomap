@@ -821,6 +821,7 @@ input[type="search"] {
   /* margin is -0.5 * dimension */
   margin-top: -40px;
   font-size: 20px;
+  color: var(--dark);
 }
 
 #map-app-leaflet-map {
