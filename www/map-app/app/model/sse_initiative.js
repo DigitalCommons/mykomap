@@ -138,7 +138,7 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     }
   */
   let registeredValues = {}; // arrays of sorted values grouped by label, then by field
-  const allRegisteredValues = {}; // arrays of sorted values, grouped by label
+  let allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
     const that = this;
@@ -253,6 +253,8 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
       const fieldKey = filterable.field;
       const labelKey = filterable.label;
       const field = this[fieldKey];
+      if (field == null)
+        console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
 
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
@@ -575,11 +577,12 @@ define(["d3", "app/eventbus", "model/config"], function (d3, eventbus, config) {
     if(dataset === currentDatasets)
       return;
 
+    startedLoading = false;
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-
+    allRegisteredValues = {};
 
     //publish reset to map markers
     eventbus.publish({
