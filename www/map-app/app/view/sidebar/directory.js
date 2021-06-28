@@ -49,15 +49,6 @@ function init(registry) {
              .on("keyup", function () {
                that.handleFilter(this.value);
              });
-
-    d3.select(".sea-main-sidebar").on("click", function () {
-      if (document.getElementById("dir-filter") && window.outerWidth >= 1080) {
-        document.getElementById("dir-filter").focus();
-      }
-
-    });
-
-
   };
 
   var dissapear;
