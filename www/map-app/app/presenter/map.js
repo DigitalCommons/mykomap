@@ -122,6 +122,7 @@ function init(registry) {
 
     this.view.removeAllMarkers();
     allMarkers = [];
+    loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
   };

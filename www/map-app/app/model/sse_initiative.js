@@ -293,7 +293,7 @@ function init(registry) {
      }
    */
   let registeredValues = {}; // arrays of sorted values grouped by label, then by field
-  const allRegisteredValues = {}; // arrays of sorted values, grouped by label
+  let allRegisteredValues = {}; // arrays of sorted values, grouped by label
 
   function Initiative(e) {
     const that = this;
@@ -392,6 +392,8 @@ function init(registry) {
       const labelKey = vocab.title;
       
       const field = this[fieldKey];
+      if (field == null)
+        console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
 
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
@@ -651,11 +653,12 @@ function init(registry) {
     if(dataset === currentDatasets)
       return;
 
+    startedLoading = false;
     loadedInitiatives = [];
     initiativesToLoad = [];
     initiativesByUid = {};
     registeredValues = {};
-
+    allRegisteredValues = {};
 
     //publish reset to map markers
     eventbus.publish({
