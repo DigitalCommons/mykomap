@@ -107,11 +107,8 @@ function init(registry) {
       let label = key;
       let tag = key;
       if (key == null) {
-        tag = 'all';
-        if (valuesByName && valuesByName.ALL)
-          label = valuesByName.ALL;
-        else
-          label = labels.allEntries
+        tag = 'all-entries';
+        label = labels.allEntries;
       }
       else {
         tag = uriToTag(key);
@@ -165,7 +162,7 @@ function init(registry) {
       selectionKey
     );
 
-    const selectionLabel = selectionKey == null? 'All' : selectionKey;
+    const selectionLabel = selectionKey == null? labels.allEntries : selectionKey;
 
     //deselect all
     that.presenter.clearLatestSelection();
@@ -203,7 +200,7 @@ function init(registry) {
     let title;
     if (values) {
       // If values exists and there's nothing in it for this selectionLabel then we're looking at All
-      title = values[selectionLabel] || selectionLabel + " " + directoryField;
+      title = values[selectionLabel] || selectionLabel;
     } else {
       // If values doesn't exist then the values are coming from the data directly
       title = selectionLabel;
