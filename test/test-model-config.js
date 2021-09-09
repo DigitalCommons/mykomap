@@ -1,43 +1,17 @@
 'use strict';
-var assert = require('assert');
+const fs = require('fs');
+const assert = require('assert');
+const configBuilder = require('../www/map-app/app/model/config');
 
-
+// Emulate what happens in ../www/map-app/app.js
+const rawConfig = require('./configs/typical/config.json');
+const version = require('./configs/typical/version.json');
+const about = fs.readFileSync(`${__dirname}/configs/typical/about.html`);
+const combinedConfig = { ...rawConfig, ...version, aboutHtml: about };
 
 describe('The config.js module', function () {
-  describe('given a typical config', function () {
-    var config;
-
-    var requirejs = require("requirejs");
-    requirejs.config({
-	    baseUrl: 'www/map-app/lib',
-	    nodeRequire: require,
-
-	    // Stripped-down adaptation of config in www/map-app/app.js
-	    paths: {
-	      app: "../app",
-	      model: "../app/model",
-
-	      // Link to our test config
-	      configuration: "../../../test/configs/typical",
-	      
-	      // For expressing dependencies on json files:
-	      json: "require/json",
-	      // json uses the text module, se we need it too:
-	      text: "require/text",
-	    },
-    });
-    
-    before(function (done) {
-      // Credit to: https://stackoverflow.com/questions/20473614/mocha-requirejs-amd-testing
-      // This saves the module config for use in tests. You have to use
-      // the done() callback because this is asynchronous.
-      requirejs(['model/config'],
-                function(_config) {
-                  config = _config;
-                  //console.log(">>", config);
-                  done();
-                });
-    });
+    describe('given a typical config', function () {
+    var config = configBuilder(combinedConfig);
 
     it('should return the configured values', function () {
       assert.equal(config.aboutHtml(), 'This is a dummy about.html!\n');
