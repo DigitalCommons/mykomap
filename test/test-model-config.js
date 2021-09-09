@@ -4,9 +4,9 @@ const assert = require('assert');
 const configBuilder = require('../www/map-app/app/model/config');
 
 // Emulate what happens in ../www/map-app/app.js
-const rawConfig = require('./configs/typical/config.json');
-const version = require('./configs/typical/version.json');
-const about = fs.readFileSync(`${__dirname}/configs/typical/about.html`);
+const rawConfig = require('test/configs/typical/config.json');
+const version = require('test/configs/typical/version.json');
+const about = fs.readFileSync('test/configs/typical/about.html');
 const combinedConfig = { ...rawConfig, ...version, aboutHtml: about };
 
 describe('The config.js module', function () {
