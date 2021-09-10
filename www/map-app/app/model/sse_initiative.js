@@ -541,13 +541,6 @@ function init(registry) {
       });
     } else {
       sortLoadedData();
-      performance.mark("endProcessing");
-      // var marks = performance.getEntriesByType("mark");
-      console.info(
-        `Time took to process all initiatives
-        ${performance.getEntriesByName("endProcessing")[0].startTime -
-        performance.getEntriesByName("startProcessing")[0].startTime}`
-      );
       //if more left
       datasetsLoaded++;
       if (datasetsLoaded >= datasetsToLoad)
@@ -764,9 +757,6 @@ function init(registry) {
       return (response) => {
         console.log("loaded "+dataset+" data", response);
 
-        // Record a timestamp for this dataset
-        performance.mark("startProcessing");
-        
         add(response.data);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
