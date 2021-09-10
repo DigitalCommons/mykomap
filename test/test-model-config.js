@@ -19,7 +19,7 @@ describe('The config.js module', function () {
       assert.equal(config.getSoftwareTimestamp(), '2020-06-13T18:38:04+0100');
       assert.equal(config.getSoftwareGitCommit(), 'fb9982f');
       assert.deepEqual(config.namedDatasets(), ['test-dataset']);
-      assert.equal(config.namedDatasetsVerbose(), undefined);
+      assert.deepEqual(config.namedDatasetsVerbose(), []);
       assert.equal(config.htmlTitle(), 'Test Title');
       assert.equal(config.getShowDatasetsPanel(), true);
       assert.equal(config.getInitialBounds(), undefined);
