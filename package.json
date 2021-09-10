@@ -18,7 +18,8 @@
   },
   "scripts": {
     "lint": "eslint www/map-app/**/*.js",
-    "tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js", 
+    "browser-tests": "karma start --single-run --browsers FirefoxHeadless",
+    "tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js",
     "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
     "build": "bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "build-windows": "node bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/",
