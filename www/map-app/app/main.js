@@ -1,6 +1,7 @@
-const config_builder = require('./model/config');
-
 "use strict";
+
+const config_builder = require('./model/config');
+const registries = require('./registries');
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -65,66 +66,16 @@ function parseUrlParameters(search) {
   return kvList;
 }
 
-function init(base_config, attrs, urlParams) {
-  console.log(
-    "header, footer and left column have been reduce to zero in style.css."
-  );
 
-  const config = config_builder(base_config);
+// Create an initialised module registry.
+//
+// `config` should be a config object created using `model/config.js`
+function initRegistry(config) {
+  const registry = registries.makeRegistry();
   
-  // Combine the attributes and the url params (latter override former).
-  const combined = Object.assign({}, attrs, urlParams);
-  
-  // Override any config values passed.
-  config.add(combined);
-
-  // Makes a registry object.
-  //
-  // This is a minimal replacement for RequireJS's dependency injection.
-  // Essentially, add pre-initialised named services first, passing
-  // the registry itself if they need this to look up other services:
-  //
-  //     registry = makeRegistry();
-  //     registry.def("myservice") = require("myservice")(registry);
-  //
-  // ...then get the pre-initialised service by name after.
-  //
-  //     myservice = registry("myservice");
-  //
-  function makeRegistry() {
-    const index = new Object();
-
-    const registry = (name) => {
-      if (!index[name]) {
-        throw new Error(`Service '${name}' not yet defined`);
-      }
-
-      return index[name];
-    };
-    
-    registry.def = (name, service) => {
-      // console.debug("registry.def", name, service);
-      if (typeof(name) != 'string') {
-        throw new Error(`Service name  is invalid: '${name}'`);
-      }
-      if (service === null || service === undefined) {
-        throw new Error(`Service value for '${name}' is invalid: ${service}`);
-      }
-      if (name in index && service !== index[name]) {
-        // console.debug(`${service} !== ${index[name]}`);
-        throw new Error(`Service '${name}' already defined with a different value`);
-      }
-
-      return index[name] = service;
-    };
-    
-    return registry;
-  }
-  
-  const registry = makeRegistry();
   registry.def('config', config);
-  const sseInitiative = registry.def('model/sse_initiative',
-                                     require('./model/sse_initiative')(registry));
+  registry.def('model/sse_initiative',
+               require('./model/sse_initiative')(registry));
 
   // Registrer the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependents.
@@ -148,18 +99,21 @@ function init(base_config, attrs, urlParams) {
   
   // The code for each view is loaded by www/app/view.js
   // Initialize the views:
-  const view = registry.def('view', require('./view.js')(registry));
-  
-  
-  view.init();
-  // Each view will ensure that the code for its presenter is loaded.
+  registry.def('view', require('./view.js')(registry));
 
-  // Ask the model to load the data for the initiatives:
-  sseInitiative.loadFromWebService();
-}
+  return registry;
+};
 
-function init2(base_config) {
-  const mapApp = document.getElementById(base_config.elem_id || 'map-app');
+
+// Start the application in the context fo a web page
+//
+// `window` should be the browser window, with a `document` property, or something
+// which emulates this adequately (for testing).
+//
+// `base_config` is the base config, but which may have settings overridden by
+// settings defined either in the configured element's attributes, or the URL paramters.
+function webRun(window, base_config) {
+  const mapApp = window.document.getElementById(base_config.elem_id || 'map-app');
   mapApp.innerHTML = `
       <!-- Page Content -->
       <div class="w3-teal map-app-content">
@@ -208,8 +162,34 @@ function init2(base_config) {
   const urlParams = parseUrlParameters(window.location.search)
     .reduce((acc, e) => { acc[e[0]] = e[1]; return acc}, {});
 
-  // Call the main function with the config values to override.
-  init(base_config, attrs, urlParams);
+  // Build the base_config into a config object
+  const config = config_builder(base_config);
+  
+  // Combine the attributes and the url params into a single object (latter override former).
+  const combined = Object.assign({}, attrs, urlParams);
+  
+  // Override any config values with the url/attribute params
+  config.add(combined);
+
+  // Get the registry of modules. This manages module dependencies,
+  // and is a hang-over from when we used requireJS.
+  const registry = initRegistry(config);
+  
+  const view = registry('view');
+  const sseInitiative = registry('model/sse_initiative');
+  
+  // Each view will ensure that the code for its presenter is loaded.
+  view.init();
+
+  // Ask the model to load the data for the initiatives:
+  sseInitiative.loadFromWebService();
 }
 
-module.exports = init2;
+
+module.exports = {
+  webRun,
+  initRegistry,
+  snakeToCamelCase,
+  parseAttributes,
+  parseUrlParameters,
+};
