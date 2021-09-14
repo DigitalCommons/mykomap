@@ -554,8 +554,6 @@ function init(registry) {
   //
   // @param json - an array of inititive definitions
   function add(json) {
-    console.log(json)
-
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
   }
