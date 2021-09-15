@@ -839,9 +839,10 @@ function init(registry) {
 
   function getLocalisedVocabs(){
     let verboseValues = {};
-    verboseValues["aci:"] = vocabs.vocabs["aci:"][language];
-    verboseValues["bmt:"] = vocabs.vocabs["bmt:"][language];
-    verboseValues["os:"] = vocabs.vocabs["os:"][language];
+
+    for(const id in vocabs.vocabs) {
+      verboseValues[id] = vocabs.vocabs[id][language];
+    }
 
     return verboseValues;
   }
