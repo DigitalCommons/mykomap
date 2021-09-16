@@ -18,5 +18,5 @@ Promise
   .all([config.then(getJson), versions.then(getJson), about.then(getText)])
   .then(([config, versions, about]) => {
     const combinedConfig = { ...config, ...versions, aboutHtml: about };
-    main(combinedConfig);
+    main.webRun(window, combinedConfig);
   });

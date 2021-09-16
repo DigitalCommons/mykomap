@@ -517,7 +517,18 @@ function init(registry) {
     return [[south, west], [north, east]];
   }
 
+  function addInitiatives(initiatives) {
+    initiatives.forEach(elem => new Initiative(elem));
+  }
 
+  function finishInitiativeLoad() {
+    sortLoadedData();
+    //if more left
+    datasetsLoaded++;
+    if (datasetsLoaded >= datasetsToLoad)
+      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
+  }
+  
   // Incrementally loads the initiatives in `initiativesToLoad`, in
   // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
   // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
@@ -529,29 +540,15 @@ function init(registry) {
     var maxInitiativesToLoadPerFrame = 100;
     // By loading the initiatives in chunks, we keep the UI responsive
     for (i = 0; i < maxInitiativesToLoadPerFrame; ++i) {
-      e = initiativesToLoad.pop();
-      if (e !== undefined) {
-        new Initiative(e);
-      }
+      addInitiatives(initiativesToLoad.splice(0, maxInitiativesToLoadPerFrame));
     }
     // If there's still more to load, we do so after returning to the event loop:
-    if (e !== undefined) {
+    if (initiativesToLoad.length) {
       setTimeout(function () {
         loadNextInitiatives();
       });
     } else {
-      sortLoadedData();
-      performance.mark("endProcessing");
-      // var marks = performance.getEntriesByType("mark");
-      console.info(
-        `Time took to process all initiatives
-        ${performance.getEntriesByName("endProcessing")[0].startTime -
-        performance.getEntriesByName("startProcessing")[0].startTime}`
-      );
-      //if more left
-      datasetsLoaded++;
-      if (datasetsLoaded >= datasetsToLoad)
-        eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
+      finishInitiativeLoad();
     }
   }
 
@@ -561,8 +558,6 @@ function init(registry) {
   //
   // @param json - an array of inititive definitions
   function add(json) {
-    console.log(json)
-
     initiativesToLoad = initiativesToLoad.concat(json);
     loadNextInitiatives();
   }
@@ -723,32 +718,8 @@ function init(registry) {
 
     function onVocabSuccess(response) {
       console.log("loaded vocabs", response);
-      
-      vocabs = response;
-      
-      // Add an inverted look-up `abbrevs` mapping abbreviations to uris
-      // obtained from `prefixes`.
-      //
-      // Sort it and `prefixes` so that longer prefixes are listed
-      // first (Ecmascript objects preserve the order of addition).
-      // This is to make matching the longest prefix simpler later.
-      const prefixes = {};
-      const abbrevs = {};
-      Object
-        .keys(vocabs.prefixes)
-        .sort((a,b) => b.length - a.length)
-        .forEach(prefix => {
-          const abbrev = vocabs.prefixes[prefix];
-          abbrevs[abbrev] = prefix;
-          prefixes[prefix] = abbrev;
-        });
 
-      vocabs.prefixes = prefixes;
-      vocabs.abbrevs = abbrevs;
-      if (!vocabs.vocabs)
-        vocabs.vocabs = []; // Ensure this is here
-      
-      eventbus.publish({ topic: "Vocabularies.loaded" });
+      setVocab(response);
     }
 
     function onVocabFailure(error) {
@@ -764,9 +735,7 @@ function init(registry) {
       return (response) => {
         console.log("loaded "+dataset+" data", response);
 
-        // Record a timestamp for this dataset
-        performance.mark("startProcessing");
-        
+        console.log(response.data);
         add(response.data);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
@@ -782,6 +751,34 @@ function init(registry) {
         });
       };
     }
+  }
+
+  function setVocab(data) {
+    vocabs = data;
+    
+    // Add an inverted look-up `abbrevs` mapping abbreviations to uris
+    // obtained from `prefixes`.
+    //
+    // Sort it and `prefixes` so that longer prefixes are listed
+    // first (Ecmascript objects preserve the order of addition).
+    // This is to make matching the longest prefix simpler later.
+    const prefixes = {};
+    const abbrevs = {};
+    Object
+      .keys(vocabs.prefixes)
+      .sort((a,b) => b.length - a.length)
+      .forEach(prefix => {
+        const abbrev = vocabs.prefixes[prefix];
+        abbrevs[abbrev] = prefix;
+        prefixes[prefix] = abbrev;
+      });
+    
+    vocabs.prefixes = prefixes;
+    vocabs.abbrevs = abbrevs;
+    if (!vocabs.vocabs)
+      vocabs.vocabs = []; // Ensure this is here
+
+    eventbus.publish({ topic: "Vocabularies.loaded" });    
   }
 
 
@@ -842,9 +839,10 @@ function init(registry) {
 
   function getLocalisedVocabs(){
     let verboseValues = {};
-    verboseValues["aci:"] = vocabs.vocabs["aci:"][language];
-    verboseValues["bmt:"] = vocabs.vocabs["bmt:"][language];
-    verboseValues["os:"] = vocabs.vocabs["os:"][language];
+
+    for(const id in vocabs.vocabs) {
+      verboseValues[id] = vocabs.vocabs[id][language];
+    }
 
     return verboseValues;
   }
@@ -1043,6 +1041,9 @@ function init(registry) {
 
   return {
     loadFromWebService,
+    setVocab,
+    addInitiatives,
+    finishInitiativeLoad,
     search,
     latLngBounds,
     getRegisteredValues,
