@@ -1,5 +1,6 @@
 'use strict';
 //const fs = require('fs');
+const { assert } = require('chai');
 const configBuilder = require('../www/map-app/app/model/config');
 
 // Emulate what happens in ../www/map-app/app.js
