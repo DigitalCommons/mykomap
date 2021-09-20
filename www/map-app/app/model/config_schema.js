@@ -79,6 +79,14 @@ const types = {
     stringDescr: 'A comma-delimited list of strings. No escaping is used, ' +
                  "so no commas can exist in the strings. Spaces are not trimmed.",
     parseString: (val) => val.split(/,/),
+  },
+  objectOfString: {
+    name: '{Object.<string>}',
+    descr: 'An object containing only string values.',
+    stringDescr: 'A comma-delimited list of name-value pairs, each delimited by a colon. '+
+                 'Therefore no commas or colons can exist in either names or values. '+
+                 'Spaces are not trimmed, and later key duplicates will overwrite earlier ones.',
+    parseString: (val) => Object.fromEntries(val.split(/,/).map(el => el.split(/:/, 2))),
   }
 };
 
