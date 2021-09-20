@@ -141,7 +141,11 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
-  dialogueSize,
+  dialogueSize = {
+    "width": "35vw",
+    "height": "225px",
+    "descriptionRatio": "2.5"
+  },
   defaultOpenSidebar,
   sidebarButtonColour
 } = {}) => [
