@@ -470,7 +470,7 @@ ${def.descr}
 
 ${def.details || ''}
 
-  `))
+`))
   .join('');
 
 module.exports = configSchema;
