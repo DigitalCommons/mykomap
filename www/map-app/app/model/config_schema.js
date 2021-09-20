@@ -34,7 +34,7 @@ const types = {
   },
   boolean: {
     name: '{boolean}',
-    stringDesc: "The empty string, 'false', or 'no' parse as `false`, " +
+    stringDescr: "The empty string, 'false', or 'no' parse as `false`, " +
                 "everything else as `true`.",
     parseString: (val) => {
       switch (val.toLowerCase()) {
@@ -396,7 +396,7 @@ const configSchema = ({
   },
   {
     id: 'dialogueSize',
-    desc: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
+    descr: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
           'descriptionRatio is how many times larger the description section is than the ' +
           'contact section. These values are used in view/map.js',
     init: () => dialogueSize,
@@ -405,14 +405,14 @@ const configSchema = ({
   },
   {
     id: 'defaultOpenSidebar',
-    desc: 'Set whether the sidebar is by default open on starting the app.',
+    descr: 'Set whether the sidebar is by default open on starting the app.',
     init: () => defaultOpenSidebar,
     getter: 'getDefaultOpenSidebar',
     type: types.boolean
   },
   {
     id: "sidebarButtonColour",
-    desc: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
+    descr: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
     init: () => sidebarButtonColour || "#39cccc",
     getter: 'getSidebarButtonColour',
     type: types.string
@@ -453,7 +453,7 @@ The following attributes can be defined.
   .concat(configSchema().map((def) => `
 ### \`${def.id}\`
 
-- *type:* \`${def.type.name}\` ${def.type.desc || ''}
+- *type:* \`${def.type.name}\` ${def.type.descr || ''}
 - *in string context:* ${def.type.stringDescr || 'parsed as-is'}
 - *default:* ${def.defaultDescr || '`' + def.init() + '`'}
 - *settable?:* ${def.setter ? 'yes' : 'no'}
