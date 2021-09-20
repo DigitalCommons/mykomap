@@ -405,11 +405,13 @@ const configSchema = ({
   {
     id: 'dialogueSize',
     descr: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
-          'descriptionRatio is how many times larger the description section is than the ' +
-          'contact section. These values are used in view/map.js',
+           'descriptionRatio is how many times larger the description section is than the ' +
+           'contact section. These values are used in view/map.js',
+    defaultDescr: "```\n"+JSON.stringify(dialogueSize, null, 2)+"\n```",
     init: () => dialogueSize,
     getter: 'getDialogueSize',
-    setter: 'setDialogueSize'
+    setter: 'setDialogueSize',
+    type: types.objectOfString
   },
   {
     id: 'defaultOpenSidebar',
