@@ -124,9 +124,9 @@ the attribution message to put at the bottom of the map
 
 ### `namedDatasets`
 
-- *type:* `{string[]}` 
+- *type:* `{string[]}` An array of strings.
 - *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* `undefined`
+- *default:* ``
 - *settable?:* no
 
 A list of names that correspond to directories in www/services, which must contain default-graph-uri.txt, endpoint.txt, query.rq.
@@ -136,9 +136,9 @@ A list of names that correspond to directories in www/services, which must conta
 
 ### `namedDatasetsVerbose`
 
-- *type:* `{string[]}` 
+- *type:* `{string[]}` An array of strings.
 - *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* `undefined`
+- *default:* ``
 - *settable?:* no
 
 A list of names for the named datasets. Length must be exactly the same as namedDatasets or this will not be used
@@ -150,7 +150,7 @@ A list of names for the named datasets. Length must be exactly the same as named
 
 - *type:* `{string}` 
 - *in string context:* parsed as-is
-- *default:* `undefined`
+- *default:* ``
 - *settable?:* yes
 
 If set, this will override the default value for the map's HTML <title> tag.
@@ -158,10 +158,46 @@ If set, this will override the default value for the map's HTML <title> tag.
 
 
 
+### `showDirectoryPanel`
+
+- *type:* `{boolean}` 
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
+- *default:* `true`
+- *settable?:* yes
+
+If true this will load the datasets panel
+
+
+
+
+### `showSearchPanel`
+
+- *type:* `{boolean}` 
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
+- *default:* `true`
+- *settable?:* yes
+
+If true this will load the datasets panel
+
+
+
+
+### `showAboutPanel`
+
+- *type:* `{boolean}` 
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
+- *default:* `true`
+- *settable?:* yes
+
+If true this will load the datasets panel
+
+
+
+
 ### `showDatasetsPanel`
 
 - *type:* `{boolean}` 
-- *in string context:* parsed as-is
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
 - *default:* `true`
 - *settable?:* yes
 
@@ -172,7 +208,7 @@ If true this will load the datasets panel
 
 ### `initialBounds`
 
-- *type:* `{number[][]}` 
+- *type:* `{number[][]}` [[latitude, longitude],[latitude, longitude]] - A two-element array of two-element arrays of numbers, defining two pairs of latitude and longitudes in degrees
 - *in string context:* A comma-delimited list of four numbers defining two latitude and longitude pairs, in degrees.
 - *default:* `undefined`
 - *settable?:* yes
@@ -184,7 +220,7 @@ The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen a
 
 ### `defaultLatLng`
 
-- *type:* `{number[]}` 
+- *type:* `{number[]}` A two-element array defining latitude and longitude in degrees.
 - *in string context:* A comma-delimited list of two numbers defining latitude and longitude in degrees.
 - *default:* `0,0`
 - *settable?:* yes
@@ -196,12 +232,12 @@ The position on the map that an initiative's dialog is positioned if it has no r
 
 ### `filterableFields`
 
-- *type:* `{string[]}` 
+- *type:* `{string[]}` An array of strings.
 - *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* `undefined`
+- *default:* ``
 - *settable?:* yes
 
-Defines the fields that can populate the directory
+Defines the instance properties that can populate the directory. Must be a list of instance property names which are associated with vocabularies.
 
 
 
@@ -209,8 +245,8 @@ Defines the fields that can populate the directory
 ### `doesDirectoryHaveColours`
 
 - *type:* `{boolean}` 
-- *in string context:* parsed as-is
-- *default:* `undefined`
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
+- *default:* `false`
 - *settable?:* yes
 
 True if the directory should feature coloured entries
@@ -222,7 +258,7 @@ True if the directory should feature coloured entries
 
 - *type:* `{number}` 
 - *in string context:* parsed as-is
-- *default:* `undefined`
+- *default:* `false`
 - *settable?:* yes
 
 Defines the zoom level above which to cluster pins; passed to Leaflet.markercluster plugin. Zero effectively disables clustering, as this is a fully zoomed-out, global map; most maps zoom in to level 18. If omitted, clustering is always off.  See: https://leaflet.github.io/Leaflet.markercluster/#other-options and https://leafletjs.com/examples/zoom-levels/
@@ -232,7 +268,7 @@ Defines the zoom level above which to cluster pins; passed to Leaflet.markerclus
 
 ### `searchedFields`
 
-- *type:* `{string[]}` 
+- *type:* `{string[]}` An array of strings.
 - *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
 - *default:* `name,www`
 - *settable?:* yes
@@ -303,11 +339,65 @@ If set this will display the logo of the organisation. This takes in a link to a
 ### `noLodCache`
 
 - *type:* `{boolean}` 
-- *in string context:* parsed as-is
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
 - *default:* True
 - *settable?:* yes
 
 Responses to SPARQL queries will normally be cached in /services/locCache.txt if this option is false or absent, with the aim of speeding up map loading time.The cache file is only updated if the static linked data's top-level index.rdf file is newer than the cache's timestamp. But if this option is set to true, this cache is disabled and a query is made each time the map is loaded.
+
+
+
+
+### `language`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* `undefined`
+- *settable?:* yes
+
+The language that will be displayed in the absence of a url argument
+
+
+
+
+### `dialogueSize`
+
+- *type:* `{Object.<string>}` An object containing only string values.
+- *in string context:* A comma-delimited list of name-value pairs, each delimited by a colon. Therefore no commas or colons can exist in either names or values. Spaces are not trimmed, and later key duplicates will overwrite earlier ones.
+- *default:* ```
+{
+  "width": "35vw",
+  "height": "225px",
+  "descriptionRatio": "2.5"
+}
+```
+- *settable?:* yes
+
+Set the dimensions of the dialogue box. Height and width are raw css values descriptionRatio is how many times larger the description section is than the contact section. These values are used in view/map.js
+
+
+
+
+### `defaultOpenSidebar`
+
+- *type:* `{boolean}` 
+- *in string context:* The empty string, 'false', or 'no' parse as `false`, everything else as `true`.
+- *default:* `undefined`
+- *settable?:* no
+
+Set whether the sidebar is by default open on starting the app.
+
+
+
+
+### `sidebarButtonColour`
+
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* `#39cccc`
+- *settable?:* no
+
+Set the css background-colour attribute for the open sidebar button. Defaults to teal
 
 
 

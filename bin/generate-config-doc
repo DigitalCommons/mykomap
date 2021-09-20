@@ -4,10 +4,5 @@
  */
 
 /** Stub the Require.js framework `define` function. */
-global.define = function(names, func) {
-    const config_schema = func()
-    console.log(config_schema.doc());
-}
-
-require("../www/map-app/app/model/config_schema.js");
-
+const configSchema = require("../www/map-app/app/model/config_schema.js");
+console.log(configSchema.doc());

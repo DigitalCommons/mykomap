@@ -34,7 +34,7 @@ const types = {
   },
   boolean: {
     name: '{boolean}',
-    stringDesc: "The empty string, 'false', or 'no' parse as `false`, " +
+    stringDescr: "The empty string, 'false', or 'no' parse as `false`, " +
                 "everything else as `true`.",
     parseString: (val) => {
       switch (val.toLowerCase()) {
@@ -79,6 +79,14 @@ const types = {
     stringDescr: 'A comma-delimited list of strings. No escaping is used, ' +
                  "so no commas can exist in the strings. Spaces are not trimmed.",
     parseString: (val) => val.split(/,/),
+  },
+  objectOfString: {
+    name: '{Object.<string>}',
+    descr: 'An object containing only string values.',
+    stringDescr: 'A comma-delimited list of name-value pairs, each delimited by a colon. '+
+                 'Therefore no commas or colons can exist in either names or values. '+
+                 'Spaces are not trimmed, and later key duplicates will overwrite earlier ones.',
+    parseString: (val) => Object.fromEntries(val.split(/,/).map(el => el.split(/:/, 2))),
   }
 };
 
@@ -141,7 +149,11 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
-  dialogueSize,
+  dialogueSize = {
+    "width": "35vw",
+    "height": "225px",
+    "descriptionRatio": "2.5"
+  },
   defaultOpenSidebar,
   sidebarButtonColour
 } = {}) => [
@@ -392,23 +404,25 @@ const configSchema = ({
   },
   {
     id: 'dialogueSize',
-    desc: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
-          'descriptionRatio is how many times larger the description section is than the ' +
-          'contact section. These values are used in view/map.js',
+    descr: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
+           'descriptionRatio is how many times larger the description section is than the ' +
+           'contact section. These values are used in view/map.js',
+    defaultDescr: "```\n"+JSON.stringify(dialogueSize, null, 2)+"\n```",
     init: () => dialogueSize,
     getter: 'getDialogueSize',
-    setter: 'setDialogueSize'
+    setter: 'setDialogueSize',
+    type: types.objectOfString
   },
   {
     id: 'defaultOpenSidebar',
-    desc: 'Set whether the sidebar is by default open on starting the app.',
+    descr: 'Set whether the sidebar is by default open on starting the app.',
     init: () => defaultOpenSidebar,
     getter: 'getDefaultOpenSidebar',
     type: types.boolean
   },
   {
     id: "sidebarButtonColour",
-    desc: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
+    descr: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
     init: () => sidebarButtonColour || "#39cccc",
     getter: 'getSidebarButtonColour',
     type: types.string
@@ -449,7 +463,7 @@ The following attributes can be defined.
   .concat(configSchema().map((def) => `
 ### \`${def.id}\`
 
-- *type:* \`${def.type.name}\` ${def.type.desc || ''}
+- *type:* \`${def.type.name}\` ${def.type.descr || ''}
 - *in string context:* ${def.type.stringDescr || 'parsed as-is'}
 - *default:* ${def.defaultDescr || '`' + def.init() + '`'}
 - *settable?:* ${def.setter ? 'yes' : 'no'}
@@ -458,7 +472,7 @@ ${def.descr}
 
 ${def.details || ''}
 
-  `))
+`))
   .join('');
 
 module.exports = configSchema;
