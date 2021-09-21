@@ -197,8 +197,26 @@ function _init(config) {
   // @param name - the sidebar to change (needs to be one of the keys
   // of this.sidebar)
   proto.changeSidebar = function (name) {
-    if (name)
-      this.sidebarName = name;
+    if (name !== undefined) {
+      // Validate name
+      if (!(name in this.sidebar)) {
+        console.warn(`ignoring request to switch to non-existant sidebar '${name}'`);
+        name = undefined;
+      }
+    }
+
+    if (name === undefined) {
+      // By default, use the first sidebar defined (JS key order is that of first definition)
+      const names = Object.keys(this.sidebar);
+      
+      if (names.length === 0)
+        return; // Except in this case, there is nothing we can do!
+
+      name = names[0];
+    }
+    
+    // Change the current sidebar
+    this.sidebarName = name;
     this.sidebar[this.sidebarName].refresh();
   };
 
@@ -379,7 +397,7 @@ function _init(config) {
     view.createOpenButton();
     view.createButtonRow();
     view.createSidebars();
-    view.changeSidebar("directory");
+    view.changeSidebar(); // Use the default
   }
 
   function showSidebar(){
