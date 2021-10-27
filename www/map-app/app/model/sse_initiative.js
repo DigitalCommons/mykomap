@@ -750,31 +750,7 @@ function init(registry) {
     function onVocabSuccess(response) {
       console.log("loaded vocabs", response);
 
-      vocabs = response;
-
-      // Add an inverted look-up `abbrevs` mapping abbreviations to uris
-      // obtained from `prefixes`.
-      //
-      // Sort it and `prefixes` so that longer prefixes are listed
-      // first (Ecmascript objects preserve the order of addition).
-      // This is to make matching the longest prefix simpler later.
-      const prefixes = {};
-      const abbrevs = {};
-      Object
-        .keys(vocabs.prefixes)
-        .sort((a, b) => b.length - a.length)
-        .forEach(prefix => {
-          const abbrev = vocabs.prefixes[prefix];
-          abbrevs[abbrev] = prefix;
-          prefixes[prefix] = abbrev;
-        });
-
-      vocabs.prefixes = prefixes;
-      vocabs.abbrevs = abbrevs;
-      if (!vocabs.vocabs)
-        vocabs.vocabs = []; // Ensure this is here
-
-      eventbus.publish({ topic: "Vocabularies.loaded" });
+      setVocab(response);
     }
 
     function onVocabFailure(error) {
@@ -790,9 +766,7 @@ function init(registry) {
       return (response) => {
         console.log("loaded " + dataset + " data", response);
 
-        // Record a timestamp for this dataset
-        performance.mark("startProcessing");
-
+        console.log(response.data);
         add(response.data);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
