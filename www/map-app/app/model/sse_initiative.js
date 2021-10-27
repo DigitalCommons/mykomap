@@ -1,7 +1,7 @@
 // Model for SSE Initiatives.
 "use strict";
 const d3 = require('d3');
-const eventbus = require('../eventbus');  
+const eventbus = require('../eventbus');
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 const { json } = require('d3');
@@ -11,7 +11,7 @@ function init(registry) {
   const config = registry("config");
 
   let language;
-  if(config.getLanguage())
+  if (config.getLanguage())
     language = config.getLanguage();
   else
     language = "EN";
@@ -103,9 +103,38 @@ function init(registry) {
       otherData: "Otros datos",
       poweredBy: "Desarrollado por",
       mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
+    },
+    KO: {
+      directory: "디렉토리",
+      showDirectory: "디렉토리 표시",
+      showSearch: "검색 표시",
+      showInfo: "정보 표시",
+      hideDirectory: "디렉토리 숨기기",
+      close: "닫기",
+      zoomIn: "확대",
+      zoomOut: "축소",
+      search: "검색",
+      whenSearch: "검색하거나 지도 마커를 클릭하면 여기에 결과가 표시됩니다.",
+      loading: "로드 중...",
+      showDatasets: "데이터 세트 표시",
+      searchInitiatives: "검색 이니셔티브",
+      any: "모든",
+      searchIn: "검색 ?",
+      clearFilters: "필터 지우기",
+      contact: "연락처",
+      allEntries: "모든 항목",
+      aboutTitle: "정보",
+      underConstruction: "이 섹션은 공사 중입니다.",
+      source: "이 콘텐츠의 소스 데이터는 ",
+      technicalInfo: "이 지도 및 디렉토리 이면의 기술에 대한 기술 정보를 찾을 수 있습니다.",
+      here: "여기",
+      contributers: "기고자",
+      otherData: "기타 데이터",
+      poweredBy: "Powered by",
+      mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
     }
   }
-  
+
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
   // normal functions.
@@ -157,7 +186,7 @@ function init(registry) {
   function fromParam(def, params) {
     return params[def.paramName];
   }
-  
+
   // Initialiser which uses the appropriate code
   function fromCode(def, params) {
     const uri = params[def.paramName];
@@ -193,7 +222,7 @@ function init(registry) {
   // this means the search results may not be what we expect.
   function asSearchStr(def, params) {
     const searchedFields = config.getSearchedFields();
-    
+
     const searchableValues = [];
 
     searchedFields.forEach(fieldName => {
@@ -203,17 +232,17 @@ function init(registry) {
         console.warn(`searchable field '${fieldName}' is not a recognised field name`)
         return;
       }
-      
+
       const value = def.init === fromCode ? // Does this field contains an ID?
-                    lookupIdentifier() :
-                    def.init === asList ? // Is it a list of IDs (currently IDs implied by list)
-                    lookupIdentifier() : // Singular - just need to do this param
-                    lookupValue();
+        lookupIdentifier() :
+        def.init === asList ? // Is it a list of IDs (currently IDs implied by list)
+          lookupIdentifier() : // Singular - just need to do this param
+          lookupValue();
 
       if (value !== undefined)
         searchableValues.push(value);
       return; // Done. Only functions below.
-      
+
       function lookupIdentifier() {
         // Add any parameter values named
         const id = params[def.paramName];
@@ -229,7 +258,7 @@ function init(registry) {
         return value;
       }
       function lookupValue() {
-        const value = params[def.paramName]; 
+        const value = params[def.paramName];
         if (value === undefined) {
           console.warn(`no value for searchable field '${fieldName}' in initiative ${params.uri}`)
           return;
@@ -237,7 +266,7 @@ function init(registry) {
         return value;
       }
     });
-    
+
     // Join searchable values, squash case
     // console.log(params.name, searchableValues.join(" ").toUpperCase()); // DEBUG
     return searchableValues.join(" ").toUpperCase();
@@ -255,12 +284,12 @@ function init(registry) {
   let verboseDatasets = {}
   const dsNamed =
     (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length) ?
-    config.namedDatasetsVerbose()
-    : [];
+      config.namedDatasetsVerbose()
+      : [];
 
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   let vocabs = {};
-  
+
   if (dsNamed.length == allDatasets.length)
     allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
   else
@@ -276,9 +305,9 @@ function init(registry) {
   // Need to record all instances of any of the fields that are specified in the config
   // Expects an array of strings which are initiative field names.
   const filterableFields = config.getFilterableFields();
-  if (typeof(filterableFields) !== 'object' || !(filterableFields instanceof Array))
+  if (typeof (filterableFields) !== 'object' || !(filterableFields instanceof Array))
     throw new Error(`invalid filterableFields config for 'filterableFields' - not an array`);
-  if (filterableFields.findIndex(e => typeof(e) !== 'string') >= 0)
+  if (filterableFields.findIndex(e => typeof (e) !== 'string') >= 0)
     throw new Error(`invalid filterableFields config for 'filterableFields' - contains non-strings`);
 
   /* Format will be:
@@ -299,11 +328,11 @@ function init(registry) {
     const that = this;
 
     // Not all initiatives have activities
-    
+
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
       let initiative = initiativesByUid[e.uri];
-      
+
       // If properties with are multi-valued, add new values to the
       // initiative.  This is to handle cases where the SPARQL
       // resultset contains multple rows for a multi-value field with
@@ -317,27 +346,27 @@ function init(registry) {
           // although this is not necessarily always true, just
           // because this has historically been assumed. We can
           // generalise this later.
-          
+
           const code = fromCode(p, e);
           if (!code)
             return;
-          
+
           const list = initiative[p.propertyName];
           if (list.includes(code))
             return;
-          
+
           list.push(code);
           const uri = e[p.paramName];
           const value = getVocabTerm(p.vocabUri, uri);
           if (value === undefined) {
-            console.warn(`can't add term '${uri}' to search, `+
-                         `it is not part of the vocab '${p.vocabUri}'`);
+            console.warn(`can't add term '${uri}' to search, ` +
+              `it is not part of the vocab '${p.vocabUri}'`);
             return;
           }
-          
+
           initiative.searchstr = [
             initiative.searchstr,
-            value.toUpperCase() 
+            value.toUpperCase()
           ].join(" ");
         });
 
@@ -370,7 +399,7 @@ function init(registry) {
     }
 
     //overwrite with manually added lat lng
-    if (this.manLat && this.manLat!="0" || this.manLng && this.manLng!="0" ) {
+    if (this.manLat && this.manLat != "0" || this.manLng && this.manLng != "0") {
       this.lat = this.manLat;
       this.lng = this.manLng;
     }
@@ -383,14 +412,14 @@ function init(registry) {
       try {
         vocab = getVocabForProperty(fieldKey);
       }
-      catch(e) {
+      catch (e) {
         e.message = `invalid filterableFields config for '${fieldKey}' - ${e.message}`;
         throw e; // rethrow.
       }
 
       // Get the title to use as a label.
       const labelKey = vocab.title;
-      
+
       const field = this[fieldKey];
       if (field == null)
         console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
@@ -433,7 +462,7 @@ function init(registry) {
     for (i = 0, len = str.length; i < len; i++) {
       code = str.charCodeAt(i);
       if (!(code > 64 && code < 91) && // upper alpha (A-Z)
-          !(code > 96 && code < 123)) { // lower alpha (a-z)
+        !(code > 96 && code < 123)) { // lower alpha (a-z)
         return false;
       }
     }
@@ -528,7 +557,7 @@ function init(registry) {
     if (datasetsLoaded >= datasetsToLoad)
       eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
   }
-  
+
   // Incrementally loads the initiatives in `initiativesToLoad`, in
   // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
   // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
@@ -578,7 +607,7 @@ function init(registry) {
         return sortInitiatives(array[0], element) == 1 ? 0 : 1;
       }
       else if
-      (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
       else
         return pivot + 1;
     }
@@ -599,7 +628,7 @@ function init(registry) {
       try {
         vocab = getVocabForProperty(filterable);
       }
-      catch(e) {
+      catch (e) {
         e.message = `invalid filterableFields config for '${filterable}' - ${e.message}`;
         throw e; // rethrow.
       }
@@ -614,7 +643,7 @@ function init(registry) {
       }
 
       // Sort entries by the vocab label for the ID used as the key
-      function sortByVocabLabel(a,b) {
+      function sortByVocabLabel(a, b) {
         const alab = vocab.terms[a[0]];
         const blab = vocab.terms[b[0]];
         return String(alab).localeCompare(String(blab));
@@ -638,14 +667,14 @@ function init(registry) {
         return "Unexpected JSON error message - cannot be extracted.";
     }
   }
-  
+
   // Reloads the active data set (or sets)
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
   function reset(dataset) {
     // If the dataset is the same as that currently selected, nothing to do
-    if(dataset === currentDatasets)
+    if (dataset === currentDatasets)
       return;
 
     startedLoading = false;
@@ -670,7 +699,7 @@ function init(registry) {
   let datasetsLoaded = 0;
   let datasetsToLoad = 0;
 
-  
+
   // Loads the configured list of vocabs from the server.
   //
   // The list is defined in `config.json`
@@ -678,7 +707,7 @@ function init(registry) {
   // @return the response data wrapped in a promise, direct from d3.json.
   async function loadVocabs() {
     return d3.json(getVocabsPhp);
-  }  
+  }
 
 
   // Loads the currently active dataset(s) and configured vocabs
@@ -688,17 +717,17 @@ function init(registry) {
   function loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
     let datasets = [];
-    
+
     if (currentDatasets === true) {
       console.log("reset: loading all datasets ", config.namedDatasets());
       datasets = config.namedDatasets();
     }
     else if (allDatasets.includes(currentDatasets)) {
-      console.log("reset: loading dataset '"+currentDatasets+"'");
+      console.log("reset: loading dataset '" + currentDatasets + "'");
       datasets = [currentDatasets];
     }
     else {
-      console.log("reset: no matching dataset '"+currentDatasets+"'");
+      console.log("reset: no matching dataset '" + currentDatasets + "'");
     }
 
     // Load the vocabs first, then on success or failure, load the
@@ -719,23 +748,49 @@ function init(registry) {
     function onVocabSuccess(response) {
       console.log("loaded vocabs", response);
 
-      setVocab(response);
+      vocabs = response;
+
+      // Add an inverted look-up `abbrevs` mapping abbreviations to uris
+      // obtained from `prefixes`.
+      //
+      // Sort it and `prefixes` so that longer prefixes are listed
+      // first (Ecmascript objects preserve the order of addition).
+      // This is to make matching the longest prefix simpler later.
+      const prefixes = {};
+      const abbrevs = {};
+      Object
+        .keys(vocabs.prefixes)
+        .sort((a, b) => b.length - a.length)
+        .forEach(prefix => {
+          const abbrev = vocabs.prefixes[prefix];
+          abbrevs[abbrev] = prefix;
+          prefixes[prefix] = abbrev;
+        });
+
+      vocabs.prefixes = prefixes;
+      vocabs.abbrevs = abbrevs;
+      if (!vocabs.vocabs)
+        vocabs.vocabs = []; // Ensure this is here
+
+      eventbus.publish({ topic: "Vocabularies.loaded" });
     }
 
     function onVocabFailure(error) {
       console.error("vocabs load failed", error);
-      
+
       eventbus.publish({
         topic: "Vocabularies.loadFailed",
         data: { error: error }
-      });     
-    }  
+      });
+    }
 
     function onDatasetSuccess(dataset) {
       return (response) => {
-        console.log("loaded "+dataset+" data", response);
+        console.log("loaded " + dataset + " data", response);
 
-        console.log(response.data);
+        // Record a timestamp for this dataset
+        performance.mark("startProcessing");
+
         add(response.data);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
@@ -743,8 +798,8 @@ function init(registry) {
 
     function onDatasetFailure(dataset) {
       return (error) => {
-        console.error("load "+dataset+" data failed", error);
-        
+        console.error("load " + dataset + " data failed", error);
+
         eventbus.publish({
           topic: "Initiative.loadFailed",
           data: { error: error, dataset: dataset }
@@ -755,7 +810,7 @@ function init(registry) {
 
   function setVocab(data) {
     vocabs = data;
-    
+
     // Add an inverted look-up `abbrevs` mapping abbreviations to uris
     // obtained from `prefixes`.
     //
@@ -766,19 +821,19 @@ function init(registry) {
     const abbrevs = {};
     Object
       .keys(vocabs.prefixes)
-      .sort((a,b) => b.length - a.length)
+      .sort((a, b) => b.length - a.length)
       .forEach(prefix => {
         const abbrev = vocabs.prefixes[prefix];
         abbrevs[abbrev] = prefix;
         prefixes[prefix] = abbrev;
       });
-    
+
     vocabs.prefixes = prefixes;
     vocabs.abbrevs = abbrevs;
     if (!vocabs.vocabs)
       vocabs.vocabs = []; // Ensure this is here
 
-    eventbus.publish({ topic: "Vocabularies.loaded" });    
+    eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
 
@@ -792,11 +847,11 @@ function init(registry) {
   function loadDataset(dataset) {
 
     let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset)}`;
-    
+
     // Note, caching currently doesn't work correctly with multiple data sets
     // so until that's fixed, don't use it in that case.
     const numDatasets = config.namedDatasets().length;
-    const noCache = numDatasets > 1? true : config.getNoLodCache();
+    const noCache = numDatasets > 1 ? true : config.getNoLodCache();
     if (noCache) {
       service += "&noLodCache=true";
     }
@@ -814,16 +869,16 @@ function init(registry) {
     return d3.json(service);
   }
 
-  function getDialogueSize(){
+  function getDialogueSize() {
     const dialogueSize = config.getDialogueSize();
-    
-    if(typeof(dialogueSize) == "string")
+
+    if (typeof (dialogueSize) == "string")
       return JSON.parse(dialogueSize);
-    else 
+    else
       return dialogueSize;
   }
-  
-  function getVerboseValuesForFields(){
+
+  function getVerboseValuesForFields() {
 
     const entries = Object
       .entries(vocabs.vocabs)
@@ -837,10 +892,10 @@ function init(registry) {
     return Object.fromEntries(entries);
   }
 
-  function getLocalisedVocabs(){
+  function getLocalisedVocabs() {
     let verboseValues = {};
 
-    for(const id in vocabs.vocabs) {
+    for (const id in vocabs.vocabs) {
       verboseValues[id] = vocabs.vocabs[id][language];
     }
 
@@ -863,7 +918,7 @@ function init(registry) {
   const getVocabTitlesAndVocabIDs = () => {
     const vocabTitlesAndVocabIDs = {}
 
-    for(const vocabID in vocabs.vocabs){
+    for (const vocabID in vocabs.vocabs) {
       vocabTitlesAndVocabIDs[vocabs.vocabs[vocabID][language].title] = vocabID;
     }
 
@@ -878,13 +933,13 @@ function init(registry) {
       const delimIx = uri.indexOf(':');
       if (delimIx < 0)
         return uri; // Shouldn't normally happen... expanded URIs have `http(s):`
-      
+
       const abbrev = uri.substring(0, delimIx);
       if (abbrev == 'http' || abbrev == 'https')
         return uri; // No more expansion needed
 
       if (abbrev in vocabs.abbrevs) // Expand this abbreviation
-        uri = vocabs.abbrevs[abbrev]+uri.substring(delimIx+1);
+        uri = vocabs.abbrevs[abbrev] + uri.substring(delimIx + 1);
     }
   }
 
@@ -901,7 +956,7 @@ function init(registry) {
 
     // Substitute the match with the abbreviation.
     if (prefix)
-      return vocabs.prefixes[prefix]+':'+uri.substring(prefix.length);
+      return vocabs.prefixes[prefix] + ':' + uri.substring(prefix.length);
 
     return uri; // No abbreviation possible.
   }
@@ -923,7 +978,7 @@ function init(registry) {
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
     }
-    
+
     return propDef.vocabUri;
   }
 
@@ -938,32 +993,32 @@ function init(registry) {
     if (!vocabUri) {
       throw new Error(`property does not reference a vocabulary: '${propName}'`);
     }
-    
+
     // Assume classSchema's vocabUris are validated. But language availability can't be
     // checked so easily.
     const vocab = vocabs.vocabs[vocabUri][language];
     if (!vocab) {
       throw new Error(`no title in lang ${language} for property: '${propName}'`);
     }
-    
+
     return vocab;
   }
 
   //construct the object of terms for advanced search
-  function getTerms(){
+  function getTerms() {
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
     let usedTerms = {};
 
-    for(const vocabID in vocabIDsAndInitiativeVariables){
+    for (const vocabID in vocabIDsAndInitiativeVariables) {
       const vocabTitle = vocabs.vocabs[vocabID][language].title;
       usedTerms[vocabTitle] = {};
     }
 
-    for(const initiativeUid in initiativesByUid ) {
+    for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
 
-      for(const vocabID in vocabIDsAndInitiativeVariables){
+      for (const vocabID in vocabIDsAndInitiativeVariables) {
         const vocabTitle = vocabs.vocabs[vocabID][language].title;
         const propName = vocabIDsAndInitiativeVariables[vocabID];
         const id = initiative[propName];
@@ -971,7 +1026,7 @@ function init(registry) {
         if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
 
         // Currently still keeping the output data strucutre the same, so use id not term
-        if(!usedTerms[vocabTitle][id] && id)
+        if (!usedTerms[vocabTitle][id] && id)
           usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][language].terms[id];
       }
     }
@@ -980,16 +1035,16 @@ function init(registry) {
   }
 
   //get an array of possible filters from  a list of initiatives
-  function getPossibleFilterValues(filteredInitiatives){
+  function getPossibleFilterValues(filteredInitiatives) {
     let possibleFilterValues = [];
 
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
     filteredInitiatives.forEach(initiative => {
-      for(const vocabID in vocabIDsAndInitiativeVariables){
+      for (const vocabID in vocabIDsAndInitiativeVariables) {
         let termIdentifier = initiative[vocabIDsAndInitiativeVariables[vocabID]];
 
-        if(!possibleFilterValues.includes(termIdentifier))
+        if (!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
       }
     })
@@ -997,22 +1052,22 @@ function init(registry) {
     return possibleFilterValues;
   }
 
-  function getAlternatePossibleFilterValues(filters, field){
+  function getAlternatePossibleFilterValues(filters, field) {
     //construct an array of the filters that aren't the one matching the field
     let otherFilters = [];
-    filters.forEach(filter=>{
-      if(filter.verboseName.split(":")[0] !== field)
+    filters.forEach(filter => {
+      if (filter.verboseName.split(":")[0] !== field)
         otherFilters.push(filter);
     });
 
     //find the set of shared initiatives from the other filters
     let sharedInitiatives = [];
-    otherFilters.forEach((filter,i) => {
-      if(i < 1)
+    otherFilters.forEach((filter, i) => {
+      if (i < 1)
         sharedInitiatives = Object.values(filter.initiatives);
       else
         //loop through sharedInitiatives and remove ones without a match in filter.initiatives
-        sharedInitiatives = sharedInitiatives.filter(initiative => 
+        sharedInitiatives = sharedInitiatives.filter(initiative =>
           filter.initiatives.includes(initiative)
         );
     });
@@ -1030,11 +1085,11 @@ function init(registry) {
     return alternatePossibleFilterValues;
   }
 
-  function getFunctionalLabels () {
+  function getFunctionalLabels() {
     return functionalLabels[language];
   }
 
-  function getSidebarButtonColour () {
+  function getSidebarButtonColour() {
     return config.getSidebarButtonColour();
   }
 
@@ -1063,7 +1118,7 @@ function init(registry) {
     getTerms,
     getPossibleFilterValues,
     getAlternatePossibleFilterValues,
-    getVocabTerm, 
+    getVocabTerm,
     getVocabUriForProperty,
     getFunctionalLabels,
     getSidebarButtonColour
