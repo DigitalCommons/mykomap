@@ -10,11 +10,13 @@ const { json } = require('d3');
 function init(registry) {
   const config = registry("config");
 
+  const fallBackLanguage = "EN";
+
   let language;
   if (config.getLanguage())
     language = config.getLanguage();
   else
-    language = "EN";
+    language = fallBackLanguage;
 
   let functionalLabels = {
     EN: {
@@ -883,9 +885,10 @@ function init(registry) {
     const entries = Object
       .entries(vocabs.vocabs)
       .map(([vocabUri, vocab]) => {
-        const vocabLang = vocab[language];
-        if (!vocabLang)
-          throw new Error(`No ${language} localisation for vocab '${language}'`);
+        const vocabLang = vocab[language] ? vocab[language] : vocab[fallBackLanguage];
+        if (vocabLang == vocab[fallBackLanguage] && language != fallBackLanguage) {
+          console.error(`No ${language} localisation for vocab '${language}, falling back to ${fallBackLanguage}'`);
+        }
         return [vocabLang.title, vocabLang.terms];
       });
 
@@ -893,10 +896,12 @@ function init(registry) {
   }
 
   function getLocalisedVocabs() {
+    const vocabLang = vocabs.vocabs["aci:"][language] ? language : fallBackLanguage;
+
     let verboseValues = {};
 
     for (const id in vocabs.vocabs) {
-      verboseValues[id] = vocabs.vocabs[id][language];
+      verboseValues[id] = vocabs.vocabs[id][vocabLang];
     }
 
     return verboseValues;
@@ -919,7 +924,8 @@ function init(registry) {
     const vocabTitlesAndVocabIDs = {}
 
     for (const vocabID in vocabs.vocabs) {
-      vocabTitlesAndVocabIDs[vocabs.vocabs[vocabID][language].title] = vocabID;
+      const vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
+      vocabTitlesAndVocabIDs[vocabs.vocabs[vocabID][vocabLang].title] = vocabID;
     }
 
     return vocabTitlesAndVocabIDs;
@@ -963,9 +969,10 @@ function init(registry) {
 
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   function getVocabTerm(vocabUri, termUri) {
+    const vocabLang = vocabs.vocabs[vocabUri][language] ? language : fallBackLanguage;
     termUri = abbrevUri(termUri);
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    return vocabs.vocabs[vocabUri][language].terms[termUri];
+    return vocabs.vocabs[vocabUri][vocabLang].terms[termUri];
   }
 
   // Gets the vocab URI for a property, if it has one.
@@ -996,9 +1003,10 @@ function init(registry) {
 
     // Assume classSchema's vocabUris are validated. But language availability can't be
     // checked so easily.
-    const vocab = vocabs.vocabs[vocabUri][language];
+    const vocabLang = vocabs.vocabs[vocabUri][language] ? language : fallBackLanguage;
+    const vocab = vocabs.vocabs[vocabUri][vocabLang];
     if (!vocab) {
-      throw new Error(`no title in lang ${language} for property: '${propName}'`);
+      throw new Error(`no title in lang ${vocabLang} for property: '${propName}'`);
     }
 
     return vocab;
@@ -1010,8 +1018,11 @@ function init(registry) {
 
     let usedTerms = {};
 
+    const dummyVocabID = Object.keys(vocabIDsAndInitiativeVariables)[0];
+    const vocabLang = vocabs.vocabs[dummyVocabID][language] ? language : fallBackLanguage;
+
     for (const vocabID in vocabIDsAndInitiativeVariables) {
-      const vocabTitle = vocabs.vocabs[vocabID][language].title;
+      const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
       usedTerms[vocabTitle] = {};
     }
 
@@ -1019,7 +1030,7 @@ function init(registry) {
       const initiative = initiativesByUid[initiativeUid];
 
       for (const vocabID in vocabIDsAndInitiativeVariables) {
-        const vocabTitle = vocabs.vocabs[vocabID][language].title;
+        const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
         const propName = vocabIDsAndInitiativeVariables[vocabID];
         const id = initiative[propName];
         const propDef = classSchema.find(p => p.propertyName === propName);
@@ -1027,7 +1038,7 @@ function init(registry) {
 
         // Currently still keeping the output data strucutre the same, so use id not term
         if (!usedTerms[vocabTitle][id] && id)
-          usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][language].terms[id];
+          usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][vocabLang].terms[id];
       }
     }
 
@@ -1086,7 +1097,8 @@ function init(registry) {
   }
 
   function getFunctionalLabels() {
-    return functionalLabels[language];
+    const labelLang = functionalLabels[language] ? language : fallBackLanguage;
+    return functionalLabels[labelLang];
   }
 
   function getSidebarButtonColour() {
