@@ -1000,9 +1000,17 @@ function init(registry) {
 
     let usedTerms = {};
 
-    const dummyVocabID = Object.keys(vocabIDsAndInitiativeVariables)[0];
-    const vocabLang = vocabs.vocabs[dummyVocabID][language] ? language : fallBackLanguage;
+    let vocabLang = fallBackLanguage;
 
+    // Set vocabLang to the configured language, if present in the first available vocab we check.
+    const vocabIDs = Object.keys(vocabIDsAndInitiativeVariables);
+    if (vocabIDs.length > 0) {
+      const dummyVocabID = vocabIDs[0];
+      if (vocabs.vocabs[dummyVocabID] && vocabs.vocabs[dummyVocabID][language]) {
+        vocabLang = language;
+      }
+    }
+    
     for (const vocabID in vocabIDsAndInitiativeVariables) {
       const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
       usedTerms[vocabTitle] = {};
