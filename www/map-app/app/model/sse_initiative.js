@@ -894,7 +894,7 @@ function init(registry) {
 
     // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
-      const vocabUri = getVocabUriForProperty(filterableField);
+      const vocabUri = getPropertySchema(filterableField).vocabUri;
       if (!vocabUri)
         throw new Error(`property does not reference a vocabulary`);
       vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
@@ -957,12 +957,10 @@ function init(registry) {
     return vocabs.vocabs[vocabUri][vocabLang].terms[termUri];
   }
 
-  // Gets the vocab URI for a property, if it has one.
+  // Gets the schema definition for a property.
   //
-  // Returns a vocab URI, or null if it does not have one.  The URI may be abbreviated.
-  //
-  // Throws an exception if there is no such property. 
-  function getVocabUriForProperty(propName) {
+  // Returns a schema definition, or throws an error null if there is no such property. 
+  function getPropertySchema(propName) {
     const propDef = classSchema.find(p => p.propertyName === propName)
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
@@ -978,7 +976,7 @@ function init(registry) {
   // Throws an exception if there is some reason this fails. The
   // exception will have a short description indicating the problem.
   function getVocabForProperty(propName) {
-    const vocabUri = getVocabUriForProperty(propName);
+    const vocabUri = getPropertySchema(propName).vocabUri;
     if (!vocabUri) {
       throw new Error(`property does not reference a vocabulary: '${propName}'`);
     }
@@ -1121,7 +1119,7 @@ function init(registry) {
     getPossibleFilterValues,
     getAlternatePossibleFilterValues,
     getVocabTerm,
-    getVocabUriForProperty,
+    getPropertySchema,
     getFunctionalLabels,
     getSidebarButtonColour
   };
