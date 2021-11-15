@@ -175,6 +175,19 @@ function init(registry) {
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
     { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+    { propertyName: 'shortPostcode', paramName: 'postcode',
+      init: (def, params) => {
+        // Regex adapted from here, combining UK and British Territories and Armed Forces
+        // Will be null if there is no match.
+        if (params.postcode == null)
+          return null;
+	      const match = params
+          .postcode
+          .toUpperCase()
+          .match(/^([A-Z][A-HJ-Y]?[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|GX\d{2}|PCRN|TKCA|BFPO)/);
+        return match? match[0] : undefined;
+      },
+    },
     { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
     { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'aci:' }, // note dupe paramName following
     { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'aci:' },
