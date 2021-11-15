@@ -49,6 +49,7 @@ function init(registry) {
       mixedSources: "Mixed Sources",
       poweredBy: "Powered by",
       mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
+      property_shortPostcode: "Short postcode",
     },
     FR: {
       directory: "Annuaire",
@@ -80,6 +81,7 @@ function init(registry) {
       mixedSources: "Sources mixtes",
       poweredBy: "Créé par",
       mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
+      property_shortPostcode: "Code postal court",
     },
     ES: {
       directory: "Directorio",
@@ -111,6 +113,7 @@ function init(registry) {
       mixedSources: "Fuentes mixtas",
       poweredBy: "Desarrollado por",
       mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
+      property_shortPostcode: "Código postal corto",
     },
     KO: {
       directory: "디렉토리",
@@ -142,6 +145,7 @@ function init(registry) {
       mixedSources: "혼합 소스",
       poweredBy: "에 의해 구동",
       mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
+      property_shortPostcode: "짧은 우편번호",
     }
   }
 
