@@ -993,10 +993,26 @@ function init(registry) {
 
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   function getVocabTerm(vocabUri, termUri) {
-    const vocabLang = vocabs.vocabs[vocabUri][language] ? language : fallBackLanguage;
     termUri = abbrevUri(termUri);
+    const vocabLang = fallBackLanguage;
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    return vocabs.vocabs[vocabUri][vocabLang].terms[termUri];
+    const vocab = vocabs.vocabs[vocabUri][language];
+    
+    if (vocab  &&
+        vocab.terms &&
+        vocab.terms[termUri]) {
+      return vocab.terms[termUri];
+    }
+      
+    // Fall back if there are no terms.
+    try {
+      return vocabs.vocabs[vocabUri][fallBackLanguage].terms[termUri];
+    }
+    catch(e) {
+      // Even the fallback failed! 
+      console.error(`No term for ${termUri}, not even in the fallback language ${fallBackLanguage}`);
+      return '?';
+    }
   }
 
   // Gets the schema definition for a property.
