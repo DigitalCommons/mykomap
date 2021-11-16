@@ -10,14 +10,19 @@ const { json } = require('d3');
 function init(registry) {
   const config = registry("config");
 
+  const languages = config.getLanguages();
+  if (!languages || languages.length <= 0)
+    throw new Error("languages is unset or configured empty, this should not happen");
+  
   // The language to use when no matching i18n text is found for the selected one.
-  const fallBackLanguage = "EN";
+  const fallBackLanguage = languages[0];
 
   // Get the configured language. This should never be unset (because there is a default).
   let language = config.getLanguage()?.toUpperCase();
-  if (!language) {
+  if (!languages.includes(language)) {
     // Warn about this, presumably this has been defined wrongly, and attempt to recover
-    console.warn("the configured language should not be unset");
+    console.warn("the configured language is unsupported, must be one of", languages,
+                 "falling back to", fallBackLanguage);
     language = fallBackLanguage;
   }
   

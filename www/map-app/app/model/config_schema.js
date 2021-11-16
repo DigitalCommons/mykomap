@@ -154,7 +154,8 @@ const configSchema = ({
   tileUrl,
   mapAttribution,
   noLodCache,
-  language = 'EN',
+  language,
+  languages = ['EN'],
   dialogueSize = {
     "width": "35vw",
     "height": "225px",
@@ -402,11 +403,25 @@ const configSchema = ({
   },
   {
     id: 'language',
-    descr: 'The language to use for internationalised text.',
-    init: () => language,
+    descr: 'The language to use for internationalised text. Must be one of those listed in '+
+           '`languages`, or it will be set to the first language code in `languages`. '+
+           'Will be upcased if not already.',
+    init: () => language || languages[0],
     getter: 'getLanguage',
     setter: 'setLanguage',
     type: types.string,
+  },
+  {
+    id: 'languages',
+    descr: 'An array of supported languages which can be used for internationalised text. '+
+           'Should not be empty, and all codes should be upper case. '+
+           'Any other language code used will be replaced with the first in this list. '+
+           'A phrases for the first code will also used as a fallback if an individual '+
+           'phrase is missing.',
+    defaultDescr: "```\n"+JSON.stringify(languages, null, 2)+"\n```",
+    init: () => languages,
+    getter: 'getLanguages',
+    type: types.arrayOfString,
   },
   {
     id: 'dialogueSize',
