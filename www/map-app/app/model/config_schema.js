@@ -116,10 +116,16 @@ const types = {
  * as the name of the getter. If this value is unset, the getter
  * method has the same name as the id.
  *
- * Note, the schema is defined as a function accepting named values
- * to initialise certain of the attributes if they are not
- * present. These should all be supplied by config.js. If defaultDescr
- * is defined, this is used as a documentation of the default value,
+ * Note, the schema is initialised via a function call. The parameters to this
+ * should match the configuration attributes, and can be used to initialise
+ * these attributes from an external source, if supplied by the caller
+ * when requiring sea-map.
+ *
+ * Therefore, the default value of the parameters below will (typically) 
+ * define the default value to use when the user does not supply one (unless
+ * the initialiser function ignores it and selects something else.)
+ *
+ * If defaultDescr is defined, this is used as a documentation of the default value,
  * else the value itself is quoted.
  */
 const configSchema = ({
