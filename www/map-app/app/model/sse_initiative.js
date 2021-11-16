@@ -318,9 +318,9 @@ function init(registry) {
   let vocabs = {};
 
   if (dsNamed.length == allDatasets.length)
-    allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
+    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: dsNamed[i] });
   else
-    allDatasets.forEach((x, i) => verboseDatasets[x] = x);
+    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: x });
 
 
 
@@ -527,8 +527,22 @@ function init(registry) {
   }
 
   function getDatasets() {
-    // @returns a map of dataset identifiers (from `namedDatasets`) to dataset names
-    // (from `namedDatasetsVerbose` if available, else just the identifier is used)
+    // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
+    //
+    // This description is a map of values, which looks like:
+    //
+    //     { id: [String], name: [String], endpoint: [String],
+    //       dgu: [String], query: [String] }
+    //
+    // Where:
+    //
+    // - `id` is the dataset identifier (same as the key)
+    // - `name` is the long name from `namedDatasetsVerbose` if available,
+    //   else just the identifier is used)
+    // - `query` is the SPARQL query used to obtain it
+    // - `dgu` is the default graph URI used for this query
+    // - `endpoint` is the SPARQL endpoint queried
+    //
     return verboseDatasets;
   }
 
@@ -604,9 +618,24 @@ function init(registry) {
   //
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
-  // @param json - an array of inititive definitions
-  function add(json) {
-    initiativesToLoad = initiativesToLoad.concat(json);
+  // @param [String] dataset - the identifier of this dataset
+  // @param [Object] response - the response from get_dataset.php, a map which
+  // should include the following elements:
+  //
+  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `meta`: [Object] a map of the following information:
+  //    - `endpoint`: [String] the SPARQL endpoint queried 
+  //    - `query`: [String] the SPARQL query used
+  //    - `default_graph_uri`: [String] the default graph URI for the query (which
+  //       is expected to self-resolve to the dataset's index webpage)
+  //
+  function add(dataset, response) {
+    const meta = verboseDatasets[dataset];
+    meta.endpoint = response.meta.endpoint;
+    meta.dgu = response.meta.default_graph_uri;
+    meta.query = response.meta.query;
+    
+    initiativesToLoad = initiativesToLoad.concat(response.data);
     loadNextInitiatives();
   }
 
@@ -780,10 +809,8 @@ function init(registry) {
 
     function onDatasetSuccess(dataset) {
       return (response) => {
-        console.log("loaded " + dataset + " data", response);
-
-        console.log(response.data);
-        add(response.data);
+        console.debug("loaded " + dataset + " data", response);
+        add(dataset, response);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
     }
@@ -853,7 +880,7 @@ function init(registry) {
     if (!startedLoading) {
       eventbus.publish({
         topic: "Initiative.loadStarted",
-        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
+        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset].name }
       });
       startedLoading = true;
     }
