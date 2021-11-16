@@ -533,6 +533,8 @@ function init(registry) {
   }
 
   function getCurrentDatasets() {
+    // @returns eiter true (if all datasets are enabled) or the identifier of a the
+    // currently selected dataset.
     return currentDatasets;
   }
 
