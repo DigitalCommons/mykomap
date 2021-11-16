@@ -527,6 +527,8 @@ function init(registry) {
   }
 
   function getDatasets() {
+    // @returns a map of dataset identifiers (from `namedDatasets`) to dataset names
+    // (from `namedDatasetsVerbose` if available, else just the identifier is used)
     return verboseDatasets;
   }
 
