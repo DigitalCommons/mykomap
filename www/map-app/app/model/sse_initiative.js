@@ -10,14 +10,17 @@ const { json } = require('d3');
 function init(registry) {
   const config = registry("config");
 
+  // The language to use when no matching i18n text is found for the selected one.
   const fallBackLanguage = "EN";
 
-  let language;
-  if (config.getLanguage())
-    language = config.getLanguage();
-  else
+  // Get the configured language. This should never be unset (because there is a default).
+  let language = config.getLanguage();
+  if (!language) {
+    // Warn about this, presumably this has been defined wrongly, and attempt to recover
+    console.warn("the configured language should not be unset");
     language = fallBackLanguage;
-
+  }
+  
   let functionalLabels = {
     EN: {
       directory: "Directory",
