@@ -402,11 +402,11 @@ const configSchema = ({
   },
   {
     id: 'language',
-    descr: 'The language that will be displayed in the absence of a url argument',
+    descr: 'The language to use for internationalised text.',
     init: () => language,
     getter: 'getLanguage',
     setter: 'setLanguage',
-    type: types.string
+    type: types.string,
   },
   {
     id: 'dialogueSize',
