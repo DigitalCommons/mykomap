@@ -14,7 +14,7 @@ function init(registry) {
   const fallBackLanguage = "EN";
 
   // Get the configured language. This should never be unset (because there is a default).
-  let language = config.getLanguage();
+  let language = config.getLanguage()?.toUpperCase();
   if (!language) {
     // Warn about this, presumably this has been defined wrongly, and attempt to recover
     console.warn("the configured language should not be unset");
