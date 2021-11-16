@@ -1140,7 +1140,7 @@ function init(registry) {
     getAllRegisteredValues,
     getInitiativeByUniqueId,
     filterDatabases,
-    getAllDatasets: getDatasets,
+    getDatasets,
     reset,
     getCurrentDatasets,
     getLoadedInitiatives,
