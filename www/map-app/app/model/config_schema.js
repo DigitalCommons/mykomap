@@ -154,7 +154,7 @@ const configSchema = ({
   tileUrl,
   mapAttribution,
   noLodCache,
-  language,
+  language = 'EN',
   dialogueSize = {
     "width": "35vw",
     "height": "225px",
