@@ -10,21 +10,18 @@ const { json } = require('d3');
 function init(registry) {
   const config = registry("config");
 
+  // `languages`' codes are validated and normalised in the config initialisation,
+  // not here, so they are available everywhere. We can be sure there is at least one,
+  // it is upper-case, and weird characters are excluded.
   const languages = config.getLanguages();
-  if (!languages || languages.length <= 0)
-    throw new Error("languages is unset or configured empty, this should not happen");
   
   // The language to use when no matching i18n text is found for the selected one.
   const fallBackLanguage = languages[0];
 
-  // Get the configured language. This should never be unset (because there is a default).
-  let language = config.getLanguage()?.toUpperCase();
-  if (!languages.includes(language)) {
-    // Warn about this, presumably this has been defined wrongly, and attempt to recover
-    console.warn("the configured language is unsupported, must be one of", languages,
-                 "falling back to", fallBackLanguage);
-    language = fallBackLanguage;
-  }
+  // Get the configured language. As above, this should have been validated/normalised already,
+  // and so never be unset (because there is a default).
+  const language = config.getLanguage();
+  console.info("using language", language);
   
   let functionalLabels = {
     EN: {

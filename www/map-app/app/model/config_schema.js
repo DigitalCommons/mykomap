@@ -16,6 +16,27 @@
 
 "use strict";
 
+// Validates/normalises a language code.
+// This is defined here as it is used more than once.
+function validateLang(lang) {
+  if (typeof lang !== 'string' || lang.match(/[^\w -]/))
+    throw new Error(`rejecting suspect language code '${lang}'`);
+  return lang.trim().toUpperCase();
+}
+
+// Returns the normalised language
+// This is `lang` (uppercased) if it is valid and one of those in `langs`,
+// else the first element of `langs` is returned.
+function normLanguage(lang, langs) {
+  let normLang = validateLang(lang);
+  if (!langs.includes(normLang)) {
+    // Warn about this, presumably this has been defined wrongly, and attempt to recover
+    normLang = langs[0];
+    console.warn(`the language being set (${lang}) is unsupported, must be one of:`,
+                 `${langs.join(", ")}. Falling back to ${normLang}`);
+  }
+  return normLang;
+}
 /** Define config value types, and certain helper functions.
  *
  * Type 'name' should be a JSDoc description:
@@ -415,16 +436,6 @@ const configSchema = ({
     type: types.boolean,
   },
   {
-    id: 'language',
-    descr: 'The language to use for internationalised text. Must be one of those listed in '+
-           '`languages`, or it will be set to the first language code in `languages`. '+
-           'Will be upcased if not already.',
-    init: () => language || languages[0],
-    getter: 'getLanguage',
-    setter: 'setLanguage',
-    type: types.string,
-  },
-  {
     id: 'languages',
     descr: 'An array of supported languages which can be used for internationalised text. '+
            'Should not be empty, and all codes should be upper case. '+
@@ -432,9 +443,26 @@ const configSchema = ({
            'A phrases for the first code will also used as a fallback if an individual '+
            'phrase is missing.',
     defaultDescr: "```\n"+JSON.stringify(languages, null, 2)+"\n```",
-    init: () => languages,
+    init: () => {
+      if (!(languages instanceof Array) || languages.length <= 0)
+        throw new Error("languages is not an Array, or configured empty, this should not happen");
+      
+      return languages.map(validateLang);
+    },
     getter: 'getLanguages',
     type: types.arrayOfString,
+  },
+  { // Note this is processed after `languages` by design, so it can refer to it
+    id: 'language',
+    descr: 'The language to use for internationalised text. Must be one of those listed in '+
+           '`languages`, or it will be set to the first language code in `languages`. '+
+           'Will be upcased if not already.',
+    init: () => normLanguage(language || languages[0], languages),
+    getter: 'getLanguage',
+    setter: function setLanguage(lang) {
+      this.language = normLanguage(lang, this.languages);
+    },
+    type: types.string,
   },
   {
     id: 'dialogueSize',
