@@ -10,18 +10,6 @@ function init(registry) {
 
   var proto = Object.create(sidebarPresenter.base.prototype);
 
-  proto.getSoftwareVersion = function () {
-    return {
-      variant: config.getSoftwareVariant(),
-      timestamp: config.getSoftwareTimestamp(),
-      gitcommit: config.getSoftwareGitCommit(),
-      version: config.getVersionTag()
-    };
-  };
-  proto.aboutHtml = function () {
-    return config.aboutHtml();
-  };
-
   Presenter.prototype = proto;
 
   function createPresenter(view) {

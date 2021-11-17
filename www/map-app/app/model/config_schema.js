@@ -166,7 +166,13 @@ const configSchema = ({
 } = {}) => [
   {
     id: 'aboutHtml',
-    descr: `Raw HTML definition of the map's "about" text.`,
+    descr: `Raw HTML definition of the map's "about" text. This can be internationalised `+
+           'in the following way: any elements with a `lang` tag which does not match the '+
+           'current language (which is set by default to `EN`) are removed, along with all '+
+           'child elements. Elements with no `lang` tag will be left in whatever the '+
+           'language, so by default older single-language definitions will still '+
+           'work as they did. Note however that the about text is always followed by links '+
+           'to the data and docs now, so you should no longer link to this in the about text.',
     defaultDescr: "The contents of the consuming project's file `config/about.html`",
     init: () => aboutHtml,
     type: types.string,
