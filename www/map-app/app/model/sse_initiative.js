@@ -903,9 +903,11 @@ function init(registry) {
     const entries = Object
       .entries(vocabs.vocabs)
       .map(([vocabUri, vocab]) => {
-        const vocabLang = vocab[language] ? vocab[language] : vocab[fallBackLanguage];
-        if (vocabLang == vocab[fallBackLanguage] && language != fallBackLanguage) {
-          console.error(`No ${language} localisation for vocab '${language}, falling back to ${fallBackLanguage}'`);
+        let vocabLang = vocab[language];
+        if (!vocabLang && language !== fallBackLanguage) {
+          console.warn(`No localisations for language ${language}, `+
+                       `falling back to ${fallBackLanguage}`);
+          vocabLang = vocab[fallBackLanguage];
         }
         return [vocabLang.title, vocabLang.terms];
       });
