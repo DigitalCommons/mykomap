@@ -106,9 +106,16 @@ const types = {
  *
  * setter: Optionally a string naming the value setter method, or a
  * method function to call to get it (in which `this` is the config
- * object). If one is defined, the name of the function will be used
- * as the name of the getter. If this value is unset, the value cannot
- * be modified.
+ * object).
+ * 
+ * If one is defined, the name of the function will be used
+ * as the name of the getter. The new value will be passed as the only
+ * parameter, but the function's `this` context will be set to the current
+ * config object, and the appropriate setting(s) should be modified directly.
+ * The return value is not used.
+ * 
+ * If the setter is left unset, then the value cannot
+ * be modified after initialisation, either in code or externally.
  *
  * getter: Optionally a string naming the value getter method, or a
  * method function to call to get it (in which `this` is the config
