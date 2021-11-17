@@ -15,11 +15,24 @@ const main = require("./app/main");
 const config = fetch("configuration/config.json");
 const versions = fetch("configuration/version.json");
 const about = fetch("configuration/about.html");
-const getJson = (r) => r.json();
-const getText = (r) => r.text();
+const detectErrors = (r) => {
+  // We don't throw an error as I can't seem to catch individual exceptions in the
+  // promise chain below correctly, without a 'Pause on exceptions'
+  // breakpoint firing and fouling the page load, or the load
+  // fouling anyway (for another reason?)
+  return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
+};
+const getJson = (r) => detectErrors(r) || r.json();
+const getText = (r) => detectErrors(r) || r.text();
+
 Promise
   .all([config.then(getJson), versions.then(getJson), about.then(getText)])
   .then(([config, versions, about]) => {
+    if (about instanceof Error) {
+      console.info("Using blank 'about' text as about.html inaccessible.", about.message);
+      console.debug("Ignored fetch error", about);
+      about = '';
+    }
     const combinedConfig = { ...config, ...versions, aboutHtml: about };
     main.webRun(window, combinedConfig);
   });
