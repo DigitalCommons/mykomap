@@ -14,7 +14,8 @@ function init(registry) {
   var proto = Object.create(presenter.base.prototype);
   proto.changeSidebar = function(name) {
     this.view.changeSidebar(name);
-    this.view.showSidebar();
+    if (config.getDefaultOpenSidebar())
+      this.view.showSidebar();
   };
 
   proto.showSidebar = function(name) {
