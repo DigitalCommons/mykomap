@@ -8,9 +8,13 @@ function init(registry) {
   const presenter = registry('presenter/sidebar/datasets');
   const view = registry('view/base');
   const sidebarView = registry('view/sidebar/base');
+  const sseInitiative = registry('model/sse_initiative');
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
 
   // Our local Sidebar object:
-  function Sidebar() {}
+  function Sidebar() { }
 
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
@@ -29,8 +33,8 @@ function init(registry) {
   const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
 
-  proto.populateFixedSelection = function(selection) {
-    let textContent = "Datasets";
+  proto.populateFixedSelection = function (selection) {
+    let textContent = labels.datasets;
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -39,7 +43,7 @@ function init(registry) {
   };
 
 
-  proto.populateScrollableSelection = function(selection) {
+  proto.populateScrollableSelection = function (selection) {
     const datasets = this.presenter.getDatasets();
     const defaultActive = this.presenter.getDefault();
     const defaultIdMixed = this.presenter.getMixedId();
@@ -47,33 +51,33 @@ function init(registry) {
 
     //create new div for buttons
     const datasetBtns = selection.append("ul")
-                                 .attr("class","sea-directory-list colours capitalized");
+      .attr("class", "sea-directory-list colours capitalized");
 
-    const color_class = function(i) {
-      return "sea-field-am"+Math.floor(((i+1) % 12) * 10);
+    const color_class = function (i) {
+      return "sea-field-am" + Math.floor(((i + 1) % 12) * 10);
     };
     Object.keys(datasets).forEach((dataset, i) => {
       let btn = datasetBtns
         .append("li")
         .attr("class", color_class(i))
-        .attr("id",dataset+"-btn")
+        .attr("id", dataset + "-btn")
         .attr("title", "load " + datasets[dataset] + " dataset")
         .text(datasets[dataset]);
-      btn.on("click",()=>{
+      btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(dataset);
       });
-    });    
+    });
     //add mixed btn
-    if(Object.keys(datasets).length > 1){
+    if (Object.keys(datasets).length > 1) {
       let btn = datasetBtns
         .append("li")
         .attr("class", color_class(Object.keys(datasets).length))
-        .attr("id",`${defaultIdMixed}-btn`)
+        .attr("id", `${defaultIdMixed}-btn`)
         .attr("title", "load mixed dataset")
-        .text("Mixed Sources");
-      btn.on("click",()=>{
+        .text(labels.mixedSources);
+      btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
         that.presenter.changeDatasets(true);
@@ -82,7 +86,7 @@ function init(registry) {
 
     //set the default active button (currently loaded dataset)
     selection.select(`#${defaultActive}-btn`)
-             .classed("sea-field-active", true);
+      .classed("sea-field-active", true);
   };
 
 
