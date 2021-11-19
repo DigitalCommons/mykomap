@@ -125,6 +125,7 @@ const webpackConfig = {
   output: {
     path: destPath,
     filename: "map-app/map-app.js",
+    clean: true,
   },
   module: {
     rules: [
