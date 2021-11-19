@@ -680,17 +680,20 @@ function init(registry) {
         const propDef = getPropertySchema(filterable);
         const ordered = Object
           .entries(labelValues)
-          .sort(propDef.vocabUri? sortByVocabLabel : sortAsString)
+          .sort(propDef.vocabUri? sortByVocabLabel(propDef) : sortAsString);
         // FIXME ideally we'd sort numbers, booleans, etc. appropriately
 
         registeredValues[label] = Object.fromEntries(ordered);
       }
 
       // Sort entries by the vocab label for the ID used as the key
-      function sortByVocabLabel(a, b) {
-        const alab = vocab.terms[a[0]];
-        const blab = vocab.terms[b[0]];
-        return String(alab).localeCompare(String(blab));
+      function sortByVocabLabel(propDef) {
+        const vocab = getVocabForProperty(propDef);
+        return (a, b) => {
+          const alab = vocab.terms[a[0]];
+          const blab = vocab.terms[b[0]];
+          return String(alab).localeCompare(String(blab));
+        };
       }
       // Sort entries as strings
       function sortAsString(a, b) {
