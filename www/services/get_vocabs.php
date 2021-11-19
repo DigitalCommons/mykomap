@@ -397,7 +397,14 @@ function main() {
 
     $vocab_srcs = $config['vocabularies'];
     $languages = $config['languages'];
-    $result = ['prefixes' => &$prefixes];
+    $result = [
+        'prefixes' => &$prefixes,
+        'meta' => [
+            'vocab_srcs' => $vocab_srcs,
+            'languages' => $languages,
+            'queries' => [],
+        ],
+    ];
 
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
@@ -414,8 +421,9 @@ function main() {
         
         #echo json_encode($query_results); # DEBUG
         $result = add_query_data($result, $query_results);
+        $result['meta']['queries'][] = $query;
     }
-    
+
     header('Content-type: application/json');
     echo json_encode($result);
 }
