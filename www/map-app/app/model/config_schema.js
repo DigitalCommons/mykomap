@@ -16,6 +16,27 @@
 
 "use strict";
 
+// Validates/normalises a language code.
+// This is defined here as it is used more than once.
+function validateLang(lang) {
+  if (typeof lang !== 'string' || lang.match(/[^\w -]/))
+    throw new Error(`rejecting suspect language code '${lang}'`);
+  return lang.trim().toUpperCase();
+}
+
+// Returns the normalised language
+// This is `lang` (uppercased) if it is valid and one of those in `langs`,
+// else the first element of `langs` is returned.
+function normLanguage(lang, langs) {
+  let normLang = validateLang(lang);
+  if (!langs.includes(normLang)) {
+    // Warn about this, presumably this has been defined wrongly, and attempt to recover
+    normLang = langs[0];
+    console.warn(`the language being set (${lang}) is unsupported, must be one of:`,
+                 `${langs.join(", ")}. Falling back to ${normLang}`);
+  }
+  return normLang;
+}
 /** Define config value types, and certain helper functions.
  *
  * Type 'name' should be a JSDoc description:
@@ -106,9 +127,16 @@ const types = {
  *
  * setter: Optionally a string naming the value setter method, or a
  * method function to call to get it (in which `this` is the config
- * object). If one is defined, the name of the function will be used
- * as the name of the getter. If this value is unset, the value cannot
- * be modified.
+ * object).
+ * 
+ * If one is defined, the name of the function will be used
+ * as the name of the getter. The new value will be passed as the only
+ * parameter, but the function's `this` context will be set to the current
+ * config object, and the appropriate setting(s) should be modified directly.
+ * The return value is not used.
+ * 
+ * If the setter is left unset, then the value cannot
+ * be modified after initialisation, either in code or externally.
  *
  * getter: Optionally a string naming the value getter method, or a
  * method function to call to get it (in which `this` is the config
@@ -155,6 +183,7 @@ const configSchema = ({
   mapAttribution,
   noLodCache,
   language,
+  languages = ['EN'],
   dialogueSize = {
     "width": "35vw",
     "height": "225px",
@@ -165,7 +194,13 @@ const configSchema = ({
 } = {}) => [
   {
     id: 'aboutHtml',
-    descr: `Raw HTML definition of the map's "about" text.`,
+    descr: `Raw HTML definition of the map's "about" text. This can be internationalised `+
+           'in the following way: any elements with a `lang` tag which does not match the '+
+           'current language (which is set by default to `EN`) are removed, along with all '+
+           'child elements. Elements with no `lang` tag will be left in whatever the '+
+           'language, so by default older single-language definitions will still '+
+           'work as they did. Note however that the about text is always followed by links '+
+           'to the data and docs now, so you should no longer link to this in the about text.',
     defaultDescr: "The contents of the consuming project's file `config/about.html`",
     init: () => aboutHtml,
     type: types.string,
@@ -401,12 +436,33 @@ const configSchema = ({
     type: types.boolean,
   },
   {
+    id: 'languages',
+    descr: 'An array of supported languages which can be used for internationalised text. '+
+           'Should not be empty, and all codes should be upper case. '+
+           'Any other language code used will be replaced with the first in this list. '+
+           'A phrases for the first code will also used as a fallback if an individual '+
+           'phrase is missing.',
+    defaultDescr: "```\n"+JSON.stringify(languages, null, 2)+"\n```",
+    init: () => {
+      if (!(languages instanceof Array) || languages.length <= 0)
+        throw new Error("languages is not an Array, or configured empty, this should not happen");
+      
+      return languages.map(validateLang);
+    },
+    getter: 'getLanguages',
+    type: types.arrayOfString,
+  },
+  { // Note this is processed after `languages` by design, so it can refer to it
     id: 'language',
-    descr: 'The language that will be displayed in the absence of a url argument',
-    init: () => language,
+    descr: 'The language to use for internationalised text. Must be one of those listed in '+
+           '`languages`, or it will be set to the first language code in `languages`. '+
+           'Will be upcased if not already.',
+    init: () => normLanguage(language || languages[0], languages),
     getter: 'getLanguage',
-    setter: 'setLanguage',
-    type: types.string
+    setter: function setLanguage(lang) {
+      this.language = normLanguage(lang, this.languages);
+    },
+    type: types.string,
   },
   {
     id: 'dialogueSize',

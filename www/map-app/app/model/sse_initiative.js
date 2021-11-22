@@ -10,14 +10,19 @@ const { json } = require('d3');
 function init(registry) {
   const config = registry("config");
 
-  const fallBackLanguage = "EN";
+  // `languages`' codes are validated and normalised in the config initialisation,
+  // not here, so they are available everywhere. We can be sure there is at least one,
+  // it is upper-case, and weird characters are excluded.
+  const languages = config.getLanguages();
+  
+  // The language to use when no matching i18n text is found for the selected one.
+  const fallBackLanguage = languages[0];
 
-  let language;
-  if (config.getLanguage())
-    language = config.getLanguage();
-  else
-    language = fallBackLanguage;
-
+  // Get the configured language. As above, this should have been validated/normalised already,
+  // and so never be unset (because there is a default).
+  const language = config.getLanguage();
+  console.info("using language", language);
+  
   let functionalLabels = {
     EN: {
       directory: "Directory",
@@ -40,9 +45,8 @@ function init(registry) {
       allEntries: "All Entries",
       aboutTitle: "About",
       underConstruction: "This section is under construction.",
-      source: "The source data of this content is ",
-      technicalInfo: "Technical information about the technology behind this map and directory can be found ",
-      here: "here",
+      source: "The source data of the content is here:",
+      technicalInfo: "Technical information about the technology behind this map and directory can be found here:",
       contributers: "contributers",
       otherData: "Other data",
       datasets: "Datasets",
@@ -72,9 +76,8 @@ function init(registry) {
       allEntries: "Toutes les entrées",
       aboutTitle: "À propos",
       underConstruction: "Cette section est en construction.",
-      source: "Les données sources de ce contenu se trouvent ",
-      technicalInfo: "Des informations techniques sur la technologie qui sous-tend cette carte et ce répertoire sont disponibles ",
-      here: "ici",
+      source: "Les données sources de ce contenu se trouvent ici:",
+      technicalInfo: "Des informations techniques sur la technologie qui sous-tend cette carte et ce répertoire sont disponibles ici:",
       contributers: "Contributeurs",
       otherData: "Autres données",
       datasets: "Ensembles de données",
@@ -104,9 +107,8 @@ function init(registry) {
       allEntries: "Todas las entradas",
       aboutTitle: "Sobre este mapa",
       underConstruction: "Esta sección está en construcción.",
-      source: "Los datos de origen de este contenido están ",
-      technicalInfo: "La información técnica sobre la tecnología que hay detrás de este mapa y directorio se puede encontrar ",
-      here: "aquí",
+      source: "Los datos de origen de este contenido están aquí:",
+      technicalInfo: "La información técnica sobre la tecnología que hay detrás de este mapa y directorio se puede encontrar aquí:",
       contributers: "Colaboradores",
       otherData: "Otros datos",
       datasets: "Conjuntos de datos",
@@ -136,9 +138,8 @@ function init(registry) {
       allEntries: "모든 항목",
       aboutTitle: "정보",
       underConstruction: "이 섹션은 공사 중입니다.",
-      source: "이 콘텐츠의 소스 데이터는 ",
-      technicalInfo: "이 지도 및 디렉토리 이면의 기술에 대한 기술 정보를 찾을 수 있습니다.",
-      here: "여기",
+      source: "이 콘텐츠의 소스 데이터는 여기:",
+      technicalInfo: "이 지도 및 디렉토리 이면의 기술에 대한 기술 정보를 찾을 수 있습니다 여기:",
       contributers: "기고자",
       otherData: "기타 데이터",
       datasets: "데이터세트",
@@ -902,9 +903,11 @@ function init(registry) {
     const entries = Object
       .entries(vocabs.vocabs)
       .map(([vocabUri, vocab]) => {
-        const vocabLang = vocab[language] ? vocab[language] : vocab[fallBackLanguage];
-        if (vocabLang == vocab[fallBackLanguage] && language != fallBackLanguage) {
-          console.error(`No ${language} localisation for vocab '${language}, falling back to ${fallBackLanguage}'`);
+        let vocabLang = vocab[language];
+        if (!vocabLang && language !== fallBackLanguage) {
+          console.warn(`No localisations for language ${language}, `+
+                       `falling back to ${fallBackLanguage}`);
+          vocabLang = vocab[fallBackLanguage];
         }
         return [vocabLang.title, vocabLang.terms];
       });
@@ -985,10 +988,26 @@ function init(registry) {
 
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   function getVocabTerm(vocabUri, termUri) {
-    const vocabLang = vocabs.vocabs[vocabUri][language] ? language : fallBackLanguage;
     termUri = abbrevUri(termUri);
+    const vocabLang = fallBackLanguage;
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    return vocabs.vocabs[vocabUri][vocabLang].terms[termUri];
+    const vocab = vocabs.vocabs[vocabUri][language];
+    
+    if (vocab  &&
+        vocab.terms &&
+        vocab.terms[termUri]) {
+      return vocab.terms[termUri];
+    }
+      
+    // Fall back if there are no terms.
+    try {
+      return vocabs.vocabs[vocabUri][fallBackLanguage].terms[termUri];
+    }
+    catch(e) {
+      // Even the fallback failed! 
+      console.error(`No term for ${termUri}, not even in the fallback language ${fallBackLanguage}`);
+      return '?';
+    }
   }
 
   // Gets the schema definition for a property.

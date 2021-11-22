@@ -41,42 +41,60 @@ function init(registry) {
 
   proto.populateScrollableSelection = function (selection) {
     const that = this;
-    //selection.append('div').attr("class", "w3-container w3-center").append('p').text("Information about this map will be available here soon.");
-    //selection.append('div').attr("class", "w3-container w3-center").html(that.presenter.aboutHtml());
+
+    const lang = config.getLanguage();
     
-    const aboutSection = selection.append('div')
-      .attr("class", "w3-container");
+    // We need to be careful to guard against weird characters, especially quotes,
+    // from the language code, as these can create vulnerabilities.
+    if (lang.match(/[^\w -]/))
+      throw new Error(`rejecting suspect language code '${lang}'`);
+    
+    selection
+      .append('div')
+      .attr("class", "w3-container about-text")
+      .html(config.aboutHtml())
+    // Remove all elements which have a language tag which is not the target language tag
+      .selectAll(`[lang]:not([lang='${lang}'])`)
+      .remove();
+    
+    const dataSection = selection.append('div')
+      .attr("class", "w3-container about-data");
 
-    aboutSection.append('h3')
-      .text(labels.underConstruction);
+    const sourceParag = dataSection.append('p')
+    sourceParag.text(labels.source)
 
-    const sourceSentence = aboutSection.append('p')
-      .text(labels.source);
+    sourceParag
+      .append('ul')
+      .selectAll('li')
+      .data(Object.values(sseInitiative.getDatasets()))
+      .enter()
+      .append('li')
+      .append('a')
+      .text(d => d.name)
+      .attr('href', d => d.dgu.replace(/\/*$/, '/')) // ensure URI has trailing slash, needed for lod.coop
+      .attr('target', '_blank');
 
-    sourceSentence.append('a')
-      .text(labels.here)
-      .attr('href','https://dev.lod.coop/ica/');
-
-    sourceSentence.append('span')
-      .text('.');
-
-    const furtherInfo = aboutSection.append('p')
+    dataSection.append('p')
       .text(labels.technicalInfo);
-    
-    furtherInfo.append('a')
-      .text(labels.here)
-      .attr('href','https://github.com/SolidarityEconomyAssociation/sea-map/wiki');
 
-    furtherInfo.append('span')
-      .text('.');
+    const technicalInfoUrl = 'https://github.com/SolidarityEconomyAssociation/sea-map/wiki';
+    dataSection
+      .append('p')
+      .append('a')
+      .text(technicalInfoUrl)
+      .attr('href', technicalInfoUrl)
+      .attr('target', '_blank');
 
-     //if version is available display it
-    if (that.presenter.getSoftwareVersion().version) {
+
+    // If a version is available display it
+    const version = config.getVersionTag();
+    if (version) {
       selection
         .append("div")
-        .attr("class", "w3-container")
+        .attr("class", "w3-container about-version")
         .append("p")
-        .text("SEA Map Version: " + that.presenter.getSoftwareVersion().version);
+        .attr("style", "font-style: italic;")
+        .text(`sea-map@${version}`);
     }
   };
 
