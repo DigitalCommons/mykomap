@@ -49,6 +49,7 @@ function init(registry) {
       mixedSources: "Mixed Sources",
       poweredBy: "Powered by",
       mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
+      property_shortPostcode: "Short postcode",
     },
     FR: {
       directory: "Annuaire",
@@ -80,6 +81,7 @@ function init(registry) {
       mixedSources: "Sources mixtes",
       poweredBy: "Créé par",
       mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
+      property_shortPostcode: "Code postal court",
     },
     ES: {
       directory: "Directorio",
@@ -111,6 +113,7 @@ function init(registry) {
       mixedSources: "Fuentes mixtas",
       poweredBy: "Desarrollado por",
       mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
+      property_shortPostcode: "Código postal corto",
     },
     KO: {
       directory: "디렉토리",
@@ -142,6 +145,7 @@ function init(registry) {
       mixedSources: "혼합 소스",
       poweredBy: "에 의해 구동",
       mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
+      property_shortPostcode: "짧은 우편번호",
     }
   }
 
@@ -175,6 +179,19 @@ function init(registry) {
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
     { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
+    { propertyName: 'shortPostcode', paramName: 'postcode',
+      init: (def, params) => {
+        // Regex adapted from here, combining UK and British Territories and Armed Forces
+        // Will be null if there is no match.
+        if (params.postcode == null)
+          return null;
+	      const match = params
+          .postcode
+          .toUpperCase()
+          .match(/^([A-Z][A-HJ-Y]?[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|GX\d{2}|PCRN|TKCA|BFPO)/);
+        return match? match[0] : undefined;
+      },
+    },
     { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
     { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'aci:' }, // note dupe paramName following
     { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'aci:' },
@@ -301,9 +318,9 @@ function init(registry) {
   let vocabs = {};
 
   if (dsNamed.length == allDatasets.length)
-    allDatasets.forEach((x, i) => verboseDatasets[x] = dsNamed[i]);
+    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: dsNamed[i] });
   else
-    allDatasets.forEach((x, i) => verboseDatasets[x] = x);
+    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: x });
 
 
 
@@ -414,33 +431,21 @@ function init(registry) {
       this.lng = this.manLng;
     }
 
-    // loop through the filterable fields and register
+    // loop through the filterable fields AKA properties, and register
     filterableFields.forEach(filterable => {
-      const fieldKey = filterable;
-      // Look up the title via the vocab.... first get the vocab.
-      let vocab;
-      try {
-        vocab = getVocabForProperty(fieldKey);
-      }
-      catch (e) {
-        e.message = `invalid filterableFields config for '${fieldKey}' - ${e.message}`;
-        throw e; // rethrow.
-      }
-
-      // Get the title to use as a label.
-      const labelKey = vocab.title;
-
-      const field = this[fieldKey];
-      if (field == null)
-        console.warn(`Initiative has no value for filter field ${fieldKey}: ${this.uri}`);
-
+      const labelKey = getTitleForProperty(filterable);
+      
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
       else
         allRegisteredValues[labelKey] = [this];
 
-      if (field == null)
-        return; // This initiative has no value for `fieldKey`, so can't be indexed further.
+      const field = this[filterable];
+      if (field == null) {
+        // This initiative has no value for `filterable`, so can't be indexed further.
+        console.warn(`Initiative has no value for filter field ${filterable}: ${this.uri}`);
+        return;
+      }
 
       if (labelKey in registeredValues) {
         const values = registeredValues[labelKey];
@@ -522,10 +527,28 @@ function init(registry) {
   }
 
   function getDatasets() {
+    // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
+    //
+    // This description is a map of values, which looks like:
+    //
+    //     { id: [String], name: [String], endpoint: [String],
+    //       dgu: [String], query: [String] }
+    //
+    // Where:
+    //
+    // - `id` is the dataset identifier (same as the key)
+    // - `name` is the long name from `namedDatasetsVerbose` if available,
+    //   else just the identifier is used)
+    // - `query` is the SPARQL query used to obtain it
+    // - `dgu` is the default graph URI used for this query
+    // - `endpoint` is the SPARQL endpoint queried
+    //
     return verboseDatasets;
   }
 
   function getCurrentDatasets() {
+    // @returns eiter true (if all datasets are enabled) or the identifier of a the
+    // currently selected dataset.
     return currentDatasets;
   }
 
@@ -595,9 +618,24 @@ function init(registry) {
   //
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
-  // @param json - an array of inititive definitions
-  function add(json) {
-    initiativesToLoad = initiativesToLoad.concat(json);
+  // @param [String] dataset - the identifier of this dataset
+  // @param [Object] response - the response from get_dataset.php, a map which
+  // should include the following elements:
+  //
+  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `meta`: [Object] a map of the following information:
+  //    - `endpoint`: [String] the SPARQL endpoint queried 
+  //    - `query`: [String] the SPARQL query used
+  //    - `default_graph_uri`: [String] the default graph URI for the query (which
+  //       is expected to self-resolve to the dataset's index webpage)
+  //
+  function add(dataset, response) {
+    const meta = verboseDatasets[dataset];
+    meta.endpoint = response.meta.endpoint;
+    meta.dgu = response.meta.default_graph_uri;
+    meta.query = response.meta.query;
+    
+    initiativesToLoad = initiativesToLoad.concat(response.data);
     loadNextInitiatives();
   }
 
@@ -634,20 +672,15 @@ function init(registry) {
   function sortLoadedData() {
     // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
-      let vocab;
-      try {
-        vocab = getVocabForProperty(filterable);
-      }
-      catch (e) {
-        e.message = `invalid filterableFields config for '${filterable}' - ${e.message}`;
-        throw e; // rethrow.
-      }
-      const label = vocab.title;
+      const label = getTitleForProperty(filterable);
+      
       const labelValues = registeredValues[label];
       if (labelValues) {
+        const propDef = getPropertySchema(filterable);
         const ordered = Object
           .entries(labelValues)
-          .sort(sortByVocabLabel)
+          .sort(propDef.vocabUri? sortByVocabLabel : sortAsString)
+        // FIXME ideally we'd sort numbers, booleans, etc. appropriately
 
         registeredValues[label] = Object.fromEntries(ordered);
       }
@@ -657,6 +690,10 @@ function init(registry) {
         const alab = vocab.terms[a[0]];
         const blab = vocab.terms[b[0]];
         return String(alab).localeCompare(String(blab));
+      }
+      // Sort entries as strings
+      function sortAsString(a, b) {
+        return String(a[0]).localeCompare(String(b[0]));
       }
     });
 
@@ -772,10 +809,8 @@ function init(registry) {
 
     function onDatasetSuccess(dataset) {
       return (response) => {
-        console.log("loaded " + dataset + " data", response);
-
-        console.log(response.data);
-        add(response.data);
+        console.debug("loaded " + dataset + " data", response);
+        add(dataset, response);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
     }
@@ -845,7 +880,7 @@ function init(registry) {
     if (!startedLoading) {
       eventbus.publish({
         topic: "Initiative.loadStarted",
-        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset] }
+        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset].name }
       });
       startedLoading = true;
     }
@@ -894,10 +929,9 @@ function init(registry) {
 
     // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
-      const vocabUri = getVocabUriForProperty(filterableField);
-      if (!vocabUri)
-        throw new Error(`property does not reference a vocabulary`);
-      vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
+      const vocabUri = getPropertySchema(filterableField).vocabUri;
+      if (vocabUri)
+        vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
     })
     return vocabIDsAndInitiativeVariables;
   }
@@ -957,52 +991,86 @@ function init(registry) {
     return vocabs.vocabs[vocabUri][vocabLang].terms[termUri];
   }
 
-  // Gets the vocab URI for a property, if it has one.
+  // Gets the schema definition for a property.
   //
-  // Returns a vocab URI, or null if it does not have one.  The URI may be abbreviated.
-  //
-  // Throws an exception if there is no such property. 
-  function getVocabUriForProperty(propName) {
+  // Returns a schema definition, or throws an error null if there is no such property. 
+  function getPropertySchema(propName) {
     const propDef = classSchema.find(p => p.propertyName === propName)
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
     }
 
-    return propDef.vocabUri;
+    return propDef;
   }
 
-  // Gets the vocab for a property.
+  // Gets the vocab for a property, given the property schema
   //
   // Returns a vocab index (for the currently set language).
   //
   // Throws an exception if there is some reason this fails. The
   // exception will have a short description indicating the problem.
-  function getVocabForProperty(propName) {
-    const vocabUri = getVocabUriForProperty(propName);
-    if (!vocabUri) {
-      throw new Error(`property does not reference a vocabulary: '${propName}'`);
-    }
+  function getVocabForProperty(propDef) {
 
     // Assume classSchema's vocabUris are validated. But language availability can't be
     // checked so easily.
-    const vocabLang = vocabs.vocabs[vocabUri][language] ? language : fallBackLanguage;
-    const vocab = vocabs.vocabs[vocabUri][vocabLang];
+    const vocab = vocabs.vocabs[propDef.vocabUri];
     if (!vocab) {
-      throw new Error(`no title in lang ${vocabLang} for property: '${propName}'`);
+      throw new Error(`no vocab defined with URI ${propDef.vocabUri} `+
+                      `(expecting one of: ${Object.keys(vocabs.vocabs).join(', ')})`);
+    }
+    const vocabLang = vocab[language] ? language : fallBackLanguage;
+    const localVocab = vocab[vocabLang];
+    if (!localVocab) {
+      throw new Error(`no title in lang ${vocabLang} for property: '${propDef.name}'`);
     }
 
-    return vocab;
+    return localVocab;
   }
 
+  function getTitleForProperty(propName) {
+    let title = propName; // Fallback value
+
+    try {
+      // First get the property definition (this will throw if it's not defined)
+      const propDef = getPropertySchema(propName);
+
+      // If the field is a vocab field
+      if (propDef.vocabUri) {
+        // Look up the title via the vocab (this may also throw)
+        title = getVocabForProperty(propDef).title;
+      }
+      else {
+        // Look up the title via functionalLabels, if present
+        const labels = getFunctionalLabels()
+        const label = labels && labels[`property_${propName}`];
+        if (label)
+          title = label;
+      }
+      return title;
+    }
+    catch (e) {
+      e.message = `invalid filterableFields config for '${propName}' - ${e.message}`;
+      throw e; // rethrow.
+    }
+  }
+  
   //construct the object of terms for advanced search
   function getTerms() {
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
     let usedTerms = {};
 
-    const dummyVocabID = Object.keys(vocabIDsAndInitiativeVariables)[0];
-    const vocabLang = vocabs.vocabs[dummyVocabID][language] ? language : fallBackLanguage;
+    let vocabLang = fallBackLanguage;
 
+    // Set vocabLang to the configured language, if present in the first available vocab we check.
+    const vocabIDs = Object.keys(vocabIDsAndInitiativeVariables);
+    if (vocabIDs.length > 0) {
+      const dummyVocabID = vocabIDs[0];
+      if (vocabs.vocabs[dummyVocabID] && vocabs.vocabs[dummyVocabID][language]) {
+        vocabLang = language;
+      }
+    }
+    
     for (const vocabID in vocabIDsAndInitiativeVariables) {
       const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
       usedTerms[vocabTitle] = {};
@@ -1099,7 +1167,7 @@ function init(registry) {
     getAllRegisteredValues,
     getInitiativeByUniqueId,
     filterDatabases,
-    getAllDatasets: getDatasets,
+    getDatasets,
     reset,
     getCurrentDatasets,
     getLoadedInitiatives,
@@ -1113,7 +1181,7 @@ function init(registry) {
     getPossibleFilterValues,
     getAlternatePossibleFilterValues,
     getVocabTerm,
-    getVocabUriForProperty,
+    getPropertySchema,
     getFunctionalLabels,
     getSidebarButtonColour
   };

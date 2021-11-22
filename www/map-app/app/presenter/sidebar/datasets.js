@@ -17,7 +17,7 @@ function init(registry) {
   let mixedId = "all";
   //test
   proto.getDatasets = () => {
-    return sseInitiative.getAllDatasets();
+    return sseInitiative.getDatasets();
   }
   
   proto.getDefault = () => {

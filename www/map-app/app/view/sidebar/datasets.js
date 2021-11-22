@@ -61,8 +61,8 @@ function init(registry) {
         .append("li")
         .attr("class", color_class(i))
         .attr("id", dataset + "-btn")
-        .attr("title", "load " + datasets[dataset] + " dataset")
-        .text(datasets[dataset]);
+        .attr("title", "load " + datasets[dataset].name + " dataset")
+        .text(datasets[dataset].name);
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);

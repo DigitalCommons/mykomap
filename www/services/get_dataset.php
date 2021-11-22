@@ -11,12 +11,13 @@ require("./common.php");
 $base_url = __DIR__ . "/../configuration";
 //$cacheFile = "locCache.json";
 //TODO sanitize all user input
-function report_success($response, $disable_cache)
+function report_success($response, $meta, $disable_cache)
 {
 	$result = array();
 	// API response uses JSend: https://labs.omniti.com/labs/jsend
 	$result["status"] = "success";
 	$result["data"] = $response;
+    $result["meta"] = $meta;
 	$json_res = json_encode($result);
 	//make sure no one else can write and file exists only for us
 	//should be safe (i.e. writing .json and hardcoded value for name)
@@ -76,16 +77,8 @@ function needsUpdate($dataset)
 	}
 	return false;
 }
-function getSparqlUrl($dataset, $q, $uid)
+function getSparqlUrl($endpoint, $query, $default_graph_uri)
 {
-	// TODO - pass in SPARQL parameters as script arguments?
-
-	global $base_url;
-	$query = file_get_contents("$base_url/$dataset/$q");
-	$endpoint = trim(file_get_contents("$base_url/$dataset/endpoint.txt"));
-	$default_graph_uri = trim(file_get_contents("$base_url/$dataset/default-graph-uri.txt"));
-
-	$query = str_replace("__UID__", addslashes($uid), $query);
 	// TODO - Consider using HTTP POST?
 	$searchUrl = $endpoint . '?'
 		. 'default-graph-uri=' . urlencode($default_graph_uri)
@@ -173,8 +166,12 @@ if (!$disable_cache && file_exists("locCache.json") && !isset($_GET["uid"]) && !
 	// Add a uid to get the values for a specific initiative (currently used for activities and org structure)
 	// TODO: Need to make more secure
 	$uid = isset($_GET["uid"]) ? $_GET["uid"] : "";
-
-	$requestURL = getSparqlUrl($dataset, $q, $uid);
+	$endpoint = trim(file_get_contents("$base_url/$dataset/endpoint.txt"));
+	$default_graph_uri = trim(file_get_contents("$base_url/$dataset/default-graph-uri.txt"));
+	$query = file_get_contents("$base_url/$dataset/$q");
+	$query = str_replace("__UID__", addslashes($uid), $query);
+    
+	$requestURL = getSparqlUrl($endpoint, $query, $default_graph_uri);
 	$response = request($requestURL);
 	$res = json_decode($response, true);
 
@@ -202,6 +199,12 @@ if (!$disable_cache && file_exists("locCache.json") && !isset($_GET["uid"]) && !
 		array_push($result, $obj);
 	}
 
+    $meta = [];
+    $meta["default_graph_uri"] = $default_graph_uri;
+    $meta["endpoint"] = $endpoint;
+    $meta["uid"] = $uid;
+    $meta["query"] = $query;
+    
 	// echo json_encode($requestURL);
-	report_success($result, $disable_cache);
+	report_success($result, $meta, $disable_cache);
 }
