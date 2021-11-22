@@ -14,10 +14,9 @@ function init(registry) {
   var proto = Object.create(presenter.base.prototype);
   proto.changeSidebar = function(name) {
     this.view.changeSidebar(name);
-    this.view.showSidebar();
   };
 
-  proto.showSidebar = function(name) {
+  proto.showSidebar = function() {
     this.view.showSidebar();
   };
 
@@ -48,6 +47,7 @@ function init(registry) {
       topic: "Sidebar.showInitiatives",
       callback: function() {
         p.changeSidebar("initiatives");
+        p.showSidebar();
       }
     });
 
@@ -55,6 +55,7 @@ function init(registry) {
       topic: "Sidebar.showAbout",
       callback: function() {
         p.changeSidebar("about");
+        p.showSidebar();
       }
     });
 
@@ -70,6 +71,7 @@ function init(registry) {
       topic: "Sidebar.showDatasets",
       callback: function() {
         p.changeSidebar("datasets");
+        p.showSidebar();
       }
     });
 
