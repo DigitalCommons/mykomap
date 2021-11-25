@@ -9,11 +9,12 @@ function _init(registry) {
   const searchbox = registry('view/searchbox');
   
   function init() {
-    if (config.htmlTitle()) {
+    const title = config.htmlTitle();
+    if (title) {
       d3.select("html")
         .select("head")
         .select("title")
-        .text(config.htmlTitle());
+        .text(title);
     }
     // @todo - make obsolete
     d3.select("#about-btn")
