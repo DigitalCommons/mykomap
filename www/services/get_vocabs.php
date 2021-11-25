@@ -134,6 +134,28 @@
               ... other languages here ...
             }
           }
+        },
+        "meta": {
+          "vocab_srcs": [
+            {
+              "endpoint": "http://dev.data.solidarityeconomy.coop:8890/sparql",
+              "uris": {
+                "https://dev.lod.coop/essglobal/2.1/standard/organisational-structure/": "os",
+                "https://dev.lod.coop/essglobal/2.1/standard/activities-ica/": "aci",
+                "https://dev.lod.coop/essglobal/2.1/standard/base-membership-type/": "bmt",
+                "https://dev.lod.coop/essglobal/2.1/standard/countries-iso/": "coun",
+                "https://dev.lod.coop/essglobal/2.1/standard/regions-ica/": "reg",
+                "https://dev.lod.coop/essglobal/2.1/standard/super-regions-ica/": "sreg"
+              }
+            }
+          ],
+          "languages": [
+            "EN",
+            ... other languages here ...
+          ],
+          "queries": [
+             ... SPARQL queries for each element of vocabs_srcs here ...
+          ]
         }
       }
 
