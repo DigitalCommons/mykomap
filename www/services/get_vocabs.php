@@ -36,6 +36,7 @@
 
         "vocabularies": [
           { "endpoint": "http:\/\/dev.data.solidarityeconomy.coop:8890/sparql",
+            "defaultGraphUri": "http:\/\/dev.lod.coop/ica",
             "uris": {
               "https:\/\/dev.lod.coop/essglobal/2.1/standard/activities-ica/": "aci",
               "https:\/\/dev.lod.coop/essglobal/2.1/standard/countries-iso/": "coun",
@@ -58,6 +59,11 @@
   `endpoint.txt` configuration file within the datasets' subdirectory
   (as well as its own request and default graph URI, therefore the
   vocabs could differ too.).
+
+  There is a `defaultGraphUri` attribute too - this is optional, but
+  recommended, because vocab queries can be extremely slow without it.
+  As this graph is specific to the query, there needs to be one per
+  query, as with `endpoint`.
 
   Notice also that each vocabulary URL, assumed to be a SKOS
   vocabulary scheme, has an associated abbreviation. Currently these
