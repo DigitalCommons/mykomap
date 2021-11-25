@@ -1203,6 +1203,8 @@ function init(registry) {
     getPossibleFilterValues,
     getAlternatePossibleFilterValues,
     getVocabTerm,
+    // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
+    getVocabUriForProperty: (name) => getPropertySchema(name).vocabUri,
     getPropertySchema,
     getFunctionalLabels,
     getSidebarButtonColour
