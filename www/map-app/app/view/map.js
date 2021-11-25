@@ -51,7 +51,7 @@ function init(registry) {
   }
   
   .sea-initiative-popup{
-    left: ${-parseInt(dialogueSize.width.split("v")[0])/2}vw!important;
+    left: ${-parseInt(dialogueSize.width.split("v")[0]) / 2}vw!important;
   }`;
 
   document.body.appendChild(dialogueSizeStyles);
@@ -66,7 +66,7 @@ function init(registry) {
         d3.select("#" + config.id + "txt").text("Error loading: " + config.text);
       }
       else {
-        let loading =  d3.select('#'+config.id);
+        let loading = d3.select('#' + config.id);
         if (!loading.node()) {
           // Create the node if it is missing
           loading = d3.select(config.container).append("div");
@@ -77,9 +77,9 @@ function init(registry) {
 
         // Ensure node is displayed
         loading.style('display', 'block');
-        
+
         //edit text
-        d3.select("#"+ config.id + "txt").text(config.text);
+        d3.select("#" + config.id + "txt").text(config.text);
       }
     };
   }
@@ -89,7 +89,7 @@ function init(registry) {
       //example loading
       //with css
       //could look a lot better
-      d3.select('#'+config.id).style('display', 'none');
+      d3.select('#' + config.id).style('display', 'none');
     };
   }
 
@@ -101,7 +101,7 @@ function init(registry) {
 
         var myLoader = loader({
           error: options.error,
-          text: `Loading ${options.datasetLoading} data set...`,
+          text: `${labels.loading} ${options.datasetLoading} ${labels.datasets}...`,
           container: "#map-app-leaflet-map", id: "loadingCircle",
         });
         myLoader();
@@ -139,8 +139,8 @@ function init(registry) {
     // setup map (could potentially add this to the map initialization instead)
     //world ends corners
     var corner1 = leaflet.latLng(-90, -180),
-        corner2 = leaflet.latLng(90, 180),
-        worldBounds = leaflet.latLngBounds(corner1, corner2);
+      corner2 = leaflet.latLng(90, 180),
+      worldBounds = leaflet.latLngBounds(corner1, corner2);
 
     const openCycleMapUrl =
       "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png";
@@ -149,14 +149,14 @@ function init(registry) {
     const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
 
     let mapAttribution = this.presenter.getMapAttribution();
-    mapAttribution = mapAttribution.replace('contributors',labels.contributers);
-    mapAttribution = mapAttribution.replace('Other data',labels.otherData);
-    mapAttribution = mapAttribution.replace('Powered by',labels.poweredBy);
-    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.',labels.mapDisclaimer);
+    mapAttribution = mapAttribution.replace('contributors', labels.contributers);
+    mapAttribution = mapAttribution.replace('Other data', labels.otherData);
+    mapAttribution = mapAttribution.replace('Powered by', labels.poweredBy);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
-    
+
     var i,
-        eventHandlers = this.presenter.getMapEventHandlers();
+      eventHandlers = this.presenter.getMapEventHandlers();
     var k = Object.keys(eventHandlers);
     // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
     this.map = leaflet.map("map-app-leaflet-map", {
@@ -186,7 +186,7 @@ function init(registry) {
       .addTo(this.map);
 
     let options = {},
-        disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
+      disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
     if (disableClusteringAtZoom)
       options.disableClusteringAtZoom = disableClusteringAtZoom;
 
@@ -258,7 +258,7 @@ function init(registry) {
   };
   proto.fitBounds = function (data) {
     let bounds = data,
-        options = {};
+      options = {};
     if (!Array.isArray(data)) {
       bounds = data.bounds;
       options = data.options;
@@ -283,11 +283,11 @@ function init(registry) {
   // }
   proto.setView = function (data) {
     let latlng = data,
-        zoom = this.map.getZoom(),
-        options = {
-          duration: 0.25
-          // maxZoom: this.map.getZoom()
-        };
+      zoom = this.map.getZoom(),
+      options = {
+        duration: 0.25
+        // maxZoom: this.map.getZoom()
+      };
     if (!Array.isArray(data)) {
       latlng = data.latlng;
       options = Object.assign(options, data.options);
@@ -324,10 +324,10 @@ function init(registry) {
 
   proto.flyTo = function (data) {
     let latlng = data,
-        options = {
-          duration: 0.25
-          // maxZoom: this.map.getZoom()
-        };
+      options = {
+        duration: 0.25
+        // maxZoom: this.map.getZoom()
+      };
     if (!Array.isArray(data)) {
       latlng = data.latlng;
       options = Object.assign(options, data.options);
@@ -340,7 +340,7 @@ function init(registry) {
   let flag = false;
   proto.flyToBounds = function (data) {
     let bounds = data,
-        options = { duration: 0.25, maxZoom: this.map.getZoom() };
+      options = { duration: 0.25, maxZoom: this.map.getZoom() };
 
     if (!Array.isArray(data)) {
       bounds = data.bounds;
@@ -352,7 +352,7 @@ function init(registry) {
     //2. Multiple markers - Markers are visisible (no clusters) - pan to markers if you can without zoom, else just do the usual and zoom
     //3. Clusters within clusters
     if (data.initiatives && this.isVisible(data.initiatives)
-        && this.boundsWithinCurrentBounds(bounds)) {// all are visible
+      && this.boundsWithinCurrentBounds(bounds)) {// all are visible
       //case 1 and 2
       //if you can contain the markers within the screen, then just pan
       // this.map.panTo(this.map.getBounds().getCenter())  ; // get center 
@@ -387,7 +387,7 @@ function init(registry) {
   //pass array of 1 initiative in data.initiative
   proto.selectAndZoomOnInitiative = function (data) {
     let bounds = data,
-        options = { duration: 0.25, maxZoom: this.map.getZoom() };
+      options = { duration: 0.25, maxZoom: this.map.getZoom() };
     if (!Array.isArray(data)) {
       bounds = data.bounds;
       options = Object.assign(options, data.options);
@@ -401,14 +401,14 @@ function init(registry) {
     const dialogueHeight = parseInt(dialogueSize.height.split("px"));
 
     //get a latitude that shows the whole dialogue on screen
-    if(this.map.project(centre).y - this.map.getPixelBounds().min.y < dialogueHeight){
+    if (this.map.project(centre).y - this.map.getPixelBounds().min.y < dialogueHeight) {
       lat = this.map.unproject({
         x: this.map.project(centre).x,
         y: this.map.project(centre).y - (dialogueHeight / 2)
       }).lat;
     }
 
-    let lngCentre = {lat: lat, lng: centre.lng};
+    let lngCentre = { lat: lat, lng: centre.lng };
 
     //make sure you pan to center the initiative on the x axis, or longitudanally.
     this.map.panTo(lngCentre, { animate: true });
@@ -512,7 +512,7 @@ function init(registry) {
     // if (!data.target.id) return;
 
     const refocusMap = true,
-          animateRefocus = true;
+      animateRefocus = true;
     this.map.setActiveArea(css, refocusMap, animateRefocus);
   };
 
