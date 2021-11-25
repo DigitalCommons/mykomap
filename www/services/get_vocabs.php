@@ -285,7 +285,8 @@ function request($url) {
  *
  * @param $endpoint  The SPARQL endpoint URL
  * @param $query     The SPARQL query to post
- * @param $graph     An optional default graph URI to specify.
+ * @param $graph     An optional default graph URI to specify. This is advisory
+ * as without specifying it, the queries can be much slower.
  * @return On success, the query response decoded from JSON format into a PHP datastructure.
  */
 function query($endpoint, $query, $graph = NULL) {
@@ -431,6 +432,8 @@ function main() {
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
+        $default_graph_uri = $vocab_src['defaultGraphUri']; // optional, but speeds the query
+
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
         if (empty($uris)) {
             continue; // Don't make a query if there are no URIs!
@@ -439,7 +442,7 @@ function main() {
         $prefixes = array_merge($uris);
         $query = generate_query($uris, $languages);
         #echo $query; # DEBUG
-        $query_results = query($endpoint, $query);
+        $query_results = query($endpoint, $query, $default_graph_uri);
         
         #echo json_encode($query_results); # DEBUG
         $result = add_query_data($result, $query_results);
