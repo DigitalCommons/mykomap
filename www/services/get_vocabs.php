@@ -36,6 +36,7 @@
 
         "vocabularies": [
           { "endpoint": "http:\/\/dev.data.solidarityeconomy.coop:8890/sparql",
+            "defaultGraphUri": "http:\/\/dev.lod.coop/ica",
             "uris": {
               "https:\/\/dev.lod.coop/essglobal/2.1/standard/activities-ica/": "aci",
               "https:\/\/dev.lod.coop/essglobal/2.1/standard/countries-iso/": "coun",
@@ -58,6 +59,11 @@
   `endpoint.txt` configuration file within the datasets' subdirectory
   (as well as its own request and default graph URI, therefore the
   vocabs could differ too.).
+
+  There is a `defaultGraphUri` attribute too - this is optional, but
+  recommended, because vocab queries can be extremely slow without it.
+  As this graph is specific to the query, there needs to be one per
+  query, as with `endpoint`.
 
   Notice also that each vocabulary URL, assumed to be a SKOS
   vocabulary scheme, has an associated abbreviation. Currently these
@@ -285,7 +291,8 @@ function request($url) {
  *
  * @param $endpoint  The SPARQL endpoint URL
  * @param $query     The SPARQL query to post
- * @param $graph     An optional default graph URI to specify.
+ * @param $graph     An optional default graph URI to specify. This is advisory
+ * as without specifying it, the queries can be much slower.
  * @return On success, the query response decoded from JSON format into a PHP datastructure.
  */
 function query($endpoint, $query, $graph = NULL) {
@@ -431,6 +438,8 @@ function main() {
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
+        $default_graph_uri = $vocab_src['defaultGraphUri']; // optional, but speeds the query
+
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
         if (empty($uris)) {
             continue; // Don't make a query if there are no URIs!
@@ -439,7 +448,7 @@ function main() {
         $prefixes = array_merge($uris);
         $query = generate_query($uris, $languages);
         #echo $query; # DEBUG
-        $query_results = query($endpoint, $query);
+        $query_results = query($endpoint, $query, $default_graph_uri);
         
         #echo json_encode($query_results); # DEBUG
         $result = add_query_data($result, $query_results);
