@@ -33,7 +33,7 @@ The following attributes can be defined.
 - *default:* The contents of the consuming project's file `config/about.html`
 - *settable?:* no
 
-Raw HTML definition of the map's "about" text.
+Raw HTML definition of the map's "about" text. This can be internationalised in the following way: any elements with a `lang` tag which does not match the current language (which is set by default to `EN`) are removed, along with all child elements. Elements with no `lang` tag will be left in whatever the language, so by default older single-language definitions will still work as they did. Note however that the about text is always followed by links to the data and docs now, so you should no longer link to this in the about text.
 
 
 
@@ -348,14 +348,30 @@ Responses to SPARQL queries will normally be cached in /services/locCache.txt if
 
 
 
+### `languages`
+
+- *type:* `{string[]}` An array of strings.
+- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
+- *default:* ```
+[
+  "EN"
+]
+```
+- *settable?:* no
+
+An array of supported languages which can be used for internationalised text. Should not be empty, and all codes should be upper case. Any other language code used will be replaced with the first in this list. A phrases for the first code will also used as a fallback if an individual phrase is missing.
+
+
+
+
 ### `language`
 
 - *type:* `{string}` 
 - *in string context:* parsed as-is
-- *default:* `undefined`
+- *default:* `EN`
 - *settable?:* yes
 
-The language that will be displayed in the absence of a url argument
+The language to use for internationalised text. Must be one of those listed in `languages`, or it will be set to the first language code in `languages`. Will be upcased if not already.
 
 
 
