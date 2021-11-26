@@ -14,7 +14,7 @@ function init(registry) {
   // not here, so they are available everywhere. We can be sure there is at least one,
   // it is upper-case, and weird characters are excluded.
   const languages = config.getLanguages();
-  
+
   // The language to use when no matching i18n text is found for the selected one.
   const fallBackLanguage = languages[0];
 
@@ -22,7 +22,7 @@ function init(registry) {
   // and so never be unset (because there is a default).
   const language = config.getLanguage();
   console.info("using language", language);
-  
+
   let functionalLabels = {
     EN: {
       directory: "Directory",
@@ -180,17 +180,18 @@ function init(registry) {
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
     { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    { propertyName: 'shortPostcode', paramName: 'postcode',
+    {
+      propertyName: 'shortPostcode', paramName: 'postcode',
       init: (def, params) => {
         // Regex adapted from here, combining UK and British Territories and Armed Forces
         // Will be null if there is no match.
         if (params.postcode == null)
           return null;
-	      const match = params
+        const match = params
           .postcode
           .toUpperCase()
           .match(/^([A-Z][A-HJ-Y]?[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|GX\d{2}|PCRN|TKCA|BFPO)/);
-        return match? match[0] : undefined;
+        return match ? match[0] : undefined;
       },
     },
     { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
@@ -435,7 +436,7 @@ function init(registry) {
     // loop through the filterable fields AKA properties, and register
     filterableFields.forEach(filterable => {
       const labelKey = getTitleForProperty(filterable);
-      
+
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
       else
@@ -635,7 +636,7 @@ function init(registry) {
     meta.endpoint = response.meta.endpoint;
     meta.dgu = response.meta.default_graph_uri;
     meta.query = response.meta.query;
-    
+
     initiativesToLoad = initiativesToLoad.concat(response.data);
     loadNextInitiatives();
   }
@@ -674,13 +675,13 @@ function init(registry) {
     // loop through the filters and sort them data, then sort the keys in order
     filterableFields.forEach(filterable => {
       const label = getTitleForProperty(filterable);
-      
+
       const labelValues = registeredValues[label];
       if (labelValues) {
         const propDef = getPropertySchema(filterable);
         const ordered = Object
           .entries(labelValues)
-          .sort(propDef.vocabUri? sortByVocabLabel(propDef) : sortAsString);
+          .sort(propDef.vocabUri ? sortByVocabLabel(propDef) : sortAsString);
         // FIXME ideally we'd sort numbers, booleans, etc. appropriately
 
         registeredValues[label] = Object.fromEntries(ordered);
@@ -908,8 +909,8 @@ function init(registry) {
       .map(([vocabUri, vocab]) => {
         let vocabLang = vocab[language];
         if (!vocabLang && language !== fallBackLanguage) {
-          console.warn(`No localisations for language ${language}, `+
-                       `falling back to ${fallBackLanguage}`);
+          console.warn(`No localisations for language ${language}, ` +
+            `falling back to ${fallBackLanguage}`);
           vocabLang = vocab[fallBackLanguage];
         }
         return [vocabLang.title, vocabLang.terms];
@@ -995,18 +996,18 @@ function init(registry) {
     const vocabLang = fallBackLanguage;
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
     const vocab = vocabs.vocabs[vocabUri][language];
-    
-    if (vocab  &&
-        vocab.terms &&
-        vocab.terms[termUri]) {
+
+    if (vocab &&
+      vocab.terms &&
+      vocab.terms[termUri]) {
       return vocab.terms[termUri];
     }
-      
+
     // Fall back if there are no terms.
     try {
       return vocabs.vocabs[vocabUri][fallBackLanguage].terms[termUri];
     }
-    catch(e) {
+    catch (e) {
       // Even the fallback failed! 
       console.error(`No term for ${termUri}, not even in the fallback language ${fallBackLanguage}`);
       return '?';
@@ -1037,8 +1038,8 @@ function init(registry) {
     // checked so easily.
     const vocab = vocabs.vocabs[propDef.vocabUri];
     if (!vocab) {
-      throw new Error(`no vocab defined with URI ${propDef.vocabUri} `+
-                      `(expecting one of: ${Object.keys(vocabs.vocabs).join(', ')})`);
+      throw new Error(`no vocab defined with URI ${propDef.vocabUri} ` +
+        `(expecting one of: ${Object.keys(vocabs.vocabs).join(', ')})`);
     }
     const vocabLang = vocab[language] ? language : fallBackLanguage;
     const localVocab = vocab[vocabLang];
@@ -1075,7 +1076,7 @@ function init(registry) {
       throw e; // rethrow.
     }
   }
-  
+
   //construct the object of terms for advanced search
   function getTerms() {
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
@@ -1084,16 +1085,9 @@ function init(registry) {
 
     let vocabLang = fallBackLanguage;
 
-    // Set vocabLang to the configured language, if present in the first available vocab we check.
-    const vocabIDs = Object.keys(vocabIDsAndInitiativeVariables);
-    if (vocabIDs.length > 0) {
-      const dummyVocabID = vocabIDs[0];
-      if (vocabs.vocabs[dummyVocabID] && vocabs.vocabs[dummyVocabID][language]) {
-        vocabLang = language;
-      }
-    }
-    
     for (const vocabID in vocabIDsAndInitiativeVariables) {
+      vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
+
       const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
       usedTerms[vocabTitle] = {};
     }
@@ -1102,6 +1096,8 @@ function init(registry) {
       const initiative = initiativesByUid[initiativeUid];
 
       for (const vocabID in vocabIDsAndInitiativeVariables) {
+        vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
+
         const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
         const propName = vocabIDsAndInitiativeVariables[vocabID];
         const id = initiative[propName];
