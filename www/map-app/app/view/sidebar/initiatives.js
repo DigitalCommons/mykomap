@@ -50,7 +50,7 @@ function init(registry) {
 			// } else if (item.isSearchResults()) {
 			//   textContent = "Search: " + item.searchString;
 			// }
-			textContent = "Search: " + item.searchString;
+			textContent = labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
 			eventbus.publish({
