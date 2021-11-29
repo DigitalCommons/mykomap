@@ -23,10 +23,10 @@ function init(registry) {
   function labelToTag(uri) {
     return uri.toLowerCase().replace(/ /g, "-");
   }
-  
+
   // Our local Sidebar inherits from sidebar:
   var proto = Object.create(sidebarView.base.prototype);
-  
+
   // And adds some overrides and new properties of it's own:
   proto.title = labels.directory;
   proto.hasHistoryNavigation = false;
@@ -39,16 +39,16 @@ function init(registry) {
       .append("div");
 
     container.append("h1")
-             .text(sidebarTitle)
-             .attr("id", "dir-title");
+      .text(sidebarTitle)
+      .attr("id", "dir-title");
 
     container.append("input")
-             .attr("id", "dir-filter")
-    //.classed("w3-center",true)
-             .attr("type", "text")
-             .on("keyup", function () {
-               that.handleFilter(this.value);
-             });
+      .attr("id", "dir-filter")
+      //.classed("w3-center",true)
+      .attr("type", "text")
+      .on("keyup", function () {
+        that.handleFilter(this.value);
+      });
   };
 
   var dissapear;
@@ -106,9 +106,12 @@ function init(registry) {
       let valuesByName = that.presenter.getVerboseValuesForFields()[field];
       let label = key;
       let tag = key;
+
+      const fieldIsCountries = field => field == "Countries" || field == "Des Pays" || field == "Países" || field == "국가"
+
       if (key == null) {
         tag = 'all-entries';
-        label = labels.allEntries;
+        label = fieldIsCountries(field) ? labels.allCountries : labels.allEntries;
       }
       else {
         tag = uriToTag(key);
@@ -132,22 +135,22 @@ function init(registry) {
           d3.select(this).classed("sea-field-active", true);
         });
     }
-    
+
     function addItems(field, values) {
       Object.keys(values)
-      // Any sorting should have been done as the initiatives were loaded
-            .forEach(key => {
-              addItem(field, key);
-            });
+        // Any sorting should have been done as the initiatives were loaded
+        .forEach(key => {
+          addItem(field, key);
+        });
     }
-    
+
     const registeredValues = this.presenter.getRegisteredValues();
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
       // Deal with the special 'All' item first
       addItem(field);
-      
+
       addItems(field, registeredValues[field]);
       break;
     }
@@ -162,7 +165,9 @@ function init(registry) {
       selectionKey
     );
 
-    const selectionLabel = selectionKey == null? labels.allEntries : selectionKey;
+    const fieldIsCountries = field => field == "Countries" || field == "Des Pays" || field == "Países" || field == "국가"
+
+    const selectionLabel = selectionKey == null ? fieldIsCountries(directoryField) ? labels.allCountries : labels.allEntries : selectionKey;
 
     //deselect all
     that.presenter.clearLatestSelection();
