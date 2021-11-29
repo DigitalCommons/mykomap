@@ -43,7 +43,7 @@ function init(registry) {
       clearFilters: "Clear Filters",
       contact: "Contact",
       allEntries: "All Entries",
-      allCountries: "All countries",
+      allCountries: "All Countries",
       aboutTitle: "About",
       underConstruction: "This section is under construction.",
       source: "The source data of the content is here:",
@@ -1176,7 +1176,6 @@ function init(registry) {
   function getSidebarButtonColour() {
     return config.getSidebarButtonColour();
   }
-
 
   return {
     loadFromWebService,
