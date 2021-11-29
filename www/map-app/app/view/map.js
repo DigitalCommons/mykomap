@@ -151,7 +151,7 @@ function init(registry) {
     let mapAttribution = this.presenter.getMapAttribution();
     mapAttribution = mapAttribution.replace('contributors', labels.contributers);
     mapAttribution = mapAttribution.replace('Other data', labels.otherData);
-    mapAttribution = mapAttribution.replace('Powered by', labels.poweredBy);
+    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${labels.poweredBy}</a>`);
     mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
 
