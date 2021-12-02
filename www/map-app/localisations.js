@@ -34,6 +34,8 @@ module.exports = {
     property_shortPostcode: "Short postcode",
     secondaryActivities: "Secondary Activities",
     noLocation: "No location available",
+    in: "in",
+    and: "AND",
   },
   FR: {
     directory: "Annuaire",
@@ -68,6 +70,8 @@ module.exports = {
     property_shortPostcode: "Code postal court",
     secondaryActivities: "Activités secondaires",
     noLocation: "Aucun emplacement disponible",
+    in: "dans",
+    and: "ET",
   },
   ES: {
     directory: "Directorio",
@@ -102,6 +106,8 @@ module.exports = {
     property_shortPostcode: "Código postal corto",
     secondaryActivities: "Actividades secundarias",
     noLocation: "No hay ubicación disponible",
+    in: "en",
+    and: "Y",
   },
   KO: {
     directory: "디렉토리",
@@ -136,5 +142,7 @@ module.exports = {
     property_shortPostcode: "짧은 우편번호",
     secondaryActivities: "보조 활동",
     noLocation: "사용 가능한 위치 없음",
+    in: "에",
+    and: "그리고",
   }
 };

@@ -7,7 +7,10 @@ function init(registry) {
   const sseInitiative = registry('model/sse_initiative');
   const sidebarPresenter = registry('presenter/sidebar/base');
   const map = registry('presenter/map');
-  
+
+  //get labels for buttons and titles
+  const labels = sseInitiative.getFunctionalLabels();
+
   function StackItem(initiatives) {
     this.initiatives = initiatives;
   }
@@ -21,9 +24,9 @@ function init(registry) {
     StackItem.call(this, initiatives);
     this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?
-                                                    "\"" + searchString + "\" in " + filterVerboseNames.join(" AND ")
-                                                  : "\"" + searchString + "\"";
-    this.filters = filterNames.map((filterName,index)=>({
+      "\"" + searchString + `" ${labels.in} ` + filterVerboseNames.join(` ${labels.and} `)
+      : "\"" + searchString + "\"";
+    this.filters = filterNames.map((filterName, index) => ({
       filterName,
       verboseName: filterVerboseNames[index]
     }));
@@ -84,7 +87,7 @@ function init(registry) {
     }
   };
 
-  proto.changeFilters = (filterCategoryName,filterValue,filterValueText) => {
+  proto.changeFilters = (filterCategoryName, filterValue, filterValueText) => {
     //get category of filter as used in intiatives
     const vocabTitlesAndVocabIDs = sseInitiative.getVocabTitlesAndVocabIDs();
     const vocabIDsAndInitiativeVariables = sseInitiative.getVocabIDsAndInitiativeVariables();
@@ -95,29 +98,29 @@ function init(registry) {
     //remove old filter 
     const currentFilters = map.getFiltersFull();
 
-    if(currentFilters.length > 0){
+    if (currentFilters.length > 0) {
       let oldFilter;
-      
+
       currentFilters.forEach(filter => {
-        if(filter.verboseName.split(":")[0] === filterCategoryName)
+        if (filter.verboseName.split(":")[0] === filterCategoryName)
           oldFilter = filter;
       })
-      
-      if(oldFilter){
+
+      if (oldFilter) {
         eventbus.publish({
           topic: "Map.removeFilter",
           data: oldFilter
         });
       }
     }
-    
+
     //if filter is any, don't add a new filter
-    if(filterValue === "any")
+    if (filterValue === "any")
       return;
 
     //get initiatives for new filter
     const allInitiatives = Object.values(sseInitiative.getInitiativeUIDMap());
-    const filteredInitiatives = allInitiatives.filter(initiative => 
+    const filteredInitiatives = allInitiatives.filter(initiative =>
       initiative[filterCategory] == filterValue
     )
 
@@ -132,14 +135,14 @@ function init(registry) {
       topic: "Map.addFilter",
       data: filterData
     });
-    
+
     eventbus.publish({
       topic: "Map.addSearchFilter",
       data: filterData
     });
-    
-    
-    
+
+
+
   }
 
   proto.removeFilters = function () {
@@ -147,7 +150,7 @@ function init(registry) {
       {
         topic: "Directory.removeFilters",
         data: null
-    });
+      });
   }
 
   proto.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative = function (initiative, sidebarWidth) {
@@ -216,7 +219,7 @@ function init(registry) {
     }
 
     //filter
-    this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose(),map.getFilters()));
+    this.contentStack.append(new SearchResults(data.results, data.text, map.getFiltersVerbose(), map.getFilters()));
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them 
@@ -342,7 +345,7 @@ function init(registry) {
         data: { text: text, results: results }
       });
     }
-    
+
     else {
       this.performSearchNoText();
     }
@@ -366,9 +369,10 @@ function init(registry) {
 
     eventbus.publish({
       topic: "Search.initiativeResults",
-      data: { 
-        text: "", 
-        results: results }
+      data: {
+        text: "",
+        results: results
+      }
     });
   }
 
