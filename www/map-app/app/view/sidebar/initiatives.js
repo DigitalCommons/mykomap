@@ -378,7 +378,7 @@ function init(registry) {
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
-							.text("Nothing matched the search");
+							.text(labels.nothingMatched);
 					}
 					break;
 				case 1:
