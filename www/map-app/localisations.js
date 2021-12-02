@@ -36,6 +36,7 @@ module.exports = {
     noLocation: "No location available",
     in: "in",
     and: "AND",
+    nothingMatched: "Nothing matched the search",
   },
   FR: {
     directory: "Annuaire",
@@ -72,6 +73,7 @@ module.exports = {
     noLocation: "Aucun emplacement disponible",
     in: "dans",
     and: "ET",
+    nothingMatched: "Rien ne correspond à la recherche",
   },
   ES: {
     directory: "Directorio",
@@ -108,6 +110,7 @@ module.exports = {
     noLocation: "No hay ubicación disponible",
     in: "en",
     and: "Y",
+    nothingMatched: "Nada coincidió con la búsqueda",
   },
   KO: {
     directory: "디렉토리",
@@ -144,5 +147,6 @@ module.exports = {
     noLocation: "사용 가능한 위치 없음",
     in: "에",
     and: "그리고",
+    nothingMatched: "검색과 일치하는 항목이 없습니다",
   }
 };
