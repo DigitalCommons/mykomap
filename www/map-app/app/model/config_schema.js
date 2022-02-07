@@ -377,7 +377,7 @@ const configSchema = ({
             "region", "postcode", "country", "primaryActivity",
             "otherActivities", "orgStructure", "tel", "email", "qualifiers"].join(",") +
            "\nif non-valid values are passed, the app will fail silently (no errors will be produced)" +
-           "\nThe default values are 'name,www'" +
+           "\nThe default values are 'name'" +
            "\nUsers can pass single arguments and multiple arguments, separated with a comma" +
            "\nPassing multiple values example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities" +
            "\nPassing a single value example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg" +
@@ -386,7 +386,7 @@ const configSchema = ({
            "\nCurrently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other." +
            "\nThe 'searchstr' is then converted into uppercase. No other string transformations are currently applied" +
            "\nWhen a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.",
-    init: () => searchedFields == undefined ? ["name", "www"] : searchedFields,
+    init: () => searchedFields == undefined ? ["name"] : searchedFields,
     getter: 'getSearchedFields',
     setter: 'setSearchedFields',
     type: types.arrayOfString,
