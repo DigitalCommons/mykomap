@@ -49,8 +49,6 @@ function init(registry) {
     { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
     { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
     { propertyName: 'name', paramName: 'name', init: fromParam },
-    { propertyName: 'nongeoLat', init: def => config.getDefaultLatLng()[0] },
-    { propertyName: 'nongeoLng', init: def => config.getDefaultLatLng()[1] },
     { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
     { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },

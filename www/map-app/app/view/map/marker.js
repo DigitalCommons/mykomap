@@ -45,8 +45,7 @@ function init(registry) {
     if (!initiative.lat || !initiative.lng) {
       initiative.nongeo = 1;
 
-      initiative.lat = initiative.nongeoLat;
-      initiative.lng = initiative.nongeoLng;
+      [ initiative.lat, initiative.lng ] = config.getDefaultLatLng();
 
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
