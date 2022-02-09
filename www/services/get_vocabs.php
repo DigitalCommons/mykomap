@@ -438,7 +438,7 @@ function main() {
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
-        $default_graph_uri = $vocab_src['defaultGraphUri']; // optional, but speeds the query
+        $default_graph_uri = $vocab_src['defaultGraphUri'] ?? null; // optional, but speeds the query
 
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
         if (empty($uris)) {
