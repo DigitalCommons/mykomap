@@ -74,7 +74,7 @@ let entry;
 if (variant == 'sea-map') {
   // Infer development mode from sea-map package
 
-  entry = "./www/map-app/app.js";
+  entry = "./www/map-app/app.ts";
   srcDir = "./www/map-app"; // locally
   servicesDir = "./www/services";
   
@@ -91,7 +91,7 @@ if (variant == 'sea-map') {
 else {
   // Infer production mode
 
-  entry = "sea-map/www/map-app/app.js";
+  entry = "sea-map/www/map-app/app.ts";
   srcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
   servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
   
@@ -118,7 +118,7 @@ console.log("popup.js:", popupModulePath);
 
 const webpackConfig = {
   context: cwd,
-  entry: srcDir+"/app.js", // path.join will strip leading '.'
+  entry: srcDir+"/app.ts", // path.join will strip leading '.'
   devtool: debug ? "source-map" : false,
   mode: debug? 'development' : 'production',
   target: 'web',
@@ -129,6 +129,11 @@ const webpackConfig = {
   },
   module: {
     rules: [
+	    {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
       {
         test: /\.html$/i,
         loader: 'html-loader',
@@ -180,6 +185,7 @@ const webpackConfig = {
     ],
   },
   resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
     alias: {
       // Allows custom popup logic to be supplied config/popup.js (if detected)
       "./view/map/popup$":  popupModulePath,
