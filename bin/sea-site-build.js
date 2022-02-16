@@ -190,7 +190,7 @@ const webpackConfig = {
       // Allows custom popup logic to be supplied config/popup.js (if detected)
       "./view/map/popup$":  popupModulePath,
       // Define this alias so that it works as before in popup.js
-      "model/sse_initiative$": path.resolve(srcDir, "app/model/sse_initiative.js"),
+      "model/sse_initiative$": path.resolve(srcDir, "app/model/sse_initiative.ts"),
     },
   },
   plugins: [

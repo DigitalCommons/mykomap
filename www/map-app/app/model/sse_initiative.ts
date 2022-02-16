@@ -8,7 +8,70 @@ const functionalLabels = require("../../localisations.js");
 const { json } = require('d3');
 
 
-function init(registry) {
+// for now
+type StringRecord = Record<string, string>;
+type LatLon = [number, number];
+type LatLonBounds = [LatLon, LatLon];
+
+declare class Initiative {}
+
+interface VocabMeta {
+  languages: string[];
+  queries: string[];
+  vocab_srcs: {
+    defaultGraphUri: string;
+    endpoint: string;
+    uris: { [uri: string]: string };
+  };
+}
+interface Vocab {
+  title: string;
+  terms: StringRecord;
+}
+interface LocalisedVocab {
+  [lang: string]: Vocab;
+}
+interface VocabIndex {
+  abbrevs: StringRecord;
+  meta: VocabMeta;
+  prefixes: StringRecord;
+  vocabs: { [prefix: string]: LocalisedVocab };
+}
+interface InitiativeIndex {
+  [id: string]: Initiative[];
+}
+interface RegisteredValues {
+  [id: string]: InitiativeIndex;
+}  
+interface Filter {
+  filterName: string;
+  verboseName: string;
+  initiatives: Initiative[];
+}
+interface Dataset {
+  id: string;
+  name: string;
+  endpoint: string;
+  dgu: string;
+  query: string;
+}
+interface DatasetMap {
+  [id: string]: Dataset;    
+}
+interface InitiativeObj {
+  uri: string;
+  [name: string]: any;
+}
+type PropInit = (def: PropDef, params: InitiativeObj) => any;
+interface PropDef {
+  propertyName: string;
+  paramName: string;
+  init: PropInit;
+  writable?: boolean;
+  vocabUri?: string;
+}
+
+function init(registry: any) {
   const config = registry("config");
 
   // `languages`' codes are validated and normalised in the config initialisation,
@@ -35,7 +98,7 @@ function init(registry) {
   // - writable: if true, the property can be assigned to. (Defaults to `false`)
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
-  const classSchema = [
+  const classSchema: PropDef[] = [
     { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'aci:' },
     { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'bmt:' },
     { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'coun:' },
@@ -54,7 +117,7 @@ function init(registry) {
     { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
     {
       propertyName: 'shortPostcode', paramName: 'postcode',
-      init: (def, params) => {
+      init: (def: PropDef, params: InitiativeObj) => {
         // Regex adapted from here, combining UK and British Territories and Armed Forces
         // Will be null if there is no match.
         if (params.postcode == null)
@@ -72,7 +135,7 @@ function init(registry) {
     { propertyName: 'region', paramName: 'region', init: fromParam },
     { propertyName: 'regionId', paramName: 'regionId', init: fromCode, vocabUri: 'reg:' },
     { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'os:' },
-    { propertyName: 'searchstr', init: asSearchStr, writable: true },
+    { propertyName: 'searchstr', paramName: '_', init: asSearchStr, writable: true },
     { propertyName: 'street', paramName: 'street', init: fromParam },
     { propertyName: 'superRegionId', paramName: 'superRegionId', init: fromCode, vocabUri: 'sreg:' },
     { propertyName: 'tel', paramName: 'tel', init: fromParam },
@@ -84,12 +147,12 @@ function init(registry) {
   ];
 
   // Initialiser which uses the appropriate parameter name
-  function fromParam(def, params) {
+  function fromParam(def: PropDef, params: InitiativeObj) {
     return params[def.paramName];
   }
 
   // Initialiser which uses the appropriate code
-  function fromCode(def, params) {
+  function fromCode(def: PropDef, params: InitiativeObj) {
     const uri = params[def.paramName];
     if (uri)
       return abbrevUri(uri);
@@ -97,7 +160,7 @@ function init(registry) {
   }
 
   // Initialiser which returns an empty array
-  function asList(def, params) {
+  function asList(def: PropDef, params: InitiativeObj): any[] {
     return [];
   }
 
@@ -121,10 +184,10 @@ function init(registry) {
   // of the equivalent properties. i.e. We are constructing the string
   // from parameter values, not object property values. If they do differ
   // this means the search results may not be what we expect.
-  function asSearchStr(def, params) {
-    const searchedFields = config.getSearchedFields();
+  function asSearchStr(def: PropDef, params: InitiativeObj) {
+    const searchedFields: string[] = config.getSearchedFields();
 
-    const searchableValues = [];
+    const searchableValues: string[] = [];
 
     searchedFields.forEach(fieldName => {
       // Get the right schema for this field (AKA property)
@@ -173,39 +236,43 @@ function init(registry) {
     return searchableValues.join(" ").toUpperCase();
   }
 
-  let loadedInitiatives = [];
-  let initiativesToLoad = [];
-  let initiativesByUid = {};
-  let allDatasets = config.namedDatasets();
+  let loadedInitiatives: Initiative[] = [];
+  let initiativesToLoad: InitiativeObj[] = [];
+  let initiativesByUid: {[id: string]: Initiative} = {};
+  let allDatasets: string[] = config.namedDatasets();
 
 
 
   //TODO: should be in a method call
   //setup map
-  let verboseDatasets = {}
-  const dsNamed =
+  let verboseDatasets: DatasetMap = {}
+  const dsNamed: string[] =
     (config.namedDatasetsVerbose() && config.namedDatasets().length == config.namedDatasetsVerbose().length) ?
       config.namedDatasetsVerbose()
       : [];
 
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  let vocabs = {};
+  let vocabs : VocabIndex;
 
   if (dsNamed.length == allDatasets.length)
-    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: dsNamed[i] });
+    allDatasets.forEach((x, i) => verboseDatasets[x] = {
+      id: x, name: dsNamed[i], endpoint: '', dgu: '', query: ''
+    });
   else
-    allDatasets.forEach((x, i) => verboseDatasets[x] = { id: x, name: x });
+    allDatasets.forEach((x, i) => verboseDatasets[x] = {
+      id: x, name: x, endpoint: '', dgu: '', query: ''
+    });
 
 
 
   //true means all available datasets from config are loaded
   //otherwise a string to indicate which dataset is loaded
-  let currentDatasets = true;
+  let currentDatasets: (string | boolean) = true;
 
 
   // Need to record all instances of any of the fields that are specified in the config
   // Expects an array of strings which are initiative field names.
-  const filterableFields = config.getFilterableFields();
+  const filterableFields: string[] = config.getFilterableFields();
   if (typeof (filterableFields) !== 'object' || !(filterableFields instanceof Array))
     throw new Error(`invalid filterableFields config for 'filterableFields' - not an array`);
   if (filterableFields.findIndex(e => typeof (e) !== 'string') >= 0)
@@ -221,18 +288,21 @@ function init(registry) {
      ...
      { fieldN: [ ... ] }
      }
-   */
-  let registeredValues = {}; // arrays of sorted values grouped by label, then by field
-  let allRegisteredValues = {}; // arrays of sorted values, grouped by label
+  */
 
-  function Initiative(e) {
-    const that = this;
+  let registeredValues: RegisteredValues = {}; // arrays of sorted values grouped by label, then by field
+  let allRegisteredValues: InitiativeIndex = {}; // arrays of sorted values, grouped by label
 
+  class Initiative {
+    // It can contain arbitrary fields (for now, anyway!)
+    [property: string]: any; 
+  
+    constructor(e: InitiativeObj) {
     // Not all initiatives have activities
 
     //if initiative exists already, just add properties
     if (initiativesByUid[e.uri] != undefined) {
-      let initiative = initiativesByUid[e.uri];
+      let initiative: Initiative = initiativesByUid[e.uri];
 
       // If properties with are multi-valued, add new values to the
       // initiative.  This is to handle cases where the SPARQL
@@ -252,12 +322,12 @@ function init(registry) {
           if (!code)
             return;
 
-          const list = initiative[p.propertyName];
+          const list: string[] = initiative[p.propertyName];
           if (list.includes(code))
             return;
 
           list.push(code);
-          const uri = e[p.paramName];
+          const uri: string = e[p.paramName];
           const value = getVocabTerm(p.vocabUri, uri);
           if (value === undefined) {
             console.warn(`can't add term '${uri}' to search, ` +
@@ -294,9 +364,9 @@ function init(registry) {
     if (this.qualifier) this.qualifiers.push(this.qualifier);
 
     //check if lat/lng are numbers and no letters in it
-    if (isAlpha(that.lat) || isAlpha(that.lng)) {
-      that.lat = undefined;
-      that.lng = undefined;
+    if (isAlpha(this.lat) || isAlpha(this.lng)) {
+      this.lat = undefined;
+      this.lng = undefined;
     }
 
     //overwrite with manually added lat lng
@@ -307,7 +377,7 @@ function init(registry) {
 
     // loop through the filterable fields AKA properties, and register
     filterableFields.forEach(filterable => {
-      const labelKey = getTitleForProperty(filterable);
+      const labelKey: string = getTitleForProperty(filterable);
 
       if (labelKey in allRegisteredValues)
         insert(this, allRegisteredValues[labelKey]);
@@ -332,7 +402,7 @@ function init(registry) {
       else {
         // Create the object that holds the registered values for the current
         // field if it hasn't already been created
-        const values = registeredValues[labelKey] = {};
+        const values: InitiativeIndex = registeredValues[labelKey] = {};
         values[field] = [this];
       }
 
@@ -341,10 +411,11 @@ function init(registry) {
     insert(this, loadedInitiatives);
     initiativesByUid[this.uniqueId] = this;
 
-    eventbus.publish({ topic: "Initiative.new", data: that });
+    eventbus.publish({ topic: "Initiative.new", data: this });
+  }
   }
 
-  function isAlpha(str) {
+  function isAlpha(str: string): boolean {
     if (!str) return false;
     var code, i, len;
 
@@ -358,7 +429,7 @@ function init(registry) {
     return true;
   }
 
-  function sortInitiatives(a, b) {
+  function sortInitiatives(a: Initiative, b: Initiative) {
     return a.name.localeCompare(b.name);
   }
 
@@ -368,13 +439,13 @@ function init(registry) {
   function getAllRegisteredValues() {
     return allRegisteredValues;
   }
-  function getInitiativeByUniqueId(uid) {
+  function getInitiativeByUniqueId(uid: string) {
     return initiativesByUid[uid];
   }
   function getInitiativeUIDMap() {
     return initiativesByUid;
   }
-  function search(text) {
+  function search(text: string): Initiative[] {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return loadedInitiatives.filter(function (i) {
@@ -386,7 +457,7 @@ function init(registry) {
     return loadedInitiatives;
   }
 
-  function filterDatabases(dbSource, all) {
+  function filterDatabases(dbSource: string, all: boolean) {
     // returns an array of sse objects whose dataset is the same as dbSource
     //if boolean all is set to true returns all instead
     if (all)
@@ -426,13 +497,13 @@ function init(registry) {
     return currentDatasets;
   }
 
-  let cachedLatLon = [];
-  function latLngBounds(initiatives) {
+  let cachedLatLon: LatLonBounds;
+  function latLngBounds(initiatives: Initiative[]): LatLonBounds {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east
     //
     // Careful: isNaN(null) returns false ...
-    if (!initiatives && cachedLatLon.length > 0) {
+    if (!initiatives && cachedLatLon !== undefined) {
       return cachedLatLon;
     }
 
@@ -453,8 +524,9 @@ function init(registry) {
     return [[south, west], [north, east]];
   }
 
-  function addInitiatives(initiatives) {
-    initiatives.forEach(elem => new Initiative(elem));
+  function addInitiatives(initiatives: InitiativeObj[]) {
+    initiatives
+      .forEach(elem => new Initiative(elem));
   }
 
   function finishInitiativeLoad() {
@@ -503,7 +575,7 @@ function init(registry) {
   //    - `default_graph_uri`: [String] the default graph URI for the query (which
   //       is expected to self-resolve to the dataset's index webpage)
   //
-  function add(dataset, response) {
+  function add(dataset: string, response: any) {
     const meta = verboseDatasets[dataset];
     meta.endpoint = response.meta.endpoint;
     meta.dgu = response.meta.default_graph_uri;
@@ -514,15 +586,13 @@ function init(registry) {
   }
 
   //taken from 
-  function insert(element, array) {
+  function insert(element: any, array: any[]) {
     array.splice(locationOf(element, array), 0, element);
     return array;
   }
 
-  function locationOf(element, array, start, end) {
-    start = start || 0;
-    end = end || array.length;
-    var pivot = parseInt(start + (end - start) / 2, 10);
+  function locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
+    var pivot = Math.floor(start + (end - start) / 2);
     if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
       //SPECIAL CASE FOR ARRAY WITH LEN = 1
       if (array.length == 1) {
@@ -548,7 +618,7 @@ function init(registry) {
     filterableFields.forEach(filterable => {
       const label = getTitleForProperty(filterable);
 
-      const labelValues = registeredValues[label];
+      const labelValues: InitiativeIndex = registeredValues[label];
       if (labelValues) {
         const propDef = getPropertySchema(filterable);
         const ordered = Object
@@ -560,23 +630,23 @@ function init(registry) {
       }
 
       // Sort entries by the vocab label for the ID used as the key
-      function sortByVocabLabel(propDef) {
+      function sortByVocabLabel(propDef: PropDef) {
         const vocab = getVocabForProperty(propDef);
-        return (a, b) => {
+        return (a: Initiative, b: Initiative): number => {
           const alab = vocab.terms[a[0]];
           const blab = vocab.terms[b[0]];
           return String(alab).localeCompare(String(blab));
         };
       }
       // Sort entries as strings
-      function sortAsString(a, b) {
+      function sortAsString(a: Initiative, b: Initiative): number {
         return String(a[0]).localeCompare(String(b[0]));
       }
     });
 
   }
 
-  function errorMessage(response) {
+  function errorMessage(response: any) {
     // Extract error message from parsed JSON response.
     // Returns error string, or null if no error.
     // API response uses JSend: https://labs.omniti.com/labs/jsend
@@ -596,7 +666,7 @@ function init(registry) {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  function reset(dataset) {
+  function reset(dataset: string) {
     // If the dataset is the same as that currently selected, nothing to do
     if (dataset === currentDatasets)
       return;
@@ -640,15 +710,15 @@ function init(registry) {
   // The vocabs are always loaded.
   function loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
-    let datasets = [];
+    let datasets: string[] = [];
 
     if (currentDatasets === true) {
       console.log("reset: loading all datasets ", config.namedDatasets());
       datasets = config.namedDatasets();
     }
-    else if (allDatasets.includes(currentDatasets)) {
+    else if (allDatasets.includes(currentDatasets as string)) {
       console.log("reset: loading dataset '" + currentDatasets + "'");
-      datasets = [currentDatasets];
+      datasets = [currentDatasets as string];
     }
     else {
       console.log("reset: no matching dataset '" + currentDatasets + "'");
@@ -669,13 +739,13 @@ function init(registry) {
       );
     }
 
-    function onVocabSuccess(response) {
+    function onVocabSuccess(response: any) {
       console.log("loaded vocabs", response);
 
       setVocab(response);
     }
 
-    function onVocabFailure(error) {
+    function onVocabFailure(error: string) {
       console.error("vocabs load failed", error);
 
       eventbus.publish({
@@ -684,16 +754,16 @@ function init(registry) {
       });
     }
 
-    function onDatasetSuccess(dataset) {
-      return (response) => {
+    function onDatasetSuccess(dataset: string) {
+      return (response: any) => {
         console.debug("loaded " + dataset + " data", response);
         add(dataset, response);
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
       };
     }
 
-    function onDatasetFailure(dataset) {
-      return (error) => {
+    function onDatasetFailure(dataset: string) {
+      return (error: string) => {
         console.error("load " + dataset + " data failed", error);
 
         eventbus.publish({
@@ -704,7 +774,7 @@ function init(registry) {
     }
   }
 
-  function setVocab(data) {
+  function setVocab(data: VocabIndex) {
     vocabs = data;
 
     // Add an inverted look-up `abbrevs` mapping abbreviations to uris
@@ -713,8 +783,8 @@ function init(registry) {
     // Sort it and `prefixes` so that longer prefixes are listed
     // first (Ecmascript objects preserve the order of addition).
     // This is to make matching the longest prefix simpler later.
-    const prefixes = {};
-    const abbrevs = {};
+    const prefixes: StringRecord = {};
+    const abbrevs: StringRecord = {};
     Object
       .keys(vocabs.prefixes)
       .sort((a, b) => b.length - a.length)
@@ -727,7 +797,7 @@ function init(registry) {
     vocabs.prefixes = prefixes;
     vocabs.abbrevs = abbrevs;
     if (!vocabs.vocabs)
-      vocabs.vocabs = []; // Ensure this is here
+      vocabs.vocabs = {}; // Ensure this is here
 
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
@@ -740,7 +810,7 @@ function init(registry) {
   // @param dataset - the name of one of the configured datasets, or true to get all of them.
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  function loadDataset(dataset) {
+  function loadDataset(dataset: string) {
 
     let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset)}`;
 
@@ -794,7 +864,7 @@ function init(registry) {
   function getLocalisedVocabs() {
     const vocabLang = vocabs.vocabs["aci:"][language] ? language : fallBackLanguage;
 
-    let verboseValues = {};
+    let verboseValues: LocalisedVocab = {};
 
     for (const id in vocabs.vocabs) {
       verboseValues[id] = vocabs.vocabs[id][vocabLang];
@@ -804,7 +874,7 @@ function init(registry) {
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
-    let vocabIDsAndInitiativeVariables = {};
+    let vocabIDsAndInitiativeVariables: StringRecord = {};
 
     // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
@@ -816,7 +886,7 @@ function init(registry) {
   }
 
   const getVocabTitlesAndVocabIDs = () => {
-    const vocabTitlesAndVocabIDs = {}
+    const vocabTitlesAndVocabIDs: StringRecord = {}
 
     for (const vocabID in vocabs.vocabs) {
       const vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
@@ -829,7 +899,7 @@ function init(registry) {
   // Expands a URI using the prefixes/abbreviations defined in vocabs
   //
   // Keeps trying until all expansions applied.
-  function expandUri(uri) {
+  function expandUri(uri: string) {
     while (true) {
       const delimIx = uri.indexOf(':');
       if (delimIx < 0)
@@ -847,7 +917,7 @@ function init(registry) {
   // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
   //
   // Keeps trying until all abbreviations applied.
-  function abbrevUri(uri) {
+  function abbrevUri(uri: string): string {
     uri = expandUri(uri); // first expand it, if necessary
 
     // Find a prefix match
@@ -863,7 +933,7 @@ function init(registry) {
   }
 
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  function getVocabTerm(vocabUri, termUri) {
+  function getVocabTerm(vocabUri: string, termUri: string): string {
     termUri = abbrevUri(termUri);
     const vocabLang = fallBackLanguage;
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
@@ -889,7 +959,7 @@ function init(registry) {
   // Gets the schema definition for a property.
   //
   // Returns a schema definition, or throws an error null if there is no such property. 
-  function getPropertySchema(propName) {
+  function getPropertySchema(propName: string): PropDef {
     const propDef = classSchema.find(p => p.propertyName === propName)
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
@@ -904,7 +974,7 @@ function init(registry) {
   //
   // Throws an exception if there is some reason this fails. The
   // exception will have a short description indicating the problem.
-  function getVocabForProperty(propDef) {
+  function getVocabForProperty(propDef: PropDef): Vocab {
 
     // Assume classSchema's vocabUris are validated. But language availability can't be
     // checked so easily.
@@ -916,13 +986,13 @@ function init(registry) {
     const vocabLang = vocab[language] ? language : fallBackLanguage;
     const localVocab = vocab[vocabLang];
     if (!localVocab) {
-      throw new Error(`no title in lang ${vocabLang} for property: '${propDef.name}'`);
+      throw new Error(`no title in lang ${vocabLang} for property: '${propDef.paramName}'`);
     }
 
     return localVocab;
   }
 
-  function getTitleForProperty(propName) {
+  function getTitleForProperty(propName: string): string {
     let title = propName; // Fallback value
 
     try {
@@ -953,7 +1023,7 @@ function init(registry) {
   function getTerms() {
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
-    let usedTerms = {};
+    let usedTerms: Record<string, StringRecord> = {};
 
     let vocabLang = fallBackLanguage;
 
@@ -986,8 +1056,8 @@ function init(registry) {
   }
 
   //get an array of possible filters from  a list of initiatives
-  function getPossibleFilterValues(filteredInitiatives) {
-    let possibleFilterValues = [];
+  function getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
+    let possibleFilterValues: string[] = [];
 
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
@@ -1003,16 +1073,16 @@ function init(registry) {
     return possibleFilterValues;
   }
 
-  function getAlternatePossibleFilterValues(filters, field) {
+  function getAlternatePossibleFilterValues(filters: Filter[], field: string) {
     //construct an array of the filters that aren't the one matching the field
-    let otherFilters = [];
+    let otherFilters: Filter[] = [];
     filters.forEach(filter => {
       if (filter.verboseName.split(":")[0] !== field)
         otherFilters.push(filter);
     });
 
     //find the set of shared initiatives from the other filters
-    let sharedInitiatives = [];
+    let sharedInitiatives: Initiative[] = [];
     otherFilters.forEach((filter, i) => {
       if (i < 1)
         sharedInitiatives = Object.values(filter.initiatives);
@@ -1028,7 +1098,7 @@ function init(registry) {
     const initiativeVariable = getVocabIDsAndInitiativeVariables()[vocabID];
 
     //loop through the initiatives and get the possible values for the initiative variable
-    let alternatePossibleFilterValues = [];
+    let alternatePossibleFilterValues: Initiative[] = [];
     sharedInitiatives.forEach(initiative => {
       alternatePossibleFilterValues.push(initiative[initiativeVariable])
     })
@@ -1075,7 +1145,7 @@ function init(registry) {
     getAlternatePossibleFilterValues,
     getVocabTerm,
     // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
-    getVocabUriForProperty: (name) => getPropertySchema(name).vocabUri,
+    getVocabUriForProperty: (name: string) => getPropertySchema(name).vocabUri,
     getPropertySchema,
     getFunctionalLabels,
     getSidebarButtonColour,
