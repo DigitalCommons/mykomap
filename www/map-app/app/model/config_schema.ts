@@ -14,11 +14,43 @@
  * REMEMBER TO REGENERATE CONFIG.md IF YOU ALTER THIS SCHEMA.
  */
 
-"use strict";
+//"use strict";
+
+export interface TypeDef {
+  name: string;
+  descr?: string;
+  stringDescr?: string;
+  parseString: (val: string) => any;
+}
+
+export interface TypeDefs {
+  [name: string]: TypeDef;
+}
+
+
+export type Getter = () => any;
+export type Setter = (data: any, schema: ConfigSchema) => void;
+
+export interface ConfigSchema {
+  id: string;
+  descr: string;
+  defaultDescr: string;
+  getter: string | Getter;
+  setter?: string | Setter | undefined;
+  init: () => any;
+  type: TypeDef;
+}
+
+export interface ConfigData {
+  [id: string]: any;
+}
+
+export type ConfigSchemaInit = (data: ConfigData) => ConfigSchema[];
+
 
 // Validates/normalises a language code.
 // This is defined here as it is used more than once.
-function validateLang(lang) {
+function validateLang(lang: any): string {
   if (typeof lang !== 'string' || lang.match(/[^\w -]/))
     throw new Error(`rejecting suspect language code '${lang}'`);
   return lang.trim().toUpperCase();
@@ -27,7 +59,7 @@ function validateLang(lang) {
 // Returns the normalised language
 // This is `lang` (uppercased) if it is valid and one of those in `langs`,
 // else the first element of `langs` is returned.
-function normLanguage(lang, langs) {
+function normLanguage(lang: any, langs: string[]): string {
   let normLang = validateLang(lang);
   if (!langs.includes(normLang)) {
     // Warn about this, presumably this has been defined wrongly, and attempt to recover
@@ -48,7 +80,7 @@ function normLanguage(lang, langs) {
  * parseString should accept a string and return a parsed value
  * suitable for the config item of associated type.
  */
-const types = {
+const types: TypeDefs = {
   int: {
     name: '{number}',
     parseString: (val) => Number(val),
@@ -77,9 +109,15 @@ const types = {
     name: '{number[]}',
     descr: 'A two-element array defining latitude and longitude in degrees.',
     stringDescr: 'A comma-delimited list of two numbers defining latitude ' +
-                 'and longitude in degrees.',
+      'and longitude in degrees.',
     parseString: (val) => {
-      return val ? val.split(',', 2).map(s => isNaN(s) ? 0 : Number(s)) : [0, 0];
+	    if (val) {
+        return val
+          .split(',', 2)
+          .map(Number)
+	        .map(s => isNaN(s) ? 0 : s)
+      }
+      return [0, 0];
     },
   },
   latLng2: {
@@ -90,7 +128,10 @@ const types = {
     stringDescr: 'A comma-delimited list of four numbers defining two latitude ' +
                  'and longitude pairs, in degrees.',
     parseString: (val) => {
-      const e = val.split(',', 4).map(s => isNaN(s) ? 0 : Number(s));
+      const e = val
+        .split(',', 4)
+        .map(Number)
+        .map(s => isNaN(s) ? 0 : s);
       return [[e[0], e[1]], [e[2], e[3]]];
     },
   },
@@ -156,7 +197,7 @@ const types = {
  * If defaultDescr is defined, this is used as a documentation of the default value,
  * else the value itself is quoted.
  */
-const configSchema = ({
+export const configSchema: ConfigSchemaInit & { doc?: () => string } = ({
   aboutHtml = '',
   variant = '',
   timestamp = '2000-01-01T00:00:00.000Z',
@@ -490,7 +531,7 @@ const configSchema = ({
     type: types.string
   } 
 
-];
+] as ConfigSchema[];
 
 // This generates the documentation for this schema, in Markdown
 configSchema.doc = () => [`
@@ -522,7 +563,7 @@ The following attributes can be defined.
 
 `]
 // This maps each definition into s documentation section
-  .concat(configSchema().map((def) => `
+  .concat(configSchema({}).map((def) => `
 ### \`${def.id}\`
 
 - *type:* \`${def.type.name}\` ${def.type.descr || ''}
@@ -532,9 +573,8 @@ The following attributes can be defined.
 
 ${def.descr}
 
-${def.details || ''}
+
 
 `))
   .join('');
 
-module.exports = configSchema;

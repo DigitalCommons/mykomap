@@ -1,6 +1,6 @@
 "use strict";
 
-const config_builder = require('./model/config');
+const config_builder = require('./model/config').init;
 const registries = require('./registries');
 
 /** Convert names-like-this into namesLikeThis
