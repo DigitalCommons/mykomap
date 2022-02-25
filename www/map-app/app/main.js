@@ -75,7 +75,7 @@ function initRegistry(config) {
   
   registry.def('config', config);
   registry.def('model/sse_initiative',
-               require('./model/sse_initiative')(registry));
+               require('./model/sse_initiative').init(registry));
 
   // Registrer the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependents.

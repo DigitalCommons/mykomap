@@ -1,5 +1,7 @@
 // Model for SSE Initiatives.
 "use strict";
+import type { Dictionary, Point2d, Box2d } from '../../common_types';
+
 const d3 = require('d3');
 const eventbus = require('../eventbus');
 const getDatasetPhp = require("../../../services/get_dataset.php");
@@ -9,9 +11,6 @@ const { json } = require('d3');
 
 
 // for now
-type StringRecord = Record<string, string>;
-type LatLon = [number, number];
-type LatLonBounds = [LatLon, LatLon];
 
 declare class Initiative {}
 
@@ -26,15 +25,15 @@ interface VocabMeta {
 }
 interface Vocab {
   title: string;
-  terms: StringRecord;
+  terms: Dictionary;
 }
 interface LocalisedVocab {
   [lang: string]: Vocab;
 }
 interface VocabIndex {
-  abbrevs: StringRecord;
+  abbrevs: Dictionary;
   meta: VocabMeta;
-  prefixes: StringRecord;
+  prefixes: Dictionary;
   vocabs: { [prefix: string]: LocalisedVocab };
 }
 interface InitiativeIndex {
@@ -71,7 +70,7 @@ interface PropDef {
   vocabUri?: string;
 }
 
-function init(registry: any) {
+export function init(registry: any) {
   const config = registry("config");
 
   // `languages`' codes are validated and normalised in the config initialisation,
@@ -497,8 +496,8 @@ function init(registry: any) {
     return currentDatasets;
   }
 
-  let cachedLatLon: LatLonBounds;
-  function latLngBounds(initiatives: Initiative[]): LatLonBounds {
+  let cachedLatLon: Box2d;
+  function latLngBounds(initiatives: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east
     //
@@ -783,8 +782,8 @@ function init(registry: any) {
     // Sort it and `prefixes` so that longer prefixes are listed
     // first (Ecmascript objects preserve the order of addition).
     // This is to make matching the longest prefix simpler later.
-    const prefixes: StringRecord = {};
-    const abbrevs: StringRecord = {};
+    const prefixes: Dictionary = {};
+    const abbrevs: Dictionary = {};
     Object
       .keys(vocabs.prefixes)
       .sort((a, b) => b.length - a.length)
@@ -874,7 +873,7 @@ function init(registry: any) {
   }
 
   const getVocabIDsAndInitiativeVariables = () => {
-    let vocabIDsAndInitiativeVariables: StringRecord = {};
+    let vocabIDsAndInitiativeVariables: Dictionary = {};
 
     // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
@@ -886,7 +885,7 @@ function init(registry: any) {
   }
 
   const getVocabTitlesAndVocabIDs = () => {
-    const vocabTitlesAndVocabIDs: StringRecord = {}
+    const vocabTitlesAndVocabIDs: Dictionary = {}
 
     for (const vocabID in vocabs.vocabs) {
       const vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
@@ -1023,7 +1022,7 @@ function init(registry: any) {
   function getTerms() {
     const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
 
-    let usedTerms: Record<string, StringRecord> = {};
+    let usedTerms: Record<string, Dictionary> = {};
 
     let vocabLang = fallBackLanguage;
 
@@ -1154,4 +1153,4 @@ function init(registry: any) {
 }
 // Automatically load the data when the app is ready:
 //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
-module.exports = init;
+
