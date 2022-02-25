@@ -94,6 +94,11 @@ function initRegistry(config) {
   registry.def('presenter/sidebar/directory', require('./presenter/sidebar/directory')(registry));
   registry.def('presenter/sidebar/datasets', require('./presenter/sidebar/datasets')(registry));
   registry.def('presenter/sidebar/initiatives', require('./presenter/sidebar/initiatives')(registry));
+  registry.def('presenter/sidebar', require('./presenter/sidebar')(registry));
+  registry.def('view/sidebar/about', require('./view/sidebar/about')(registry));
+  registry.def('view/sidebar/directory', require('./view/sidebar/directory')(registry));
+  registry.def('view/sidebar/datasets', require('./view/sidebar/datasets')(registry));
+  registry.def('view/sidebar/initiatives', require('./view/sidebar/initiatives')(registry));
   registry.def('view/sidebar', require('./view/sidebar')(registry));
   registry.def('presenter/sidebar/mainmenu', require('./presenter/sidebar/mainmenu')(registry));
   
