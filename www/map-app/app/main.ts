@@ -1,12 +1,15 @@
 "use strict";
 
-const config_builder = require('./model/config').init;
-const registries = require('./registries');
+import type { Dictionary } from "../common_types";
+import type { SseInitiative } from "./model/sse_initiative";
+
+import { init as config_builder, ConfigData, Config } from './model/config';
+import { makeRegistry, Registry } from './registries';
 
 /** Convert names-like-this into namesLikeThis
  */
-function snakeToCamelCase(string) {
-  return string.replace(/-([^-])/g, (m, p1) => p1.toUpperCase());
+export function snakeToCamelCase(str: string): string {
+  return str.replace(/-([^-])/g, (m, p1) => p1.toUpperCase());
 }
 
 /** Parse attributes from an element, convert snake-case names to camelCase
@@ -16,12 +19,12 @@ function snakeToCamelCase(string) {
  * @return an object containing the matching attribute names (converted) and values
  * (as is).
  */
-function parseAttributes(elem, namespace = '') {
+export function parseAttributes(elem: HTMLElement, namespace: string = ''): Dictionary {
   if (namespace !== '') {
     namespace = namespace+':';
   }
 
-  const config = {};
+  const config: Dictionary = {};
   for(var ix = 0; ix < elem.attributes.length; ix += 1) {
     const attr = elem.attributes[ix];
     console.log("attr", attr);
@@ -35,13 +38,15 @@ function parseAttributes(elem, namespace = '') {
   return config;
 }
 
+export type UrlParams = [string, string][] & { keyMap: Dictionary<string[]> };
+
 /** Parse the URL in location.search
  *
  * @returns a list of key/value pairs (each pair is a two element array)
- * The array also has an attribute `values` which is a map of keys to lists of values
+ * The array also has an attribute `keyMap` which is a map of keys to lists of values
  * (there may be zero or more values per key).
  */
-function parseUrlParameters(search) {
+export function parseUrlParameters(search: string): UrlParams {
   const query = search
     .replace(/^[?]/, '')
     .replace(/#.*/, '');
@@ -53,12 +58,12 @@ function parseUrlParameters(search) {
         .split(/=(.*)/, 2) // split on first =, don't drop
       // characters after second =
         .map(kv => decodeURIComponent(kv.replace(/[+]/g, ' ')))
-    );
-  kvList.values = new Object();
+    ) as UrlParams;
+  kvList.keyMap = new Object() as Dictionary<string[]>;
   kvList.forEach(kv => {
-    var list = kvList.values[kv[0]];
+    var list = kvList.keyMap[kv[0]];
     if (list === undefined)
-      list = kvList.values[kv[0]] = [];
+      list = kvList.keyMap[kv[0]] = [];
     if (kv.length > 1) {
       list.push(kv[1]);
     }
@@ -70,15 +75,15 @@ function parseUrlParameters(search) {
 // Create an initialised module registry.
 //
 // `config` should be a config object created using `model/config.js`
-function initRegistry(config) {
-  const registry = registries.makeRegistry();
+export function initRegistry(config: Config): Registry {
+  const registry: Registry = makeRegistry();
   
   registry.def('config', config);
   registry.def('model/sse_initiative',
                require('./model/sse_initiative').init(registry));
 
-  // Registrer the view/presenter modules so they can find each other.
-  // The order matters insofar that dependencies must come before dependents.
+  // Register the view/presenter modules so they can find each other.
+  // The order matters insofar that dependencies must come before dependants.
   registry.def('view/base', require('./view/base'));
   registry.def('presenter', require('./presenter'));
   registry.def('view/map/popup', require('./view/map/popup'));
@@ -117,8 +122,12 @@ function initRegistry(config) {
 //
 // `base_config` is the base config, but which may have settings overridden by
 // settings defined either in the configured element's attributes, or the URL paramters.
-function webRun(window, base_config) {
-  const mapApp = window.document.getElementById(base_config.elem_id || 'map-app');
+export function webRun(window: Window, base_config: ConfigData): void {
+  const target: string = base_config.elem_id || 'map-app';
+  const mapApp: HTMLElement | null = window.document.getElementById(target);
+  if (mapApp === null)
+    throw new Error(`No target element ${target} found in this web page`);
+
   mapApp.innerHTML = `
       <!-- Page Content -->
       <div class="w3-teal map-app-content">
@@ -161,27 +170,27 @@ function webRun(window, base_config) {
         </div>
       </div>`;
 
-  const attrs = parseAttributes(mapApp, base_config.attr_namespace || 'map-app');
+  const attrs = parseAttributes(mapApp, base_config.attr_namespace || '');
   // Combine/flatten the parameter array into an object. This will
   // lose duplicates.
   const urlParams = parseUrlParameters(window.location.search)
-    .reduce((acc, e) => { acc[e[0]] = e[1]; return acc}, {});
+    .reduce((acc, e) => { acc[e[0]] = e[1]; return acc}, {} as Dictionary);
 
   // Build the base_config into a config object
   const config = config_builder(base_config);
   
   // Combine the attributes and the url params into a single object (latter override former).
-  const combined = Object.assign({}, attrs, urlParams);
+  const combined: Dictionary = Object.assign({} as Dictionary, attrs, urlParams);
   
-  // Override any config values with the url/attribute params
+  // Override any config values with the url/attribute params 
   config.add(combined);
 
   // Get the registry of modules. This manages module dependencies,
   // and is a hang-over from when we used requireJS.
   const registry = initRegistry(config);
   
-  const view = registry('view');
-  const sseInitiative = registry('model/sse_initiative');
+  const view = registry('view') as { init: () => void };
+  const sseInitiative = registry('model/sse_initiative') as SseInitiative;
   
   // Each view will ensure that the code for its presenter is loaded.
   view.init();
@@ -190,11 +199,3 @@ function webRun(window, base_config) {
   sseInitiative.loadFromWebService();
 }
 
-
-module.exports = {
-  webRun,
-  initRegistry,
-  snakeToCamelCase,
-  parseAttributes,
-  parseUrlParameters,
-};

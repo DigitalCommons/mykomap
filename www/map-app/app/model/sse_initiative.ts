@@ -1,6 +1,8 @@
 // Model for SSE Initiatives.
 "use strict";
 import type { Dictionary, Point2d, Box2d } from '../../common_types';
+import type { Registry } from '../registries';
+import type { Config } from './config';
 
 const d3 = require('d3');
 const eventbus = require('../eventbus');
@@ -70,8 +72,14 @@ interface PropDef {
   vocabUri?: string;
 }
 
-export function init(registry: any) {
-  const config = registry("config");
+// minimal definition for now
+export interface SseInitiative {
+  loadFromWebService: () => void;
+  [name: string]: unknown;
+}
+
+export function init(registry: Registry): SseInitiative {
+  const config = registry("config") as Config;
 
   // `languages`' codes are validated and normalised in the config initialisation,
   // not here, so they are available everywhere. We can be sure there is at least one,
@@ -1149,7 +1157,7 @@ export function init(registry: any) {
     getFunctionalLabels,
     getSidebarButtonColour,
     getLanguage
-  };
+  } as SseInitiative;
 }
 // Automatically load the data when the app is ready:
 //eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});

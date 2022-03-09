@@ -13,11 +13,20 @@
 //     myservice = registry("myservice");
 //
 
-// Makes a new registry object.
-function makeRegistry() {
-  const index = new Object();
+import type { Dictionary } from '../common_types';
 
-  const registry = (name) => {
+export type Module = unknown;
+
+export interface Registry {
+  def: (name: string, service: Module) => Module;
+  (name: string): Module;
+}
+
+// Makes a new registry object.
+export function makeRegistry(): Registry {
+  const index = new Object() as Dictionary<Module>;
+
+  const registry = (name: string): Module => {
     if (!index[name]) {
       throw new Error(`Service '${name}' not yet defined`);
     }
@@ -25,7 +34,7 @@ function makeRegistry() {
     return index[name];
   };
   
-  registry.def = (name, service) => {
+  registry.def = (name: string, service: Module): Module => {
     // console.debug("registry.def", name, service);
     if (typeof(name) != 'string') {
       throw new Error(`Service name  is invalid: '${name}'`);
@@ -44,7 +53,3 @@ function makeRegistry() {
   return registry;
 }
 
-
-module.exports = {
-  makeRegistry,
-};

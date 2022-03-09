@@ -16,3 +16,4 @@ export type Point2d = [number, number];
 
 // A 2 dimensional bounding box
 export type Box2d = [Point2d, Point2d];
+
