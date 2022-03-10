@@ -1,8 +1,0 @@
-#!/usr/bin/env node
-
-/** Generates a CONFIG.md documentation file from the schema in config.js
- */
-
-/** Stub the Require.js framework `define` function. */
-const configSchema = require("../www/map-app/app/model/config_schema.js");
-console.log(configSchema.doc());
