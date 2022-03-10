@@ -21,7 +21,7 @@
     "browser-tests": "karma start --single-run --browsers FirefoxHeadless",
     "mocha-tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js",
     "test": "npm run mocha-tests && npm run browser-tests",
-    "generate-config-doc": "bin/generate-config-doc >CONFIG.md",
+    "generate-config-doc": "ts-node bin/generate-config-doc >CONFIG.md",
     "build": "bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/*",
     "build-windows": "node bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/",
     "server": "php -t ext/build/out -S localhost:8080",
