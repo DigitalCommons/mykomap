@@ -1,4 +1,5 @@
 {
+  "exclude": [ "./ext/" ],
   "compilerOptions": {
     "outDir": "./build/",
     "noImplicitAny": true,

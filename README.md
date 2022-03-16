@@ -17,7 +17,7 @@ script exported by this package.
 
 ```
   "scripts": {
-    "build": "sea-site-build -c config -m node_modules/sea-map -d build src/*",
+    "build": "sea-site-build -c config -m -s src node_modules/sea-map -d build www/*",
     "deploy": "sea-site-deploy",
     "server": "php -t build/out -S localhost:8080"
   },
@@ -101,14 +101,16 @@ The NPM `sea-map` package needs to be a dependency, which exports the
 The package needs to invoke it like this(typically as an npm build
 script target):
 
-    sea-site-build -c config -m node_modules/sea-map  -d build src/*
+    sea-site-build -c config -s src -m node_modules/sea-map  -d build www/*
 
 Where:
 
  - `config` is the path to the configuration directory mentioned above
+ - `src` is an optional path to a custom entry point (index.ts or
+   index.js) and related source code
  - `node_modules/sea-map` is the path to the `sea-map` package directory
  - `build` is the directory in which to build the site
- - `src/*` expands to a list of directories to include in the build
+ - `www/*` expands to a list of directories to include in the build
   
 `build` will be populated with two directories:
 
