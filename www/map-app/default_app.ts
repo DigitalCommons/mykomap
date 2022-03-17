@@ -11,6 +11,6 @@
 //
 // Specify this as an entry point in webpack as "sea-map/www/map-app/app.js"
 
-import { webRun, fetchConfigs } from "./app/main";
+import { webRun, fetchConfigs } from "./index";
 
 fetchConfigs().then(combinedConfig => webRun(window, combinedConfig));

@@ -75,7 +75,6 @@ let entry;
 if (variant == 'sea-map') {
   // Infer development mode from sea-map package
 
-  entry = "./www/map-app/app.ts";
   seaMapSrcDir = "./www/map-app"; // locally
   servicesDir = "./www/services";
   
@@ -92,7 +91,6 @@ if (variant == 'sea-map') {
 else {
   // Infer production mode
 
-  entry = "sea-map/www/map-app/app.ts";
   seaMapSrcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
   servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
   
@@ -116,7 +114,7 @@ fs.writeFileSync(versionJson,
 // file needs an `"exclude": [ "./ext/" ]` in order that
 // typescript files in ./ext are not loaded by `tsc` unless explicitly
 // linked via an entry point or an include. 
-let entryModulePath = path.join(path.resolve(cwd, seaMapSrcDir), 'app.ts');
+let entryModulePath = path.join(path.resolve(cwd, seaMapSrcDir), 'default_app.ts');
 if (srcPath) { // -s was supplied, maybe override the default
   const customTsEntryModulePath = path.join(srcPath, 'index.ts');
   const customJsEntryModulePath = path.join(srcPath, 'index.js');

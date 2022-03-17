@@ -2,7 +2,7 @@
   "name": "sea-map",
   "version": "1.3.5",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
-  "main": "www/map-app/app/main.js",
+  "main": "www/map-app/index.ts",
   "config": {
     "deploy_to": "",
     "deploy_user": "www-data",
