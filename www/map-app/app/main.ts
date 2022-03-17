@@ -115,6 +115,43 @@ export function initRegistry(config: Config): Registry {
 };
 
 
+export async function fetchConfigs(params?: {
+    configJson?: string,
+    versionJson?: string,
+    aboutHtml?: string,
+}): Promise<ConfigData> {
+    const {
+	configJson = "configuration/config.json",
+	versionJson = "configuration/version.json",
+	aboutHtml =  "configuration/about.html",
+    } = params || {};
+    const config = fetch(configJson);
+    const versions = fetch(versionJson);
+    const about = fetch(aboutHtml);
+    const detectErrors = (r: any) => {
+	// We don't throw an error as I can't seem to catch individual exceptions in the
+	// promise chain below correctly, without a 'Pause on exceptions'
+	// breakpoint firing and fouling the page load, or the load
+	// fouling anyway (for another reason?)
+	return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
+    };
+    const getJson = (r: any) => detectErrors(r) || r.json();
+    const getText = (r: any) => detectErrors(r) || r.text();
+
+    return Promise
+	.all([config.then(getJson), versions.then(getJson), about.then(getText)])
+	.then(([config, versions, about]) => {
+	    if (about instanceof Error) {
+		console.info("Using blank 'about' text as about.html inaccessible.", about.message);
+		console.debug("Ignored fetch error", about);
+		about = '';
+	    }
+	    const combinedConfig = { ...config, ...versions, aboutHtml: about };
+	    return combinedConfig;
+	});
+
+}
+
 // Start the application in the context fo a web page
 //
 // `window` should be the browser window, with a `document` property, or something
