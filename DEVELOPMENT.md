@@ -28,11 +28,14 @@ particular, one with a path linking back to the map-app source dir in
 sea-map's repository:
     
     {
+      "include": [
+        "node_modules/sea-map"
+      ],
       "compilerOptions": {
-      "paths": {
-        "sea-map/*": ["../www/map-app/*"]
-      },
-      [... your options here ...]
+        "paths": {
+          "sea-map/*": ["./node_modules/sea-map/www/map-app/*","../www/map-app/*"]
+        },
+        [... your options here ...]
       }
     }
 

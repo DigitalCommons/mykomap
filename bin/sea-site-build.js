@@ -142,8 +142,11 @@ const webpackConfig = {
     rules: [
 	    {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
+        loader: 'ts-loader',
+        // Allow TS compiling in node_modules, but exclude all except
+        // sea-map, which because it is a git dependency, contains
+        // uncompiled typescript.
+        options: { allowTsInNodeModules: true },
       },
       {
         test: /\.html$/i,
