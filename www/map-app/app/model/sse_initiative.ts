@@ -72,11 +72,39 @@ interface PropDef {
   vocabUri?: string;
 }
 
-// minimal definition for now
+
 export interface SseInitiative {
+  addInitiatives: (initiatives: InitiativeObj[]) => void;
+  filterDatabases: (dbSource: string, all: boolean) => Initiative[];
+  finishInitiativeLoad: () => void;
+  getAllRegisteredValues: () => InitiativeIndex;
+  getAlternatePossibleFilterValues: (filters: Filter[], field: string) => Initiative[];
+  getCurrentDatasets: () => string | boolean;
+  getDatasets: () => DatasetMap;
+  getDialogueSize: () => any;
+  getFunctionalLabels: () => any;
+  getInitiativeByUniqueId: (uid: string) => Initiative;
+  getInitiativeUIDMap: () => { [id: string]: Initiative; };
+  getLanguage: () => string;
+  getLoadedInitiatives: () => Initiative[];
+  getLocalisedVocabs: () => LocalisedVocab;
+  getPossibleFilterValues: (filteredInitiatives: Initiative[]) => string[];
+  getPropertySchema: (propName: string) => PropDef;
+  getRegisteredValues: () => RegisteredValues;
+  getSidebarButtonColour: () => string;  
+  getTerms: () => Record<string, Partial<Record<string, string>>>;
+  getVerboseValuesForFields: () => any;
+  getVocabIDsAndInitiativeVariables: () => Partial<Record<string, string>>;
+  getVocabTerm: (vocabUri: string, termUri: string) => string;
+  getVocabTitlesAndVocabIDs: () => Partial<Record<string, string>>;
+  getVocabUriForProperty: (name: string) => string;
+  latLngBounds: (initiatives: Initiative[]) => Box2d;
   loadFromWebService: () => void;
-  [name: string]: unknown;
-}
+  reset: (dataset: string) => void;
+  search: (text: string) => Initiative[];
+  setVocab: (data: VocabIndex) => void;
+//  [name: string]: unknown;
+};
 
 export function init(registry: Registry): SseInitiative {
   const config = registry("config") as Config;
