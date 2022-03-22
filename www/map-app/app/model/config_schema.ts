@@ -22,25 +22,27 @@ import type {
   Box2d
 } from '../../common_types';
 
+import type { SseInitiative, Initiative } from './sse_initiative';
+
 class TypeDef<T> {
   constructor(params: {
     name: string;
-    parseString: typeof this.parseString,
+    parseString?: typeof this.parseString,
     descr?: string;
-    stringDescr?: string}) {
+    stringDescr?: typeof this.stringDescr}) {
     this.name = params.name;
     this.parseString = params.parseString;
     this.descr = params.descr || '';
-    this.stringDescr = params.stringDescr || '';
+    this.stringDescr = params.stringDescr;
   }
   // The type's short JSDoc style identifier, e.g. {int} or {MyType[]}
   name: string;
   // The type's description
   descr: string;
   // An explanation of the expected input when parsing a string
-  stringDescr: string;
+  stringDescr?: string;
   // A string-parsing function
-  parseString: (val: string) => T;
+  parseString?: (val: string) => T;
 };
 
 export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d;
@@ -51,6 +53,7 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
+  getCustomPopup(): InitiativeRenderFunction;
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
@@ -126,9 +129,13 @@ export interface DialogueSize {
     descriptionRatio?: number;
 };  
 
+export type InitiativeRenderFunction =
+  (initiative: Initiative, model: SseInitiative) => string;
+
 export interface ConfigData {
   aboutHtml?: string;
   attr_namespace?: string;
+  customPopup?: InitiativeRenderFunction;
   defaultLatLng?: Point2d;
   defaultOpenSidebar?: boolean;
   dialogueSize?: DialogueSize;
@@ -200,7 +207,7 @@ function normLanguage(lang: any, langs: string[]): string {
  * Additional information in 'descr', or 'stringDescr' for how
  * strings get parsed. These are optional.
  *
- * parseString should accept a string and return a parsed value
+ * parseString, if present, should accept a string and return a parsed value
  * suitable for the config item of associated type.
  *
  * Note: types is deliberately not defined as a map to
@@ -288,7 +295,11 @@ const types = {
         descriptionRatio: Number(obj.descriptionRatio) 
       };
     },
-  })
+  }),
+  initiativeRenderFunction: new TypeDef<InitiativeRenderFunction>({
+    name: '{InitiativeRenderFunction}',
+    descr: 'A function which accepts an Initiative instance and returns an HTML string',
+  }),
 };
 
 
@@ -348,6 +359,7 @@ export class Config implements ReadableConfig, WritableConfig {
   constructor({
     aboutHtml = '',
     attr_namespace = '',
+    customPopup = undefined,
     elem_id = 'map-app',
     variant = '',
     timestamp = '2000-01-01T00:00:00.000Z',
@@ -408,6 +420,15 @@ export class Config implements ReadableConfig, WritableConfig {
         init: () => { this.data.attr_namespace = attr_namespace; },
         getter: 'attr_namespace',
         type: types.string,
+      },
+      customPopup: {
+        id: 'customPopup',
+        descr: "An optional function accepting an Initiative and an SseInitiative object, "+
+          "which returns an HTML string which will be used as the pop-up contents for that "+
+          "initiative's marker",
+        init: () => { this.data.customPopup = customPopup; },
+        getter: 'getCustomPopup',
+        type: types.initiativeRenderFunction,
       },
       defaultLatLng: {
         id: 'defaultLatLng',
@@ -764,7 +785,7 @@ ${def.descr}
       if (id in this.configSchemas) {
         const def = this.configSchemas[id];
         
-        if (def.setter) {
+        if (def.setter && def.type.parseString) {
           const val = def.type.parseString(strcfg[id]);
           const setter = this[def.setter] as (val: any) => void; // FIXME this was frigged
           setter.call(this, val);
@@ -785,6 +806,10 @@ ${def.descr}
 
   attr_namespace(): string {
     return this.data.attr_namespace;
+  }
+
+  getCustomPopup(): InitiativeRenderFunction {
+    return this.data.customPopup;
   }
   
   doesDirectoryHaveColours(): boolean {

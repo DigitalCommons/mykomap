@@ -4,7 +4,7 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const presenter = registry('presenter');
-  const popup = registry('view/map/popup');
+  const defaultPopup = registry('view/map/popup').getPopup;
   const sse_initiatives = registry('model/sse_initiative');
 
   const labels = sse_initiatives.getFunctionalLabels();
@@ -38,11 +38,12 @@ function init(registry) {
   //   return sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
   // };
   proto.getInitiativeContent = function (initiative) {
-    if (popup && popup.getPopup)
-      return popup.getPopup(initiative, sse_initiatives,labels);
+    const customPopup = config.getCustomPopup();
+    if (customPopup)
+      return customPopup(initiative, sse_initiatives,labels);
     else
-      // use this if there is no popup.js file in the configuration folder
-      return default_popup.getPopup(initiative, sse_initiatives,labels);
+      // use this if there is no customPopup configured
+      return defaultPopup(initiative, sse_initiatives,labels);
   };
 
 

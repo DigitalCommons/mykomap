@@ -14,7 +14,7 @@ const { json } = require('d3');
 
 // for now
 
-declare class Initiative {}
+export type Initiative = Dictionary<any | undefined>;
 
 interface VocabMeta {
   languages: string[];
@@ -328,11 +328,7 @@ export function init(registry: Registry): SseInitiative {
   let registeredValues: RegisteredValues = {}; // arrays of sorted values grouped by label, then by field
   let allRegisteredValues: InitiativeIndex = {}; // arrays of sorted values, grouped by label
 
-  class Initiative {
-    // It can contain arbitrary fields (for now, anyway!)
-    [property: string]: any; 
-  
-    constructor(e: InitiativeObj) {
+  function mkInitiative(e: InitiativeObj) {
     // Not all initiatives have activities
 
     //if initiative exists already, just add properties
@@ -382,9 +378,11 @@ export function init(registry: Registry): SseInitiative {
       //TODO: decide if then you index the secondary activities
     }
 
+    const initiative = {} as Initiative;
+    
     // Define and initialise the instance properties.
     classSchema.forEach(p => {
-      Object.defineProperty(this, p.propertyName, {
+      Object.defineProperty(initiative, p.propertyName, {
         value: p.init(p, e),
         enumerable: true,
         writable: !!p.writable,
@@ -394,20 +392,20 @@ export function init(registry: Registry): SseInitiative {
     // Post-initialisation adjustments, typically requiring
     // a birds-eye view of the instance.
 
-    if (this.regorg) this.orgStructure.push(this.regorg);
-    if (this.activity) this.otherActivities.push(this.activity);
-    if (this.qualifier) this.qualifiers.push(this.qualifier);
+    if (initiative.regorg) initiative.orgStructure.push(initiative.regorg);
+    if (initiative.activity) initiative.otherActivities.push(initiative.activity);
+    if (initiative.qualifier) initiative.qualifiers.push(initiative.qualifier);
 
     //check if lat/lng are numbers and no letters in it
-    if (isAlpha(this.lat) || isAlpha(this.lng)) {
-      this.lat = undefined;
-      this.lng = undefined;
+    if (isAlpha(initiative.lat) || isAlpha(initiative.lng)) {
+      initiative.lat = undefined;
+      initiative.lng = undefined;
     }
 
     //overwrite with manually added lat lng
-    if (this.manLat && this.manLat != "0" || this.manLng && this.manLng != "0") {
-      this.lat = this.manLat;
-      this.lng = this.manLng;
+    if (initiative.manLat && initiative.manLat != "0" || initiative.manLng && initiative.manLng != "0") {
+      initiative.lat = initiative.manLat;
+      initiative.lng = initiative.manLng;
     }
 
     // loop through the filterable fields AKA properties, and register
@@ -415,39 +413,40 @@ export function init(registry: Registry): SseInitiative {
       const labelKey: string = getTitleForProperty(filterable);
 
       if (labelKey in allRegisteredValues)
-        insert(this, allRegisteredValues[labelKey]);
+        insert(initiative, allRegisteredValues[labelKey]);
       else
-        allRegisteredValues[labelKey] = [this];
+        allRegisteredValues[labelKey] = [initiative];
 
-      const field = this[filterable];
+      const field = initiative[filterable];
       if (field == null) {
         // This initiative has no value for `filterable`, so can't be indexed further.
-        console.warn(`Initiative has no value for filter field ${filterable}: ${this.uri}`);
+        console.warn(`Initiative has no value for filter field ${filterable}: ${initiative.uri}`);
         return;
       }
 
       if (labelKey in registeredValues) {
         const values = registeredValues[labelKey];
         if (field in values) {
-          insert(this, values[field]);
+          insert(initiative, values[field]);
         } else {
-          values[field] = [this];
+          values[field] = [initiative];
         }
       }
       else {
         // Create the object that holds the registered values for the current
         // field if it hasn't already been created
         const values: InitiativeIndex = registeredValues[labelKey] = {};
-        values[field] = [this];
+        values[field] = [initiative];
       }
 
     });
 
-    insert(this, loadedInitiatives);
-    initiativesByUid[this.uniqueId] = this;
+    insert(initiative, loadedInitiatives);
+    initiativesByUid[initiative.uniqueId] = initiative;
 
-    eventbus.publish({ topic: "Initiative.new", data: this });
-  }
+    eventbus.publish({ topic: "Initiative.new", data: initiative });
+
+    return initiative;
   }
 
   function isAlpha(str: string): boolean {
@@ -561,7 +560,7 @@ export function init(registry: Registry): SseInitiative {
 
   function addInitiatives(initiatives: InitiativeObj[]) {
     initiatives
-      .forEach(elem => new Initiative(elem));
+      .forEach(elem => mkInitiative(elem));
   }
 
   function finishInitiativeLoad() {
