@@ -134,51 +134,10 @@ export function init(registry: Registry): SseInitiative {
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema: PropDef[] = [
-    { propertyName: 'activity', paramName: 'activity', init: fromCode, writable: true, vocabUri: 'aci:' },
-    { propertyName: 'baseMembershipType', paramName: 'baseMembershipType', init: fromCode, vocabUri: 'bmt:' },
-    { propertyName: 'countryId', paramName: 'countryId', init: fromCode, vocabUri: 'coun:' },
-    { propertyName: 'dataset', paramName: 'dataset', init: fromParam },
-    { propertyName: 'desc', paramName: 'desc', init: fromParam },
-    { propertyName: 'email', paramName: 'email', init: fromParam },
-    { propertyName: 'facebook', paramName: 'facebook', init: fromParam },
+    { propertyName: 'uri', paramName: 'uri', init: fromParam },
+    { propertyName: 'name', paramName: 'name', init: fromParam },
     { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
     { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
-    { propertyName: 'locality', paramName: 'locality', init: fromParam },
-    { propertyName: 'manLat', paramName: 'manLat', init: fromParam, writable: true },
-    { propertyName: 'manLng', paramName: 'manLng', init: fromParam, writable: true },
-    { propertyName: 'name', paramName: 'name', init: fromParam },
-    { propertyName: 'orgStructure', paramName: 'regorg', init: asList, writable: true, vocabUri: 'os:' },
-    { propertyName: 'otherActivities', paramName: 'activity', init: asList, writable: true, vocabUri: 'aci:' },
-    { propertyName: 'postcode', paramName: 'postcode', init: fromParam },
-    {
-      propertyName: 'shortPostcode', paramName: 'postcode',
-      init: (def: PropDef, params: InitiativeObj) => {
-        // Regex adapted from here, combining UK and British Territories and Armed Forces
-        // Will be null if there is no match.
-        if (params.postcode == null)
-          return null;
-        const match = params
-          .postcode
-          .toUpperCase()
-          .match(/^([A-Z][A-HJ-Y]?[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|GX\d{2}|PCRN|TKCA|BFPO)/);
-        return match ? match[0] : undefined;
-      },
-    },
-    { propertyName: 'primaryActivity', paramName: 'primaryActivity', init: fromCode, vocabUri: 'aci:' },
-    { propertyName: 'qualifier', paramName: 'qualifier', init: fromCode, vocabUri: 'aci:' }, // note dupe paramName following
-    { propertyName: 'qualifiers', paramName: 'qualifier', init: asList, writable: true, vocabUri: 'aci:' },
-    { propertyName: 'region', paramName: 'region', init: fromParam },
-    { propertyName: 'regionId', paramName: 'regionId', init: fromCode, vocabUri: 'reg:' },
-    { propertyName: 'regorg', paramName: 'regorg', init: fromCode, vocabUri: 'os:' },
-    { propertyName: 'searchstr', paramName: '_', init: asSearchStr, writable: true },
-    { propertyName: 'street', paramName: 'street', init: fromParam },
-    { propertyName: 'superRegionId', paramName: 'superRegionId', init: fromCode, vocabUri: 'sreg:' },
-    { propertyName: 'tel', paramName: 'tel', init: fromParam },
-    { propertyName: 'twitter', paramName: 'twitter', init: fromParam },
-    { propertyName: 'uniqueId', paramName: 'uri', init: fromParam },
-    { propertyName: 'uri', paramName: 'uri', init: fromParam },
-    { propertyName: 'within', paramName: 'within', init: fromParam },
-    { propertyName: 'www', paramName: 'www', init: fromParam },
   ];
 
   // Initialiser which uses the appropriate parameter name
