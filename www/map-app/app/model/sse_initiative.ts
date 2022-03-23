@@ -133,12 +133,12 @@ export function init(registry: Registry): SseInitiative {
   // - writable: if true, the property can be assigned to. (Defaults to `false`)
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
-  const classSchema: PropDef[] = [
-    { propertyName: 'uri', paramName: 'uri', init: fromParam },
-    { propertyName: 'name', paramName: 'name', init: fromParam },
-    { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
-    { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
-  ];
+  const classSchema: Dictionary<PropDef> = {
+    uri: { propertyName: 'uri', paramName: 'uri', init: fromParam },
+    name: { propertyName: 'name', paramName: 'name', init: fromParam },
+    lat: { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
+    lng: { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+  };
 
   // Initialiser which uses the appropriate parameter name
   function fromParam(def: PropDef, params: InitiativeObj) {
@@ -185,7 +185,7 @@ export function init(registry: Registry): SseInitiative {
 
     searchedFields.forEach(fieldName => {
       // Get the right schema for this field (AKA property)
-      const def = classSchema.find(p => p.propertyName === fieldName);
+      const def = classSchema[fieldName];
       if (!def) {
         console.warn(`searchable field '${fieldName}' is not a recognised field name`)
         return;
@@ -298,7 +298,7 @@ export function init(registry: Registry): SseInitiative {
       // initiative.  This is to handle cases where the SPARQL
       // resultset contains multple rows for a multi-value field with
       // multiple values.
-      classSchema
+      Object.values(classSchema)
         .forEach(p => {
           if (p.init !== asList)
             return;
@@ -340,7 +340,7 @@ export function init(registry: Registry): SseInitiative {
     const initiative = {} as Initiative;
     
     // Define and initialise the instance properties.
-    classSchema.forEach(p => {
+    Object.values(classSchema).forEach(p => {
       Object.defineProperty(initiative, p.propertyName, {
         value: p.init(p, e),
         enumerable: true,
@@ -953,7 +953,7 @@ export function init(registry: Registry): SseInitiative {
   //
   // Returns a schema definition, or throws an error null if there is no such property. 
   function getPropertySchema(propName: string): PropDef {
-    const propDef = classSchema.find(p => p.propertyName === propName)
+    const propDef = classSchema[propName];
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
     }
@@ -1036,7 +1036,7 @@ export function init(registry: Registry): SseInitiative {
         const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
         const propName = vocabIDsAndInitiativeVariables[vocabID];
         const id = initiative[propName];
-        const propDef = classSchema.find(p => p.propertyName === propName);
+        const propDef = classSchema[propName];
         if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
 
         // Currently still keeping the output data strucutre the same, so use id not term
