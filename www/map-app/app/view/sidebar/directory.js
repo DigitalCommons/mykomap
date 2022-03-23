@@ -360,7 +360,7 @@ function init(registry) {
         activeClass = "sea-initiative-active";
       }
 
-      if (initiative.nongeo == 1) {
+      if (!initiative.hasLocation()) {
         nongeoClass = "sea-initiative-non-geo";
       }
 

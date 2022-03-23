@@ -42,10 +42,7 @@ function init(registry) {
     // For non-geo initiatives we don't need a marker but still want to get the initiativeContent
     // TODO: Content generation should live somewhere else.
     // const ukPostcode = /([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/;
-    if (!initiative.lat || !initiative.lng) {
-      initiative.nongeo = 1;
-
-      [ initiative.lat, initiative.lng ] = config.getDefaultLatLng();
+    if (!initiative.hasLocation()) {
 
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
@@ -56,7 +53,7 @@ function init(registry) {
         cluster: false
       });
 
-      this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
+      this.marker = leaflet.marker(config.getDefaultLatLng(), {
         icon: icon,
         initiative: this.initiative
       });
@@ -157,7 +154,7 @@ function init(registry) {
     mapObj.selectedInitiative = undefined;
 
     //change the color of an initiative with a location
-    if (!initiative.nongeo) {
+    if (initiative.hasLocation()) {
       this.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
@@ -178,7 +175,7 @@ function init(registry) {
     //set initiative for selection
     mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
-    if (!initiative.nongeo) {
+    if (initiative.hasLocation()) {
       initiative.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
@@ -193,7 +190,7 @@ function init(registry) {
       );
     }
 
-    if (initiative.nongeo) {
+    if (!initiative.hasLocation()) {
       initiative.marker.openPopup();
     }
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
@@ -263,7 +260,7 @@ function init(registry) {
   //   let initiative = target.selectedInitiative;
 
   //   //change the color of the marker to a slightly darker shade
-  //   if (!initiative.nongeo) {
+  //   if (initiative.hasLocation()) {
   //     initiative.marker.setIcon(
   //       leaflet.AwesomeMarkers.icon({
   //         prefix: "fa",
@@ -278,7 +275,7 @@ function init(registry) {
   //     );
   //   }
 
-  //   if (initiative.nongeo) {
+  //   if (!initiative.hasLocation()) {
   //     initiative.marker.openPopup();
   //   }
 

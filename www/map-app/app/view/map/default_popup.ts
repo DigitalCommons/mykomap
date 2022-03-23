@@ -28,7 +28,7 @@ export function getAddress(initiative: Initiative) {
      initiative.region,
      initiative.postcode].map(htmlEscape)
   )
-  if (initiative.nongeo === 1 || !initiative.lat || !initiative.lng)
+  if (!initiative.hasLocation())
     address.push('<i>NO LOCATION AVAILABLE</i>');
 
   return address.join('<br/>\n        ');

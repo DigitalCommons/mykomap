@@ -11,11 +11,12 @@ const getVocabsPhp = require("../../../services/get_vocabs.php");
 const functionalLabels = require("../../localisations.js");
 const { json } = require('d3');
 
-
-// for now
-
-export type Initiative = Dictionary<any | undefined>;
-
+export class Initiative {
+  [id: string]: any | undefined;
+  hasLocation() {
+    return this.lat && this.lng;
+  }
+}
 interface VocabMeta {
   languages: string[];
   queries: string[];
@@ -336,7 +337,7 @@ export function init(registry: Registry): SseInitiative {
       //TODO: decide if then you index the secondary activities
     }
 
-    const initiative = {} as Initiative;
+    const initiative = new Initiative();
     
     // Define and initialise the instance properties.
     Object.entries(classSchema).forEach(entry => {
