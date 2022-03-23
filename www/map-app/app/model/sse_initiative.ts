@@ -154,7 +154,7 @@ export function init(registry: Registry): SseInitiative {
 
   // Initialiser which returns an empty array
   function asList(def: PropDef, params: InitiativeObj): any[] {
-    return [];
+    return [fromCode(def, params)];
   }
 
   // Initialiser for the search string.
@@ -351,10 +351,6 @@ export function init(registry: Registry): SseInitiative {
 
     // Post-initialisation adjustments, typically requiring
     // a birds-eye view of the instance.
-
-    if (initiative.regorg) initiative.orgStructure.push(initiative.regorg);
-    if (initiative.activity) initiative.otherActivities.push(initiative.activity);
-    if (initiative.qualifier) initiative.qualifiers.push(initiative.qualifier);
 
     //check if lat/lng are numbers and no letters in it
     if (isAlpha(initiative.lat) || isAlpha(initiative.lng)) {
