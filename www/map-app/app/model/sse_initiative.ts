@@ -65,7 +65,6 @@ interface InitiativeObj {
 }
 type PropInit = (def: PropDef, params: InitiativeObj) => any;
 interface PropDef {
-  propertyName: string;
   paramName: string;
   init: PropInit;
   writable?: boolean;
@@ -126,7 +125,6 @@ export function init(registry: Registry): SseInitiative {
   // variable hoisting semantics, we can reference initialiser functions below, if they are
   // normal functions.
   //
-  // - propertyName: the name of the initiative instance property. Should be unique!
   // - paramName: the name of the constructor paramter property. Not necessarily unique.
   // - init: a function to initialise the property, called with this property's schema
   //   definition and a parameters object.
@@ -134,10 +132,10 @@ export function init(registry: Registry): SseInitiative {
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema: Dictionary<PropDef> = {
-    uri: { propertyName: 'uri', paramName: 'uri', init: fromParam },
-    name: { propertyName: 'name', paramName: 'name', init: fromParam },
-    lat: { propertyName: 'lat', paramName: 'lat', init: fromParam, writable: true },
-    lng: { propertyName: 'lng', paramName: 'lng', init: fromParam, writable: true },
+    uri: { paramName: 'uri', init: fromParam },
+    name: { paramName: 'name', init: fromParam },
+    lat: { paramName: 'lat', init: fromParam, writable: true },
+    lng: { paramName: 'lng', init: fromParam, writable: true },
   };
 
   // Initialiser which uses the appropriate parameter name
@@ -205,12 +203,12 @@ export function init(registry: Registry): SseInitiative {
         // Add any parameter values named
         const id = params[def.paramName];
         if (!def.vocabUri) {
-          console.warn(`missing vocabUri for property '${def.propertyName}'`);
+          console.warn(`missing vocabUri for property '${fieldName}'`);
           return undefined;
         }
         const value = getVocabTerm(def.vocabUri, id);
         if (value === undefined) {
-          console.warn(`no value defined for ID '${id}' in property '${def.propertyName}'`);
+          console.warn(`no value defined for ID '${id}' in property '${fieldName}'`);
           return undefined;
         }
         return value;
@@ -298,8 +296,9 @@ export function init(registry: Registry): SseInitiative {
       // initiative.  This is to handle cases where the SPARQL
       // resultset contains multple rows for a multi-value field with
       // multiple values.
-      Object.values(classSchema)
-        .forEach(p => {
+      Object.entries(classSchema)
+        .forEach(entry => {
+          const [propertyName, p] = entry;
           if (p.init !== asList)
             return;
 
@@ -312,7 +311,7 @@ export function init(registry: Registry): SseInitiative {
           if (!code)
             return;
 
-          const list: string[] = initiative[p.propertyName];
+          const list: string[] = initiative[propertyName];
           if (list.includes(code))
             return;
 
@@ -340,8 +339,9 @@ export function init(registry: Registry): SseInitiative {
     const initiative = {} as Initiative;
     
     // Define and initialise the instance properties.
-    Object.values(classSchema).forEach(p => {
-      Object.defineProperty(initiative, p.propertyName, {
+    Object.entries(classSchema).forEach(entry => {
+      const [propertyName, p] = entry;
+      Object.defineProperty(initiative, propertyName, {
         value: p.init(p, e),
         enumerable: true,
         writable: !!p.writable,
