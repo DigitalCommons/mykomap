@@ -614,9 +614,10 @@ export function init(registry: Registry): SseInitiative {
       const labelValues: InitiativeIndex = registeredValues[label];
       if (labelValues) {
         const propDef = getPropertySchema(filterable);
+        const sorter = propDef.vocabUri ? sortByVocabLabel(propDef) : sortAsString;
         const ordered = Object
           .entries(labelValues)
-          .sort(propDef.vocabUri ? sortByVocabLabel(propDef) : sortAsString);
+          .sort(sorter)
         // FIXME ideally we'd sort numbers, booleans, etc. appropriately
 
         registeredValues[label] = Object.fromEntries(ordered);
@@ -625,14 +626,14 @@ export function init(registry: Registry): SseInitiative {
       // Sort entries by the vocab label for the ID used as the key
       function sortByVocabLabel(propDef: PropDef) {
         const vocab = getVocabForProperty(propDef);
-        return (a: Initiative, b: Initiative): number => {
+        return (a: [string, any], b: [string, any]): number => {
           const alab = vocab.terms[a[0]];
           const blab = vocab.terms[b[0]];
           return String(alab).localeCompare(String(blab));
         };
       }
       // Sort entries as strings
-      function sortAsString(a: Initiative, b: Initiative): number {
+      function sortAsString(a: [string, any], b: [string, any]): number {
         return String(a[0]).localeCompare(String(b[0]));
       }
     });
