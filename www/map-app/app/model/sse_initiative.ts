@@ -68,7 +68,6 @@ type PropInit = (def: PropDef, params: InitiativeObj) => any;
 interface PropDef {
   paramName: string;
   init: PropInit;
-  writable?: boolean;
   vocabUri?: string;
 }
 
@@ -129,14 +128,13 @@ export function init(registry: Registry): SseInitiative {
   // - paramName: the name of the constructor paramter property. Not necessarily unique.
   // - init: a function to initialise the property, called with this property's schema
   //   definition and a parameters object.
-  // - writable: if true, the property can be assigned to. (Defaults to `false`)
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
   const classSchema: Dictionary<PropDef> = {
     uri: { paramName: 'uri', init: fromParam },
     name: { paramName: 'name', init: fromParam },
-    lat: { paramName: 'lat', init: fromParam, writable: true },
-    lng: { paramName: 'lng', init: fromParam, writable: true },
+    lat: { paramName: 'lat', init: mkLocFromParam('manLat') },
+    lng: { paramName: 'lng', init: mkLocFromParam('manLng') },
   };
 
   // Initialiser which uses the appropriate parameter name
@@ -144,6 +142,24 @@ export function init(registry: Registry): SseInitiative {
     return params[def.paramName];
   }
 
+  function mkLocFromParam(overrideParam: string) {
+    return (def: PropDef, params: InitiativeObj) => {
+      let param = params[def.paramName];
+      
+      // Overwrite with manually added lat lng if present
+      if (params.manLat && params.manLat != "0" ||
+        params.manLng && params.manLng != "0") {
+        param = params[overrideParam];
+      }
+    
+      // Ensure param is a number
+      if (isAlpha(param))
+        return undefined;
+      else
+        return Number(param);
+    };
+  }
+  
   // Initialiser which uses the appropriate code
   function fromCode(def: PropDef, params: InitiativeObj) {
     const uri = params[def.paramName];
@@ -345,24 +361,9 @@ export function init(registry: Registry): SseInitiative {
       Object.defineProperty(initiative, propertyName, {
         value: p.init(p, e),
         enumerable: true,
-        writable: !!p.writable,
+        writable: false,
       });
     });
-
-    // Post-initialisation adjustments, typically requiring
-    // a birds-eye view of the instance.
-
-    //check if lat/lng are numbers and no letters in it
-    if (isAlpha(initiative.lat) || isAlpha(initiative.lng)) {
-      initiative.lat = undefined;
-      initiative.lng = undefined;
-    }
-
-    //overwrite with manually added lat lng
-    if (initiative.manLat && initiative.manLat != "0" || initiative.manLng && initiative.manLng != "0") {
-      initiative.lat = initiative.manLat;
-      initiative.lng = initiative.manLng;
-    }
 
     // loop through the filterable fields AKA properties, and register
     filterableFields.forEach(filterable => {
