@@ -81,7 +81,7 @@ function init(registry) {
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
         markerColor: this.initiative.primaryActivity
-                   ? this.initiative.primaryActivity.toLowerCase()
+                   ? this.initiative.primaryActivity.toLowerCase().replace(/\W/g, '_')
                    : "ALL",
         iconColor: "white",
         icon: "certificate",
