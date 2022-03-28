@@ -16,6 +16,17 @@ export class Initiative {
   hasLocation() {
     return this.lat && this.lng;
   }
+
+  // Appends a searchable value to the `searchstr` property, if present.
+  // Uppercasses it first.
+  appendSearchableValue(value: string) {
+    if ('searchstr' in this) {
+      if (this.searchstr === undefined)
+        this.searchstr = value.toUpperCase();
+      else
+        this.searchstr += ' '+ value.toUpperCase();
+    }
+  }
 }
 interface VocabMeta {
   languages: string[];
@@ -60,17 +71,104 @@ interface Dataset {
 interface DatasetMap {
   [id: string]: Dataset;    
 }
-interface InitiativeObj {
+export interface InitiativeObj {
   uri: string;
   [name: string]: any;
 }
-type PropInit = (def: PropDef, params: InitiativeObj) => any;
-interface PropDef {
-  paramName: string;
-  init: PropInit;
-  vocabUri?: string;
+
+type ParamParser<P> = (id: string, def: P, params: InitiativeObj) => any;
+
+function mkParser(vocabs: Vocabs): ParamParser<PropDef> {
+  function parseVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
+    const paramName = def.from ?? id;
+    const uri = params[paramName];
+    if (uri)
+      return vocabs.abbrevUri(uri);
+    return undefined;
+  };
+  function parseValue(id: string, def: ValuePropDef, params: InitiativeObj) {
+    const paramName = def.from ?? id;
+    const value = params[paramName];
+    if (def.strict === true) {
+      // Assert that the incoming type is the expected type
+      switch(def.as) {
+        case 'boolean': _assert(() => typeof value === 'boolean'); break;
+        case 'number':  _assert(() => typeof value === 'number'); break;
+        case 'string': 
+        default:
+          _assert(() => typeof value === 'string');
+          break;
+      }
+      return value;
+    }
+    else {
+      // Preserve undefined (and normalise null) values.
+      if (value === undefined || value === null)
+        return undefined;
+      
+      switch(def.as) {
+        case 'boolean': return Boolean(value);
+        case 'number':  return Number(value);        
+        case 'string':
+        default: return String(value);
+      }
+    } 
+
+    function _assert(callback: () => boolean) {
+      if (!callback())
+        throw new Error(`Property '${id}' expects parameter '${paramName}' to be of type '${def.as}'`);
+    }
+  }
+  //  number: (def: string) => 0,
+  function parseCustom(id: string, def: CustomPropDef, params: InitiativeObj) {
+    return def.calling(id, def, params);
+  }
+  function parseMulti(id: string, def: MultiPropDef, params: InitiativeObj): any[] {
+    return [parseAny(id, def.of, params)];
+  }
+
+  
+  function parseAny(id: string, def: PropDef, params: InitiativeObj): any {
+    switch(def.type) {
+      case 'value': return parseValue(id, def, params);
+      case 'vocab': return parseVocab(id, def, params);
+      case 'custom': return parseCustom(id, def, params);
+      case 'multi': return parseMulti(id, def, params);
+    }
+  }
+  return parseAny;
 }
 
+export type PropSourceId = string;
+
+
+export interface ValuePropDef {
+  type: 'value';
+  as?: 'string'|'boolean'|'number';
+  strict?: boolean;
+  from?: string;
+}
+export interface VocabPropDef {
+  type: 'vocab';
+  uri: string;
+  from?: string;
+}
+export interface CustomPropDef {
+  type: 'custom'
+  calling: (id: string, def: PropDef, params: InitiativeObj) => any;
+}
+export interface MultiPropDef {
+  type: 'multi';
+  of: PropDef;
+}
+
+export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef;
+
+export type PropDefs = Dictionary<PropDef | PropDef['type']>;
+
+function mkDefaultPropDef(id: string): ValuePropDef {
+  return { type: 'value', from: id };
+}
 
 export interface SseInitiative {
   addInitiatives: (initiatives: InitiativeObj[]) => void;
@@ -105,6 +203,199 @@ export interface SseInitiative {
 //  [name: string]: unknown;
 };
 
+
+
+class Vocabs {
+  vocabs: VocabIndex;
+  fallBackLanguage: string;
+  
+  constructor(data: VocabIndex, fallBackLanguage: string) {
+    this.vocabs = data;
+    this.fallBackLanguage = fallBackLanguage;
+    
+    // Add an inverted look-up `abbrevs` mapping abbreviations to uris
+    // obtained from `prefixes`.
+    //
+    // Sort it and `prefixes` so that longer prefixes are listed
+    // first (Ecmascript objects preserve the order of addition).
+    // This is to make matching the longest prefix simpler later.
+    const prefixes: Dictionary = {};
+    const abbrevs: Dictionary = {};
+    Object
+      .keys(this.vocabs.prefixes)
+      .sort((a, b) => b.length - a.length)
+      .forEach(prefix => {
+        const abbrev = this.vocabs.prefixes[prefix];
+        abbrevs[abbrev] = prefix;
+        prefixes[prefix] = abbrev;
+      });
+
+    this.vocabs.prefixes = prefixes;
+    this.vocabs.abbrevs = abbrevs;
+    if (!this.vocabs.vocabs)
+      this.vocabs.vocabs = {}; // Ensure this is here
+  }
+  
+  getVerboseValuesForFields(language: string) {
+
+    const entries = Object
+      .entries(this.vocabs.vocabs)
+      .map(([vocabUri, vocab]) => {
+        let vocabLang = vocab[language];
+        if (!vocabLang && language !== this.fallBackLanguage) {
+          console.warn(`No localisations for language ${language}, ` +
+            `falling back to ${this.fallBackLanguage}`);
+          vocabLang = vocab[this.fallBackLanguage];
+        }
+        return [vocabLang.title, vocabLang.terms];
+      });
+
+    return Object.fromEntries(entries);
+  }
+  
+  //construct the object of terms for advanced search
+  getTerms(language: string, vocabIDsAndInitiativeVariables: Dictionary, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
+
+    let usedTerms: Record<string, Dictionary> = {};
+
+    let vocabLang = this.fallBackLanguage;
+
+    for (const vocabID in vocabIDsAndInitiativeVariables) {
+      vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+
+      const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
+      usedTerms[vocabTitle] = {};
+    }
+
+    for (const initiativeUid in initiativesByUid) {
+      const initiative = initiativesByUid[initiativeUid];
+
+      for (const vocabID in vocabIDsAndInitiativeVariables) {
+        vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+
+        const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
+        const propName = vocabIDsAndInitiativeVariables[vocabID];
+        const id = initiative[propName];
+        const propDef = propertySchema[propName];
+        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
+
+        // Currently still keeping the output data strucutre the same, so use id not term
+        if (!usedTerms[vocabTitle][id] && id)
+          usedTerms[vocabTitle][id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+      }
+    }
+
+    return usedTerms;
+  }
+
+  // Gets the vocab for a property, given the property schema
+  //
+  // Returns a vocab index (for the currently set language).
+  //
+  // Throws an exception if there is some reason this fails. The
+  // exception will have a short description indicating the problem.
+  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab {
+
+    if (propDef.type !== 'vocab')
+      throw new Error(`property ${id} is not a vocab property`);
+    
+    // Assume propertySchema's vocabUris are validated. But language availability can't be
+    // checked so easily.
+    const vocab = this.vocabs.vocabs[propDef.uri];
+    if (!vocab) {
+      throw new Error(`no vocab defined with URI ${propDef.uri} ` +
+        `(expecting one of: ${Object.keys(this.vocabs.vocabs).join(', ')})`);
+    }
+    const vocabLang = vocab[language] ? language : this.fallBackLanguage;
+    const localVocab = vocab[vocabLang];
+    if (!localVocab) {
+      throw new Error(`no title in lang ${vocabLang} for property: '${id}'`);
+    }
+
+    return localVocab;
+  }
+  
+  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  getVocabTerm(vocabUri: string, termUri: string, language: string): string {
+    termUri = this.abbrevUri(termUri);
+    const vocabLang = this.fallBackLanguage;
+    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
+    const vocab = this.vocabs.vocabs[vocabUri][language];
+
+    let term = vocab?.terms?.[termUri];
+    if (term !== undefined)
+      return term;
+
+    // Fall back if there are no terms.
+    term = this.vocabs.vocabs[vocabUri]?.[this.fallBackLanguage]?.terms?.[termUri];
+    if (term !== undefined)
+      return term;
+
+    // Even the fallback failed! 
+    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
+    return '?';
+  }
+  
+  getVocabTitlesAndVocabIDs(language: string) {
+    const vocabTitlesAndVocabIDs: Dictionary = {}
+
+    for (const vocabID in this.vocabs.vocabs) {
+      const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+      vocabTitlesAndVocabIDs[this.vocabs.vocabs[vocabID][vocabLang].title] = vocabID;
+    }
+
+    return vocabTitlesAndVocabIDs;
+  }
+
+  getLocalisedVocabs(language: string) {
+    const vocabLang = this.vocabs.vocabs["aci:"][language] ? language : this.fallBackLanguage;
+
+    let verboseValues: LocalisedVocab = {};
+
+    for (const id in this.vocabs.vocabs) {
+      verboseValues[id] = this.vocabs.vocabs[id][vocabLang];
+    }
+
+    return verboseValues;
+  }
+
+  // Expands a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all expansions applied.
+  expandUri(uri: string) {
+    while (true) {
+      const delimIx = uri.indexOf(':');
+      if (delimIx < 0)
+        return uri; // Shouldn't normally happen... expanded URIs have `http(s):`
+
+      const abbrev = uri.substring(0, delimIx);
+      if (abbrev == 'http' || abbrev == 'https')
+        return uri; // No more expansion needed
+
+      if (abbrev in this.vocabs.abbrevs) // Expand this abbreviation
+        uri = this.vocabs.abbrevs[abbrev] + uri.substring(delimIx + 1);
+    }
+  }
+
+  // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all abbreviations applied.
+  abbrevUri(uri: string): string {
+    uri = this.expandUri(uri); // first expand it, if necessary
+
+    // Find a prefix match
+    const prefix = Object
+      .keys(this.vocabs.prefixes) // NOTE: assumes this object is sorted largest-key first
+      .find(p => uri.startsWith(p));
+
+    // Substitute the match with the abbreviation.
+    if (prefix)
+      return this.vocabs.prefixes[prefix] + ':' + uri.substring(prefix.length);
+
+    return uri; // No abbreviation possible.
+  }
+}
+
 export function init(registry: Registry): SseInitiative {
   const config = registry("config") as Config;
 
@@ -130,21 +421,29 @@ export function init(registry: Registry): SseInitiative {
   //   definition and a parameters object.
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
-  const classSchema: Dictionary<PropDef> = {
-    uri: { paramName: 'uri', init: fromParam },
-    name: { paramName: 'name', init: fromParam },
-    lat: { paramName: 'lat', init: mkLocFromParam('manLat') },
-    lng: { paramName: 'lng', init: mkLocFromParam('manLng') },
+  const propertySchema: PropDefs = {
+    uri: { type: 'value', as: 'string' },
+    name: { type: 'value', as: 'string' },
+    lat: { type: 'custom', calling: mkLocFromParam('lat', 'manLat') },
+    lng: { type: 'custom', calling: mkLocFromParam('lng', 'manLng') },
+    searchstr: { type: 'custom', calling: mkSearchString },
   };
 
-  // Initialiser which uses the appropriate parameter name
-  function fromParam(def: PropDef, params: InitiativeObj) {
-    return params[def.paramName];
+  const fields = config.fields();
+  for(const fieldId in fields) {
+    const fieldDef = fields[fieldId];
+    if (typeof fieldDef === 'string') {
+      const foo = mkDefaultPropDef(fieldId);
+      propertySchema[fieldId] = foo;
+    }
+    else {
+      propertySchema[fieldId] = fieldDef;
+    }
   }
-
-  function mkLocFromParam(overrideParam: string) {
-    return (def: PropDef, params: InitiativeObj) => {
-      let param = params[def.paramName];
+  
+  function mkLocFromParam(from: string, overrideParam: string) {
+    return (id: string, def: CustomPropDef, params: InitiativeObj) => {
+      let param = params[from];
       
       // Overwrite with manually added lat lng if present
       if (params.manLat && params.manLat != "0" ||
@@ -159,23 +458,11 @@ export function init(registry: Registry): SseInitiative {
         return Number(param);
     };
   }
-  
-  // Initialiser which uses the appropriate code
-  function fromCode(def: PropDef, params: InitiativeObj) {
-    const uri = params[def.paramName];
-    if (uri)
-      return abbrevUri(uri);
-    return undefined;
-  }
 
-  // Initialiser which returns an empty array
-  function asList(def: PropDef, params: InitiativeObj): any[] {
-    return [fromCode(def, params)];
-  }
 
   // Initialiser for the search string.
   //
-  // Scans the searchedFields, using the classSchema to extract
+  // Scans the searchedFields, using the propertySchema to extract
   // the relevant values from the parameters, which are combined
   // together as an uppercased string for matching against later.
   //
@@ -193,61 +480,37 @@ export function init(registry: Registry): SseInitiative {
   // of the equivalent properties. i.e. We are constructing the string
   // from parameter values, not object property values. If they do differ
   // this means the search results may not be what we expect.
-  function asSearchStr(def: PropDef, params: InitiativeObj) {
+  function mkSearchString(id: string, def: PropDef, params: InitiativeObj) {
     const searchedFields: string[] = config.getSearchedFields();
 
     const searchableValues: string[] = [];
 
-    searchedFields.forEach(fieldName => {
+    searchedFields.forEach(propName => {
       // Get the right schema for this field (AKA property)
-      const def = classSchema[fieldName];
+      let def = propertySchema[propName];
       if (!def) {
-        console.warn(`searchable field '${fieldName}' is not a recognised field name`)
+        console.warn(`searchable field '${propName}' is not a recognised field name`)
         return;
       }
 
-      const value = def.init === fromCode ? // Does this field contains an ID?
-        lookupIdentifier() :
-        def.init === asList ? // Is it a list of IDs (currently IDs implied by list)
-          lookupIdentifier() : // Singular - just need to do this param
-          lookupValue();
-
-      if (value !== undefined)
-        searchableValues.push(value);
-      return; // Done. Only functions below.
-
-      function lookupIdentifier() {
-        // Add any parameter values named
-        const id = params[def.paramName];
-        if (!def.vocabUri) {
-          console.warn(`missing vocabUri for property '${fieldName}'`);
-          return undefined;
-        }
-        const value = getVocabTerm(def.vocabUri, id);
-        if (value === undefined) {
-          console.warn(`no value defined for ID '${id}' in property '${fieldName}'`);
-          return undefined;
-        }
-        return value;
+      if (typeof def === 'string') {
+        def = mkDefaultPropDef(propName);
       }
-      function lookupValue() {
-        const value = params[def.paramName];
-        if (value === undefined) {
-          console.warn(`no value for searchable field '${fieldName}' in initiative ${params.uri}`)
-          return;
-        }
-        return value;
-      }
+
+      const value = parser(propName, def, params);
+      const searchableValue = mkSearchableValue(value, def, language);
+      searchableValues.push(searchableValue);
     });
 
     // Join searchable values, squash case
-    // console.log(params.name, searchableValues.join(" ").toUpperCase()); // DEBUG
-    return searchableValues.join(" ").toUpperCase();
+    const searchStr = searchableValues.join(" ").toUpperCase();
+    // console.log(params.name, "has searchstr:", searchStr); // DEBUG
+    return searchStr;
   }
 
   let loadedInitiatives: Initiative[] = [];
   let initiativesToLoad: InitiativeObj[] = [];
-  let initiativesByUid: {[id: string]: Initiative} = {};
+  let initiativesByUid: Dictionary<Initiative> = {};
   let allDatasets: string[] = config.namedDatasets();
 
 
@@ -261,7 +524,8 @@ export function init(registry: Registry): SseInitiative {
       : [];
 
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  let vocabs : VocabIndex;
+  let vocabs: Vocabs | undefined = undefined;
+  let parser: ParamParser<PropDef> | undefined = undefined;
 
   if (dsNamed.length == allDatasets.length)
     allDatasets.forEach((x, i) => verboseDatasets[x] = {
@@ -302,10 +566,28 @@ export function init(registry: Registry): SseInitiative {
   let registeredValues: RegisteredValues = {}; // arrays of sorted values grouped by label, then by field
   let allRegisteredValues: InitiativeIndex = {}; // arrays of sorted values, grouped by label
 
+  // Get a searchable value which can be added to an initiative's searchstr field
+  function mkSearchableValue(value: any, propDef: PropDef, language: string) {
+    if (value === undefined || value === null)
+      return '';
+    
+    const stringValue = String(value);
+    if (propDef.type !== 'vocab')
+      return stringValue;
+    
+    const term = vocabs.getVocabTerm(propDef.uri, stringValue, language);
+    if (term === '?')
+      return ''; // No term found
+
+    return term;
+  }
+  
   function mkInitiative(e: InitiativeObj) {
     // Not all initiatives have activities
 
-    //if initiative exists already, just add properties
+    const searchedFields = config.getSearchedFields();
+    
+    // If this initiative exists already, just add multi-value property values
     if (initiativesByUid[e.uri] != undefined) {
       let initiative: Initiative = initiativesByUid[e.uri];
 
@@ -313,53 +595,40 @@ export function init(registry: Registry): SseInitiative {
       // initiative.  This is to handle cases where the SPARQL
       // resultset contains multple rows for a multi-value field with
       // multiple values.
-      Object.entries(classSchema)
+      Object.entries(propertySchema)
         .forEach(entry => {
-          const [propertyName, p] = entry;
-          if (p.init !== asList)
-            return;
+          const [propertyName, propDef] = entry;
+          
+          if (typeof propDef === 'string' || propDef.type !== 'multi')
+            return; // This is not a multi-value property. Do nothing.
 
-          // Assume these are always ID fields (enums) for now,
-          // although this is not necessarily always true, just
-          // because this has historically been assumed. We can
-          // generalise this later.
+          // Add this new value to the multi-valued property
+          const list: any[] = initiative[propertyName];
+          const value = parser(propertyName, propDef.of, e);
+          list.push(value);
 
-          const code = fromCode(p, e);
-          if (!code)
-            return;
+          const searchableValue = mkSearchableValue(value, propDef.of, language);
 
-          const list: string[] = initiative[propertyName];
-          if (list.includes(code))
-            return;
-
-          list.push(code);
-          const uri: string = e[p.paramName];
-          const value = getVocabTerm(p.vocabUri, uri);
-          if (value === undefined) {
-            console.warn(`can't add term '${uri}' to search, ` +
-              `it is not part of the vocab '${p.vocabUri}'`);
-            return;
+          // If it is in the searchedFields, also add it to initiative.searchstr (if present)
+          if (searchedFields.includes(propertyName)) {
+            initiative.appendSearchableValue(searchableValue);
           }
-
-          initiative.searchstr = [
-            initiative.searchstr,
-            value.toUpperCase()
-          ].join(" ");
         });
 
       //update pop-up
       eventbus.publish({ topic: "Initiative.refresh", data: initiative });
       return;
-      //TODO: decide if then you index the secondary activities
     }
 
     const initiative = new Initiative();
     
     // Define and initialise the instance properties.
-    Object.entries(classSchema).forEach(entry => {
-      const [propertyName, p] = entry;
+    Object.entries(propertySchema).forEach(entry => {
+      let [propertyName, p] = entry;
+      if (typeof p === 'string')
+        p = mkDefaultPropDef(propertyName);
       Object.defineProperty(initiative, propertyName, {
-        value: p.init(p, e),
+        value: parser(propertyName, p, e),
         enumerable: true,
         writable: false,
       });
@@ -612,7 +881,7 @@ export function init(registry: Registry): SseInitiative {
       const labelValues: InitiativeIndex = registeredValues[label];
       if (labelValues) {
         const propDef = getPropertySchema(filterable);
-        const sorter = propDef.vocabUri ? sortByVocabLabel(propDef) : sortAsString;
+        const sorter = propDef.type === 'vocab' ? sortByVocabLabel(filterable, propDef) : sortAsString;
         const ordered = Object
           .entries(labelValues)
           .sort(sorter)
@@ -622,8 +891,8 @@ export function init(registry: Registry): SseInitiative {
       }
 
       // Sort entries by the vocab label for the ID used as the key
-      function sortByVocabLabel(propDef: PropDef) {
-        const vocab = getVocabForProperty(propDef);
+      function sortByVocabLabel(id: string, propDef: PropDef) {
+        const vocab = getVocabForProperty(id, propDef);
         return (a: [string, any], b: [string, any]): number => {
           const alab = vocab.terms[a[0]];
           const blab = vocab.terms[b[0]];
@@ -734,7 +1003,7 @@ export function init(registry: Registry): SseInitiative {
     function onVocabSuccess(response: any) {
       console.log("loaded vocabs", response);
 
-      setVocab(response);
+      setVocab(response, fallBackLanguage);
     }
 
     function onVocabFailure(error: string) {
@@ -766,31 +1035,9 @@ export function init(registry: Registry): SseInitiative {
     }
   }
 
-  function setVocab(data: VocabIndex) {
-    vocabs = data;
-
-    // Add an inverted look-up `abbrevs` mapping abbreviations to uris
-    // obtained from `prefixes`.
-    //
-    // Sort it and `prefixes` so that longer prefixes are listed
-    // first (Ecmascript objects preserve the order of addition).
-    // This is to make matching the longest prefix simpler later.
-    const prefixes: Dictionary = {};
-    const abbrevs: Dictionary = {};
-    Object
-      .keys(vocabs.prefixes)
-      .sort((a, b) => b.length - a.length)
-      .forEach(prefix => {
-        const abbrev = vocabs.prefixes[prefix];
-        abbrevs[abbrev] = prefix;
-        prefixes[prefix] = abbrev;
-      });
-
-    vocabs.prefixes = prefixes;
-    vocabs.abbrevs = abbrevs;
-    if (!vocabs.vocabs)
-      vocabs.vocabs = {}; // Ensure this is here
-
+  function setVocab(data: VocabIndex, fallBackLanguage: string) {
+    vocabs = new Vocabs(data, fallBackLanguage);
+    parser = mkParser(vocabs);
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
@@ -836,153 +1083,57 @@ export function init(registry: Registry): SseInitiative {
       return dialogueSize;
   }
 
-  function getVerboseValuesForFields() {
-
-    const entries = Object
-      .entries(vocabs.vocabs)
-      .map(([vocabUri, vocab]) => {
-        let vocabLang = vocab[language];
-        if (!vocabLang && language !== fallBackLanguage) {
-          console.warn(`No localisations for language ${language}, ` +
-            `falling back to ${fallBackLanguage}`);
-          vocabLang = vocab[fallBackLanguage];
-        }
-        return [vocabLang.title, vocabLang.terms];
-      });
-
-    return Object.fromEntries(entries);
-  }
-
-  function getLocalisedVocabs() {
-    const vocabLang = vocabs.vocabs["aci:"][language] ? language : fallBackLanguage;
-
-    let verboseValues: LocalisedVocab = {};
-
-    for (const id in vocabs.vocabs) {
-      verboseValues[id] = vocabs.vocabs[id][vocabLang];
-    }
-
-    return verboseValues;
-  }
-
   const getVocabIDsAndInitiativeVariables = () => {
     let vocabIDsAndInitiativeVariables: Dictionary = {};
 
     // Generate the index from filterableFields in the config
     filterableFields.forEach(filterableField => {
-      const vocabUri = getPropertySchema(filterableField).vocabUri;
-      if (vocabUri)
-        vocabIDsAndInitiativeVariables[vocabUri] = filterableField;
+      const propDef = getPropertySchema(filterableField);      
+      if (propDef.type === 'vocab')
+        vocabIDsAndInitiativeVariables[propDef.uri] = filterableField;
     })
     return vocabIDsAndInitiativeVariables;
   }
 
-  const getVocabTitlesAndVocabIDs = () => {
-    const vocabTitlesAndVocabIDs: Dictionary = {}
+  const getVerboseValuesForFields = () =>
+    vocabs && vocabs.getVerboseValuesForFields(language);
 
-    for (const vocabID in vocabs.vocabs) {
-      const vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
-      vocabTitlesAndVocabIDs[vocabs.vocabs[vocabID][vocabLang].title] = vocabID;
-    }
+  const getVocabTitlesAndVocabIDs = () =>
+    vocabs && vocabs.getVocabTitlesAndVocabIDs(language);
 
-    return vocabTitlesAndVocabIDs;
+  const getLocalisedVocabs = () =>
+    vocabs && vocabs.getLocalisedVocabs(language);
+  
+  const getVocabTerm = (vocabUri: string, termUri: string) =>
+    vocabs && vocabs.getVocabTerm(vocabUri, termUri, language);
+
+  const getVocabUriForProperty = (name: string) => {
+    const propDef = getPropertySchema(name);
+    if (propDef.type === 'vocab')
+      return propDef.uri;
+    throw new Error(`property ${name} is not a vocab property`);
   }
-
-  // Expands a URI using the prefixes/abbreviations defined in vocabs
-  //
-  // Keeps trying until all expansions applied.
-  function expandUri(uri: string) {
-    while (true) {
-      const delimIx = uri.indexOf(':');
-      if (delimIx < 0)
-        return uri; // Shouldn't normally happen... expanded URIs have `http(s):`
-
-      const abbrev = uri.substring(0, delimIx);
-      if (abbrev == 'http' || abbrev == 'https')
-        return uri; // No more expansion needed
-
-      if (abbrev in vocabs.abbrevs) // Expand this abbreviation
-        uri = vocabs.abbrevs[abbrev] + uri.substring(delimIx + 1);
-    }
-  }
-
-  // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
-  //
-  // Keeps trying until all abbreviations applied.
-  function abbrevUri(uri: string): string {
-    uri = expandUri(uri); // first expand it, if necessary
-
-    // Find a prefix match
-    const prefix = Object
-      .keys(vocabs.prefixes) // NOTE: assumes this object is sorted largest-key first
-      .find(p => uri.startsWith(p));
-
-    // Substitute the match with the abbreviation.
-    if (prefix)
-      return vocabs.prefixes[prefix] + ':' + uri.substring(prefix.length);
-
-    return uri; // No abbreviation possible.
-  }
-
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  function getVocabTerm(vocabUri: string, termUri: string): string {
-    termUri = abbrevUri(termUri);
-    const vocabLang = fallBackLanguage;
-    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    const vocab = vocabs.vocabs[vocabUri][language];
-
-    if (vocab &&
-      vocab.terms &&
-      vocab.terms[termUri]) {
-      return vocab.terms[termUri];
-    }
-
-    // Fall back if there are no terms.
-    try {
-      return vocabs.vocabs[vocabUri][fallBackLanguage].terms[termUri];
-    }
-    catch (e) {
-      // Even the fallback failed! 
-      console.error(`No term for ${termUri}, not even in the fallback language ${fallBackLanguage}`);
-      return '?';
-    }
-  }
-
+  
+  const getVocabForProperty = (id: string, propDef: PropDef) =>
+    vocabs && vocabs.getVocabForProperty(id, propDef, language);
+    
+  const getTerms = () =>
+    vocabs && vocabs.getTerms(language, getVocabIDsAndInitiativeVariables(), initiativesByUid, propertySchema); 
+  
   // Gets the schema definition for a property.
   //
   // Returns a schema definition, or throws an error null if there is no such property. 
   function getPropertySchema(propName: string): PropDef {
-    const propDef = classSchema[propName];
+    const propDef = propertySchema[propName];
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
     }
-
-    return propDef;
+    if (typeof propDef === 'string')
+      return mkDefaultPropDef(propName);
+    else
+      return propDef;
   }
-
-  // Gets the vocab for a property, given the property schema
-  //
-  // Returns a vocab index (for the currently set language).
-  //
-  // Throws an exception if there is some reason this fails. The
-  // exception will have a short description indicating the problem.
-  function getVocabForProperty(propDef: PropDef): Vocab {
-
-    // Assume classSchema's vocabUris are validated. But language availability can't be
-    // checked so easily.
-    const vocab = vocabs.vocabs[propDef.vocabUri];
-    if (!vocab) {
-      throw new Error(`no vocab defined with URI ${propDef.vocabUri} ` +
-        `(expecting one of: ${Object.keys(vocabs.vocabs).join(', ')})`);
-    }
-    const vocabLang = vocab[language] ? language : fallBackLanguage;
-    const localVocab = vocab[vocabLang];
-    if (!localVocab) {
-      throw new Error(`no title in lang ${vocabLang} for property: '${propDef.paramName}'`);
-    }
-
-    return localVocab;
-  }
+  
 
   function getTitleForProperty(propName: string): string {
     let title = propName; // Fallback value
@@ -992,9 +1143,9 @@ export function init(registry: Registry): SseInitiative {
       const propDef = getPropertySchema(propName);
 
       // If the field is a vocab field
-      if (propDef.vocabUri) {
+      if (propDef.type === 'vocab') {
         // Look up the title via the vocab (this may also throw)
-        title = getVocabForProperty(propDef).title;
+        title = getVocabForProperty(propName, propDef).title;
       }
       else {
         // Look up the title via functionalLabels, if present
@@ -1011,41 +1162,6 @@ export function init(registry: Registry): SseInitiative {
     }
   }
 
-  //construct the object of terms for advanced search
-  function getTerms() {
-    const vocabIDsAndInitiativeVariables = getVocabIDsAndInitiativeVariables();
-
-    let usedTerms: Record<string, Dictionary> = {};
-
-    let vocabLang = fallBackLanguage;
-
-    for (const vocabID in vocabIDsAndInitiativeVariables) {
-      vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
-
-      const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
-      usedTerms[vocabTitle] = {};
-    }
-
-    for (const initiativeUid in initiativesByUid) {
-      const initiative = initiativesByUid[initiativeUid];
-
-      for (const vocabID in vocabIDsAndInitiativeVariables) {
-        vocabLang = vocabs.vocabs[vocabID][language] ? language : fallBackLanguage;
-
-        const vocabTitle = vocabs.vocabs[vocabID][vocabLang].title;
-        const propName = vocabIDsAndInitiativeVariables[vocabID];
-        const id = initiative[propName];
-        const propDef = classSchema[propName];
-        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
-
-        // Currently still keeping the output data strucutre the same, so use id not term
-        if (!usedTerms[vocabTitle][id] && id)
-          usedTerms[vocabTitle][id] = vocabs.vocabs[vocabID][vocabLang].terms[id];
-      }
-    }
-
-    return usedTerms;
-  }
 
   //get an array of possible filters from  a list of initiatives
   function getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
@@ -1137,7 +1253,7 @@ export function init(registry: Registry): SseInitiative {
     getAlternatePossibleFilterValues,
     getVocabTerm,
     // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
-    getVocabUriForProperty: (name: string) => getPropertySchema(name).vocabUri,
+    getVocabUriForProperty,
     getPropertySchema,
     getFunctionalLabels,
     getSidebarButtonColour,

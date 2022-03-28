@@ -22,7 +22,11 @@ import type {
   Box2d
 } from '../../common_types';
 
-import type { SseInitiative, Initiative } from './sse_initiative';
+import type {
+  SseInitiative,
+  Initiative,
+  PropDefs
+} from './sse_initiative';
 
 class TypeDef<T> {
   constructor(params: {
@@ -53,6 +57,7 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
+  fields(): PropDefs;
   getCustomPopup(): InitiativeRenderFunction;
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
@@ -142,6 +147,7 @@ export interface ConfigData {
   disableClusteringAtZoom?: number;
   doesDirectoryHaveColours?: boolean;
   elem_id?: string;
+  fields?: PropDefs;
   filterableFields?: string[];
   gitcommit?: string;
   htmlTitle?: string;
@@ -296,6 +302,10 @@ const types = {
       };
     },
   }),
+  propDefs: new TypeDef<PropDefs>({
+    name: '{PropDefs}',
+    descr: 'A dictionary of initiative property definitions, keyed by property id',
+  }),
   initiativeRenderFunction: new TypeDef<InitiativeRenderFunction>({
     name: '{InitiativeRenderFunction}',
     descr: 'A function which accepts an Initiative instance and returns an HTML string',
@@ -361,6 +371,7 @@ export class Config implements ReadableConfig, WritableConfig {
     attr_namespace = '',
     customPopup = undefined,
     elem_id = 'map-app',
+    fields = undefined,
     variant = '',
     timestamp = '2000-01-01T00:00:00.000Z',
     gitcommit = '0',
@@ -485,6 +496,13 @@ export class Config implements ReadableConfig, WritableConfig {
         init: () => { this.data.elem_id = elem_id; },
         getter: 'elem_id',
         type: types.string,
+      },
+      fields: {
+        id: 'fields',
+        descr: 'Defines extended definitions of new or existing initiative fields',
+        init: () => { this.data.fields = fields; },
+        getter: 'fields',
+        type: types.propDefs,
       },
       filterableFields: {
         id: 'filterableFields',
@@ -820,6 +838,10 @@ ${def.descr}
     return this.data.elem_id;
   }
 
+  fields() {
+    return this.data.fields;
+  }
+  
   getDefaultLatLng(): Point2d {
     return this.data.defaultLatLng;
   }
