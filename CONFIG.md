@@ -50,6 +50,18 @@ Sets the namespace prefix expected on the sea-map anchor element's attributes.
 
 
 
+### `customPopup`
+
+- *type:* `{InitiativeRenderFunction}` A function which accepts an Initiative instance and returns an HTML string
+- *in string context:* parsed as-is
+- *default:* `undefined`
+- *settable?:* no
+
+An optional function accepting an Initiative and an SseInitiative object, which returns an HTML string which will be used as the pop-up contents for that initiative's marker
+
+
+
+
 ### `defaultLatLng`
 
 - *type:* `{Point2d}` A two-element array defining latitude and longitude in degrees.
@@ -124,6 +136,18 @@ True if the directory should feature coloured entries
 - *settable?:* no
 
 
+
+
+
+
+### `fields`
+
+- *type:* `{PropDefs}` A dictionary of initiative property definitions, keyed by property id
+- *in string context:* parsed as-is
+- *default:* `undefined`
+- *settable?:* no
+
+Defines extended definitions of new or existing initiative fields
 
 
 
