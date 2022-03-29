@@ -226,7 +226,7 @@ function init(registry) {
     let deselectInitiative = function () {
       if (unselectedClusterGroup.getVisibleParent(initiative.marker) !==
         initiative.marker) {
-        that.setUnselected(initiative.marker);
+        that.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
