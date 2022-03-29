@@ -214,7 +214,7 @@ function init(registry) {
       //search results should be a subset of filtered
 
       data.results = data.results.filter(initiative =>
-        filterKeys.includes(initiative.uniqueId)
+        filterKeys.includes(initiative.uri)
       );
     }
 
@@ -432,7 +432,7 @@ function init(registry) {
     eventbus.subscribe({
       topic: "Initiatives.searchedInitiativeClicked",
       callback: function (data) {
-        p.searchedInitiativeClicked(data.initiative.uniqueId)
+        p.searchedInitiativeClicked(data.initiative.uri)
       }
     });
 

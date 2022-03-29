@@ -112,7 +112,7 @@ function init(registry) {
       this.marker.hasPhysicalLocation = true;
     }
 
-    markerForInitiative[initiative.uniqueId] = this;
+    markerForInitiative[initiative.uri] = this;
   };
   proto.onClick = function (e) {
     // console.log("MarkerView.onclick");
@@ -350,12 +350,12 @@ function init(registry) {
   };
 
   function setSelected(initiative) {
-    if (markerForInitiative[initiative.uniqueId])
-      markerForInitiative[initiative.uniqueId].setSelected(initiative);
+    if (markerForInitiative[initiative.uri])
+      markerForInitiative[initiative.uri].setSelected(initiative);
   }
   function setUnselected(initiative) {
-    if (markerForInitiative[initiative.uniqueId])
-      markerForInitiative[initiative.uniqueId].setUnselected(initiative);
+    if (markerForInitiative[initiative.uri])
+      markerForInitiative[initiative.uri].setUnselected(initiative);
   }
 
 
@@ -387,7 +387,7 @@ function init(registry) {
   function showMarkers(initiatives) {
     //show markers only if it is not currently vissible
     initiatives.forEach(initiative => {
-      const marker = markerForInitiative[initiative.uniqueId];
+      const marker = markerForInitiative[initiative.uri];
       if (marker && !marker.isVisible())
         marker.show();
     });
@@ -396,8 +396,8 @@ function init(registry) {
 
   function hideMarkers(initiatives) {
     initiatives.forEach(initiative => {
-      if (markerForInitiative[initiative.uniqueId])
-        markerForInitiative[initiative.uniqueId].destroy();
+      if (markerForInitiative[initiative.uri])
+        markerForInitiative[initiative.uri].destroy();
     });
   }
 
@@ -409,11 +409,11 @@ function init(registry) {
   }
 
   function refreshMarker(initiative) {
-    if (!markerForInitiative[initiative.uniqueId])
+    if (!markerForInitiative[initiative.uri])
       return;
-    markerForInitiative[initiative.uniqueId]
+    markerForInitiative[initiative.uri]
       .marker
-      .setPopupContent(markerForInitiative[initiative.uniqueId].presenter.getInitiativeContent(initiative));
+      .setPopupContent(markerForInitiative[initiative.uri].presenter.getInitiativeContent(initiative));
   }
 
   function setSelectedClusterGroup(clusterGroup) {
@@ -424,18 +424,18 @@ function init(registry) {
     unselectedClusterGroup = clusterGroup;
   }
   function showTooltip(initiative) {
-    if (markerForInitiative[initiative.uniqueId])
-      markerForInitiative[initiative.uniqueId].showTooltip(initiative);
+    if (markerForInitiative[initiative.uri])
+      markerForInitiative[initiative.uri].showTooltip(initiative);
   }
   function hideTooltip(initiative) {
-    if (markerForInitiative[initiative.uniqueId])
-      markerForInitiative[initiative.uniqueId].hideTooltip(initiative);
+    if (markerForInitiative[initiative.uri])
+      markerForInitiative[initiative.uri].hideTooltip(initiative);
   }
 
   function getInitiativeContent(initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    if (markerForInitiative[initiative.uniqueId])
-      return markerForInitiative[initiative.uniqueId].getInitiativeContent(
+    if (markerForInitiative[initiative.uri])
+      return markerForInitiative[initiative.uri].getInitiativeContent(
         initiative
       );
     else return null;

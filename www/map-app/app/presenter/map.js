@@ -268,8 +268,8 @@ function init(registry) {
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
-        delete initiativesOutsideOfFilterUIDMap[initiative.uniqueId];
-        filteredInitiativesUIDMap[initiative.uniqueId] = initiative;
+        delete initiativesOutsideOfFilterUIDMap[initiative.uri];
+        filteredInitiativesUIDMap[initiative.uri] = initiative;
       });
     }
     /* if this is the second or more filter, remove items from the 
@@ -322,7 +322,7 @@ function init(registry) {
 
     //add in the values that you are removing 
     oldFilterVals.forEach(i => {
-      initiativesOutsideOfFilterUIDMap[i.uniqueId] = i;
+      initiativesOutsideOfFilterUIDMap[i.uri] = i;
     });
 
     //remove filter initatitives 
@@ -330,9 +330,9 @@ function init(registry) {
     Object.keys(filtered).forEach(k => {
       filtered[k].forEach(i => {
         //add in unique ones
-        filteredInitiativesUIDMap[i.uniqueId] = i;
+        filteredInitiativesUIDMap[i.uri] = i;
         //remove the ones you added
-        delete initiativesOutsideOfFilterUIDMap[i.uniqueId];
+        delete initiativesOutsideOfFilterUIDMap[i.uri];
       })
     });
 
@@ -417,11 +417,11 @@ function init(registry) {
 
 
     //get the ids from the passed data
-    const initiativeIds = data.initiatives.map(i => i.uniqueId);
+    const initiativeIds = data.initiatives.map(i => i.uri);
     
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
     hidden = loadedInitiatives.filter(i => 
-      !initiativeIds.includes(i.uniqueId)
+      !initiativeIds.includes(i.uri)
     );
 
     //hide all unneeded markers

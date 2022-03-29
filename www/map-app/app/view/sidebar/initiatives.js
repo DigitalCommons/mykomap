@@ -189,7 +189,7 @@ function init(registry) {
 			selection
 				.append("button")
 				.attr("class", initiativeClass)
-				.attr("data-uid", initiative.uniqueId)
+				.attr("data-uid", initiative.uri)
 				.attr("title", "Click to see details here and on map")
 				// TODO - shift-click should remove initiative from selection,
 				//        just like shift-clicking a marker.

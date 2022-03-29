@@ -454,8 +454,12 @@ export function init(registry: Registry): SseInitiative {
       // Ensure param is a number
       if (isAlpha(param))
         return undefined;
-      else
-        return Number(param);
+
+      // Preserve undefs
+      if (param === undefined)
+        return undefined;
+      
+      return Number(param);
     };
   }
 
@@ -668,7 +672,7 @@ export function init(registry: Registry): SseInitiative {
     });
 
     insert(initiative, loadedInitiatives);
-    initiativesByUid[initiative.uniqueId] = initiative;
+    initiativesByUid[initiative.uri] = initiative;
 
     eventbus.publish({ topic: "Initiative.new", data: initiative });
 
