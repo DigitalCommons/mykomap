@@ -301,7 +301,7 @@ class Vocabs {
     
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
-    const vocab = this.vocabs.vocabs[propDef.uri];
+    const vocab = this.vocabs.vocabs[this.abbrevUri(propDef.uri)];
     if (!vocab) {
       throw new Error(`no vocab defined with URI ${propDef.uri} ` +
         `(expecting one of: ${Object.keys(this.vocabs.vocabs).join(', ')})`);
