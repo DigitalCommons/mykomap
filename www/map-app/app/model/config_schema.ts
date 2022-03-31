@@ -25,6 +25,7 @@ import type {
 import type {
   SseInitiative,
   Initiative,
+  PropDef,
   PropDefs
 } from './sse_initiative';
 
@@ -57,7 +58,7 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
-  fields(): PropDefs;
+  fields(): Dictionary<PropDef | PropDef['type']>;
   getCustomPopup(): InitiativeRenderFunction;
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
@@ -147,7 +148,7 @@ export interface ConfigData {
   disableClusteringAtZoom?: number;
   doesDirectoryHaveColours?: boolean;
   elem_id?: string;
-  fields?: PropDefs;
+  fields?: Dictionary<PropDef | PropDef['type']>;
   filterableFields?: string[];
   gitcommit?: string;
   htmlTitle?: string;
@@ -302,9 +303,10 @@ const types = {
       };
     },
   }),
-  propDefs: new TypeDef<PropDefs>({
+  propDefs: new TypeDef<Dictionary<PropDef | PropDef['type']>>({
     name: '{PropDefs}',
-    descr: 'A dictionary of initiative property definitions, keyed by property id',
+    descr: 'A dictionary of initiative property definitions, or just a property type string, '+
+      'keyed by property id',
   }),
   initiativeRenderFunction: new TypeDef<InitiativeRenderFunction>({
     name: '{InitiativeRenderFunction}',
@@ -365,6 +367,18 @@ export class Config implements ReadableConfig, WritableConfig {
   
   private readonly data: ConfigData;
   private readonly configSchemas: ConfigSchemas;
+  private _fields: PropDefs;
+
+  private stringsToPropDefs(fields: ConfigData['fields']): PropDefs {
+    const propDefEntries = Object.entries(fields).map(
+      ([id, field]) => {
+        if (typeof field === 'string')
+          return [id, { type: field, from: id }];
+        return [id, field];
+      }
+    );
+    return Object.fromEntries(propDefEntries);
+  }
   
   constructor({
     aboutHtml = '',
@@ -839,7 +853,8 @@ ${def.descr}
   }
 
   fields() {
-    return this.data.fields;
+    // Lazily expand the raw config into PropDefs type
+    return this._fields ?? (this._fields = this.stringsToPropDefs(this.data.fields));
   }
   
   getDefaultLatLng(): Point2d {

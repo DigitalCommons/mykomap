@@ -165,11 +165,7 @@ export interface MultiPropDef {
 
 export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef;
 
-export type PropDefs = Dictionary<PropDef | PropDef['type']>;
-
-function mkDefaultPropDef(id: string): ValuePropDef {
-  return { type: 'value', from: id };
-}
+export type PropDefs = Dictionary<PropDef>;
 
 export interface SseInitiative {
   addInitiatives: (initiatives: InitiativeObj[]) => void;
@@ -433,13 +429,7 @@ export function init(registry: Registry): SseInitiative {
   const fields = config.fields();
   for(const fieldId in fields) {
     const fieldDef = fields[fieldId];
-    if (typeof fieldDef === 'string') {
-      const foo = mkDefaultPropDef(fieldId);
-      propertySchema[fieldId] = foo;
-    }
-    else {
-      propertySchema[fieldId] = fieldDef;
-    }
+    propertySchema[fieldId] = fieldDef;
   }
   
   function mkLocFromParam(from: string, overrideParam: string) {
@@ -496,10 +486,6 @@ export function init(registry: Registry): SseInitiative {
       if (!def) {
         console.warn(`searchable field '${propName}' is not a recognised field name`)
         return;
-      }
-
-      if (typeof def === 'string') {
-        def = mkDefaultPropDef(propName);
       }
 
       const value = parser(propName, def, params);
@@ -604,7 +590,7 @@ export function init(registry: Registry): SseInitiative {
         .forEach(entry => {
           const [propertyName, propDef] = entry;
           
-          if (typeof propDef === 'string' || propDef.type !== 'multi')
+          if (propDef.type !== 'multi')
             return; // This is not a multi-value property. Do nothing.
 
           // Add this new value to the multi-valued property
@@ -630,8 +616,6 @@ export function init(registry: Registry): SseInitiative {
     // Define and initialise the instance properties.
     Object.entries(propertySchema).forEach(entry => {
       let [propertyName, p] = entry;
-      if (typeof p === 'string')
-        p = mkDefaultPropDef(propertyName);
       Object.defineProperty(initiative, propertyName, {
         value: parser(propertyName, p, e),
         enumerable: true,
@@ -1131,10 +1115,7 @@ export function init(registry: Registry): SseInitiative {
     if (!propDef) {
       throw new Error(`unrecognised property name: '${propName}'`);
     }
-    if (typeof propDef === 'string')
-      return mkDefaultPropDef(propName);
-    else
-      return propDef;
+    return propDef;
   }
   
 
