@@ -1,6 +1,6 @@
 // Model for SSE Initiatives.
 
-import type { Dictionary, Point2d, Box2d } from '../../common_types';
+import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
 
