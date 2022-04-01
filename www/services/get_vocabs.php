@@ -403,7 +403,16 @@ function add_query_data($result, $query_results) {
  * aggregated result as the response body, with content-type
  * `application/json`.
  */
+$dev_cache_file = "./get_vocabs.json";
 function main() {
+    global $dev_cache_file;
+    if (file_exists($dev_cache_file)) {
+        $content = file_get_contents($dev_cache_file);
+        header('Content-type: application/json');
+        echo $content;
+        return;
+    }
+
     // Predefined prefixes commonly seen in the data.  Any inferred
     // prefixes not in this list, or obtained from config.json, will
     // have names generated starting with an '_'
