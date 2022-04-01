@@ -318,7 +318,6 @@ class Vocabs {
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   getVocabTerm(vocabUri: string, termUri: string, language: string): string {
     termUri = this.abbrevUri(termUri);
-    const vocabLang = this.fallBackLanguage;
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
     const vocab = this.vocabs.vocabs[vocabUri][language];
 
@@ -1065,8 +1064,6 @@ export function init(registry: Registry): SseInitiative {
       service += "&noLodCache=true";
     }
     console.log("loadDataset", service);
-    var response = null;
-    var message = null;
     if (!startedLoading) {
       eventbus.publish({
         topic: "Initiative.loadStarted",
