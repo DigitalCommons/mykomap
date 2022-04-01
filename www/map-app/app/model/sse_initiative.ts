@@ -319,7 +319,8 @@ class Vocabs {
   getVocabTerm(vocabUri: string, termUri: string, language: string): string {
     termUri = this.abbrevUri(termUri);
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    const vocab = this.vocabs.vocabs[vocabUri][language];
+    const prefix = this.abbrevUri(vocabUri);
+    const vocab = this.vocabs.vocabs[prefix][language];
 
     let term = vocab?.terms?.[termUri];
     if (term !== undefined)
