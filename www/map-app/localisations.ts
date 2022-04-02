@@ -1,6 +1,6 @@
-"use strict";
+import type { Dictionary } from './common_types';
 
-module.exports = {
+export const functionalLabels: Dictionary<Dictionary<string>> = {
   EN: {
     directory: "Directory",
     showDirectory: "Show directory",

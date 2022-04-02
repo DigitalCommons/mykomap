@@ -9,7 +9,7 @@ import { json } from 'd3';
 const eventbus = require('../eventbus');
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
-const functionalLabels = require("../../localisations.js");
+import { functionalLabels } from '../../localisations';
 
 
 export class Initiative {
