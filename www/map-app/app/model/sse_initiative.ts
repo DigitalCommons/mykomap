@@ -4,12 +4,13 @@ import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
 
-const d3 = require('d3');
+import { json } from 'd3';
+
 const eventbus = require('../eventbus');
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 const functionalLabels = require("../../localisations.js");
-const { json } = require('d3');
+
 
 export class Initiative {
   [id: string]: any | undefined;
@@ -965,7 +966,7 @@ export function init(registry: Registry): SseInitiative {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   async function loadVocabs() {
-    return d3.json(getVocabsPhp);
+    return json(getVocabsPhp);
   }
 
 
@@ -1073,7 +1074,7 @@ export function init(registry: Registry): SseInitiative {
       startedLoading = true;
     }
 
-    return d3.json(service);
+    return json(service);
   }
 
   function getDialogueSize() {
