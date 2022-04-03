@@ -26,7 +26,8 @@ import type {
   SseInitiative,
   Initiative,
   PropDef,
-  PropDefs
+  PropDefs,
+  VocabSource
 } from './sse_initiative';
 
 class TypeDef<T> {
@@ -89,6 +90,7 @@ export interface ReadableConfig {
   logo(): string;
   namedDatasets(): string[];
   namedDatasetsVerbose(): string[];
+  vocabularies(): VocabSource[];
 };
 
 export interface WritableConfig {
@@ -174,7 +176,8 @@ export interface ConfigData {
   tileUrl?: string;
   timestamp?: string;
   variant?: string;
-
+  vocabularies?: VocabSource[];
+  
   // This index accessor is required for Typescript to allow dynamic assignment, it seems
   [name: string]: unknown;
 };
@@ -312,6 +315,12 @@ const types = {
     name: '{InitiativeRenderFunction}',
     descr: 'A function which accepts an Initiative instance and returns an HTML string',
   }),
+  vocabSources: new TypeDef<VocabSource[]>({
+    name: '{VocabSource[]}',
+    descr: 'An array of vocab source definitions, defining a SPARQL endpoint URL, '+
+      'a default graph URI, and an index of vocabulary URIs to their prefixes - '+
+      'which must be unique to the whole array.',
+  }),
 };
 
 
@@ -421,7 +430,8 @@ export class Config implements ReadableConfig, WritableConfig {
       "descriptionRatio": 2.5
     },
     defaultOpenSidebar = false,
-    sidebarButtonColour = "#39cccc"
+    sidebarButtonColour = "#39cccc",
+    vocabularies = undefined,
   }: ConfigData = {}) {
     this.data = {};
     this.configSchemas = {
@@ -750,7 +760,15 @@ export class Config implements ReadableConfig, WritableConfig {
         init: () => { this.data.variant = variant; },
         getter: 'getSoftwareVariant',
         type: types.string,
-      },  
+      },
+      vocabularies: {
+        id: 'vocabularies',
+        descr: 'Specifies the vocabularies to obtain via SPARQL query for use in `fields`',
+        defaultDescr: 'No vocabs are queried if nothing is provided',
+        init: () => { this.data.vocabularies = vocabularies; },
+        getter: 'vocabularies',
+        type: types.vocabSources,
+      },
       //  [name: string]: unknown;
     };
 
@@ -758,6 +776,55 @@ export class Config implements ReadableConfig, WritableConfig {
     for(const id in this.configSchemas) {
       this.configSchemas[id].init();
     }
+
+    // Expand abbreviated field defs
+    this._fields = this.stringsToPropDefs(this.data.fields);
+    
+    // Special know-how validations...
+    
+    // Make sure the vocab prefixes are unique
+    const prefixesSeen = {} as Dictionary;
+    const urisSeen = {} as Dictionary;
+    if (this.data.vocabularies) {
+      for(let ix = 0; ix < this.data.vocabularies.length; ix++) {
+        const vocabSource = this.data.vocabularies[ix];
+        for(const vocabUri in vocabSource.uris) {
+          const vocabPrefix = vocabSource.uris[vocabUri];
+          if (vocabPrefix in prefixesSeen) {
+            console.warn(`Duplicate prefix in vocabularies config, ${vocabPrefix} (for ${vocabUri})`);
+          }
+          else {
+            prefixesSeen[vocabPrefix] = vocabUri;
+            urisSeen[vocabUri] = vocabPrefix;
+          }          
+        }
+      }
+    }
+
+    // Make sure the fields all reference a known vocab
+    for(const fieldId in this._fields ?? {}) {
+      let field = this._fields[fieldId];
+      if (field.type === 'multi')
+        field = field.of;
+      if (field.type !== 'vocab')
+        continue;
+
+      let vocabUri = field.uri;
+      if (vocabUri.endsWith(':')) {
+        vocabUri = vocabUri.slice(0, -1);
+        if (!prefixesSeen[vocabUri]) {
+          throw new Error(`Unknown vocab prefix '${vocabUri}' in field '${fieldId}'`);
+        }
+      }
+      else {
+        if (!urisSeen[vocabUri]) {
+          const error = new Error(`Unknown vocab uri '${vocabUri}' in field '${fieldId}'`);
+          if (!vocabUri.includes(':'))
+            error.message += ` (did you omit the trailing colon for a prefix?)`;
+          throw error;
+        }
+      }
+    } 
   }
 
   // This generates the documentation for this schema, in Markdown
@@ -853,8 +920,7 @@ ${def.descr}
   }
 
   fields() {
-    // Lazily expand the raw config into PropDefs type
-    return this._fields ?? (this._fields = this.stringsToPropDefs(this.data.fields));
+    return this._fields;
   }
   
   getDefaultLatLng(): Point2d {
@@ -945,6 +1011,10 @@ ${def.descr}
   namedDatasetsVerbose(): string[] {
     return this.data.namedDatasetsVerbose;
   }
+  vocabularies(): VocabSource[] {
+    return this.data.vocabularies;
+  }
+  
   setDefaultLatLng(val: Point2d): void {
     this.data.defaultLatLng = val;
   }

@@ -51,6 +51,12 @@ interface VocabIndex {
   prefixes: Dictionary;
   vocabs: { [prefix: string]: LocalisedVocab };
 }
+export interface VocabSource {
+  endpoint: string;
+  defaultGraphUri?: string;
+  uris: Dictionary<string>;
+}
+
 interface InitiativeIndex {
   [id: string]: Initiative[];
 }
@@ -950,7 +956,14 @@ export function init(registry: Registry): SseInitiative {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   async function loadVocabs() {
-    return json(getVocabsPhp);
+    return json(getVocabsPhp, {
+      method: 'POST',
+      body: JSON.stringify({
+        languages: [language],
+        vocabularies: config.vocabularies(),
+      }),
+      headers: { 'content-type': 'application/json; charset=UTF-8' },
+    });
   }
 
 

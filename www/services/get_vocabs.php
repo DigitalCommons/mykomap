@@ -418,12 +418,7 @@ function main() {
     // have names generated starting with an '_'
     $prefixes = [];
 
-    // allow override in tests
-    $config_dir = getenv('SEA_MAP_CONFIG_DIR');
-    if (!$config_dir) 
-        $config_dir = __DIR__ . "/../configuration";
-
-    $config = json_decode(file_get_contents("$config_dir/config.json"), true);
+    $config = json_decode(file_get_contents("php://input"), true);
 
     // Validate the required attributes are present.  This is fairly
     // rudimentary, exhaustive checks probably don't belong here.
