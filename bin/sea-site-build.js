@@ -67,7 +67,7 @@ const variant = process.env.npm_package_name;
 
 const debug = variant == 'sea-map' || process.env.NODE_ENV !== "production";
 
-const versionJson = path.join(configPath, 'version.json');
+const versionJson = path.join(srcPath, 'version.json');
 let versionInfo;
 let seaMapSrcDir;
 let servicesDir;
