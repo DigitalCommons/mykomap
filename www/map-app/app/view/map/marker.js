@@ -58,7 +58,7 @@ function init(registry) {
         initiative: this.initiative
       });
 
-      initiative.marker = this.marker;
+      initiative.__internal.marker = this.marker;
 
       this.marker.bindPopup(opts.popuptext, {
         autoPan: false,
@@ -91,7 +91,7 @@ function init(registry) {
         initiative: this.initiative
       });
 
-      initiative.marker = this.marker;
+      initiative.__internal.marker = this.marker;
 
       // maxWidth helps to accomodate big font, for presentation purpose, set up in CSS
       // maxWidth:800 is needed if the font-size is set to 200% in CSS:
@@ -176,7 +176,7 @@ function init(registry) {
     mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
-      initiative.marker.setIcon(
+      initiative.__internal.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: initiative.primaryActivity
@@ -191,41 +191,41 @@ function init(registry) {
     }
 
     if (!initiative.hasLocation()) {
-      initiative.marker.openPopup();
+      initiative.__internal.marker.openPopup();
     }
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     else if (unselectedClusterGroup._inZoomAnimation) {
       unselectedClusterGroup.on("animationend", e => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
-          unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-            initiative.marker
+          unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+            initiative.__internal.marker
         ) {
-          if (initiative.marker.__parent) //if it has a parent
+          if (initiative.__internal.marker.__parent) //if it has a parent
           {
-            initiative.marker.__parent.spiderfy();
+            initiative.__internal.marker.__parent.spiderfy();
           }
         }
-        initiative.marker.openPopup();
+        initiative.__internal.marker.openPopup();
         unselectedClusterGroup.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
       if (
-        unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-          initiative.marker
+        unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+          initiative.__internal.marker
       ) {
 
-        initiative.marker.__parent.spiderfy();
+        initiative.__internal.marker.__parent.spiderfy();
       }
-      initiative.marker.openPopup();
+      initiative.__internal.marker.openPopup();
     }
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = function () {
-      if (unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-        initiative.marker) {
+      if (unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+        initiative.__internal.marker) {
         that.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
@@ -238,89 +238,6 @@ function init(registry) {
 
   };
 
-
-  //old code for not destroying pop-up when zooming out
-  // proto.setSelected = function (initiative) {
-  //   //set initiative for selection
-  //   mapObj.selectedInitiative = initiative;
-  //   //zoom counter
-  //   mapObj.counttest = 1;
-  //   //displays marker on all zoom events by triggering selectInitiative function
-  //   mapObj.on("zoomend", selectInitiative);  
-  //   /* tip: this can be used to uncluster a specific marker
-  //   unselectedClusterGroup.removeLayer(initiative.marker);
-  //   hiddenClusterGroup.addLayer(initiative.marker);
-  //    */
-  //   //next time you click on a cluster, will unselect the current selection
-
-  // };
-
-  // function selectInitiative({ target }) {
-  //   //get the initiative selected (specified in setSelected)
-  //   let initiative = target.selectedInitiative;
-
-  //   //change the color of the marker to a slightly darker shade
-  //   if (initiative.hasLocation()) {
-  //     initiative.marker.setIcon(
-  //       leaflet.AwesomeMarkers.icon({
-  //         prefix: "fa",
-  //         markerColor: initiative.primaryActivity
-  //           ? initiative.primaryActivity.toLowerCase()
-  //           : "ALL",
-  //         iconColor: "white",
-  //         icon: "certificate",
-  //         className: "awesome-marker sea-marker sea-selected",
-  //         cluster: false
-  //       })
-  //     );
-  //   }
-
-  //   if (!initiative.hasLocation()) {
-  //     initiative.marker.openPopup();
-  //   }
-
-  //   // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
-  //   else if (unselectedClusterGroup._inZoomAnimation) {
-  //     unselectedClusterGroup.on("animationend", e => {
-  //       //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
-  //       if (
-  //         unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-  //         initiative.marker
-  //       ) {
-  //         if (initiative.marker.__parent) //if it has a parent
-  //         {
-  //           initiative.marker.__parent.spiderfy();
-  //         }
-  //       }
-  //       initiative.marker.openPopup();
-  //       unselectedClusterGroup.off("animationend");
-  //     });
-  //   }
-  //   // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
-  //   else {
-  //     if (
-  //       unselectedClusterGroup.getVisibleParent(initiative.marker) !==
-  //       initiative.marker
-  //     ) {
-
-  //         console.log("error noanim");
-  //         initiative.marker.__parent.spiderfy();
-  //     }
-  //     initiative.marker.openPopup();
-  //   }
-
-  //   //touch the parent so it triggers the unspiderify naturally
-  //   mapObj.off("zoomend", selectInitiative); 
-  //   initiative.marker.__parent.fire("touch");
-  //   mapObj.counttest = mapObj.counttest-1;
-  //   console.log(mapObj.counttest);
-  //   if(mapObj.counttest<0){
-  //     mapObj.off("zoomend", selectInitiative); 
-  //     initiative.marker.__parent.fire("touch");
-
-  //   }
-
-  // }
 
 
 

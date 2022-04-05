@@ -78,8 +78,6 @@ function init(registry) {
     return {
       click: function (e) {
         // Deselect any selected markers
-        // this.marker.on("popupclose", e => {
-        // console.log("Unselecting");
         if (e.originalEvent.ctrlKey) {
           copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
         }
@@ -88,7 +86,6 @@ function init(registry) {
           topic: "Directory.InitiativeClicked",
           data: ""
         });
-        // });
       },
       load: function (e) {
         console.log("Map loaded");
@@ -110,7 +107,7 @@ function init(registry) {
     const initiative = data,
           marker = this.view.addMarker(initiative).marker;
 
-    if (marker.hasPhysicalLocation) allMarkers.push(marker);
+    if (marker.hasPhysicalLocatioogn) allMarkers.push(marker);
   };
   proto.refreshInitiative = function (data) {
     const initiative = data;

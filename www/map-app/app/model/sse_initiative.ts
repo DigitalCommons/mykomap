@@ -13,7 +13,11 @@ import { functionalLabels } from '../../localisations';
 
 
 export class Initiative {
+  //  This is used for associating internal data, like map markers
+  __internal: Dictionary<any> = {};
+  
   [id: string]: any | undefined;
+  
   hasLocation() {
     return this.lat && this.lng;
   }
