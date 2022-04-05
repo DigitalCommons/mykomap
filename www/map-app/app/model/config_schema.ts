@@ -841,7 +841,7 @@ Here is an example of what you might put in this file:
  {
   "namedDatasets": ["oxford"],
   "htmlTitle": "Solidarity Oxford",
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
   "disableClusteringAtZoom": false
 }
