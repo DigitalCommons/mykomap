@@ -87,17 +87,17 @@ export interface InitiativeObj {
   [name: string]: any;
 }
 
-type ParamParser<P> = (id: string, def: P, params: InitiativeObj) => any;
+type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
-function mkParser(vocabs: Vocabs): ParamParser<PropDef> {
-  function parseVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
+function mkBuilder(vocabs: Vocabs): ParamBuilder<PropDef> {
+  function buildVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
     const paramName = def.from ?? id;
     const uri = params[paramName];
     if (uri)
       return vocabs.abbrevUri(uri);
     return undefined;
   };
-  function parseValue(id: string, def: ValuePropDef, params: InitiativeObj) {
+  function buildValue(id: string, def: ValuePropDef, params: InitiativeObj) {
     const paramName = def.from ?? id;
     const value = params[paramName];
     if (def.strict === true) {
@@ -131,23 +131,23 @@ function mkParser(vocabs: Vocabs): ParamParser<PropDef> {
     }
   }
   //  number: (def: string) => 0,
-  function parseCustom(id: string, def: CustomPropDef, params: InitiativeObj) {
-    return def.calling(id, def, params);
+  function buildCustom(id: string, def: CustomPropDef, params: InitiativeObj) {
+    return def.builder(id, def, params);
   }
-  function parseMulti(id: string, def: MultiPropDef, params: InitiativeObj): any[] {
-    return [parseAny(id, def.of, params)];
+  function buildMulti(id: string, def: MultiPropDef, params: InitiativeObj): any[] {
+    return [buildAny(id, def.of, params)];
   }
 
   
-  function parseAny(id: string, def: PropDef, params: InitiativeObj): any {
+  function buildAny(id: string, def: PropDef, params: InitiativeObj): any {
     switch(def.type) {
-      case 'value': return parseValue(id, def, params);
-      case 'vocab': return parseVocab(id, def, params);
-      case 'custom': return parseCustom(id, def, params);
-      case 'multi': return parseMulti(id, def, params);
+      case 'value': return buildValue(id, def, params);
+      case 'vocab': return buildVocab(id, def, params);
+      case 'custom': return buildCustom(id, def, params);
+      case 'multi': return buildMulti(id, def, params);
     }
   }
-  return parseAny;
+  return buildAny;
 }
 
 export type PropSourceId = string;
@@ -166,7 +166,7 @@ export interface VocabPropDef {
 }
 export interface CustomPropDef {
   type: 'custom'
-  calling: (id: string, def: PropDef, params: InitiativeObj) => any;
+  builder: (id: string, def: CustomPropDef, params: InitiativeObj) => any;
 }
 export interface MultiPropDef {
   type: 'multi';
@@ -431,9 +431,9 @@ export function init(registry: Registry): SseInitiative {
   const propertySchema: PropDefs = {
     uri: { type: 'value', as: 'string' },
     name: { type: 'value', as: 'string' },
-    lat: { type: 'custom', calling: mkLocFromParam('lat', 'manLat') },
-    lng: { type: 'custom', calling: mkLocFromParam('lng', 'manLng') },
-    searchstr: { type: 'custom', calling: mkSearchString },
+    lat: { type: 'custom', builder: mkLocFromParam('lat', 'manLat') },
+    lng: { type: 'custom', builder: mkLocFromParam('lng', 'manLng') },
+    searchstr: { type: 'custom', builder: mkSearchString },
     dataset: { type: 'value', as: 'string' },
   };
 
@@ -499,7 +499,7 @@ export function init(registry: Registry): SseInitiative {
         return;
       }
 
-      const value = parser(propName, def, params);
+      const value = builder(propName, def, params);
       const searchableValue = mkSearchableValue(value, def, language);
       searchableValues.push(searchableValue);
     });
@@ -527,7 +527,7 @@ export function init(registry: Registry): SseInitiative {
 
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   let vocabs: Vocabs | undefined = undefined;
-  let parser: ParamParser<PropDef> | undefined = undefined;
+  let builder: ParamBuilder<PropDef> | undefined = undefined;
 
   if (dsNamed.length == allDatasets.length)
     allDatasets.forEach((x, i) => verboseDatasets[x] = {
@@ -606,7 +606,7 @@ export function init(registry: Registry): SseInitiative {
 
           // Add this new value to the multi-valued property
           const list: any[] = initiative[propertyName];
-          const value = parser(propertyName, propDef.of, e);
+          const value = builder(propertyName, propDef.of, e);
           list.push(value);
 
           const searchableValue = mkSearchableValue(value, propDef.of, language);
@@ -628,7 +628,7 @@ export function init(registry: Registry): SseInitiative {
     Object.entries(propertySchema).forEach(entry => {
       let [propertyName, p] = entry;
       Object.defineProperty(initiative, propertyName, {
-        value: parser(propertyName, p, e),
+        value: builder(propertyName, p, e),
         enumerable: true,
         writable: false,
       });
@@ -1044,7 +1044,7 @@ export function init(registry: Registry): SseInitiative {
 
   function setVocab(data: VocabIndex, fallBackLanguage: string) {
     vocabs = new Vocabs(data, fallBackLanguage);
-    parser = mkParser(vocabs);
+    builder = mkBuilder(vocabs);
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
