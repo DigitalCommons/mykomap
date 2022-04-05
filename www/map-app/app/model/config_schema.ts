@@ -669,12 +669,10 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       searchedFields: {
         id: 'searchedFields',
-        descr: 'A list of fields that are looked at when using the search function. Valid values for this parameter are:' +
-          ["name", "uri", "www",
-           "regorg", "sameas", "desc", "street", "locality",
-           "region", "postcode", "country", "primaryActivity",
-           "otherActivities", "orgStructure", "tel", "email", "qualifiers"].join(",") +
-          "\nif non-valid values are passed, the app will fail silently (no errors will be produced)" +
+        descr: "A list of fields that are looked at when using the search function. Valid "+
+          "values for this parameter are 'name', 'uri', and any custom field names supplied "+
+          "in the configuration." +
+          "\nIf non-valid values are passed, the app will fail silently (no errors will be produced)" +
           "\nThe default values are 'name'" +
           "\nUsers can pass single arguments and multiple arguments, separated with a comma" +
           "\nPassing multiple values example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities" +
