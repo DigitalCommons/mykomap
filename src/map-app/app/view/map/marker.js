@@ -32,11 +32,7 @@ function init(registry) {
 
     // options argument overrides our default options:
     const opts = Object.assign(dfltOptions, {
-      // icon: this.presenter.getIcon(initiative),
       popuptext: this.presenter.getInitiativeContent(initiative)
-      // hovertext: this.presenter.getHoverText(initiative),
-      // cluster: true,
-      // markerColor: this.presenter.getMarkerColor(initiative)
     });
 
     // For non-geo initiatives we don't need a marker but still want to get the initiativeContent

@@ -78,90 +78,6 @@ function init(registry) {
 	};
 
 
-	proto.geekZoneContentAtD3Selection = function (selection, initiative) {
-		const that = this;
-		const s = selection.append("div").attr("class", "w3-bar-block");
-		if (initiative.lat) {
-			s.append("div")
-				.attr("class", sectionClasses)
-				.text("Latitude: " + initiative.lat);
-		}
-		if (initiative.lng) {
-			s.append("div")
-				.attr("class", sectionClasses)
-				.text("Longitude: " + initiative.lng);
-		}
-		if (initiative.uri) {
-			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
-				.text("Detailed data for this initiative")
-				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.uri);
-				});
-		}
-		if (initiative.within) {
-			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
-				.text("Ordnance Survey postcode information")
-				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.within);
-				});
-		}
-		if (initiative.regorg) {
-			const serviceToDisplaySimilarCompanies =
-				document.location.origin +
-				document.location.pathname +
-				config.getServicesPath() +
-				"display_similar_companies/main.php";
-			const serviceToDisplaySimilarCompaniesURL =
-				serviceToDisplaySimilarCompanies +
-				"?company=" +
-				encodeURIComponent(initiative.regorg);
-			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
-				.attr("title", "A tech demo of federated Linked Open Data queries!")
-				.text("Display similar companies nearby using Companies House data")
-				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
-				});
-		}
-	};
-	proto.populateSelectionWithOneInitiative = function (selection, initiative) {
-		const s = selection.append("div").attr("class", "w3-bar-block");
-		const that = this;
-		if (initiative.www) {
-			s.append("div")
-				.attr("class", sectionHeadingClasses)
-				.text("website");
-			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
-				.text(initiative.www)
-				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.www);
-				});
-		}
-		s.append("div")
-			.attr("class", sectionHeadingClasses)
-			.text("description");
-		s.append("div")
-			.attr("class", sectionClasses)
-			.text(initiative.desc || "No description available");
-		// Make an accordion for opening up the geek zone
-		that.makeAccordionAtD3Selection({
-			selection: s,
-			heading: "Geek zone",
-			headingClasses: accordionClasses,
-			makeContentAtD3Selection: function (contentD3Selection) {
-				that.geekZoneContentAtD3Selection(contentD3Selection, initiative);
-			},
-			hideContent: true
-		});
-	};
-
 	proto.onInitiativeClicked = function (id) {
 		d3.select(".sea-search-initiative-active")
 			.classed("sea-search-initiative-active", false);
@@ -381,7 +297,6 @@ function init(registry) {
 					}
 					break;
 				case 1:
-					//this.populateSelectionWithOneInitiative(selection, initiatives[0]);
 					this.populateSelectionWithListOfInitiatives(selection, initiatives);
 					break;
 				default:

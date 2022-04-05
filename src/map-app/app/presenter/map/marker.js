@@ -47,27 +47,6 @@ function init(registry) {
   };
 
 
-  proto.getMarkerColor = function (initiative) {
-    const hasWww = initiative.www && initiative.www.length > 0;
-    const hasReg = initiative.regorg && initiative.regorg.length > 0;
-    const markerColor =
-      hasWww && hasReg ? "purple" : hasWww ? "blue" : hasReg ? "red" : "green";
-    return markerColor;
-  };
-  proto.getIconOptions = function (initiative) {
-    const icon = initiative.dataset == "dotcoop" ? "globe" : "certificate";
-    return {
-      icon: icon,
-      popuptext: popuptext,
-      hovertext: hovertext,
-      cluster: true,
-      markerColor: markerColor
-    };
-  };
-  proto.getIcon = function (initiative) {
-    return initiative.dataset == "dotcoop" ? "globe" : "certificate";
-  };
-
   Presenter.prototype = proto;
 
   function createPresenter(view) {
