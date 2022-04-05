@@ -430,6 +430,7 @@ export function init(registry: Registry): SseInitiative {
     lat: { type: 'custom', calling: mkLocFromParam('lat', 'manLat') },
     lng: { type: 'custom', calling: mkLocFromParam('lng', 'manLng') },
     searchstr: { type: 'custom', calling: mkSearchString },
+    dataset: { type: 'value', as: 'string' },
   };
 
   const fields = config.fields();
