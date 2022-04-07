@@ -2,6 +2,7 @@
 const leaflet = require('leaflet');
 const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
+const cssesc = require('cssesc');
 const eventbus = require('../../eventbus');
 
 function init(registry) {
@@ -26,10 +27,33 @@ function init(registry) {
   // http://fortawesome.github.io/Font-Awesome/icons/
   const dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
 
+  // Convert a field id / definition into an array of CSS classes
+  function classesForField(fieldId, fieldDef, value) {
+    if (!fieldDef.isStyled)
+      return [];
+
+    // Multi fields are special
+    if (fieldDef.type === 'multi')
+      return value.map(elem => classesForFields(fieldId, fieldDef.of, elem));
+
+    // Other field types all equivalent
+    const components = ['sea-marker', fieldId, String(value)];
+    return [components.join('_').toLowerCase()];
+  }
+
+  // Converts the field definitions
+  function classesForFields(initiative, fields) {
+    // Iterate the fields, converting each of them into an array CSS classes
+    return Object.entries(fields).flatMap(
+      ([fieldId, fieldDef]) => classesForField(fieldId, fieldDef, initiative[fieldId])
+    );
+  }
+  
+
   proto.create = function (map, initiative) {
     this.initiative = initiative;
     mapObj = map;
-
+    
     // options argument overrides our default options:
     const opts = Object.assign(dfltOptions, {
       popuptext: this.presenter.getInitiativeContent(initiative)
@@ -39,13 +63,13 @@ function init(registry) {
     // TODO: Content generation should live somewhere else.
     // const ukPostcode = /([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/;
     if (!initiative.hasLocation()) {
-
+      const classes = ['awesome-marker', 'sea-non-geo-marker']
+        .concat(classesForFields(initiative, config.fields()));
+          
       const icon = leaflet.AwesomeMarkers.icon({
-        prefix: "fa",
-        markerColor: "red",
-        iconColor: "white",
-        icon: "certificate",
-        className: "awesome-marker sea-non-geo-marker",
+        prefix: 'fa',
+        icon: 'certificate',
+        className: classes.join(' '),
         cluster: false
       });
 
@@ -69,18 +93,17 @@ function init(registry) {
       this.marker.hasPhysicalLocation = false;
     } else {
       const hovertext = this.presenter.getHoverText(initiative);
-
+      const classes = ['awesome-marker', 'sea-marker']
+        .concat(classesForFields(initiative, config.fields()));
+          
+      
       const icon = leaflet.AwesomeMarkers.icon({
-        prefix: "fa",
-        markerColor: this.initiative.primaryActivity
-                   ? this.initiative.primaryActivity.toLowerCase().replace(/\W/g, '_')
-                   : "ALL",
-        iconColor: "white",
-        icon: "certificate",
-        className: "awesome-marker sea-marker",
+        prefix: 'fa',
+        icon: 'certificate',
+        className: classes.join(' '),
         cluster: false,
       });
-
+      
       //this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {icon: icon, title: hovertext});
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
@@ -151,15 +174,14 @@ function init(registry) {
 
     //change the color of an initiative with a location
     if (initiative.hasLocation()) {
+      const classes = ['awesome-marker', 'sea-marker']
+        .concat(classesForFields(initiative, config.fields()));
+          
       this.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
-          prefix: "fa",
-          markerColor: this.initiative.primaryActivity
-                     ? this.initiative.primaryActivity.toLowerCase()
-                     : "AM00",
-          iconColor: "white",
-          icon: "certificate",
-          className: "awesome-marker sea-marker",
+          prefix: 'fa',
+          icon: 'certificate',
+          className: classes.join(' '),
           cluster: false
         })
       );
@@ -172,15 +194,14 @@ function init(registry) {
     mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
+      const classes = ['awesome-marker', 'sea-marker', 'sea-selected']
+        .concat(classesForFields(initiative, config.fields()));
+      
       initiative.__internal.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
-          prefix: "fa",
-          markerColor: initiative.primaryActivity
-                     ? initiative.primaryActivity.toLowerCase()
-                     : "ALL",
-          iconColor: "white",
-          icon: "certificate",
-          className: "awesome-marker sea-marker sea-selected",
+          prefix: 'fa',
+          icon: 'certificate',
+          className: classes.join(' '),
           cluster: false
         })
       );

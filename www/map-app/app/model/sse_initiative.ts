@@ -155,21 +155,25 @@ export type PropSourceId = string;
 
 export interface ValuePropDef {
   type: 'value';
+  isStyled?: boolean;
   as?: 'string'|'boolean'|'number';
   strict?: boolean;
   from?: string;
 }
 export interface VocabPropDef {
   type: 'vocab';
+  isStyled?: boolean;
   uri: string;
   from?: string;
 }
 export interface CustomPropDef {
   type: 'custom'
+  isStyled?: boolean;
   builder: (id: string, def: CustomPropDef, params: InitiativeObj) => any;
 }
 export interface MultiPropDef {
   type: 'multi';
+  isStyled?: boolean;
   of: PropDef;
 }
 
