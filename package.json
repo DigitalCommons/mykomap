@@ -49,6 +49,7 @@
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
+    "@types/leaflet": "^1.7.9",
     "copy-webpack-plugin": "^7.0.0",
     "css-loader": "^5.2.7",
     "cssesc": "^3.0.0",
