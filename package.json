@@ -73,6 +73,7 @@
     "webpack": "^5.53.0"
   },
   "devDependencies": {
+    "@types/cssesc": "^3.0.0",
     "@types/d3": "^7.1.0",
     "@types/postal": "^1.0.31",
     "chai": "^4.3.4",
