@@ -1,6 +1,5 @@
 import * as leaflet from 'leaflet';
 import 'leaflet.markercluster';
-import 'leaflet.awesome-markers';
 import * as cssesc from 'cssesc';
 const eventbus = require('../../eventbus');
 
@@ -161,18 +160,11 @@ class MarkerView extends base {
     // const ukPostcode = /([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/;
     if (!initiative.hasLocation()) {
       const classes = [
-        'awesome-marker', 'sea-non-geo-marker'
+        'fa', 'sea-non-geo-marker'
       ].concat(MarkerView.classesForFields(initiative, this.config.fields()));
       
-      const icon = leaflet.AwesomeMarkers.icon({
-        prefix: 'fa',
-        icon: 'certificate',
-        className: classes.join(' '),
-//        cluster: false
-      });
-
       this.marker = leaflet.marker(this.config.getDefaultLatLng(), {
-        icon: icon,
+        icon: this.mkIcon(classes),
 //        initiative: this.initiative
       });
 
@@ -192,20 +184,13 @@ class MarkerView extends base {
     }
     else {
       const hovertext = this.presenter.getHoverText(initiative);
-      const classes = ['awesome-marker', 'sea-marker']
+      const classes = ['fa', 'sea-marker']
         .concat(MarkerView.classesForFields(initiative, this.config.fields()));
       
       
-      const icon = leaflet.AwesomeMarkers.icon({
-        prefix: 'fa',
-        icon: 'certificate',
-        className: classes.join(' '),
-        //cluster: false,
-      });
-      
       //this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {icon: icon, title: hovertext});
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
-        icon: icon,
+        icon: this.mkIcon(classes),
         //initiative: this.initiative
       });
 
@@ -257,6 +242,15 @@ class MarkerView extends base {
     }
   };
 
+  mkIcon(classes: string[]) {
+    return leaflet.divIcon({
+      html: `<svg class="sea-map-icon"><use href="#svg-icon"/></svg><svg class="sea-map-shadow"><use href="#svg-icon-shadow"/></svg>`,
+      className: classes.join(' '),
+      iconSize: [36,46],
+      iconAnchor: [18,46],
+    });
+  }
+
 
 
   setUnselected(initiative: Initiative) {
@@ -271,17 +265,10 @@ class MarkerView extends base {
 
     //change the color of an initiative with a location
     if (this.initiative.hasLocation()) {
-      const classes = ['awesome-marker', 'sea-marker']
+      const classes = ['fa', 'sea-marker']
         .concat(MarkerView.classesForFields(this.initiative, this.config.fields()));
       
-      this.marker?.setIcon(
-        leaflet.AwesomeMarkers.icon({
-          prefix: 'fa',
-          icon: 'certificate',
-          className: classes.join(' '),
-          //cluster: false
-        })
-      );
+      this.marker?.setIcon(this.mkIcon(classes));
     }
   };
 
@@ -290,17 +277,10 @@ class MarkerView extends base {
     this.mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (this.initiative.hasLocation()) {
-      const classes = ['awesome-marker', 'sea-marker', 'sea-selected']
+      const classes = ['fa', 'sea-marker', 'sea-selected']
         .concat(MarkerView.classesForFields(this.initiative, this.config.fields()));
       
-      this.initiative.__internal.marker.setIcon(
-        leaflet.AwesomeMarkers.icon({
-          prefix: 'fa',
-          icon: 'certificate',
-          className: classes.join(' '),
-          //cluster: false
-        })
-      );
+      this.initiative.__internal.marker.setIcon(this.mkIcon(classes));
     }
 
     if (!this.initiative.hasLocation()) {

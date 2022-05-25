@@ -164,7 +164,72 @@ export function webRun(window: Window, base_config: ConfigData): void {
   if (mapApp === null)
     throw new Error(`No target element ${target} found in this web page`);
 
-  mapApp.innerHTML = `
+  const iconDefs = `
+      <!-- Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" style="display: none"
+           >
+        <defs>
+          <style>.cls-1{fill:#3c00ce;}</style>
+          <symbol id="svg-icon-shadow" class="svg-icon-shadow" viewBox="0 0 28 42">
+            <filter
+               id="filter3967"
+               style="color-interpolation-filters:sRGB;">
+              <feFlood
+                 id="feFlood3953"
+                 result="flood"
+                 flood-color="rgb(255,255,255)"
+                 flood-opacity="1" />
+              <feColorMatrix
+                 id="feColorMatrix3955"
+                 result="colormatrix1"
+                 values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -0.2125 -0.7154 -0.0721 1 0 "
+                 in="SourceGraphic" />
+              <feGaussianBlur
+                 id="feGaussianBlur3957"
+                 result="blur"
+                 stdDeviation="10.06 6.43"
+                 in="colormatrix1" />
+              <feColorMatrix
+                 id="feColorMatrix3959"
+                 result="colormatrix2"
+                 values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1.2 -0.3 "
+                 in="blur" />
+              <feBlend
+                 id="feBlend3961"
+                 result="blend"
+                 mode="normal"
+                 in2="BackgroundImage"
+                 in="colormatrix2" />
+              <feComposite
+                 id="feComposite3963"
+                 result="composite1"
+                 k2="1"
+                 operator="arithmetic"
+                 in2="blend"
+                 in="blend" />
+              <feComposite
+                 id="feComposite3965"
+                 operator="in"
+                 in2="SourceGraphic" />
+            </filter>
+            <path
+               transform="matrix(0.94542347,0,0,1.010613,6.081143,8.0833578)"
+               style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;stroke-width:0.852301;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;"
+               d="M 8.3759894,33.560465 C 41.074971,15.559798 37.660691,3.0509515 24.288309,3.0509515 c -13.372381,0 -29.8347074,12.5088455 -15.9123196,30.5095135 z"
+               id="path845" />
+          </symbol>
+          <symbol id="svg-icon" class="svg-icon" viewBox="0 0 28 42">
+            <path
+              class="svg-icon-path"
+              d="M 14,6.4e-7 C 0.62761898,6.4e-7 -9.3106853,17.219925 14,42 37.310685,17.219926 27.372381,6.4e-7 14,6.4e-7 Z" />
+          </symbol>
+        </defs>
+        <!-- to make the svg-icon.svg file
+             also usable as image: -->
+        <use href="#svg-icon"/>
+      </svg>
+`;
+  mapApp.innerHTML = iconDefs+`
       <!-- Page Content -->
       <div class="w3-teal map-app-content">
         <!-- Sidebar -->

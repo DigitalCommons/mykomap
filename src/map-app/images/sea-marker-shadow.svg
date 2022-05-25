@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   viewBox="0 0 28 42"
+   height="42"
+   width="28"
+   id="svg2"
+   version="1.1">
+  <metadata
+     id="metadata8">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs6">
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter3967">
+      <feFlood
+         flood-opacity="1"
+         flood-color="rgb(255,255,255)"
+         result="flood"
+         id="feFlood3953" />
+      <feColorMatrix
+         in="SourceGraphic"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -0.2125 -0.7154 -0.0721 1 0 "
+         result="colormatrix1"
+         id="feColorMatrix3955" />
+      <feGaussianBlur
+         in="colormatrix1"
+         stdDeviation="10.06 6.43"
+         result="blur"
+         id="feGaussianBlur3957" />
+      <feColorMatrix
+         in="blur"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1.2 -0.3 "
+         result="colormatrix2"
+         id="feColorMatrix3959" />
+      <feBlend
+         in="colormatrix2"
+         in2="BackgroundImage"
+         mode="normal"
+         result="blend"
+         id="feBlend3961" />
+      <feComposite
+         k4="0"
+         k3="0"
+         k1="0"
+         in="blend"
+         in2="blend"
+         operator="arithmetic"
+         k2="1"
+         result="composite1"
+         id="feComposite3963" />
+      <feComposite
+         in2="SourceGraphic"
+         operator="in"
+         id="feComposite3965" />
+    </filter>
+  </defs>
+  <path
+     transform="matrix(0.94542347,0,0,1.010613,6.081143,8.0833578)"
+     style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;stroke-width:0.852301;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter3967)"
+     d="M 8.3759894,33.560465 C 41.074971,15.559798 37.660691,3.0509515 24.288309,3.0509515 c -13.372381,0 -29.8347074,12.5088455 -15.9123196,30.5095135 z"
+     id="path845" />
+</svg>
