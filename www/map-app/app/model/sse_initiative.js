@@ -1047,6 +1047,10 @@ function init(registry) {
     return config.getSidebarButtonColour();
   }
 
+  function getLanguage() {
+    return language || fallBackLanguage;
+  }
+
   return {
     loadFromWebService,
     setVocab,
@@ -1076,7 +1080,8 @@ function init(registry) {
     getVocabUriForProperty: (name) => getPropertySchema(name).vocabUri,
     getPropertySchema,
     getFunctionalLabels,
-    getSidebarButtonColour
+    getSidebarButtonColour,
+    getLanguage
   };
 }
 // Automatically load the data when the app is ready:
