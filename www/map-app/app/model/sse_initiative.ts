@@ -180,7 +180,6 @@ export type PropDefs = Dictionary<PropDef>;
 export interface SseInitiative {
   addInitiatives: (initiatives: InitiativeObj[]) => void;
   filterDatabases: (dbSource: string, all: boolean) => Initiative[];
-  finishInitiativeLoad: () => void;
   getAllRegisteredValues: () => InitiativeIndex;
   getAlternatePossibleFilterValues: (filters: Filter[], field: string) => Initiative[];
   getCurrentDatasets: () => string | boolean;
@@ -1233,7 +1232,6 @@ export function init(registry: Registry): SseInitiative {
     loadFromWebService,
     setVocab,
     addInitiatives,
-    finishInitiativeLoad,
     search,
     latLngBounds,
     getRegisteredValues,
