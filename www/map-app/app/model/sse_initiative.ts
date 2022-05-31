@@ -11,6 +11,141 @@ const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
 
+class SparqlDataLoader {
+  readonly maxInitiativesToLoadPerFrame = 100;
+  readonly config: Config;
+  readonly onData: (initiatives: InitiativeObj[]) => void;
+  readonly onFinish: () => void;
+  initiativesToLoad: InitiativeObj[] = [];
+  loadedInitiatives: Initiative[] = [];
+  startedLoading = false;
+  datasetsLoaded = 0;
+  datasetsToLoad = 0;
+
+  constructor(config: Config, onData: (data: InitiativeObj[]) => void, onFinish: () => void) {
+    this.config = config;
+    this.onData = onData;
+    this.onFinish = onFinish;
+  }
+  
+  // Loads the initiatives data for the given dataset (or all of them) from the server.
+  //
+  // The query is defined in the relevant dataset directory's `query.rq` file.
+  //
+  // @param dataset - the name of one of the configured datasets, or true to get all of them.
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
+  loadDataset(dataset: Dataset) {
+
+    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
+
+    // Note, caching currently doesn't work correctly with multiple data sets
+    // so until that's fixed, don't use it in that case.
+    const numDatasets = this.config.namedDatasets().length;
+    const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
+    if (noCache) {
+      service += "&noLodCache=true";
+    }
+    console.log("loadDataset", service);
+    if (!this.startedLoading) {
+      eventbus.publish({
+        topic: "Initiative.loadStarted",
+        data: { message: "Loading data via " + service, dataset: dataset.name }
+      });
+      this.startedLoading = true;
+    }
+
+    return json(service);
+  }
+
+
+  
+  // Incrementally loads the initiatives in `initiativesToLoad`, in
+  // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
+  // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
+  // batches are loaded.
+  loadNextInitiatives() {
+    // By loading the initiatives in chunks, we keep the UI responsive
+    for (let i = 0; i < this.maxInitiativesToLoadPerFrame; ++i) {
+      this.onData(this.initiativesToLoad.splice(0, this.maxInitiativesToLoadPerFrame));
+    }
+    // If there's still more to load, we do so after returning to the event loop:
+    if (this.initiativesToLoad.length) {
+      setTimeout(() => this.loadNextInitiatives());
+    } else {
+      this.finishInitiativeLoad();
+    }
+  }
+
+  finishInitiativeLoad() {
+    this.onFinish();
+    //if more left
+    this.datasetsLoaded++;
+    if (this.datasetsLoaded >= this.datasetsToLoad)
+      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
+  }
+
+  // Loads a set of initiatives
+  //
+  // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
+  //
+  // @param [String] dataset - the identifier of this dataset
+  // @param [Object] response - the response from get_dataset.php, a map which
+  // should include the following elements:
+  //
+  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `meta`: [Object] a map of the following information:
+  //    - `endpoint`: [String] the SPARQL endpoint queried 
+  //    - `query`: [String] the SPARQL query used
+  //    - `default_graph_uri`: [String] the default graph URI for the query (which
+  //       is expected to self-resolve to the dataset's index webpage)
+  //
+  add(dataset: Dataset, response: any) {
+    dataset.endpoint = response.meta.endpoint;
+    dataset.dgu = response.meta.default_graph_uri;
+    dataset.query = response.meta.query;
+
+    this.initiativesToLoad = this.initiativesToLoad.concat(response.data);
+    this.loadNextInitiatives();
+  }
+  
+  loadInitiatives(datasets: Dataset[]) {
+    datasets.forEach(dataset =>
+      this.loadDataset(dataset)
+        .then(this.onDatasetSuccess(dataset))
+        .catch(this.onDatasetFailure(dataset))
+    );
+  }
+
+  protected onDatasetSuccess(dataset: Dataset) {
+    return (response: any) => {
+      console.debug("loaded " + dataset.id + " data", response);
+      this.add(dataset, response);
+      eventbus.publish({ topic: "Initiative.datasetLoaded" });
+    };
+  }
+
+  protected onDatasetFailure(dataset: Dataset) {
+    return (error: string) => {
+      console.error("load " + dataset.id + " data failed", error);
+
+      eventbus.publish({
+        topic: "Initiative.loadFailed",
+        data: { error: error, dataset: dataset.id }
+      });
+    };
+  }
+
+  reset() {
+    this.startedLoading = false;
+    this.loadedInitiatives = [];
+    this.initiativesToLoad = [];
+    this.datasetsLoaded = 0;
+    this.datasetsToLoad = 0;
+  }
+}
+
+
 export class Initiative {
   //  This is used for associating internal data, like map markers
   __internal: Dictionary<any> = {};
@@ -292,8 +427,7 @@ export function init(registry: Registry): SseInitiative {
     return searchStr;
   }
 
-  let loadedInitiatives: Initiative[] = [];
-  let initiativesToLoad: InitiativeObj[] = [];
+  const dataLoader = new SparqlDataLoader(config, addInitiatives, sortLoadedData);
   let initiativesByUid: Dictionary<Initiative> = {};
   let allDatasets: string[] = config.namedDatasets();
 
@@ -449,7 +583,7 @@ export function init(registry: Registry): SseInitiative {
 
     });
 
-    insert(initiative, loadedInitiatives);
+    insert(initiative, dataLoader.loadedInitiatives);
     initiativesByUid[initiative.uri] = initiative;
 
     eventbus.publish({ topic: "Initiative.new", data: initiative });
@@ -490,25 +624,25 @@ export function init(registry: Registry): SseInitiative {
   function search(text: string): Initiative[] {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
-    return loadedInitiatives.filter(function (i) {
-      return i.searchstr.includes(up);
-    }).sort((a, b) => sortInitiatives(a, b));
+    return dataLoader.loadedInitiatives.filter(
+      (i: Initiative) => i.searchstr.includes(up)
+    ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
   }
 
   function getLoadedInitiatives() {
-    return loadedInitiatives;
+    return dataLoader.loadedInitiatives;
   }
 
   function filterDatabases(dbSource: string, all: boolean) {
     // returns an array of sse objects whose dataset is the same as dbSource
     //if boolean all is set to true returns all instead
     if (all)
-      return loadedInitiatives;
+      return dataLoader.loadedInitiatives;
     else {
       let up = dbSource.toUpperCase();
-      return loadedInitiatives.filter(function (i) {
-        return i.dataset.toUpperCase() === up;
-      });
+      return dataLoader.loadedInitiatives.filter(
+        (i: Initiative) => i.dataset.toUpperCase() === up
+      );
     }
 
   }
@@ -549,12 +683,12 @@ export function init(registry: Registry): SseInitiative {
       return cachedLatLon;
     }
 
-    const lats = (initiatives || loadedInitiatives)
-      .filter(obj => obj.lat !== null && !isNaN(obj.lat))
-      .map(obj => obj.lat);
-    const lngs = (initiatives || loadedInitiatives)
-      .filter(obj => obj.lng !== null && !isNaN(obj.lng))
-      .map(obj => obj.lng);
+    const lats = (initiatives || dataLoader.loadedInitiatives)
+                   .filter((obj: Initiative) => obj.lat !== null && !isNaN(obj.lat))
+                   .map((obj: Initiative) => obj.lat);
+    const lngs = (initiatives || dataLoader.loadedInitiatives)
+                   .filter((obj: Initiative) => obj.lng !== null && !isNaN(obj.lng))
+                   .map((obj: Initiative) => obj.lng);
     const west = Math.min.apply(Math, lngs);
     const east = Math.max.apply(Math, lngs);
     const south = Math.min.apply(Math, lats);
@@ -569,62 +703,6 @@ export function init(registry: Registry): SseInitiative {
   function addInitiatives(initiatives: InitiativeObj[]) {
     initiatives
       .forEach(elem => mkInitiative(elem));
-  }
-
-  function finishInitiativeLoad() {
-    sortLoadedData();
-    //if more left
-    datasetsLoaded++;
-    if (datasetsLoaded >= datasetsToLoad)
-      eventbus.publish({ topic: "Initiative.complete" }); //stop loading the specific dataset
-  }
-
-  // Incrementally loads the initiatives in `initiativesToLoad`, in
-  // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
-  // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
-  // batches are loaded.
-  //
-  //NEEDS TO BE FIXED TO WORK WITH MULTIPLE DATASETS
-  function loadNextInitiatives() {
-    var i, e;
-    var maxInitiativesToLoadPerFrame = 100;
-    // By loading the initiatives in chunks, we keep the UI responsive
-    for (i = 0; i < maxInitiativesToLoadPerFrame; ++i) {
-      addInitiatives(initiativesToLoad.splice(0, maxInitiativesToLoadPerFrame));
-    }
-    // If there's still more to load, we do so after returning to the event loop:
-    if (initiativesToLoad.length) {
-      setTimeout(function () {
-        loadNextInitiatives();
-      });
-    } else {
-      finishInitiativeLoad();
-    }
-  }
-
-  // Loads a set of initiatives
-  //
-  // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
-  //
-  // @param [String] dataset - the identifier of this dataset
-  // @param [Object] response - the response from get_dataset.php, a map which
-  // should include the following elements:
-  //
-  // - `data`: [Array] list of inititive definitions, each a map of field names to values
-  // - `meta`: [Object] a map of the following information:
-  //    - `endpoint`: [String] the SPARQL endpoint queried 
-  //    - `query`: [String] the SPARQL query used
-  //    - `default_graph_uri`: [String] the default graph URI for the query (which
-  //       is expected to self-resolve to the dataset's index webpage)
-  //
-  function add(dataset: string, response: any) {
-    const meta = verboseDatasets[dataset];
-    meta.endpoint = response.meta.endpoint;
-    meta.dgu = response.meta.default_graph_uri;
-    meta.query = response.meta.query;
-
-    initiativesToLoad = initiativesToLoad.concat(response.data);
-    loadNextInitiatives();
   }
 
   //taken from 
@@ -714,9 +792,7 @@ export function init(registry: Registry): SseInitiative {
     if (dataset === currentDatasets)
       return;
 
-    startedLoading = false;
-    loadedInitiatives = [];
-    initiativesToLoad = [];
+    dataLoader.reset();
     initiativesByUid = {};
     registeredValues = {};
     allRegisteredValues = {};
@@ -731,10 +807,6 @@ export function init(registry: Registry): SseInitiative {
     loadFromWebService();
   }
 
-
-  let startedLoading = false;
-  let datasetsLoaded = 0;
-  let datasetsToLoad = 0;
 
 
   // Loads the configured list of vocabs from the server.
@@ -779,15 +851,7 @@ export function init(registry: Registry): SseInitiative {
     loadVocabs()
       .then(onVocabSuccess)
       .catch(onVocabFailure)
-      .finally(loadInitiatives);
-
-    function loadInitiatives() {
-      datasets.forEach(dataset =>
-        loadDataset(dataset)
-          .then(onDatasetSuccess(dataset))
-          .catch(onDatasetFailure(dataset))
-      );
-    }
+      .finally(() => dataLoader.loadInitiatives(datasets.map(id => verboseDatasets[id])));
 
     function onVocabSuccess(response: any) {
       console.log("loaded vocabs", response);
@@ -803,25 +867,6 @@ export function init(registry: Registry): SseInitiative {
         data: { error: error }
       });
     }
-
-    function onDatasetSuccess(dataset: string) {
-      return (response: any) => {
-        console.debug("loaded " + dataset + " data", response);
-        add(dataset, response);
-        eventbus.publish({ topic: "Initiative.datasetLoaded" });
-      };
-    }
-
-    function onDatasetFailure(dataset: string) {
-      return (error: string) => {
-        console.error("load " + dataset + " data failed", error);
-
-        eventbus.publish({
-          topic: "Initiative.loadFailed",
-          data: { error: error, dataset: dataset }
-        });
-      };
-    }
   }
 
   function setVocab(data: VocabIndex, fallBackLanguage: string) {
@@ -830,36 +875,6 @@ export function init(registry: Registry): SseInitiative {
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
-
-  // Loads the initiatives data for the given dataset (or all of them) from the server.
-  //
-  // The query is defined in the relevant dataset directory's `query.rq` file.
-  //
-  // @param dataset - the name of one of the configured datasets, or true to get all of them.
-  //
-  // @return the response data wrapped in a promise, direct from d3.json.
-  function loadDataset(dataset: string) {
-
-    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset)}`;
-
-    // Note, caching currently doesn't work correctly with multiple data sets
-    // so until that's fixed, don't use it in that case.
-    const numDatasets = config.namedDatasets().length;
-    const noCache = numDatasets > 1 ? true : config.getNoLodCache();
-    if (noCache) {
-      service += "&noLodCache=true";
-    }
-    console.log("loadDataset", service);
-    if (!startedLoading) {
-      eventbus.publish({
-        topic: "Initiative.loadStarted",
-        data: { message: "Loading data via " + service, dataset: verboseDatasets[dataset].name }
-      });
-      startedLoading = true;
-    }
-
-    return json(service);
-  }
 
   function getDialogueSize() {
     const dialogueSize = config.getDialogueSize();
