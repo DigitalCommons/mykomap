@@ -27,8 +27,11 @@ import type {
   Initiative,
   PropDef,
   PropDefs,
-  VocabSource
 } from './sse_initiative';
+
+import type {
+  VocabSource
+} from './vocabs';
 
 class TypeDef<T> {
   constructor(params: {
