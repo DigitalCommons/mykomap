@@ -144,6 +144,7 @@ export class Vocabs {
   }
   
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  // Returns '?' if there is no value found
   getVocabTerm(vocabUri: string, termUri: string, language: string): string {
     termUri = this.abbrevUri(termUri);
     // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
@@ -222,4 +223,5 @@ export class Vocabs {
 
     return uri; // No abbreviation possible.
   }
+
 }
