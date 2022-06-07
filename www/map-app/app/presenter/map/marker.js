@@ -1,9 +1,9 @@
 "use strict";
 const eventbus = require('../../eventbus');
+const presenter = require('../../presenter');
 
 function init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter');
   const defaultPopup = registry('view/map/popup').getPopup;
   const sse_initiatives = registry('model/sse_initiative');
 

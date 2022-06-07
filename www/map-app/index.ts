@@ -85,7 +85,6 @@ export function initRegistry(config: Config): Registry {
   // Register the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependants.
   registry.def('view/base', require('./app/view/base'));
-  registry.def('presenter', require('./app/presenter'));
   registry.def('view/map/popup', require('./app/view/map/default_popup'));
   registry.def('presenter/map/marker', require('./app/presenter/map/marker')(registry));
   registry.def('view/map/marker', require('./app/view/map/marker')(registry));

@@ -1,9 +1,9 @@
 "use strict";
 const eventbus = require('../../eventbus');
+const presenter = require('../../presenter');
 
 function init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter');
   
   function Stack() {
     this.index = 0;
