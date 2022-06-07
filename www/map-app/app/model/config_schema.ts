@@ -846,7 +846,7 @@ Here is an example of what you might put in this file:
   "htmlTitle": "Solidarity Oxford",
   "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom": false
+  "disableClusteringAtZoom": 10
 }
 \`\`\`
 
