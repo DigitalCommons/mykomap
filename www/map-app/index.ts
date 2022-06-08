@@ -78,37 +78,37 @@ export function parseUrlParameters(search: string): UrlParams {
 export function initRegistry(config: Config): Registry {
   const registry: Registry = makeRegistry();
   
-  registry.def('config', config);
+  registry.def('config', () => config);
   registry.def('model/sse_initiative',
-               require('./app/model/sse_initiative').init(registry));
+               () => require('./app/model/sse_initiative').init(registry));
 
   // Register the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependants.
-  registry.def('view/base', require('./app/view/base'));
-  registry.def('view/map/popup', require('./app/view/map/default_popup'));
-  registry.def('presenter/map/marker', require('./app/presenter/map/marker')(registry));
-  registry.def('view/map/marker', require('./app/view/map/marker')(registry));
-  registry.def('presenter/map', require('./app/presenter/map').init(registry));
-  registry.def('view/map', require('./app/view/map')(registry));
-  registry.def('presenter/searchbox', require('./app/presenter/searchbox')(registry));
-  registry.def('view/searchbox', require('./app/view/searchbox')(registry));
-  registry.def('view/sidebar/base', require('./app/view/sidebar/base'));    
-  registry.def('presenter/sidebar/base', require('./app/presenter/sidebar/base')(registry));
-  registry.def('presenter/sidebar/about', require('./app/presenter/sidebar/about')(registry));
-  registry.def('presenter/sidebar/directory', require('./app/presenter/sidebar/directory')(registry));
-  registry.def('presenter/sidebar/datasets', require('./app/presenter/sidebar/datasets')(registry));
-  registry.def('presenter/sidebar/initiatives', require('./app/presenter/sidebar/initiatives')(registry));
-  registry.def('presenter/sidebar', require('./app/presenter/sidebar')(registry));
-  registry.def('view/sidebar/about', require('./app/view/sidebar/about')(registry));
-  registry.def('view/sidebar/directory', require('./app/view/sidebar/directory')(registry));
-  registry.def('view/sidebar/datasets', require('./app/view/sidebar/datasets')(registry));
-  registry.def('view/sidebar/initiatives', require('./app/view/sidebar/initiatives')(registry));
-  registry.def('view/sidebar', require('./app/view/sidebar')(registry));
-  registry.def('presenter/sidebar/mainmenu', require('./app/presenter/sidebar/mainmenu')(registry));
+  registry.def('view/base', () => require('./app/view/base'));
+  registry.def('view/map/popup', () => require('./app/view/map/default_popup'));
+  registry.def('presenter/map/marker', () => require('./app/presenter/map/marker')(registry));
+  registry.def('view/map/marker', () => require('./app/view/map/marker')(registry));
+  registry.def('presenter/map', () => require('./app/presenter/map').init(registry));
+  registry.def('view/map', () => require('./app/view/map')(registry));
+  registry.def('presenter/searchbox', () => require('./app/presenter/searchbox')(registry));
+  registry.def('view/searchbox', () => require('./app/view/searchbox')(registry));
+  registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    
+  registry.def('presenter/sidebar/base', () => require('./app/presenter/sidebar/base')(registry));
+  registry.def('presenter/sidebar/about', () => require('./app/presenter/sidebar/about')(registry));
+  registry.def('presenter/sidebar/directory', () => require('./app/presenter/sidebar/directory')(registry));
+  registry.def('presenter/sidebar/datasets', () => require('./app/presenter/sidebar/datasets')(registry));
+  registry.def('presenter/sidebar/initiatives', () => require('./app/presenter/sidebar/initiatives')(registry));
+  registry.def('presenter/sidebar', () => require('./app/presenter/sidebar')(registry));
+  registry.def('view/sidebar/about', () => require('./app/view/sidebar/about')(registry));
+  registry.def('view/sidebar/directory', () => require('./app/view/sidebar/directory')(registry));
+  registry.def('view/sidebar/datasets', () => require('./app/view/sidebar/datasets')(registry));
+  registry.def('view/sidebar/initiatives', () => require('./app/view/sidebar/initiatives')(registry));
+  registry.def('view/sidebar', () => require('./app/view/sidebar')(registry));
+  registry.def('presenter/sidebar/mainmenu', () => require('./app/presenter/sidebar/mainmenu')(registry));
   
   // The code for each view is loaded by www/app/view.js
   // Initialize the views:
-  registry.def('view', require('./app/view.js')(registry));
+  registry.def('view', () => require('./app/view.js')(registry));
 
   return registry;
 };

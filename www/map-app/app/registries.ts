@@ -18,23 +18,33 @@ import type { Dictionary } from '../common_types';
 export type Module = unknown;
 
 export interface Registry {
-  def: (name: string, service: Module) => Module;
+  def: (name: string, service: () => Module) => void;
   (name: string): Module;
 }
 
 // Makes a new registry object.
 export function makeRegistry(): Registry {
-  const index = new Object() as Dictionary<Module>;
-
+  const index = new Object() as Dictionary<() => Module>;
+  const resolved = {} as Dictionary<false | Module>;
+    
   const registry = (name: string): Module => {
     if (!index[name]) {
       throw new Error(`Service '${name}' not yet defined`);
     }
+    if (resolved[name] === false) {
+      console.debug(`registry('${name}') called whilst loading of registry('${name}')`);      
+      throw new Error(`Service '${name}' has cyclic dependency`);
+    }
+    if (resolved[name]) {
+      return resolved[name];
+    }
 
-    return index[name];
+    console.debug(`registry('${name}')`);
+    resolved[name] = false;
+    return resolved[name] = index[name]();
   };
   
-  registry.def = (name: string, service: Module): Module => {
+  registry.def = (name: string, service: () => Module): void => {
     // console.debug("registry.def", name, service);
     if (typeof(name) != 'string') {
       throw new Error(`Service name  is invalid: '${name}'`);
@@ -47,7 +57,7 @@ export function makeRegistry(): Registry {
       throw new Error(`Service '${name}' already defined with a different value`);
     }
 
-    return index[name] = service;
+    index[name] = service;
   };
 
   return registry;
