@@ -88,7 +88,7 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/map/popup', require('./app/view/map/default_popup'));
   registry.def('presenter/map/marker', require('./app/presenter/map/marker')(registry));
   registry.def('view/map/marker', require('./app/view/map/marker')(registry));
-  registry.def('presenter/map', require('./app/presenter/map')(registry));
+  registry.def('presenter/map', require('./app/presenter/map').init(registry));
   registry.def('view/map', require('./app/view/map')(registry));
   registry.def('presenter/searchbox', require('./app/presenter/searchbox')(registry));
   registry.def('view/searchbox', require('./app/view/searchbox')(registry));
