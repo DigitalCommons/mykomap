@@ -124,8 +124,6 @@ function init(registry) {
     //   }
     // }); //should be doing this
 
-    const lats = initiatives.map(x => x.lat);
-    const lngs = initiatives.map(x => x.lng);
     let options = { maxZoom: config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
       options = { maxZoom: config.getMaxZoomOnOne() };
@@ -133,7 +131,10 @@ function init(registry) {
     if (options.maxZoom == 0)
       options = {};
 
+    const defaultPos = config.getDefaultLatLng();
     if (initiatives.length > 0) {
+      const lats = initiatives.map(x => x.lat || defaultPos[0]);
+      const lngs = initiatives.map(x => x.lng || defaultPos[1]);
       eventbus.publish({
         topic: "Map.selectAndZoomOnInitiative",
         data: {
