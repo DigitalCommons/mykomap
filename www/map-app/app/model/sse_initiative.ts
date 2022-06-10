@@ -454,6 +454,19 @@ class SparqlDataAggregator {
     })
     return vocabIDsAndInitiativeVariables;
   }
+
+  // Returns an array of sse objects whose dataset is the same as dbSource.
+  // If boolean all is set to true returns all instead.
+  filterDatabases(dbSource: string, all: boolean): Initiative[] {
+    if (all)
+      return this.loadedInitiatives;
+    else {
+      const up = dbSource.toUpperCase();
+      return this.loadedInitiatives.filter(
+        (i: Initiative) => i.dataset.toUpperCase() === up
+      );
+    }
+  }  
 }
 
 
@@ -635,31 +648,10 @@ export class SseInitiative {
     }
   }
 
-  addInitiatives(data: InitiativeObj[]): void {
-    if (!this.dataAggregator)
-      throw new Error("Can't addInitiatives. Data has not yet been aggregated.");
-    this.dataAggregator.addInitiatives(data);
-  }
-
-  filterDatabases(dbSource: string, all: boolean): Initiative[] {
-    if (!this.dataAggregator)
-      throw new Error("Can't filterDatabases. Data has not yet been aggregated.");
-    // returns an array of sse objects whose dataset is the same as dbSource
-    //if boolean all is set to true returns all instead
-    if (all)
-      return this.dataAggregator.loadedInitiatives;
-    else {
-      let up = dbSource.toUpperCase();
-      return this.dataAggregator.loadedInitiatives.filter(
-        (i: Initiative) => i.dataset.toUpperCase() === up
-      );
-    }
-
-  }
 
   getAllRegisteredValues(): InitiativeIndex {
     if (!this.dataAggregator)
-      throw new Error("Can't getAllRegisteredValues. Data has not yet been aggregated.");
+      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
     return this.dataAggregator.allRegisteredValues;
   }
 
@@ -735,9 +727,9 @@ export class SseInitiative {
     return this.functionalLabels[this.getLanguage()];
   }
   
-  getInitiativeByUniqueId(uid: string): Initiative {
+  getInitiativeByUniqueId(uid: string): Initiative | undefined {
     if (!this.dataAggregator)
-      throw new Error("Can't getInitiativeByUniqueId. Data has not yet been aggregated.");
+      return undefined; // Data has not yet been aggregated.  Some dependencies call this early!
     return this.dataAggregator.initiativesByUid[uid];
   }
 
@@ -779,10 +771,8 @@ export class SseInitiative {
     return possibleFilterValues;
   }
 
-  getPropertySchema(propName: string): PropDef {
-    if (!this.dataAggregator)
-      throw new Error("Can't getPropertySchema. Data has not yet been aggregated.");
-    return this.dataAggregator.getPropertySchema(propName);
+  getPropertySchema(propName: string): PropDef | undefined {
+    return this.propertySchema[propName];
   }
   
   getRegisteredValues(): RegisteredValues {
@@ -944,7 +934,7 @@ export class SseInitiative {
   
   search(text: string): Initiative[] {
     if (!this.dataAggregator)
-      throw new Error("Can't search. Data has not yet been aggregated.");
+      return [];
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return this.dataAggregator.loadedInitiatives.filter(
