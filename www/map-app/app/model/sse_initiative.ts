@@ -12,14 +12,22 @@ const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
 
+interface DatasetResponse {
+  meta: {
+    endpoint?: string;
+    default_graph_uri?: string;
+    query?: string;
+  };
+  data: InitiativeObj[];
+  status?: "success";
+}
+
 class SparqlDataLoader {
   readonly maxInitiativesToLoadPerFrame = 100;
   readonly config: Config;
   readonly onFinish: (aggregator: SparqlDataAggregator) => void;
   initiativesToLoad: InitiativeObj[] = [];
   startedLoading = false;
-  datasetsLoaded = 0;
-  datasetsToLoad = 0;
 
   constructor(config: Config, onFinish: (aggregator: SparqlDataAggregator) => void) {
     this.config = config;
@@ -33,7 +41,14 @@ class SparqlDataLoader {
   // @param dataset - the name of one of the configured datasets, or true to get all of them.
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  loadDataset(dataset: Dataset) {
+  // The data should be an object with the properties:
+  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `meta`: [Object] a map of the following information:
+  //    - `endpoint`: [String] the SPARQL endpoint queried 
+  //    - `query`: [String] the SPARQL query used
+  //    - `default_graph_uri`: [String] the default graph URI for the query (which
+  //       is expected to self-resolve to the dataset's index webpage)
+  loadDataset(dataset: Dataset): Promise<DatasetResponse> {
 
     let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
 
@@ -58,88 +73,90 @@ class SparqlDataLoader {
 
 
   
-  // Incrementally loads the initiatives in `initiativesToLoad`, in
-  // batches of `maxInitiativesToLoadPerFrame`, in the background so as to avoid
-  // making the UI unresponsive. Re-invokes itself using `setTimeout` until all
-  // batches are loaded.
-  loadNextInitiatives(aggregator: SparqlDataAggregator) {
-    // By loading the initiatives in chunks, we keep the UI responsive
-    for (let i = 0; i < this.maxInitiativesToLoadPerFrame; ++i) {
-      aggregator.addInitiatives(this.initiativesToLoad.splice(0, this.maxInitiativesToLoadPerFrame));
-    }
-    // If there's still more to load, we do so after returning to the event loop:
-    if (this.initiativesToLoad.length) {
-      setTimeout(() => this.loadNextInitiatives(aggregator));
-    } else {
-      this.finishInitiativeLoad(aggregator);
-    }
-  }
-
-  finishInitiativeLoad(aggregator: SparqlDataAggregator) {
-    //if more left
-    this.datasetsLoaded++;
-    if (this.datasetsLoaded >= this.datasetsToLoad) {
-      aggregator.sortLoadedData();
-      this.onFinish(aggregator);
-    }
-  }
-
   // Loads a set of initiatives
   //
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
   // @param [String] dataset - the identifier of this dataset
-  // @param [Object] response - the response from get_dataset.php, a map which
-  // should include the following elements:
+  // @param [SparqlDataAggregator] aggregator - consumer for the data
   //
-  // - `data`: [Array] list of inititive definitions, each a map of field names to values
-  // - `meta`: [Object] a map of the following information:
-  //    - `endpoint`: [String] the SPARQL endpoint queried 
-  //    - `query`: [String] the SPARQL query used
-  //    - `default_graph_uri`: [String] the default graph URI for the query (which
-  //       is expected to self-resolve to the dataset's index webpage)
-  //
-  add(dataset: Dataset, response: any, aggregator: SparqlDataAggregator) {
-    dataset.endpoint = response.meta.endpoint;
-    dataset.dgu = response.meta.default_graph_uri;
-    dataset.query = response.meta.query;
+  // @returns a promise which resolves when all datasets are fully loaded and processed
+  async loadInitiatives(datasets: Dataset[], aggregator: SparqlDataAggregator) {
 
-    this.initiativesToLoad = this.initiativesToLoad.concat(response.data);
-    this.loadNextInitiatives(aggregator);
-  }
-  
-  loadInitiatives(datasets: Dataset[], aggregator: SparqlDataAggregator) {
-    datasets.forEach(dataset =>
-      this.loadDataset(dataset)
-        .then(this.onDatasetSuccess(dataset, aggregator))
-        .catch(this.onDatasetFailure(dataset))
-    );
-  }
+    // Calls this.loadDataset and handles the result
+    const loadDataset = async (dataset: Dataset) => {
+      const result: [string, InitiativeObj[]] | [string, undefined] = [dataset.id, undefined];
+      try {
+        const response: DatasetResponse = await this.loadDataset(dataset);
+        console.debug("loaded " + dataset.id + " data", response);
 
-  protected onDatasetSuccess(dataset: Dataset, aggregator: SparqlDataAggregator) {
-    return (response: any) => {
-      console.debug("loaded " + dataset.id + " data", response);
-      this.add(dataset, response, aggregator);
-      eventbus.publish({ topic: "Initiative.datasetLoaded" });
+        // Record the dataset's metadata
+        dataset.endpoint = response.meta.endpoint;
+        dataset.dgu = response.meta.default_graph_uri;
+        dataset.query = response.meta.query;
+
+        // Return the dataset id and its data
+        result[1] = response.data;
+      }
+      catch(error) {
+        console.error("load " + dataset.id + " data failed", error);
+        
+        eventbus.publish({
+          topic: "Initiative.loadFailed",
+          data: { error: error, dataset: dataset.id }
+        });
+
+        // Return the default, a failed dataset indicator
+      }
+      return result;
     };
-  }
+    
+    // Launch the dataset loaders asynchronously, obtaining an array of promises
+    // for an [<id>, <data>] pair.
+    // Make an index of datasetIds to expect to the relevant dataset loader promises
+    let outstanding = Object.fromEntries(datasets.map(
+      (ds, ix) => [ds.id, loadDataset(ds)]
+    ));
+    
+    // Process the data as it arrives, in chunks    
+    while(Object.keys(outstanding).length > 0) {
+      try {
+        const outstandingPromises = Object.values(outstanding);
+        const [datasetId, dataset] = await Promise.any(outstandingPromises);
+        
+        // A dataset has arrived... check it off the list
+        delete outstanding[datasetId];
+        
+        if (dataset !== undefined) { // Skip failed datasets, which will be undefined
+          
+          // Load initiatives in chunks, to keep the UI responsive
+          while(dataset.length > 0) {
+            const batch = dataset.splice(0, this.maxInitiativesToLoadPerFrame);
 
-  protected onDatasetFailure(dataset: Dataset) {
-    return (error: string) => {
-      console.error("load " + dataset.id + " data failed", error);
+             // Call addInitiatives in the background, to prevent it blocking other processes.
+            await (async () => aggregator.addInitiatives(batch))();
+          }
+          
+          // Publish completion event
+          eventbus.publish({ topic: "Initiative.datasetLoaded" });
+        }
+      }
+      catch(error) {
+        // All promises should succeed, even on error. Therefore this
+        // shouldn't normally occur, except possibly if there are no
+        // datasets.  Ignore this.
+        console.debug("Unexpected exception whilst processing datasets: ", error);
+      }
+    }
 
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: error, dataset: dataset.id }
-      });
-    };
+    // Having loaded all we can, finish off
+    aggregator.sortLoadedData();
+    this.onFinish(aggregator);
   }
 
   reset() {
     this.startedLoading = false;
     this.initiativesToLoad = [];
-    this.datasetsLoaded = 0;
-    this.datasetsToLoad = 0;
   }
 }
 
