@@ -54,8 +54,8 @@ interface DataAggregator extends DataConsumer {
 }
 
 class SparqlDataLoader implements DataLoader {
-  readonly maxInitiativesToLoadPerFrame = 100;
-  readonly config: Config;
+  private readonly maxInitiativesToLoadPerFrame = 100;
+  private readonly config: Config;
 
   constructor(config: Config) {
     this.config = config;
@@ -174,17 +174,16 @@ class SparqlDataLoader implements DataLoader {
 }
 
 class SparqlDataAggregator implements DataAggregator {
-  readonly config: Config;
-  readonly propertySchema: PropDefs;
-  readonly loadedInitiatives: Initiative[] = [];
   readonly initiativesByUid: Dictionary<Initiative> = {};
-  readonly vocabs: Vocabs;
-  readonly vocabBuilder: ParamBuilder<PropDef>;
-  readonly labels: Dictionary<string>;
-  // arrays of sorted values grouped by label, then by field
   readonly registeredValues: RegisteredValues = {};
-  // arrays of sorted values, grouped by label
   readonly allRegisteredValues: InitiativeIndex = {};
+  readonly loadedInitiatives: Initiative[] = [];
+  
+  private readonly config: Config;
+  private readonly propertySchema: PropDefs;
+  private readonly vocabs: Vocabs;
+  private readonly vocabBuilder: ParamBuilder<PropDef>;
+  private readonly labels: Dictionary<string>;
 
   constructor(config: Config, propertySchema: PropDefs, vocabs: Vocabs, labels: Dictionary<string>) {
     this.config = config;
@@ -194,6 +193,37 @@ class SparqlDataAggregator implements DataAggregator {
     this.labels = labels;
   }
 
+  addBatch(initiatives: InitiativeObj[]): void {
+    initiatives
+      .forEach(elem => this.onData(elem));
+  }
+  
+  // Finishes the load after all data has been seen.
+  complete() {
+    // Loop through the filters and sort them data, then sort the keys in order
+    // Sorts only the filterable fields, not the initiatives they hold
+    const filterableFields: string[] = this.config.getFilterableFields();
+    filterableFields.forEach(filterable => {
+      const label = this.getTitleForProperty(filterable);
+
+      const labelValues: InitiativeIndex = this.registeredValues[label];
+      if (labelValues) {
+        const propDef = this.getPropertySchema(filterable);
+        const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
+        const ordered = Object
+          .entries(labelValues)
+          .sort(sorter)
+        // FIXME ideally we'd sort numbers, booleans, etc. appropriately
+
+        this.registeredValues[label] = Object.fromEntries(ordered);
+      }
+
+      // Sort entries as strings
+      function sortAsString(a: [string, any], b: [string, any]): number {
+        return String(a[0]).localeCompare(String(b[0]));
+      }
+    });
+  }
   
   reset() {
     this.loadedInitiatives.length = 0;
@@ -202,7 +232,7 @@ class SparqlDataAggregator implements DataAggregator {
     clear(this.allRegisteredValues);
   }
   
-  mkBuilder(vocabs: Vocabs): ParamBuilder<PropDef> {
+  private mkBuilder(vocabs: Vocabs): ParamBuilder<PropDef> {
     function buildVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
       const paramName = def.from ?? id;
       const uri = params[paramName];
@@ -262,7 +292,7 @@ class SparqlDataAggregator implements DataAggregator {
     return buildAny;
   }
   
-  onData(e: InitiativeObj) {
+  private onData(e: InitiativeObj) {
     // Not all initiatives have activities
 
     const searchedFields = this.config.getSearchedFields();
@@ -353,18 +383,13 @@ class SparqlDataAggregator implements DataAggregator {
     eventbus.publish({ topic: "Initiative.new", data: initiative });
   }
 
-  addBatch(initiatives: InitiativeObj[]): void {
-    initiatives
-      .forEach(elem => this.onData(elem));
-  }
-
-  insert(element: any, array: any[]) {
+  private insert(element: any, array: any[]) {
     array.splice(this.locationOf(element, array), 0, element);
     return array;
   }
   
   // Get a searchable value which can be added to an initiative's searchstr field
-  mkSearchableValue(value: any, propDef: PropDef, language: string) {
+  private mkSearchableValue(value: any, propDef: PropDef, language: string) {
     if (value === undefined || value === null)
       return '';
 
@@ -379,7 +404,7 @@ class SparqlDataAggregator implements DataAggregator {
     return term;
   }
   
-  locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
+  private locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
     var pivot = Math.floor(start + (end - start) / 2);
     if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
       //SPECIAL CASE FOR ARRAY WITH LEN = 1
@@ -399,7 +424,7 @@ class SparqlDataAggregator implements DataAggregator {
     }
   }
   
-  getTitleForProperty(propName: string): string {
+  private getTitleForProperty(propName: string): string {
     let title = propName; // Fallback value
 
     try {
@@ -436,35 +461,8 @@ class SparqlDataAggregator implements DataAggregator {
     return propDef;
   }
 
-  // Finishes the load after all data has been seen.
-  complete() {
-    // Loop through the filters and sort them data, then sort the keys in order
-    // Sorts only the filterable fields, not the initiatives they hold
-    const filterableFields: string[] = this.config.getFilterableFields();
-    filterableFields.forEach(filterable => {
-      const label = this.getTitleForProperty(filterable);
-
-      const labelValues: InitiativeIndex = this.registeredValues[label];
-      if (labelValues) {
-        const propDef = this.getPropertySchema(filterable);
-        const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
-        const ordered = Object
-          .entries(labelValues)
-          .sort(sorter)
-        // FIXME ideally we'd sort numbers, booleans, etc. appropriately
-
-        this.registeredValues[label] = Object.fromEntries(ordered);
-      }
-
-      // Sort entries as strings
-      function sortAsString(a: [string, any], b: [string, any]): number {
-        return String(a[0]).localeCompare(String(b[0]));
-      }
-    });
-  }
-  
   // Sort entries by the vocab label for the ID used as the key
-  sortByVocabLabel(id: string, propDef: PropDef) {
+  private sortByVocabLabel(id: string, propDef: PropDef) {
     const vocab = this.vocabs.getVocabForProperty(id, propDef, this.config.getLanguage());
     return (a: [string, any], b: [string, any]): number => {
       const alab = vocab.terms[a[0]];
@@ -488,7 +486,7 @@ class SparqlDataAggregator implements DataAggregator {
 
   // Returns an array of sse objects whose dataset is the same as dbSource.
   // If boolean all is set to true returns all instead.
-  filterDatabases(dbSource: string, all: boolean): Initiative[] {
+  private filterDatabases(dbSource: string, all: boolean): Initiative[] {
     if (all)
       return this.loadedInitiatives;
     else {
