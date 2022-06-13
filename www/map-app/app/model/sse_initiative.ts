@@ -22,7 +22,38 @@ interface DatasetResponse {
   status?: "success";
 }
 
-class SparqlDataLoader {
+interface DataConsumer {
+  // Add a batch of data. May be called multiple times.
+  addBatch(initiatives: InitiativeObj[]): void;
+
+  // Finishes the load after all data has been seen.
+  complete(): void;
+}
+
+interface DataLoader {
+  // Asynchronously load the datasets given, feeding it to the consumer given.
+  // @returns a promise indicating when this has been done.
+  loadDatasets(datasets: Dataset[], consumer: DataConsumer): Promise<void>;
+}
+
+interface DataAggregator extends DataConsumer {
+  getVocabIDsAndInitiativeVariables(): Dictionary;
+  
+  // Gets the schema definition for a property.
+  //
+  // Returns a schema definition, or throws an error null if there is no such property. 
+  getPropertySchema(propName: string): PropDef;
+
+  // Resets the aggregator's data structures
+  reset(): void;
+  
+  initiativesByUid: { [id: string]: Initiative; }
+  loadedInitiatives: Initiative[];
+  registeredValues: RegisteredValues;
+  allRegisteredValues: InitiativeIndex;
+}
+
+class SparqlDataLoader implements DataLoader {
   readonly maxInitiativesToLoadPerFrame = 100;
   readonly config: Config;
 
@@ -35,11 +66,11 @@ class SparqlDataLoader {
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
   // @param [String] dataset - the identifier of this dataset
-  // @param [SparqlDataAggregator] aggregator - consumer for the data
+  // @param [DataConsumer] consumer - consumer for the data
   //
   // @returns a promise which resolves when all datasets are fully loaded and processed
-  // by the aggregator
-  async loadDatasets(datasets: Dataset[], aggregator: SparqlDataAggregator) {
+  // by the consumer
+  async loadDatasets(datasets: Dataset[], consumer: DataConsumer) {
     
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
@@ -63,8 +94,8 @@ class SparqlDataLoader {
           while(dataset.length > 0) {
             const batch = dataset.splice(0, this.maxInitiativesToLoadPerFrame);
 
-             // Call addInitiatives in the background, to prevent it blocking other processes.
-            await (async () => aggregator.addInitiatives(batch))();
+            // Call addInitiatives in the background, to prevent it blocking other processes.
+            await (async () => consumer.addBatch(batch))();
           }
           
           // Publish completion event
@@ -80,7 +111,7 @@ class SparqlDataLoader {
     }
 
     // Having loaded all we can, finish off
-    aggregator.sortLoadedData();
+    consumer.complete();
   }
 
   // Calls this.loadDataset and handles the result, including event emission
@@ -142,7 +173,7 @@ class SparqlDataLoader {
   }
 }
 
-class SparqlDataAggregator {
+class SparqlDataAggregator implements DataAggregator {
   readonly config: Config;
   readonly propertySchema: PropDefs;
   readonly loadedInitiatives: Initiative[] = [];
@@ -322,7 +353,7 @@ class SparqlDataAggregator {
     eventbus.publish({ topic: "Initiative.new", data: initiative });
   }
 
-  addInitiatives(initiatives: InitiativeObj[]) {
+  addBatch(initiatives: InitiativeObj[]): void {
     initiatives
       .forEach(elem => this.onData(elem));
   }
@@ -405,9 +436,10 @@ class SparqlDataAggregator {
     return propDef;
   }
 
-  // Sorts only the filterable fields not the initiatives they hold
-  sortLoadedData() {
-    // loop through the filters and sort them data, then sort the keys in order
+  // Finishes the load after all data has been seen.
+  complete() {
+    // Loop through the filters and sort them data, then sort the keys in order
+    // Sorts only the filterable fields, not the initiatives they hold
     const filterableFields: string[] = this.config.getFilterableFields();
     filterableFields.forEach(filterable => {
       const label = this.getTitleForProperty(filterable);
@@ -441,7 +473,7 @@ class SparqlDataAggregator {
     };
   }
 
-  getVocabIDsAndInitiativeVariables() {
+  getVocabIDsAndInitiativeVariables(): Dictionary {
     const vocabIDsAndInitiativeVariables: Dictionary = {};
     
     // Generate the index from filterableFields in the config
@@ -554,7 +586,7 @@ export class SseInitiative {
   readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
   readonly verboseDatasets: DatasetMap = {};
-  readonly dataLoader: SparqlDataLoader;
+  readonly dataLoader: DataLoader;
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
@@ -579,7 +611,7 @@ export class SseInitiative {
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs: Vocabs | undefined = undefined;
   builder: ParamBuilder<PropDef> | undefined = undefined;
-  dataAggregator: SparqlDataAggregator | undefined = undefined;
+  dataAggregator: DataAggregator | undefined = undefined;
   cachedLatLon: Box2d | undefined = undefined;
 
   // true means all available datasets from config are loaded
@@ -904,7 +936,7 @@ export class SseInitiative {
   // The list is defined in `config.json`
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  private async loadVocabs() {
+  private async loadVocabs(): Promise<VocabIndex> {
     return json(getVocabsPhp, {
       method: 'POST',
       body: JSON.stringify({
