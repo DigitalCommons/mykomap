@@ -848,7 +848,7 @@ export class SseInitiative {
   //
   // This may be all of the datasets, or just a single selected one.
   // The vocabs are always loaded.
-  loadFromWebService(): void {
+  async loadFromWebService() {
     // Active datasets indicated internally through `currentDatasets`
     let datasets: string[] = [];
 
@@ -864,25 +864,32 @@ export class SseInitiative {
       console.log("reset: no matching dataset '" + this.currentDatasets + "'");
     }
 
-    const onVocabSuccess = async (response: any) => {
+    // Load the vocabs first, then on success, load the
+    // initiatives. Handlers defined below.
+    try {
+      const response = await this.loadVocabs();
+      
       console.log("loaded vocabs", response);
 
       this.setVocab(response, this.getLanguage());
       const labels = this.functionalLabels[this.config.getLanguage()];
       const dataAggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
+      this.dataAggregator = undefined;
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
       
-      await this.dataLoader.loadDatasets(datasets.map(id => this.verboseDatasets[id]), dataAggregator);
+      await this.dataLoader.loadDatasets(
+        datasets.map(id => this.verboseDatasets[id]),
+        dataAggregator
+      );
 
       this.dataAggregator = dataAggregator;
       eventbus.publish({ topic: "Initiative.complete" });
     }
-
-    const onVocabFailure = (error: string) => {
+    catch(error) {
       console.error("vocabs load failed", error);
 
       eventbus.publish({
@@ -890,12 +897,6 @@ export class SseInitiative {
         data: { error: error }
       });
     }
-
-    // Load the vocabs first, then on success, load the
-    // initiatives. Handlers defined below.
-    this.loadVocabs()
-      .then(onVocabSuccess)
-      .catch(onVocabFailure)
   }
 
   // Loads the configured list of vocabs from the server.
