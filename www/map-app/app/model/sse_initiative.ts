@@ -25,7 +25,6 @@ interface DatasetResponse {
 class SparqlDataLoader {
   readonly maxInitiativesToLoadPerFrame = 100;
   readonly config: Config;
-  startedLoading = false;
 
   constructor(config: Config) {
     this.config = config;
@@ -140,10 +139,6 @@ class SparqlDataLoader {
     console.debug("fetchDataset", service);
     
     return await json(service);
-  }
-
-  reset() {
-    this.startedLoading = false;
   }
 }
 
@@ -928,7 +923,6 @@ export class SseInitiative {
     if (dataset === this.currentDatasets)
       return;
 
-    this.dataLoader.reset();
     this.dataAggregator.reset();
 
     //publish reset to map markers
