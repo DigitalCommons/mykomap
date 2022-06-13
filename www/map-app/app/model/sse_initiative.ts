@@ -25,7 +25,6 @@ interface DatasetResponse {
 class SparqlDataLoader {
   readonly maxInitiativesToLoadPerFrame = 100;
   readonly config: Config;
-  initiativesToLoad: InitiativeObj[] = [];
   startedLoading = false;
 
   constructor(config: Config) {
@@ -140,20 +139,11 @@ class SparqlDataLoader {
     }
     console.debug("fetchDataset", service);
     
-    if (!this.startedLoading) {
-      eventbus.publish({
-        topic: "Initiative.loadStarted",
-        data: { message: "Loading data via " + service, dataset: dataset.name }
-      });
-      this.startedLoading = true;
-    }
-
     return await json(service);
   }
 
   reset() {
     this.startedLoading = false;
-    this.initiativesToLoad = [];
   }
 }
 
@@ -885,6 +875,11 @@ export class SseInitiative {
       this.setVocab(response, this.getLanguage());
       const labels = this.functionalLabels[this.config.getLanguage()];
       const dataAggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
+
+      eventbus.publish({
+        topic: "Initiative.loadStarted",
+        data: { message: "Started loading data", dataset: datasets[0] }
+      });
       
       await this.dataLoader.loadDatasets(datasets.map(id => this.verboseDatasets[id]), dataAggregator);
 
