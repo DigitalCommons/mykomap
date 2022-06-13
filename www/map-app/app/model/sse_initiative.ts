@@ -878,7 +878,7 @@ export class SseInitiative {
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
-        data: { message: "Started loading data", dataset: datasets[0] }
+        data: { message: "Started loading data" }
       });
       
       await this.dataLoader.loadDatasets(datasets.map(id => this.verboseDatasets[id]), dataAggregator);

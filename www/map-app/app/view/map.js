@@ -96,12 +96,9 @@ function init(registry) {
   var SpinMapMixin = {
     seaLoading: function (state, options) {
       if (!!state) {
-        options.datasetLoading =
-          options.datasetLoading.charAt(0).toUpperCase() + options.datasetLoading.slice(1);
-
         var myLoader = loader({
           error: options.error,
-          text: `${labels.loading} ${options.datasetLoading} ${labels.datasets}...`,
+          text: `${labels.loading}...`,
           container: "#map-app-leaflet-map", id: "loadingCircle",
         });
         myLoader();
@@ -486,7 +483,7 @@ function init(registry) {
   };
 
   proto.startLoading = function (data) {
-    this.map.seaLoading(true, { datasetLoading: data.dataset, error: data.error });
+    this.map.seaLoading(true, { error: data.error });
   };
 
   proto.stopLoading = function () {
