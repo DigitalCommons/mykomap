@@ -25,54 +25,13 @@ interface DatasetResponse {
 class SparqlDataLoader {
   readonly maxInitiativesToLoadPerFrame = 100;
   readonly config: Config;
-  readonly onFinish: (aggregator: SparqlDataAggregator) => void;
   initiativesToLoad: InitiativeObj[] = [];
   startedLoading = false;
 
-  constructor(config: Config, onFinish: (aggregator: SparqlDataAggregator) => void) {
+  constructor(config: Config) {
     this.config = config;
-    this.onFinish = onFinish;
   }
-  
-  // Loads the initiatives data for the given dataset (or all of them) from the server.
-  //
-  // The query is defined in the relevant dataset directory's `query.rq` file.
-  //
-  // @param dataset - the name of one of the configured datasets, or true to get all of them.
-  //
-  // @return the response data wrapped in a promise, direct from d3.json.
-  // The data should be an object with the properties:
-  // - `data`: [Array] list of inititive definitions, each a map of field names to values
-  // - `meta`: [Object] a map of the following information:
-  //    - `endpoint`: [String] the SPARQL endpoint queried 
-  //    - `query`: [String] the SPARQL query used
-  //    - `default_graph_uri`: [String] the default graph URI for the query (which
-  //       is expected to self-resolve to the dataset's index webpage)
-  loadDataset(dataset: Dataset): Promise<DatasetResponse> {
-
-    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
-
-    // Note, caching currently doesn't work correctly with multiple data sets
-    // so until that's fixed, don't use it in that case.
-    const numDatasets = this.config.namedDatasets().length;
-    const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
-    if (noCache) {
-      service += "&noLodCache=true";
-    }
-    console.log("loadDataset", service);
-    if (!this.startedLoading) {
-      eventbus.publish({
-        topic: "Initiative.loadStarted",
-        data: { message: "Loading data via " + service, dataset: dataset.name }
-      });
-      this.startedLoading = true;
-    }
-
-    return json(service);
-  }
-
-
-  
+    
   // Loads a set of initiatives
   //
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
@@ -81,41 +40,14 @@ class SparqlDataLoader {
   // @param [SparqlDataAggregator] aggregator - consumer for the data
   //
   // @returns a promise which resolves when all datasets are fully loaded and processed
-  async loadInitiatives(datasets: Dataset[], aggregator: SparqlDataAggregator) {
-
-    // Calls this.loadDataset and handles the result
-    const loadDataset = async (dataset: Dataset) => {
-      const result: [string, InitiativeObj[]] | [string, undefined] = [dataset.id, undefined];
-      try {
-        const response: DatasetResponse = await this.loadDataset(dataset);
-        console.debug("loaded " + dataset.id + " data", response);
-
-        // Record the dataset's metadata
-        dataset.endpoint = response.meta.endpoint;
-        dataset.dgu = response.meta.default_graph_uri;
-        dataset.query = response.meta.query;
-
-        // Return the dataset id and its data
-        result[1] = response.data;
-      }
-      catch(error) {
-        console.error("load " + dataset.id + " data failed", error);
-        
-        eventbus.publish({
-          topic: "Initiative.loadFailed",
-          data: { error: error, dataset: dataset.id }
-        });
-
-        // Return the default, a failed dataset indicator
-      }
-      return result;
-    };
+  // by the aggregator
+  async loadDatasets(datasets: Dataset[], aggregator: SparqlDataAggregator) {
     
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
     // Make an index of datasetIds to expect to the relevant dataset loader promises
     let outstanding = Object.fromEntries(datasets.map(
-      (ds, ix) => [ds.id, loadDataset(ds)]
+      (ds, ix) => [ds.id, this.loadDataset(ds)]
     ));
     
     // Process the data as it arrives, in chunks    
@@ -151,7 +83,72 @@ class SparqlDataLoader {
 
     // Having loaded all we can, finish off
     aggregator.sortLoadedData();
-    this.onFinish(aggregator);
+  }
+
+  // Calls this.loadDataset and handles the result, including event emission
+  async loadDataset(dataset: Dataset) {
+    const result: [string, InitiativeObj[]] | [string, undefined] = [dataset.id, undefined];
+    try {
+      const response: DatasetResponse = await this.fetchDataset(dataset);
+      console.debug("loaded " + dataset.id + " data", response);
+
+      // Record the dataset's metadata
+      dataset.endpoint = response.meta.endpoint;
+      dataset.dgu = response.meta.default_graph_uri;
+      dataset.query = response.meta.query;
+
+      // Return the dataset id and its data
+      result[1] = response.data;
+    }
+    catch(error) {
+      console.error("load " + dataset.id + " data failed", error);
+      
+      eventbus.publish({
+        topic: "Initiative.loadFailed",
+        data: { error: error, dataset: dataset.id }
+      });
+
+      // Return the default, a failed dataset indicator
+    }
+    return result;
+  }
+  
+  // Loads the initiatives data for the given dataset (or all of them) from the server.
+  //
+  // The query is defined in the relevant dataset directory's `query.rq` file.
+  //
+  // @param dataset - the name of one of the configured datasets, or true to get all of them.
+  //
+  // @return the response data wrapped in a promise, direct from d3.json.
+  // The data should be an object with the properties:
+  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `meta`: [Object] a map of the following information:
+  //    - `endpoint`: [String] the SPARQL endpoint queried 
+  //    - `query`: [String] the SPARQL query used
+  //    - `default_graph_uri`: [String] the default graph URI for the query (which
+  //       is expected to self-resolve to the dataset's index webpage)
+  async fetchDataset(dataset: Dataset): Promise<DatasetResponse> {
+
+    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
+
+    // Note, caching currently doesn't work correctly with multiple data sets
+    // so until that's fixed, don't use it in that case.
+    const numDatasets = this.config.namedDatasets().length;
+    const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
+    if (noCache) {
+      service += "&noLodCache=true";
+    }
+    console.debug("fetchDataset", service);
+    
+    if (!this.startedLoading) {
+      eventbus.publish({
+        topic: "Initiative.loadStarted",
+        data: { message: "Loading data via " + service, dataset: dataset.name }
+      });
+      this.startedLoading = true;
+    }
+
+    return await json(service);
   }
 
   reset() {
@@ -607,10 +604,7 @@ export class SseInitiative {
   constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
     this.config = config;
     this.allDatasets = config.namedDatasets();
-    this.dataLoader = new SparqlDataLoader(this.config, (aggregator) => {
-      this.dataAggregator = aggregator;
-      eventbus.publish({ topic: "Initiative.complete" });
-    });
+    this.dataLoader = new SparqlDataLoader(this.config);
     this.functionalLabels = functionalLabels;
     
     {
@@ -885,14 +879,17 @@ export class SseInitiative {
       console.log("reset: no matching dataset '" + this.currentDatasets + "'");
     }
 
-    const onVocabSuccess = (response: any) => {
+    const onVocabSuccess = async (response: any) => {
       console.log("loaded vocabs", response);
 
       this.setVocab(response, this.getLanguage());
       const labels = this.functionalLabels[this.config.getLanguage()];
       const dataAggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
       
-      this.dataLoader.loadInitiatives(datasets.map(id => this.verboseDatasets[id]), dataAggregator);
+      await this.dataLoader.loadDatasets(datasets.map(id => this.verboseDatasets[id]), dataAggregator);
+
+      this.dataAggregator = dataAggregator;
+      eventbus.publish({ topic: "Initiative.complete" });
     }
 
     const onVocabFailure = (error: string) => {
