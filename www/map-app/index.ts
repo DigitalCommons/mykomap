@@ -232,6 +232,6 @@ export function webRun(window: Window, base_config: ConfigData): void {
   view.init();
 
   // Ask the model to load the data for the initiatives:
-  sseInitiative.loadFromWebService();
+  sseInitiative.loadData();
 }
 

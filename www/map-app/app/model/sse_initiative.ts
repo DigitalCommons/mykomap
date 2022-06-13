@@ -848,7 +848,7 @@ export class SseInitiative {
   //
   // This may be all of the datasets, or just a single selected one.
   // The vocabs are always loaded.
-  async loadFromWebService() {
+  async loadData() {
     // Active datasets indicated internally through `currentDatasets`
     let datasets: string[] = [];
 
@@ -933,7 +933,7 @@ export class SseInitiative {
     });
 
     this.currentDatasets = dataset;
-    this.loadFromWebService();
+    this.loadData();
   }
   
   search(text: string): Initiative[] {
@@ -992,6 +992,4 @@ export function init(registry: Registry): SseInitiative {
 
   return new SseInitiative(config, functionalLabels);
 }
-// Automatically load the data when the app is ready:
-//eventbus.subscribe({topic: "Main.ready", callback: loadFromWebService});
 
