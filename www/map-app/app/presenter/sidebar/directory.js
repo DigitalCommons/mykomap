@@ -4,7 +4,7 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const sidebarView = registry('view/sidebar/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   const sidebarPresenter = registry('presenter/sidebar/base');
   const markerView = registry('view/map/marker');
 
@@ -37,15 +37,15 @@ function init(registry) {
   };
 
   proto.getVerboseValuesForFields = function () {
-    return sseInitiative.getVerboseValuesForFields();
+    return dataServices.getVerboseValuesForFields();
   };
 
   proto.getRegisteredValues = function () {
-    return sseInitiative.getRegisteredValues();
+    return dataServices.getRegisteredValues();
   };
 
   proto.getAllRegisteredValues = function () {
-    return sseInitiative.getAllRegisteredValues();
+    return dataServices.getAllRegisteredValues();
   };
 
   proto.notifyViewToBuildDirectory = function () {
@@ -55,13 +55,13 @@ function init(registry) {
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
   proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
     if (key == null)
-      return sseInitiative.getAllRegisteredValues()[field];
+      return dataServices.getAllRegisteredValues()[field];
     else
-      return sseInitiative.getRegisteredValues()[field][key];
+      return dataServices.getRegisteredValues()[field][key];
   };
 
   proto.getInitiativeByUniqueId = function (uid) {
-    return sseInitiative.getInitiativeByUniqueId(uid);
+    return dataServices.getInitiativeByUniqueId(uid);
   };
 
   function arrayMax(array) {
@@ -238,7 +238,7 @@ function init(registry) {
   };
 
   function latLngBounds(initiatives) {
-    return sseInitiative.latLngBounds(initiatives);
+    return dataServices.latLngBounds(initiatives);
   }
 
   Presenter.prototype = proto;

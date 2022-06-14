@@ -5,15 +5,15 @@ const config = require('../www/map-app/app/model/config')({});
 const registry = require('../www/map-app/app/registries').makeRegistry();
 registry.def('config', config);
 
-const sse_initiative = require('../www/map-app/app/model/sse_initiative')(registry);
+const dataservices = require('../www/map-app/app/model/dataservices')(registry);
 
 // Emulate how vocabs get loaded in the web app
-sse_initiative.setVocab(require('./cannedVocabs.json'));
+dataservices.setVocab(require('./cannedVocabs.json'));
 
 // Emulate how initiatives get loaded in the web app
-sse_initiative.addInitiatives(require('./cannedData.json').data);
-sse_initiative.finishInitiativeLoad();
-const initiatives = sse_initiative.getInitiativeUIDMap();
+dataservices.addInitiatives(require('./cannedData.json').data);
+dataservices.finishInitiativeLoad();
+const initiatives = dataservices.getInitiativeUIDMap();
 
 describe('The default_popup.js module', function () {
   const popup = require('../www/map-app/app/view/map/default_popup');
@@ -21,7 +21,7 @@ describe('The default_popup.js module', function () {
 
   const allContent = {};
   Object.entries(initiatives).forEach((ent) => {
-    const content = popup.getPopup(ent[1], sse_initiative);
+    const content = popup.getPopup(ent[1], dataservices);
     allContent[ent[0]] = content;
   })
 

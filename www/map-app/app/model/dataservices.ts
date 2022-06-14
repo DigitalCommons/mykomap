@@ -541,7 +541,7 @@ function sortInitiatives(a: Initiative, b: Initiative) {
   return a.name.localeCompare(b.name);
 }
 
-export class SseInitiative {
+export class DataServices {
   readonly config: Config;
   readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
@@ -560,8 +560,8 @@ export class SseInitiative {
   readonly propertySchema: PropDefs = {
     uri: { type: 'value', as: 'string' },
     name: { type: 'value', as: 'string' },
-    lat: { type: 'custom', builder: SseInitiative.mkLocFromParam('lat', 'manLat') },
-    lng: { type: 'custom', builder: SseInitiative.mkLocFromParam('lng', 'manLng') },
+    lat: { type: 'custom', builder: DataServices.mkLocFromParam('lat', 'manLat') },
+    lng: { type: 'custom', builder: DataServices.mkLocFromParam('lng', 'manLng') },
     dataset: { type: 'value', as: 'string' },
     // Note: a searchstr property is also inserted to Initiatives during construction
     // Special-cased as it potentially depends on the contents all other properties.
@@ -983,9 +983,9 @@ export class SseInitiative {
 }
 
 
-export function init(registry: Registry): SseInitiative {
+export function init(registry: Registry): DataServices {
   const config = registry("config") as Config;
 
-  return new SseInitiative(config, functionalLabels);
+  return new DataServices(config, functionalLabels);
 }
 

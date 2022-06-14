@@ -22,15 +22,15 @@ function init(registry) {
   const presenter = registry('presenter/map');
   const markerView = registry('view/map/marker');
   const viewBase = registry('view/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
 
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   const config = {
     putSelectedMarkersInClusterGroup: false
   };
 
-  const dialogueSize = sseInitiative.getDialogueSize();
+  const dialogueSize = dataServices.getDialogueSize();
 
   const descriptionRatio = parseInt(dialogueSize.descriptionRatio);
   const descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);

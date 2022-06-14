@@ -1,5 +1,5 @@
 import type { Dictionary } from '../../common_types';
-import type { Initiative, PropDefs, PropDef } from './sse_initiative';
+import type { Initiative, PropDefs, PropDef } from './dataservices';
 
 interface VocabMeta {
   languages: string[];

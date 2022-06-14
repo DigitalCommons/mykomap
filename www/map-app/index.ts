@@ -1,7 +1,7 @@
 "use strict";
 
 import type { Dictionary } from "./common_types";
-import type { SseInitiative } from "./app/model/sse_initiative";
+import type { DataServices } from "./app/model/dataservices";
 
 import { init as config_builder, ConfigData, Config } from './app/model/config';
 import { makeRegistry, Registry } from './app/registries';
@@ -79,8 +79,8 @@ export function initRegistry(config: Config): Registry {
   const registry: Registry = makeRegistry();
   
   registry.def('config', () => config);
-  registry.def('model/sse_initiative',
-               () => require('./app/model/sse_initiative').init(registry));
+  registry.def('model/dataservices',
+               () => require('./app/model/dataservices').init(registry));
 
   // Register the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependants.
@@ -226,12 +226,12 @@ export function webRun(window: Window, base_config: ConfigData): void {
   const registry = initRegistry(config);
   
   const view = registry('view') as { init: () => void };
-  const sseInitiative = registry('model/sse_initiative') as SseInitiative;
+  const dataServices = registry('model/dataservices') as DataServices;
   
   // Each view will ensure that the code for its presenter is loaded.
   view.init();
 
   // Ask the model to load the data for the initiatives:
-  sseInitiative.loadData();
+  dataServices.loadData();
 }
 

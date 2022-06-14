@@ -3,9 +3,9 @@ const eventbus = require('../eventbus');
 
 export class PresenterFactory {
   
-  constructor(config, sse_initiative, markerView, sidebarView) {
+  constructor(config, dataservices, markerView, sidebarView) {
     this.config = config;
-    this.sse_initiative = sse_initiative;
+    this.dataservices = dataservices;
     this.markerView = markerView;
     this.sidebarView = sidebarView;
     this.initiativesOutsideOfFilterUIDMap = {};
@@ -21,8 +21,8 @@ export class PresenterFactory {
   }
 
   onNewInitiatives() {
-    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.sse_initiative.getInitiativeUIDMap());
-    this.loadedInitiatives = this.sse_initiative.getLoadedInitiatives();
+    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.dataservices.getInitiativeUIDMap());
+    this.loadedInitiatives = this.dataservices.getLoadedInitiatives();
   }
   
   createPresenter(view) {
@@ -408,7 +408,7 @@ export class Presenter extends BasePresenter {
 
   getInitialBounds() {
     return this.factory.config.getInitialBounds() == undefined ?
-           this.factory.sse_initiative.latLngBounds(null) : this.factory.config.getInitialBounds();
+           this.factory.dataservices.latLngBounds(null) : this.factory.config.getInitialBounds();
   }
 
   getInitialZoom() { }
@@ -451,7 +451,7 @@ export class Presenter extends BasePresenter {
 
     //if this is the first filter, add items to the filteredInitiativesUIDMap
     if (Object.keys(this.factory.filtered).length <= 1) {
-      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.sse_initiative.getInitiativeUIDMap());
+      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getInitiativeUIDMap());
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
@@ -481,7 +481,7 @@ export class Presenter extends BasePresenter {
     //remove filters
     this.factory.filtered = {};
     this.factory.filteredInitiativesUIDMap = {};
-    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.sse_initiative.getInitiativeUIDMap());
+    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getInitiativeUIDMap());
     this.factory.verboseNamesMap = {};
     //show all markers
     this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
@@ -587,7 +587,7 @@ export class Presenter extends BasePresenter {
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = this.factory.sse_initiative.latLngBounds(data.initiatives)
+      const latlng = this.factory.dataservices.latLngBounds(data.initiatives)
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
@@ -644,7 +644,7 @@ export class Presenter extends BasePresenter {
     this.factory.hidden = [];
 
     //zoom and pan
-    //const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
+    //const latlng = dataservices.latLngBounds(getFiltered().length > 0? getFiltered() : null)
     // eventbus.publish({
     //   topic: "Map.needsToBeZoomedAndPanned",
     //   data: {
@@ -669,7 +669,7 @@ export class Presenter extends BasePresenter {
 export function init(registry) {
   const config = registry('config');
   const markerView = registry('view/map/marker');
-  const sse_initiative = registry('model/sse_initiative');
+  const dataservices = registry('model/dataservices');
   
-  return new PresenterFactory(config, sse_initiative, markerView, registry);
+  return new PresenterFactory(config, dataservices, markerView, registry);
 }

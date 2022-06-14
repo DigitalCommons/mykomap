@@ -8,11 +8,11 @@ function init(registry) {
 	const config = registry('config');
 	const sidebarView = registry('view/sidebar/base');
 	const presenter = registry('presenter/sidebar/initiatives');
-	const sseInitiative = registry('model/sse_initiative');
+	const dataServices = registry('model/dataservices');
 	const map = registry('presenter/map');
 
 	//get labels for buttons and titles
-	const labels = sseInitiative.getFunctionalLabels();
+	const labels = dataServices.getFunctionalLabels();
 
 	// Our local Sidebar object:
 	function Sidebar() { }
@@ -71,7 +71,7 @@ function init(registry) {
 			.append("div")
 
 
-		const terms = sseInitiative.getTerms();
+		const terms = dataServices.getTerms();
 
 		this.createAdvancedSearch(advancedSearchContainer, terms, this.presenter);
 
@@ -281,7 +281,7 @@ function init(registry) {
 					presenter.performSearch(item.searchedFor);
 		};
 
-		const possibleFilterValues = sseInitiative.getPossibleFilterValues(map.getFiltered());
+		const possibleFilterValues = dataServices.getPossibleFilterValues(map.getFiltered());
 		const activeFilterCategories = map.getFiltersFull().map(filter =>
 			filter.verboseName.split(":")[0]);
 
@@ -312,7 +312,7 @@ function init(registry) {
 			//find alternative possible filters for an active filter
 			let alternatePossibleFilterValues;
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
-				alternatePossibleFilterValues = sseInitiative.getAlternatePossibleFilterValues(
+				alternatePossibleFilterValues = dataServices.getAlternatePossibleFilterValues(
 					map.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {

@@ -5,7 +5,7 @@ import type {
 import type {
   Initiative,
   InitiativeObj,
-} from './sse_initiative';
+} from './dataservices';
 
 // Defines properties of a dataset which can be loaded.
 export interface Dataset {
@@ -32,7 +32,7 @@ export interface DataLoader {
   loadDatasets(datasets: Dataset[], consumer: DataConsumer): Promise<void>;
 }
 
-// For aggregating Vocab and InitiativeObj data into a form used by SseInitiative
+// For aggregating Vocab and InitiativeObj data into a form used by DataServices
 //
 // This is a DataConsumer which builds up the required datastructures.
 export interface DataAggregator extends DataConsumer {

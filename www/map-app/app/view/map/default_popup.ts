@@ -1,5 +1,5 @@
 // FIXME prevent malicious content in replacements (like description)
-import type { SseInitiative, Initiative } from "../../model/sse_initiative";
+import type { DataServices, Initiative } from "../../model/dataservices";
 
 export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality
@@ -55,8 +55,8 @@ export function getTwitter(initiative: Initiative) {
   return '';
 }
 
-export function getPopup(initiative: Initiative, sse_initiatives: SseInitiative): string {
-  const labels = sse_initiatives.getFunctionalLabels();
+export function getPopup(initiative: Initiative, dataservices: DataServices): string {
+  const labels = dataservices.getFunctionalLabels();
   let popupHTML = `
     <div class="sea-initiative-details">
       <h2 class="sea-initiative-name">${initiative.name}</h2>

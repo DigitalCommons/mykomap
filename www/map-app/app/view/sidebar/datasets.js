@@ -8,10 +8,10 @@ function init(registry) {
   const presenter = registry('presenter/sidebar/datasets');
   const view = registry('view/base');
   const sidebarView = registry('view/sidebar/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
 
   //get labels for buttons and titles
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   // Our local Sidebar object:
   function Sidebar() { }

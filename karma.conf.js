@@ -150,7 +150,7 @@ module.exports = function(config) {
           // Allows custom popup logic to be supplied config/popup.js (if detected)
           './view/map/popup$':  `${__dirname}/www/map-app/app/view/map/default_popup.js`,
           // Define this alias so that it works as before in popup.js
-          'model/sse_initiative$': `${__dirname}/www/map-app/app/model/sse_initiative.js`,
+          'model/dataservices$': `${__dirname}/www/map-app/app/model/dataservices.ts`,
         },
       },
       plugins: [

@@ -4,7 +4,7 @@ const presenter = require('../presenter');
 
 function init(registry) {
   const config = registry('config');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   
   function Presenter() {}
 
@@ -22,7 +22,7 @@ function init(registry) {
           selected: []
         }
       });
-      var results = sseInitiative.search(text);
+      var results = dataServices.search(text);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }

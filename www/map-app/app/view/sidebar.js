@@ -11,12 +11,12 @@ function _init(registry) {
   const directory = registry('view/sidebar/directory');
   const datasets = registry('view/sidebar/datasets');
   const initiatives = registry('view/sidebar/initiatives');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   
 
   //get labels for buttons and titles
-  const labels = sseInitiative.getFunctionalLabels();
-  const sidebarButtonColour = sseInitiative.getSidebarButtonColour();
+  const labels = dataServices.getFunctionalLabels();
+  const sidebarButtonColour = dataServices.getSidebarButtonColour();
 
   // This deals with the view object that controls the sidebar
   // It is not itself a sidebar/view object, but contains objects of that type

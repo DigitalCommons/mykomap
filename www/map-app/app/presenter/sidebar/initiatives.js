@@ -4,12 +4,12 @@ const eventbus = require('../../eventbus');
 
 function init(registry) {
   const config = registry('config');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   const sidebarPresenter = registry('presenter/sidebar/base');
   const map = registry('presenter/map');
 
   //get labels for buttons and titles
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   function StackItem(initiatives) {
     this.initiatives = initiatives;
@@ -88,8 +88,8 @@ function init(registry) {
 
   proto.changeFilters = (filterCategoryName, filterValue, filterValueText) => {
     //get category of filter as used in intiatives
-    const vocabTitlesAndVocabIDs = sseInitiative.getVocabTitlesAndVocabIDs();
-    const vocabIDsAndInitiativeVariables = sseInitiative.getVocabFilteredFields();
+    const vocabTitlesAndVocabIDs = dataServices.getVocabTitlesAndVocabIDs();
+    const vocabIDsAndInitiativeVariables = dataServices.getVocabFilteredFields();
 
     const filterCategory =
       vocabIDsAndInitiativeVariables[vocabTitlesAndVocabIDs[filterCategoryName]];
@@ -118,7 +118,7 @@ function init(registry) {
       return;
 
     //get initiatives for new filter
-    const allInitiatives = Object.values(sseInitiative.getInitiativeUIDMap());
+    const allInitiatives = Object.values(dataServices.getInitiativeUIDMap());
     const filteredInitiatives = allInitiatives.filter(initiative =>
       initiative[filterCategory] == filterValue
     )
@@ -338,7 +338,7 @@ function init(registry) {
       });
 
       //should be async
-      var results = sseInitiative.search(text);
+      var results = dataServices.search(text);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }
@@ -364,7 +364,7 @@ function init(registry) {
     });
 
     //should be async
-    var results = Object.values(sseInitiative.getInitiativeUIDMap());
+    var results = Object.values(dataServices.getInitiativeUIDMap());
 
     eventbus.publish({
       topic: "Search.initiativeResults",
