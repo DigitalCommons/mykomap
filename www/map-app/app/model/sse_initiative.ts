@@ -37,11 +37,6 @@ interface DataLoader {
 }
 
 interface DataAggregator extends DataConsumer {
-  // Gets the schema definition for a property.
-  //
-  // Returns a schema definition, or throws an error null if there is no such property. 
-  getPropertySchema(propName: string): PropDef;
-
   // Resets the aggregator's data structures
   reset(): void;
   
@@ -830,7 +825,7 @@ export class SseInitiative {
   getVocabUriForProperty(name: string): string {
     if (!this.dataAggregator)
       throw new Error("Can't add initiatives. Data has not yet been aggregated.");
-    const propDef = this.dataAggregator.getPropertySchema(name);
+    const propDef = this.getPropertySchema(name);
     if (propDef.type === 'vocab')
       return propDef.uri;
     throw new Error(`property ${name} is not a vocab property`);
