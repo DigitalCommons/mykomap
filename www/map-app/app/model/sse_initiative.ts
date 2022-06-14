@@ -37,8 +37,6 @@ interface DataLoader {
 }
 
 interface DataAggregator extends DataConsumer {
-  getVocabIDsAndInitiativeVariables(): Dictionary;
-  
   // Gets the schema definition for a property.
   //
   // Returns a schema definition, or throws an error null if there is no such property. 
@@ -51,6 +49,7 @@ interface DataAggregator extends DataConsumer {
   loadedInitiatives: Initiative[];
   registeredValues: Dictionary<Dictionary<Initiative[]>>;
   allRegisteredValues: Dictionary<Initiative[]>;
+  vocabIDsAndInitiativeVariables: Dictionary;
 }
 
 class SparqlDataLoader implements DataLoader {
@@ -178,6 +177,7 @@ class SparqlDataAggregator implements DataAggregator {
   readonly registeredValues: Dictionary<Dictionary<Initiative[]>> = {};
   readonly allRegisteredValues: Dictionary<Initiative[]> = {};
   readonly loadedInitiatives: Initiative[] = [];
+  readonly vocabIDsAndInitiativeVariables: Dictionary = {};
   
   private readonly config: Config;
   private readonly propertySchema: PropDefs;
@@ -201,14 +201,19 @@ class SparqlDataAggregator implements DataAggregator {
   // Finishes the load after all data has been seen.
   complete() {
     // Loop through the filters and sort them data, then sort the keys in order
-    // Sorts only the filterable fields, not the initiatives they hold
+    // Sorts only the filterable fields, not the initiatives they hold.
+    // Populate vocabIDsAndInitiativeVariables.
     const filterableFields: string[] = this.config.getFilterableFields();
     filterableFields.forEach(filterable => {
+      // Populate vocabIDsAndInitiativeVariables
+      const propDef = this.getPropertySchema(filterable);
+      if (propDef.type === 'vocab')
+        this.vocabIDsAndInitiativeVariables[propDef.uri] = filterable;
+      
       const label = this.getTitleForProperty(filterable);
 
       const labelValues: Dictionary<Initiative[]> = this.registeredValues[label];
       if (labelValues) {
-        const propDef = this.getPropertySchema(filterable);
         const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
         const ordered = Object
           .entries(labelValues)
@@ -469,19 +474,6 @@ class SparqlDataAggregator implements DataAggregator {
       const blab = vocab.terms[b[0]];
       return String(alab).localeCompare(String(blab));
     };
-  }
-
-  getVocabIDsAndInitiativeVariables(): Dictionary {
-    const vocabIDsAndInitiativeVariables: Dictionary = {};
-    
-    // Generate the index from filterableFields in the config
-    const filterableFields: string[] = this.config.getFilterableFields();
-    filterableFields.forEach(filterableField => {
-      const propDef = this.getPropertySchema(filterableField);      
-      if (propDef.type === 'vocab')
-        vocabIDsAndInitiativeVariables[propDef.uri] = filterableField;
-    })
-    return vocabIDsAndInitiativeVariables;
   }
 
   // Returns an array of sse objects whose dataset is the same as dbSource.
@@ -806,25 +798,29 @@ export class SseInitiative {
   }
 
   getTerms(): Record<string, Partial<Record<string, string>>> {
-    return this?.vocabs.getTerms(this.getLanguage(), this.getVocabIDsAndInitiativeVariables(),
-                                 this.dataAggregator.initiativesByUid, this.propertySchema); 
+    if (!this.dataAggregator)
+      throw new Error("Can't getTerms. Data has not yet been aggregated.");
+    return this?.vocabs.getTerms(this.getLanguage(),
+                                 this.dataAggregator.vocabIDsAndInitiativeVariables,
+                                 this.dataAggregator.initiativesByUid,
+                                 this.propertySchema); 
   }
   
   getVerboseValuesForFields() {
     return this?.vocabs.getVerboseValuesForFields(this.getLanguage());
   }
   
-  getVocabIDsAndInitiativeVariables(): Partial<Record<string, string>> {
+  getVocabIDsAndInitiativeVariables(): Dictionary {
     if (!this.dataAggregator)
-      throw new Error("Can't add initiatives. Data has not yet been aggregated.");
-    return this.dataAggregator.getVocabIDsAndInitiativeVariables();
+      throw new Error("Can't getVocabIDsAndInitiativeVariables. Data has not yet been aggregated.");
+    return this.dataAggregator.vocabIDsAndInitiativeVariables;
   }
   
   getVocabTerm(vocabUri: string, termUri: string): string {
     return this?.vocabs.getVocabTerm(vocabUri, termUri, this.getLanguage());
   }
 
-  getVocabTitlesAndVocabIDs(): Partial<Record<string, string>> {
+  getVocabTitlesAndVocabIDs(): Dictionary {
     return this?.vocabs.getVocabTitlesAndVocabIDs(this.getLanguage());
   }
   
