@@ -3,6 +3,14 @@
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
+
+import type {
+  Dataset,
+  DataConsumer,
+  DataLoader,
+  DataAggregator,
+} from './dataloader';
+
 import { Vocabs, VocabIndex, LocalisedVocab } from './vocabs';
 import { json } from 'd3';
 import { clear } from '../../common_types';
@@ -20,33 +28,6 @@ interface DatasetResponse {
   };
   data: InitiativeObj[];
   status?: "success";
-}
-
-interface DataConsumer {
-  // Add a batch of data. May be called multiple times.
-  addBatch(initiatives: InitiativeObj[]): void;
-
-  // Finishes the load after all data has been seen.
-  complete(): void;
-}
-
-interface DataLoader {
-  // Asynchronously load the datasets given, feeding it to the consumer given.
-  // @returns a promise indicating when this has been done.
-  loadDatasets(datasets: Dataset[], consumer: DataConsumer): Promise<void>;
-}
-
-interface DataAggregator extends DataConsumer {
-  // Resets the aggregator's data structures
-  reset(): void;
-  
-  initiativesByUid: Dictionary<Initiative>;
-  loadedInitiatives: Initiative[];
-  registeredValues: Dictionary<Dictionary<Initiative[]>>;
-  allRegisteredValues: Dictionary<Initiative[]>;
-
-  // Filtered fields of type vocab, indexed by vocab prefix
-  vocabFilteredFields: Dictionary;
 }
 
 class SparqlDataLoader implements DataLoader {
@@ -512,13 +493,6 @@ interface Filter {
   filterName: string;
   verboseName: string;
   initiatives: Initiative[];
-}
-interface Dataset {
-  id: string;
-  name: string;
-  endpoint: string;
-  dgu: string;
-  query: string;
 }
 interface DatasetMap {
   [id: string]: Dataset;    
