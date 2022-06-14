@@ -920,7 +920,7 @@ export class SseInitiative {
     if (dataset === this.currentDatasets)
       return;
 
-    this.dataAggregator.reset();
+    this.dataAggregator = undefined;
 
     //publish reset to map markers
     eventbus.publish({

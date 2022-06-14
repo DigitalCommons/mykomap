@@ -36,9 +36,6 @@ export interface DataLoader {
 //
 // This is a DataConsumer which builds up the required datastructures.
 export interface DataAggregator extends DataConsumer {
-  // Resets the aggregator's data structures
-  reset(): void;
-  
   initiativesByUid: Dictionary<Initiative>;
   loadedInitiatives: Initiative[];
   registeredValues: Dictionary<Dictionary<Initiative[]>>;
