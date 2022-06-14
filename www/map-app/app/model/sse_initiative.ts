@@ -47,10 +47,10 @@ interface DataAggregator extends DataConsumer {
   // Resets the aggregator's data structures
   reset(): void;
   
-  initiativesByUid: { [id: string]: Initiative; }
+  initiativesByUid: Dictionary<Initiative>;
   loadedInitiatives: Initiative[];
-  registeredValues: RegisteredValues;
-  allRegisteredValues: InitiativeIndex;
+  registeredValues: Dictionary<Dictionary<Initiative[]>>;
+  allRegisteredValues: Dictionary<Initiative[]>;
 }
 
 class SparqlDataLoader implements DataLoader {
@@ -175,8 +175,8 @@ class SparqlDataLoader implements DataLoader {
 
 class SparqlDataAggregator implements DataAggregator {
   readonly initiativesByUid: Dictionary<Initiative> = {};
-  readonly registeredValues: RegisteredValues = {};
-  readonly allRegisteredValues: InitiativeIndex = {};
+  readonly registeredValues: Dictionary<Dictionary<Initiative[]>> = {};
+  readonly allRegisteredValues: Dictionary<Initiative[]> = {};
   readonly loadedInitiatives: Initiative[] = [];
   
   private readonly config: Config;
@@ -206,7 +206,7 @@ class SparqlDataAggregator implements DataAggregator {
     filterableFields.forEach(filterable => {
       const label = this.getTitleForProperty(filterable);
 
-      const labelValues: InitiativeIndex = this.registeredValues[label];
+      const labelValues: Dictionary<Initiative[]> = this.registeredValues[label];
       if (labelValues) {
         const propDef = this.getPropertySchema(filterable);
         const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
@@ -371,7 +371,7 @@ class SparqlDataAggregator implements DataAggregator {
       else {
         // Create the object that holds the registered values for the current
         // field if it hasn't already been created
-        const values: InitiativeIndex = this.registeredValues[labelKey] = {};
+        const values: Dictionary<Initiative[]> = this.registeredValues[labelKey] = {};
         values[field] = [initiative];
       }
 
@@ -519,12 +519,6 @@ export class Initiative {
   }
 }
 
-interface InitiativeIndex {
-  [id: string]: Initiative[];
-}
-interface RegisteredValues {
-  [id: string]: InitiativeIndex;
-}  
 interface Filter {
   filterName: string;
   verboseName: string;
@@ -675,7 +669,7 @@ export class SseInitiative {
   }
 
 
-  getAllRegisteredValues(): InitiativeIndex {
+  getAllRegisteredValues(): Dictionary<Initiative[]> {
     if (!this.dataAggregator)
       return {}; // Data has not yet been aggregated.  Some dependencies call this early!
     return this.dataAggregator.allRegisteredValues;
@@ -801,7 +795,7 @@ export class SseInitiative {
     return this.propertySchema[propName];
   }
   
-  getRegisteredValues(): RegisteredValues {
+  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
     if (!this.dataAggregator)
       return {}; // Data has not yet been aggregated.  Some dependencies call this early!
     return this.dataAggregator.registeredValues;
