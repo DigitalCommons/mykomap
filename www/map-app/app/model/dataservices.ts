@@ -81,11 +81,13 @@ export interface VocabPropDef {
 }
 export interface CustomPropDef {
   type: 'custom'
+  from?: string;
   builder: (id: string, def: CustomPropDef, params: InitiativeObj) => any;
 }
 export interface MultiPropDef {
   type: 'multi';
   of: PropDef;
+  from?: string;
 }
 
 export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;

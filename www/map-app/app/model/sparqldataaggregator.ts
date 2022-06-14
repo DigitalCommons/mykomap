@@ -48,14 +48,14 @@ export class SparqlDataAggregator implements DataAggregator {
   private readonly config: Config;
   private readonly propertySchema: PropDefs;
   private readonly vocabs: VocabServices;
-  private readonly vocabBuilder: ParamBuilder<PropDef>;
+  private readonly paramBuilder: ParamBuilder<PropDef>;
   private readonly labels: Dictionary<string>;
 
   constructor(config: Config, propertySchema: PropDefs, vocabs: VocabServices, labels: Dictionary<string>) {
     this.config = config;
     this.propertySchema = propertySchema;
     this.vocabs = vocabs;
-    this.vocabBuilder = this.mkBuilder(vocabs);
+    this.paramBuilder = this.mkBuilder(vocabs);
     this.labels = labels;
   }
 
@@ -145,7 +145,32 @@ export class SparqlDataAggregator implements DataAggregator {
       return def.builder(id, def, params);
     }
     function buildMulti(id: string, def: MultiPropDef, params: InitiativeObj): any[] {
-      return [buildAny(id, def.of, params)];
+      // Re-use other builders (which expect an InitiativeObj) by
+      // substiting the InitiativeObj's array containing the multiple
+      // values with each of its elements in turn. This is partly
+      // historically necessary, as SPARQL data represents multiple
+      // values using multiple records, and we used to consume
+      // multiple records like this.
+      const paramsCopy = { ...params };
+      const paramName = def.of.from ?? id;
+
+      // Enusre we are dealing with an array. Promote non-arrays into an array
+      //
+      // FIXME should we actually throw an error? No- not for now,
+      // because the sparqldataloader cannot currently infer a
+      // multivalue into an array when there is only one record, not
+      // multiple. But the plan is to address this later.
+      let ary: any[] = params[paramName];
+      if (ary == null) { // or undefined
+        ary = [];
+      }
+      else if (!(typeof ary === 'object' && ary instanceof Array)) {
+        ary = [params[paramName]];
+      }
+      return ary.map(param => {
+        paramsCopy[paramName] = param;
+        return buildAny(id, def.of, paramsCopy);
+      });
     }
 
     function buildAny(id: string, def: PropDef, params: InitiativeObj): any {
@@ -158,53 +183,34 @@ export class SparqlDataAggregator implements DataAggregator {
     }
     return buildAny;
   }
-  
-  private onData(e: InitiativeObj) {
+
+  // This expects complete initiaitives, with multi-valued fields
+  // expressed as either single values, or an array of multiple
+  // values. (Single values are historically allowed to make it easier
+  // to marshall the multiple-record expression of multiple values
+  // emitted by SPARQL)
+  //
+  // So these are equivalent:
+  // - { uri: 'xxx', multivalue: 1 }
+  // - { uri: 'xxx', multivalue: [1] }
+  private onData(props: InitiativeObj) {
     // Not all initiatives have activities
 
     const searchedFields = this.config.getSearchedFields();
     const language = this.config.getLanguage();
     
-    // If this initiative exists already, just add multi-value property values
-    if (this.initiativesByUid[e.uri] !== undefined) {
-      let initiative: Initiative = this.initiativesByUid[e.uri];
-
-      // If properties with are multi-valued, add new values to the
-      // initiative.  This is to handle cases where the SPARQL
-      // resultset contains multple rows for a multi-value field with
-      // multiple values.
-      Object.entries(this.propertySchema)
-        .forEach(entry => {
-          const [propertyName, propDef] = entry;
-          
-          if (propDef.type !== 'multi')
-            return; // This is not a multi-value property. Do nothing.
-
-          // Add this new value to the multi-valued property
-          const list: any[] = initiative[propertyName];
-          const value = this.vocabBuilder(propertyName, propDef.of, e);
-          list.push(value);
-
-          // If it is in the searchedFields, also add it to initiative.searchstr (if present)
-          if (searchedFields.includes(propertyName)) {
-            const searchableValue = this.mkSearchableValue(value, propDef.of, language);
-
-            initiative.appendSearchableValue(searchableValue);
-          }
-        });
-      
-      //update pop-up
-      eventbus.publish({ topic: "Initiative.refresh", data: initiative });
-      return;
+    // If this initiative exists already, something is wrong!
+    if (this.initiativesByUid[props.uri] !== undefined) {
+      throw new Error(`duplicate initiative uri: ${props.uri}`);
     }
 
     const initiative = new Initiative();
     
     // Define and initialise the instance properties.
     Object.entries(this.propertySchema).forEach(entry => {
-      let [propertyName, p] = entry;
+      let [propertyName, propDef] = entry;
       Object.defineProperty(initiative, propertyName, {
-        value: this.vocabBuilder(propertyName, p, e),
+        value: this.paramBuilder(propertyName, propDef, props),
         enumerable: true,
         writable: false,
       });
@@ -255,7 +261,7 @@ export class SparqlDataAggregator implements DataAggregator {
     // Broadcast the creation of the initiative
     eventbus.publish({ topic: "Initiative.new", data: initiative });
   }
-
+  
   private insert(element: any, array: any[]) {
     array.splice(this.locationOf(element, array), 0, element);
     return array;
