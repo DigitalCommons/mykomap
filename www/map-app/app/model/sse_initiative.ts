@@ -11,7 +11,12 @@ import type {
   DataAggregator,
 } from './dataloader';
 
-import { Vocabs, VocabIndex, LocalisedVocab } from './vocabs';
+import {
+  VocabServices,
+  VocabIndex,
+  LocalisedVocab,
+  VocabServiceImpl
+} from './vocabs';
 import { json } from 'd3';
 import { clear } from '../../common_types';
 
@@ -159,11 +164,11 @@ class SparqlDataAggregator implements DataAggregator {
   
   private readonly config: Config;
   private readonly propertySchema: PropDefs;
-  private readonly vocabs: Vocabs;
+  private readonly vocabs: VocabServices;
   private readonly vocabBuilder: ParamBuilder<PropDef>;
   private readonly labels: Dictionary<string>;
 
-  constructor(config: Config, propertySchema: PropDefs, vocabs: Vocabs, labels: Dictionary<string>) {
+  constructor(config: Config, propertySchema: PropDefs, vocabs: VocabServices, labels: Dictionary<string>) {
     this.config = config;
     this.propertySchema = propertySchema;
     this.vocabs = vocabs;
@@ -215,7 +220,7 @@ class SparqlDataAggregator implements DataAggregator {
     clear(this.allRegisteredValues);
   }
   
-  private mkBuilder(vocabs: Vocabs): ParamBuilder<PropDef> {
+  private mkBuilder(vocabs: VocabServices): ParamBuilder<PropDef> {
     function buildVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
       const paramName = def.from ?? id;
       const uri = params[paramName];
@@ -564,7 +569,7 @@ export class SseInitiative {
   };
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  vocabs: Vocabs | undefined = undefined;
+  vocabs: VocabServices | undefined = undefined;
   builder: ParamBuilder<PropDef> | undefined = undefined;
   dataAggregator: DataAggregator | undefined = undefined;
   cachedLatLon: Box2d | undefined = undefined;
@@ -938,7 +943,7 @@ export class SseInitiative {
   }
 
   setVocab(data: VocabIndex, fallBackLanguage: string): void {
-    this.vocabs = new Vocabs(data, fallBackLanguage);
+    this.vocabs = new VocabServiceImpl(data, fallBackLanguage);
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 

@@ -33,11 +33,16 @@ export interface VocabSource {
   uris: Dictionary<string>;
 }
 
-interface VocabInterface {
+// Supplies query functions for a VocabIndex
+export interface VocabServices {
+  // Gets the fallBackLanguage used
+  getFallBackLanguage(): string;
+  
   // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
   //
   // Keeps trying until all abbreviations applied.
   abbrevUri(uri: string): string;
+  
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   // Returns '?' if there is no value found
   getVocabTerm(vocabUri: string, termUri: string, language: string): string;
@@ -79,7 +84,8 @@ interface VocabInterface {
   getVocabTitlesAndVocabIDs(language: string): Dictionary;
 }
 
-export class Vocabs implements VocabInterface {
+// Supplies query functions for a VocabIndex
+export class VocabServiceImpl implements VocabServices {
   readonly vocabs: VocabIndex;
   readonly fallBackLanguage: string;
   
@@ -110,6 +116,10 @@ export class Vocabs implements VocabInterface {
       this.vocabs.vocabs = {}; // Ensure this is here
   }
 
+  getFallBackLanguage(): string {
+    return this.fallBackLanguage;
+  }
+  
   // Returns a localised Dictionary of vocab titles to Dictionaries of
   // vocab IDs to vocab terms - in the target langugage, where
   // available, or the fallBackLanguage if not.
