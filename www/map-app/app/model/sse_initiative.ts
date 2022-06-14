@@ -49,7 +49,9 @@ interface DataAggregator extends DataConsumer {
   loadedInitiatives: Initiative[];
   registeredValues: Dictionary<Dictionary<Initiative[]>>;
   allRegisteredValues: Dictionary<Initiative[]>;
-  vocabIDsAndInitiativeVariables: Dictionary;
+
+  // Filtered fields of type vocab, indexed by vocab prefix
+  vocabFilteredFields: Dictionary;
 }
 
 class SparqlDataLoader implements DataLoader {
@@ -177,7 +179,7 @@ class SparqlDataAggregator implements DataAggregator {
   readonly registeredValues: Dictionary<Dictionary<Initiative[]>> = {};
   readonly allRegisteredValues: Dictionary<Initiative[]> = {};
   readonly loadedInitiatives: Initiative[] = [];
-  readonly vocabIDsAndInitiativeVariables: Dictionary = {};
+  readonly vocabFilteredFields: Dictionary = {};
   
   private readonly config: Config;
   private readonly propertySchema: PropDefs;
@@ -202,13 +204,13 @@ class SparqlDataAggregator implements DataAggregator {
   complete() {
     // Loop through the filters and sort them data, then sort the keys in order
     // Sorts only the filterable fields, not the initiatives they hold.
-    // Populate vocabIDsAndInitiativeVariables.
+    // Populate vocabFilteredFields.
     const filterableFields: string[] = this.config.getFilterableFields();
     filterableFields.forEach(filterable => {
-      // Populate vocabIDsAndInitiativeVariables
+      // Populate vocabFilteredFields
       const propDef = this.getPropertySchema(filterable);
       if (propDef.type === 'vocab')
-        this.vocabIDsAndInitiativeVariables[propDef.uri] = filterable;
+        this.vocabFilteredFields[propDef.uri] = filterable;
       
       const label = this.getTitleForProperty(filterable);
 
@@ -689,7 +691,7 @@ export class SseInitiative {
 
     //find the initiative variable associated with the field
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    const initiativeVariable = this.getVocabIDsAndInitiativeVariables()[vocabID];
+    const initiativeVariable = this.getVocabFilteredFields()[vocabID];
 
     //loop through the initiatives and get the possible values for the initiative variable
     let alternatePossibleFilterValues: Initiative[] = [];
@@ -769,11 +771,11 @@ export class SseInitiative {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
-    const vocabIDsAndInitiativeVariables = this.getVocabIDsAndInitiativeVariables();
+    const vocabFilteredFields = this.getVocabFilteredFields();
 
     filteredInitiatives.forEach(initiative => {
-      for (const vocabID in vocabIDsAndInitiativeVariables) {
-        let termIdentifier = initiative[vocabIDsAndInitiativeVariables[vocabID]];
+      for (const vocabID in vocabFilteredFields) {
+        let termIdentifier = initiative[vocabFilteredFields[vocabID]];
 
         if (!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
@@ -801,7 +803,7 @@ export class SseInitiative {
     if (!this.dataAggregator)
       throw new Error("Can't getTerms. Data has not yet been aggregated.");
     return this?.vocabs.getTerms(this.getLanguage(),
-                                 this.dataAggregator.vocabIDsAndInitiativeVariables,
+                                 this.dataAggregator.vocabFilteredFields,
                                  this.dataAggregator.initiativesByUid,
                                  this.propertySchema); 
   }
@@ -810,10 +812,10 @@ export class SseInitiative {
     return this?.vocabs.getVerboseValuesForFields(this.getLanguage());
   }
   
-  getVocabIDsAndInitiativeVariables(): Dictionary {
+  getVocabFilteredFields(): Dictionary {
     if (!this.dataAggregator)
-      throw new Error("Can't getVocabIDsAndInitiativeVariables. Data has not yet been aggregated.");
-    return this.dataAggregator.vocabIDsAndInitiativeVariables;
+      throw new Error("Can't getVocabFilteredFields. Data has not yet been aggregated.");
+    return this.dataAggregator.vocabFilteredFields;
   }
   
   getVocabTerm(vocabUri: string, termUri: string): string {

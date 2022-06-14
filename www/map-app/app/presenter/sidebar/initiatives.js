@@ -89,7 +89,7 @@ function init(registry) {
   proto.changeFilters = (filterCategoryName, filterValue, filterValueText) => {
     //get category of filter as used in intiatives
     const vocabTitlesAndVocabIDs = sseInitiative.getVocabTitlesAndVocabIDs();
-    const vocabIDsAndInitiativeVariables = sseInitiative.getVocabIDsAndInitiativeVariables();
+    const vocabIDsAndInitiativeVariables = sseInitiative.getVocabFilteredFields();
 
     const filterCategory =
       vocabIDsAndInitiativeVariables[vocabTitlesAndVocabIDs[filterCategoryName]];
