@@ -33,9 +33,55 @@ export interface VocabSource {
   uris: Dictionary<string>;
 }
 
-export class Vocabs {
-  vocabs: VocabIndex;
-  fallBackLanguage: string;
+interface VocabInterface {
+  // Abbreviates a URI using the prefixes/abbreviations defined in vocabs
+  //
+  // Keeps trying until all abbreviations applied.
+  abbrevUri(uri: string): string;
+  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  // Returns '?' if there is no value found
+  getVocabTerm(vocabUri: string, termUri: string, language: string): string;
+
+  // Gets the vocab for a property, given the property schema
+  //
+  // Returns a vocab index (for the currently set language).
+  //
+  // Throws an exception if there is some reason this fails. The
+  // exception will have a short description indicating the problem.
+  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab;
+
+  // Gets a LocalisedVocab for the given language (which may be empty
+  // or only partially populated!)
+  getLocalisedVocabs(language: string): LocalisedVocab;
+
+  // Construct the object of terms for advanced search
+  //
+  // Returns a Dictionary of localised vocab titles, to Dictionaries
+  // of vocab ID to term label (in the given language, if available,
+  // else the fallBackLanguage)
+  getTerms(language: string,
+           vocabFilteredFields: Dictionary,
+           initiativesByUid: Dictionary<Initiative>,
+           propertySchema: PropDefs): Dictionary<Dictionary>;
+
+  // Returns a localised Dictionary of vocab titles to Dictionaries of
+  // vocab IDs to vocab terms - in the target langugage, where
+  // available, or the fallBackLanguage if not.
+  getVerboseValuesForFields(language: string): Dictionary<Dictionary>;
+
+  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
+  // Returns '?' if there is no value found
+  getVocabTerm(vocabUri: string, termUri: string, language: string): string;
+
+  // Gets a localised map of vocab titles to the relevant vocab
+  // prefixes (in the given language). (May be empty or only partially
+  // populated!)
+  getVocabTitlesAndVocabIDs(language: string): Dictionary;
+}
+
+export class Vocabs implements VocabInterface {
+  readonly vocabs: VocabIndex;
+  readonly fallBackLanguage: string;
   
   constructor(data: VocabIndex, fallBackLanguage: string) {
     this.vocabs = data;
@@ -63,8 +109,11 @@ export class Vocabs {
     if (!this.vocabs.vocabs)
       this.vocabs.vocabs = {}; // Ensure this is here
   }
-  
-  getVerboseValuesForFields(language: string) {
+
+  // Returns a localised Dictionary of vocab titles to Dictionaries of
+  // vocab IDs to vocab terms - in the target langugage, where
+  // available, or the fallBackLanguage if not.
+  getVerboseValuesForFields(language: string): Dictionary<Dictionary> {
 
     const entries = Object
       .entries(this.vocabs.vocabs)
@@ -82,13 +131,13 @@ export class Vocabs {
   }
   
   //construct the object of terms for advanced search
-  getTerms(language: string, vocabIDsAndInitiativeVariables: Dictionary, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
+  getTerms(language: string, vocabFilteredFields: Dictionary, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
 
-    let usedTerms: Record<string, Dictionary> = {};
+    let usedTerms: Dictionary<Dictionary> = {};
 
     let vocabLang = this.fallBackLanguage;
 
-    for (const vocabID in vocabIDsAndInitiativeVariables) {
+    for (const vocabID in vocabFilteredFields) {
       vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
 
       const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
@@ -98,11 +147,11 @@ export class Vocabs {
     for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
 
-      for (const vocabID in vocabIDsAndInitiativeVariables) {
+      for (const vocabID in vocabFilteredFields) {
         vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
 
         const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-        const propName = vocabIDsAndInitiativeVariables[vocabID];
+        const propName = vocabFilteredFields[vocabID];
         const id = initiative[propName];
         const propDef = propertySchema[propName];
         if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
@@ -165,7 +214,7 @@ export class Vocabs {
     return '?';
   }
   
-  getVocabTitlesAndVocabIDs(language: string) {
+  getVocabTitlesAndVocabIDs(language: string): Dictionary {
     const vocabTitlesAndVocabIDs: Dictionary = {}
 
     for (const vocabID in this.vocabs.vocabs) {
@@ -176,7 +225,7 @@ export class Vocabs {
     return vocabTitlesAndVocabIDs;
   }
 
-  getLocalisedVocabs(language: string) {
+  getLocalisedVocabs(language: string): LocalisedVocab {
     const vocabLang = this.vocabs.vocabs["aci:"][language] ? language : this.fallBackLanguage;
 
     let verboseValues: LocalisedVocab = {};
