@@ -519,18 +519,6 @@ export class DataServices {
   }
 
   static mkLocFromParam(from: string, overrideParam: string) {
-    function isAlpha(str: string): boolean {
-      if (!str) return false;
-
-      for (let i = 0, len = str.length; i < len; i++) {
-        const code = str.charCodeAt(i);
-        if (!(code > 64 && code < 91) && // upper alpha (A-Z)
-          !(code > 96 && code < 123)) { // lower alpha (a-z)
-          return false;
-        }
-      }
-      return true;
-    }
     return (id: string, def: CustomPropDef, params: InitiativeObj) => {
       let param = params[from];
       
@@ -543,7 +531,7 @@ export class DataServices {
       }
     
       // Ensure param is a number
-      if (isAlpha(param))
+      if (isNaN(Number.parseFloat(param)))
         return undefined;
 
       // Preserve undefs/nulls/empty strings as undefined 
