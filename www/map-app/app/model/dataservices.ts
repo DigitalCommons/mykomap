@@ -546,8 +546,8 @@ export class DataServices {
       if (isAlpha(param))
         return undefined;
 
-      // Preserve undefs
-      if (param === undefined)
+      // Preserve undefs/nulls/empty strings as undefined 
+      if (param === undefined || param === null || param === "")
         return undefined;
       
       return Number(param);
