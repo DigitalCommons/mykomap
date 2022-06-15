@@ -534,9 +534,11 @@ export class DataServices {
     return (id: string, def: CustomPropDef, params: InitiativeObj) => {
       let param = params[from];
       
-      // Overwrite with manually added lat lng if present
-      if (params.manLat && params.manLat != "0" ||
-        params.manLng && params.manLng != "0") {
+      // Overwrite with manually added lat lng if present For
+      // historical reasons, "0" counts as undefined (meaning, use
+      // lat/lng), cos it used to mean this in the old wonky data.
+      if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
+        'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
         param = params[overrideParam];
       }
     
