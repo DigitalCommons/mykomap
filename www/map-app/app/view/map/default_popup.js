@@ -14,15 +14,15 @@ function htmlEscape(str) {
 function getAddress(initiative) {
   // We want to add the whole address into a single paragraph.
   // Not all orgs have an address, however.
-  const address = [];
+  let address = [];
   if (initiative.street)
-    address.concat(
+    address = address.concat(
       initiative.street.split(';')
                 .map(elem => elem.trim())
                 .filter(elem => elem !== initiative.name)
                 .map(htmlEscape)
     );
-  address.concat(
+  address = address.concat(
     [initiative.locality,
      initiative.region,
      initiative.postcode].map(htmlEscape)
