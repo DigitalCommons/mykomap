@@ -1,19 +1,219 @@
+import { base as BasePresenter } from '../presenter';
 const eventbus = require('../eventbus');
 
-"use strict";
-function init(registry) {
-  const config = registry('config');
-  const presenter = registry('presenter');
-  const markerView = registry('view/map/marker');
-  const sse_initiative = registry('model/sse_initiative');
+export class PresenterFactory {
   
-  function Presenter() { }
+  constructor(config, dataservices, markerView, sidebarView) {
+    this.config = config;
+    this.dataservices = dataservices;
+    this.markerView = markerView;
+    this.sidebarView = sidebarView;
+    this.initiativesOutsideOfFilterUIDMap = {};
+    this.loadedInitiatives = [];
+    this.filtered = {};
+    this.filteredInitiativesUIDMap = {};
+    this.verboseNamesMap = {};
+    this.initiativesOutsideOfFilterUIDMap;
+    this.loadedInitiatives;
+    this.hidden = [];
+    this.lastRequest = [];
+    this.allMarkers = [];
+  }
 
-  var proto = Object.create(presenter.base.prototype);
+  onNewInitiatives() {
+    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.dataservices.getInitiativeUIDMap());
+    this.loadedInitiatives = this.dataservices.getLoadedInitiatives();
+  }
+  
+  createPresenter(view) {
+    const p = new Presenter(this);
+    p.registerView(view);
+    eventbus.subscribe({
+      topic: "Initiative.datasetLoaded",
+      callback: (data) => {
+        this.onNewInitiatives();
+        p.onInitiativeDatasetLoaded(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Initiative.new",
+      callback: (data) => {
+        p.onInitiativeNew(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Initiative.refresh",
+      callback: (data) => {
+        this.onNewInitiatives();
+        p.refreshInitiative(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Initiative.reset",
+      callback: (data) => {
+        this.onNewInitiatives();
+        p.onInitiativeReset(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Initiative.complete",
+      callback: () => {
+        this.onNewInitiatives();
+        p.onInitiativeLoadComplete();
+        p.onInitiativeComplete();
+      }
+    });
 
-  let allMarkers = [];
+    eventbus.subscribe({
+      topic: "Initiative.loadStarted",
+      callback: (data) => {
+        p.onInitiativeLoadMessage(data);
+      }
+    });
 
-  var copyTextToClipboard = function (text) {
+
+    eventbus.subscribe({ topic: "Initiative.loadFailed", callback: (data) => { p.onInitiativeLoadMessage(data); } });
+    // TODO - strip out this mechanism from everywhere it appears:
+    //eventbus.subscribe({topic: "Initiative.selected", callback: (data) => { p.onInitiativeSelected(data); } });
+    eventbus.subscribe({
+      topic: "Markers.needToShowLatestSelection",
+      callback: (data) => {
+        p.onMarkersNeedToShowLatestSelection(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.needsToBeZoomedAndPanned",
+      callback: (data) => {
+        p.onMapNeedsToBeZoomedAndPanned(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.needToShowInitiativeTooltip",
+      callback: (data) => {
+        p.onNeedToShowInitiativeTooltip(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.needToHideInitiativeTooltip",
+      callback: (data) => {
+        p.onNeedToHideInitiativeTooltip(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.setZoom",
+      callback: (data) => {
+        p.setZoom(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.setActiveArea",
+      callback: (data) => {
+        p.setActiveArea(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.fitBounds",
+      callback: (data) => {
+        p.onBoundsRequested(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.selectAndZoomOnInitiative",
+      callback: (data) => {
+        p.selectAndZoomOnInitiative(data);
+      }
+    });
+
+
+
+    eventbus.subscribe({
+      topic: "Map.addFilter", //change this
+      callback: (data) => {
+        p.addFilter(data);
+      }
+    });
+    eventbus.subscribe({
+      topic: "Map.refresh", //change this
+      callback: (data) => {
+        p.view.refresh();
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.removeFilter",
+      callback: (data) => {
+        p.removeFilter(data);
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.removeFilters",
+      callback: (data) => {
+        p.removeFilters();
+      }
+    });
+
+    eventbus.subscribe({
+      topic: "Map.addSearchFilter",
+      callback: (data) => {
+        p.addSearchFilter(data);
+      }
+    });//change this to search
+
+    eventbus.subscribe({
+      topic: "Map.removeSearchFilter",
+      callback: (data) => {
+        p.removeSearchFilter();
+      }
+    });
+
+    return p;
+  }
+  
+  //should return an array of unique initiatives in filters
+  getFiltered() {
+    return Object.values(this.filteredInitiativesUIDMap);
+  }
+
+  getFilteredMap() {
+    return this.filteredInitiativesUIDMap;
+  }
+
+  getFilters(){
+    return Object.keys(this.filtered);
+  }
+
+  getFiltersFull(){
+    let filterArray = []
+    
+    for(let filterName in this.verboseNamesMap){
+      filterArray.push({
+        "filterName": filterName,
+        "verboseName": this.verboseNamesMap[filterName],
+        "initiatives": this.filtered[filterName]
+      })
+    }
+
+    return filterArray;
+  }
+
+  getFiltersVerbose() {
+    return Object.values(this.verboseNamesMap);
+  }
+}
+
+export class Presenter extends BasePresenter {
+
+  constructor(factory, view) {
+    super(view);
+    this.factory = factory;
+    this.previouslySelected = [];
+  }
+    
+  static copyTextToClipboard(text) {
     var textArea = document.createElement("textarea");
     // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
     //
@@ -68,18 +268,21 @@ function init(registry) {
 
     document.body.removeChild(textArea);
   }
-  proto.getTileUrl = function () {
-    return config.getTileUrl();
+
+  getTileUrl() {
+    return this.factory.config.getTileUrl();
   }
-  proto.getMapAttribution = function() {
-    return config.getMapAttribution();
+  
+  getMapAttribution() {
+    return this.factory.config.getMapAttribution();
   }
-  proto.getMapEventHandlers = function () {
+  
+  getMapEventHandlers() {
     return {
-      click: function (e) {
+      click: (e) => {
         // Deselect any selected markers
         if (e.originalEvent.ctrlKey) {
-          copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
+          Presenter.copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
         }
 
         eventbus.publish({
@@ -87,297 +290,249 @@ function init(registry) {
           data: ""
         });
       },
-      load: function (e) {
+      load: (e) => {
         console.log("Map loaded");
 
-        const sidebarView = registry('view/sidebar');
-
-        let defaultOpenSidebar = config.getDefaultOpenSidebar();
-
-        if(defaultOpenSidebar)
-          sidebarView.showSidebar();        
+        let defaultOpenSidebar = this.factory.config.getDefaultOpenSidebar();
+        
+        if (defaultOpenSidebar) {
+          const sidebarView = registry('view/sidebar');
+          sidebarView.showSidebar();
+        }
       },
-      resize: function (e) {
+      resize: (e) => {
         window.seaMap.invalidateSize();
         console.log("Map resize", window.outerWidth);
       }
     };
-  };
-  proto.onInitiativeNew = function (data) {
+  }
+
+  onInitiativeNew(data) {
     const initiative = data,
           marker = this.view.addMarker(initiative).marker;
 
-    if (marker.hasPhysicalLocatioogn) allMarkers.push(marker);
-  };
-  proto.refreshInitiative = function (data) {
+    if (marker.hasPhysicalLocation) this.factory.allMarkers.push(marker);
+  }
+  
+  refreshInitiative(data) {
     const initiative = data;
     this.view.refreshMarker(initiative);
-  };
+  }
 
 
-  proto.onInitiativeReset = function (data) {
+  onInitiativeReset(data) {
 
     this.view.removeAllMarkers();
-    allMarkers = [];
-    loadedInitiatives = [];
+    this.factory.allMarkers = [];
+    this.factory.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
-  };
+  }
 
-  proto.onInitiativeComplete = function () {
+  onInitiativeComplete() {
     // Load the markers into the clustergroup
     this.view.fitBounds(this.getInitialBounds());
-    this.view.unselectedClusterGroup.addLayers(allMarkers);
+    this.view.unselectedClusterGroup.addLayers(this.factory.allMarkers);
     console.log("onInitiativeComplete");
     // eventbus.publish({
     //   topic: "Markers.completed",
-    //   data: { markers: allMarkers }
+    //   data: { markers: this.factory.allMarkers }
     // });
     // eventbus.publish({
     //   topic: "Markers.",
     //   data: ""
     // });
-  };
+  }
 
 
-  proto.onInitiativeDatasetLoaded = function (data) {
+  onInitiativeDatasetLoaded(data) {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
     //console.log(data.latLngBounds());
     // this.view.fitBounds([[-45.87859, -162.60022], [76.47861, 176.84446]]);
-  };
-  proto.onInitiativeLoadComplete = function () {
+  }
+
+  onInitiativeLoadComplete() {
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
     this.view.stopLoading();
 
-  };
-  proto.onInitiativeLoadMessage = function (data) {
+  }
+  
+  onInitiativeLoadMessage(data) {
     /* The protecting veil is now obsolete. */
     //view.showProtectingVeil(data.message);
     // TODO - hook this up to a log?
     this.view.startLoading(data);
+  }
 
-  };
-
-  let previouslySelected = [];
-  //this will manage markers pop-ing up and zooming
-  proto.onMarkersNeedToShowLatestSelection = function (data) {
-    const that = this;
-    previouslySelected.forEach(function (e) {
-      that.view.setUnselected(e);
+  onMarkersNeedToShowLatestSelection(data) {
+    this.previouslySelected.forEach((e) => {
+      this.view.setUnselected(e);
     });
 
-    previouslySelected = data.selected;
-
+    this.previouslySelected = data.selected;
+    
     //zoom in and then select 
-    data.selected.forEach(function (e) {
-      that.view.setSelected(e);
+    data.selected.forEach((e) => {
+      this.view.setSelected(e);
     });
-  };
+  }
 
-
-  proto.onNeedToShowInitiativeTooltip = function (data) {
+  onNeedToShowInitiativeTooltip(data) {
     this.view.showTooltip(data);
-  };
-  proto.onNeedToHideInitiativeTooltip = function (data) {
+  }
+  
+  onNeedToHideInitiativeTooltip(data) {
     this.view.hideTooltip(data);
-  };
-  //  proto.onInitiativeSelected = function(data) {
-  //    const initiative = data;
-  //    console.log('onInitiativeSelected');
-  //    console.log(initiative);
-  //    this.view.setSelected(initiative);
-  //    this.view.zoomAndPanTo({lon: initiative.lng, lat: initiative.lat});
-  //  };
-  proto.onMapNeedsToBeZoomedAndPanned = function (data) {
+  }
+  
+  onMapNeedsToBeZoomedAndPanned(data) {
     console.log("onMapNeedsToBeZoomedAndPanned ", data);
     const latLngBounds = data;
     this.view.flyToBounds(latLngBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
-  };
+  }
 
-  proto.onBoundsRequested = function (data) {
+  onBoundsRequested(data) {
     this.view.fitBounds(data);
-  };
+  }
 
-  proto.setZoom = function (data) {
+  setZoom(data) {
     console.log("Zooming to ", data);
     const zoom = data;
     this.view.setZoom(zoom);
-  };
+  }
 
-  proto.getInitialBounds = function () {
-    return config.getInitialBounds() == undefined ?
-           sse_initiative.latLngBounds(null) : config.getInitialBounds();
-  };
+  getInitialBounds() {
+    return this.factory.config.getInitialBounds() == undefined ?
+           this.factory.dataservices.latLngBounds(null) : this.factory.config.getInitialBounds();
+  }
 
-  proto.getInitialZoom = function () { };
+  getInitialZoom() { }
 
-  proto.setActiveArea = function (data) {
+  setActiveArea(data) {
     this.view.setActiveArea(data);
-  };
+  }
 
-  proto.getDisableClusteringAtZoomFromConfig = function () {
-    return config.getDisableClusteringAtZoom() || false;
-  };
+  getDisableClusteringAtZoomFromConfig() {
+    return this.factory.config.getDisableClusteringAtZoom() || false;
+  }
 
 
 
   //FILTERS
-  let filtered = {};
-  let filteredInitiativesUIDMap = {};
-  let verboseNamesMap = {};
-  let initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
-  let loadedInitiatives = sse_initiative.getLoadedInitiatives();
-  proto.applyFilter = function () {
+  applyFilter() {
     //if there are currently any filters 
-    if (getFiltered().length > 0) {
+    if (this.factory.getFiltered().length > 0) {
       //display only filtered initiatives, the rest should be hidden
-      markerView.hideMarkers(this.getInitiativesOutsideOfFilter());
-      markerView.showMarkers(getFiltered());
+      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());
+      this.factory.markerView.showMarkers(this.factory.getFiltered());
     } else //if no filters available show everything
       this.removeFilters();
+  }
 
-  };
-
-
-  proto.addFilter = function (data) {
+  addFilter(data) {
     let initiatives = data.initiatives;
     let filterName = data.filterName;
     let verboseName = data.verboseName;
 
     //if filter already exists don't do anything
-    if (Object.keys(filtered).includes(filterName))
+    if (Object.keys(this.factory.filtered).includes(filterName))
       return;
 
     //add filter
-    filtered[filterName] = initiatives;
+    this.factory.filtered[filterName] = initiatives;
 
     //add the verbose name of the filter
-    verboseNamesMap[filterName] = verboseName;
+    this.factory.verboseNamesMap[filterName] = verboseName;
 
     //if this is the first filter, add items to the filteredInitiativesUIDMap
-    if(Object.keys(filtered).length <= 1){
-      initiativesOutsideOfFilterUIDMap = Object.assign({},sse_initiative.getInitiativeUIDMap());
+    if (Object.keys(this.factory.filtered).length <= 1) {
+      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getInitiativeUIDMap());
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
-        delete initiativesOutsideOfFilterUIDMap[initiative.uri];
-        filteredInitiativesUIDMap[initiative.uri] = initiative;
+        delete this.factory.initiativesOutsideOfFilterUIDMap[initiative.uri];
+        this.factory.filteredInitiativesUIDMap[initiative.uri] = initiative;
       });
     }
     /* if this is the second or more filter, remove items from the 
        filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
      */
-    else{      
-      for(const initiativeUniqueId in filteredInitiativesUIDMap){
-        if(!initiatives.includes(filteredInitiativesUIDMap[initiativeUniqueId])){
-          initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},filteredInitiativesUIDMap[initiativeUniqueId]);
-          delete filteredInitiativesUIDMap[initiativeUniqueId];
+    else {      
+      for(const initiativeUniqueId in this.factory.filteredInitiativesUIDMap){
+        if(!initiatives.includes(this.factory.filteredInitiativesUIDMap[initiativeUniqueId])){
+          this.factory.initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},this.factory.filteredInitiativesUIDMap[initiativeUniqueId]);
+          delete this.factory.filteredInitiativesUIDMap[initiativeUniqueId];
         }
       }
     }
 
-    console.log(filteredInitiativesUIDMap);
+    console.log(this.factory.filteredInitiativesUIDMap);
 
     //apply filters
     this.applyFilter();
-  };
+  }
 
-
-
-  proto.removeFilters = function () {
+  removeFilters() {
     //remove filters
-    filtered = {};
-    filteredInitiativesUIDMap = {};
-    initiativesOutsideOfFilterUIDMap = Object.assign({}, sse_initiative.getInitiativeUIDMap());
-    verboseNamesMap = {};
+    this.factory.filtered = {};
+    this.factory.filteredInitiativesUIDMap = {};
+    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getInitiativeUIDMap());
+    this.factory.verboseNamesMap = {};
     //show all markers
-    markerView.showMarkers(loadedInitiatives);
-  };
+    this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
+  }
 
-
-
-  proto.removeFilter = function (data) {
+  removeFilter(data) {
     const filterName = data.filterName;
     //if filter doesn't exist don't do anything
-    if (!Object.keys(filtered).includes(filterName))
+    if (!Object.keys(this.factory.filtered).includes(filterName))
       return;
 
     //remove the filter
-    let oldFilterVals = filtered[filterName];
-    delete filtered[filterName];
+    let oldFilterVals = this.factory.filtered[filterName];
+    delete this.factory.filtered[filterName];
 
     //if no filters left call remove all and stop
-    if (Object.keys(filtered).length <= 0) {
+    if (Object.keys(this.factory.filtered).length <= 0) {
       this.removeFilters();
       return;
     }
 
     //add in the values that you are removing 
     oldFilterVals.forEach(i => {
-      initiativesOutsideOfFilterUIDMap[i.uri] = i;
+      this.factory.initiativesOutsideOfFilterUIDMap[i.uri] = i;
     });
 
     //remove filter initatitives 
     //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    Object.keys(filtered).forEach(k => {
-      filtered[k].forEach(i => {
+    Object.keys(this.factory.filtered).forEach(k => {
+      this.factory.filtered[k].forEach(i => {
         //add in unique ones
-        filteredInitiativesUIDMap[i.uri] = i;
+        this.factory.filteredInitiativesUIDMap[i.uri] = i;
         //remove the ones you added
-        delete initiativesOutsideOfFilterUIDMap[i.uri];
+        delete this.factory.initiativesOutsideOfFilterUIDMap[i.uri];
       })
     });
 
     //remove filter from verbose name
-    delete verboseNamesMap[filterName];
+    delete this.factory.verboseNamesMap[filterName];
 
 
     //apply filters
     this.applyFilter();
-  };
-
-
-
-  //should return an array of unique initiatives in filters
-  function getFiltered() {
-    return Object.values(filteredInitiativesUIDMap);
-  };
-
-  function getFilteredMap() {
-    return filteredInitiativesUIDMap;
   }
 
-  function getFilters(){
-    return Object.keys(filtered);
-  }
 
-  function getFiltersFull(){
-    let filterArray = []
-    
-    for(let filterName in verboseNamesMap){
-      filterArray.push({
-        "filterName": filterName,
-        "verboseName": verboseNamesMap[filterName],
-        "initiatives": filtered[filterName]
-      })
-    }
-
-    return filterArray;
-  }
-
-  function getFiltersVerbose() {
-    return Object.values(verboseNamesMap);
-  }
 
   //should return an array of unique initiatives outside of filters
-  proto.getInitiativesOutsideOfFilter = function () {
-    return Object.values(initiativesOutsideOfFilterUIDMap);
-  };
+  getInitiativesOutsideOfFilter() {
+    return Object.values(this.factory.initiativesOutsideOfFilterUIDMap);
+  }
   //FILTERS END
 
 
@@ -385,10 +540,7 @@ function init(registry) {
 
 
   //highlights markers, hides markers not in the current selection
-
-  let hidden = [];
-  let lastRequest = [];
-  proto.addSearchFilter = function (data) {
+  addSearchFilter(data) {
     
     //if no results remove the filter, currently commented out
     if (data.initiatives != null && data.initiatives.length == 0) {
@@ -397,8 +549,8 @@ function init(registry) {
       // return;
       console.log("no results, hide everything");
       //hide all 
-      hidden = loadedInitiatives;
-      markerView.hideMarkers(hidden);
+      this.factory.hidden = this.factory.loadedInitiatives;
+      this.factory.markerView.hideMarkers(this.factory.hidden);
       return;
     }
 
@@ -406,10 +558,10 @@ function init(registry) {
        //this was causing a bug and doesn't seem to do anything useful
 
        //if the results match the previous results don't do anything
-       if (data.initiatives == lastRequest)
+       if (data.initiatives == this.factory.lastRequest)
        return;
 
-       lastRequest = data.initiatives; //cache the last request
+       this.factory.lastRequest = data.initiatives; //cache the last request
      */
 
 
@@ -417,25 +569,25 @@ function init(registry) {
     const initiativeIds = data.initiatives.map(i => i.uri);
     
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    hidden = loadedInitiatives.filter(i => 
+    this.factory.hidden = this.factory.loadedInitiatives.filter(i => 
       !initiativeIds.includes(i.uri)
     );
 
     //hide all unneeded markers
-    markerView.hideMarkers(hidden);
+    this.factory.markerView.hideMarkers(this.factory.hidden);
     //make sure the markers you need to highlight are shown
-    markerView.showMarkers(data.initiatives);
+    this.factory.markerView.showMarkers(data.initiatives);
 
     //zoom and pan
 
     if (data.initiatives.length > 0) {
       var options = {
-        maxZoom: config.getMaxZoomOnSearch()
+        maxZoom: this.factory.config.getMaxZoomOnSearch()
       }
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = sse_initiative.latLngBounds(data.initiatives)
+      const latlng = this.factory.dataservices.latLngBounds(data.initiatives)
       eventbus.publish({
         topic: "Map.needsToBeZoomedAndPanned",
         data: {
@@ -445,55 +597,54 @@ function init(registry) {
         }
       });
     }
-  };
+  }
 
-  proto.getLogo = function () {
-    return config.logo();
-  };
+  getLogo() {
+    return this.factory.config.logo();
+  }
 
-  proto.refresh = function () {
+  refresh() {
     eventbus.publish({
       topic: "Map.refresh",
       data: ""
     });
   }
 
-  proto.selectAndZoomOnInitiative = function (data) {
+  selectAndZoomOnInitiative(data) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
-
   //this can get called multiple times make sure it doesn't crash
-  proto.removeSearchFilter = function () {
+  removeSearchFilter() {
 
     //if no search filter to remove just return
-    if (hidden.length === 0)
+    if (this.factory.hidden.length === 0)
       return;
 
     //show hidden markers
-    //markerView.showMarkers(hidden);
+    //this.factory.markerView.showMarkers(hidden);
     this.applyFilter();
 
-    if (getFiltered().length > 0) {
+    if (this.factory.getFiltered().length > 0) {
       //hide the initiatives that were outside of the filter
-      markerView.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
+      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
       //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
       //with the difference between getFiltered() and data.initiatives
       //i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      markerView.showMarkers(hidden);
+      this.factory.markerView.showMarkers(this.factory.hidden);
     } else //if no filters available then the search was under global (only hidden ones need to be shown)
-      markerView.showMarkers(hidden);
+      this.factory.markerView.showMarkers(this.factory.hidden);
 
     //clear last request so you can search the same data again
-    lastRequest = [];
+    this.factory.lastRequest = [];
 
     //reset the hidden array
-    hidden = [];
+    this.factory.hidden = [];
 
     //zoom and pan
-    //const latlng = sse_initiative.latLngBounds(getFiltered().length > 0? getFiltered() : null)
+    //const latlng = dataservices.latLngBounds(getFiltered().length > 0? getFiltered() : null)
     // eventbus.publish({
     //   topic: "Map.needsToBeZoomedAndPanned",
     //   data: {
@@ -511,167 +662,14 @@ function init(registry) {
         selected: []
       }
     });
-
-  };
-
-
-  //END SEARCH HIGHLIGHT
-
-
-  Presenter.prototype = proto;
-
-  function createPresenter(view) {
-    var p = new Presenter();
-    p.registerView(view);
-    eventbus.subscribe({
-      topic: "Initiative.datasetLoaded",
-      callback: function (data) {
-        p.onInitiativeDatasetLoaded(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.new",
-      callback: function (data) {
-        p.onInitiativeNew(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.refresh",
-      callback: function (data) {
-        p.refreshInitiative(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.reset",
-      callback: function (data) {
-        p.onInitiativeReset(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.complete",
-      callback: function () {
-        p.onInitiativeLoadComplete();
-        p.onInitiativeComplete();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Initiative.loadStarted",
-      callback: function (data) {
-        p.onInitiativeLoadMessage(data);
-      }
-    });
-
-
-    eventbus.subscribe({ topic: "Initiative.loadFailed", callback: function (data) { p.onInitiativeLoadMessage(data); } });
-    // TODO - strip out this mechanism from everywhere it appears:
-    //eventbus.subscribe({topic: "Initiative.selected", callback: function(data) { p.onInitiativeSelected(data); } });
-    eventbus.subscribe({
-      topic: "Markers.needToShowLatestSelection",
-      callback: function (data) {
-        p.onMarkersNeedToShowLatestSelection(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needsToBeZoomedAndPanned",
-      callback: function (data) {
-        p.onMapNeedsToBeZoomedAndPanned(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needToShowInitiativeTooltip",
-      callback: function (data) {
-        p.onNeedToShowInitiativeTooltip(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needToHideInitiativeTooltip",
-      callback: function (data) {
-        p.onNeedToHideInitiativeTooltip(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.setZoom",
-      callback: function (data) {
-        p.setZoom(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.setActiveArea",
-      callback: function (data) {
-        p.setActiveArea(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.fitBounds",
-      callback: function (data) {
-        p.onBoundsRequested(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.selectAndZoomOnInitiative",
-      callback: function (data) {
-        p.selectAndZoomOnInitiative(data);
-      }
-    });
-
-
-
-    eventbus.subscribe({
-      topic: "Map.addFilter", //change this
-      callback: function (data) {
-        p.addFilter(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.refresh", //change this
-      callback: function (data) {
-        p.view.refresh();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.removeFilter",
-      callback: function (data) {
-        p.removeFilter(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.removeFilters",
-      callback: function (data) {
-        p.removeFilters();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.addSearchFilter",
-      callback: function (data) {
-        p.addSearchFilter(data);
-      }
-    });//change this to search
-
-    eventbus.subscribe({
-      topic: "Map.removeSearchFilter",
-      callback: function (data) {
-        p.removeSearchFilter();
-      }
-    });
-
-
-
-    return p;
   }
-  return {
-    createPresenter: createPresenter,
-    getFiltered: getFiltered,
-    getFilteredMap: getFilteredMap,
-    getFilters: getFilters,
-    getFiltersFull: getFiltersFull,
-    getFiltersVerbose: getFiltersVerbose
-  };
+  //END SEARCH HIGHLIGHT
 }
-module.exports = init;
+
+export function init(registry) {
+  const config = registry('config');
+  const markerView = registry('view/map/marker');
+  const dataservices = registry('model/dataservices');
+  
+  return new PresenterFactory(config, dataservices, markerView, registry);
+}

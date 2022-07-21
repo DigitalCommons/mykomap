@@ -23,12 +23,15 @@ import type {
 } from '../../common_types';
 
 import type {
-  SseInitiative,
+  DataServices,
   Initiative,
   PropDef,
   PropDefs,
+} from './dataservices';
+
+import type {
   VocabSource
-} from './sse_initiative';
+} from './vocabs';
 
 class TypeDef<T> {
   constructor(params: {
@@ -138,7 +141,7 @@ export interface DialogueSize {
 };  
 
 export type InitiativeRenderFunction =
-  (initiative: Initiative, model: SseInitiative) => string;
+  (initiative: Initiative, model: DataServices) => string;
 
 export interface ConfigData {
   aboutHtml?: string;
@@ -458,7 +461,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       customPopup: {
         id: 'customPopup',
-        descr: "An optional function accepting an Initiative and an SseInitiative object, "+
+        descr: "An optional function accepting an Initiative and an DataServices object, "+
           "which returns an HTML string which will be used as the pop-up contents for that "+
           "initiative's marker",
         init: () => { this.data.customPopup = customPopup; },
@@ -843,7 +846,7 @@ Here is an example of what you might put in this file:
   "htmlTitle": "Solidarity Oxford",
   "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom": false
+  "disableClusteringAtZoom": 10
 }
 \`\`\`
 

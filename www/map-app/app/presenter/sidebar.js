@@ -1,9 +1,9 @@
 "use strict";
 const eventbus = require('../eventbus');
+const presenter = require('../presenter');
 
 function init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter');
   
   // This is the presenter for the view/sidebar object.
   // Don't confuse this with the base object for all sidebar objects, which is in presenter/sidebar/base.

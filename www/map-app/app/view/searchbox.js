@@ -6,10 +6,10 @@ function init(registry) {
   const config = registry('config');
   const viewBase = registry('view/base');
   const presenter = registry('presenter/searchbox');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
 
   //get labels for buttons and titles
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   function SearchBoxView() {}
   // inherit from the standard view base object:

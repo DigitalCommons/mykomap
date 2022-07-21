@@ -6,10 +6,10 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const sidebarView = registry('view/sidebar/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   const presenter = registry('presenter/sidebar/about');
 
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   // Our local Sidebar object:
   function Sidebar() { }
@@ -66,7 +66,7 @@ function init(registry) {
     sourceParag
       .append('ul')
       .selectAll('li')
-      .data(Object.values(sseInitiative.getDatasets()))
+      .data(Object.values(dataServices.getDatasets()))
       .enter()
       .append('li')
       .append('a')

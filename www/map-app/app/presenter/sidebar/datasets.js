@@ -4,7 +4,7 @@ const eventbus = require('../../eventbus');
 function init(registry) {
   const config = registry('config');
   const sidebarView = registry('view/sidebar/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
   const sidebarPresenter = registry('presenter/sidebar/base');
   const markerView = registry('view/map/marker');
   
@@ -17,11 +17,11 @@ function init(registry) {
   let mixedId = "all";
   //test
   proto.getDatasets = () => {
-    return sseInitiative.getDatasets();
+    return dataServices.getDatasets();
   }
   
   proto.getDefault = () => {
-    let val = sseInitiative.getCurrentDatasets();
+    let val = dataServices.getCurrentDatasets();
     return val===true? "all" : val;
   }
 
@@ -37,7 +37,7 @@ function init(registry) {
   //remove initiatives from menu on the side
   //remove initiatives from map
   proto.changeDatasets = (dataset) => {
-    sseInitiative.reset(dataset); // simply delegate
+    dataServices.reset(dataset); // simply delegate
   };
   
   function createPresenter(view) {

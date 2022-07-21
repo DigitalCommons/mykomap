@@ -1,13 +1,13 @@
 "use strict";
 const eventbus = require('../../eventbus');
+const presenter = require('../../presenter');
 
 function init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter');
   const defaultPopup = registry('view/map/popup').getPopup;
-  const sse_initiatives = registry('model/sse_initiative');
+  const dataservices = registry('model/dataservices');
 
-  const labels = sse_initiatives.getFunctionalLabels();
+  const labels = dataservices.getFunctionalLabels();
   
   function Presenter() { }
 
@@ -35,15 +35,15 @@ function init(registry) {
     return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
   };
   // proto.getAllOrgStructures = function() {
-  //   return sse_initiatives.getVerboseValuesForFields()["Organisational Structure"];
+  //   return dataservices.getVerboseValuesForFields()["Organisational Structure"];
   // };
   proto.getInitiativeContent = function (initiative) {
     const customPopup = config.getCustomPopup();
     if (customPopup)
-      return customPopup(initiative, sse_initiatives,labels);
+      return customPopup(initiative, dataservices,labels);
     else
       // use this if there is no customPopup configured
-      return defaultPopup(initiative, sse_initiatives,labels);
+      return defaultPopup(initiative, dataservices,labels);
   };
 
 

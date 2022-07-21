@@ -22,15 +22,15 @@ function init(registry) {
   const presenter = registry('presenter/map');
   const markerView = registry('view/map/marker');
   const viewBase = registry('view/base');
-  const sseInitiative = registry('model/sse_initiative');
+  const dataServices = registry('model/dataservices');
 
-  const labels = sseInitiative.getFunctionalLabels();
+  const labels = dataServices.getFunctionalLabels();
 
   const config = {
     putSelectedMarkersInClusterGroup: false
   };
 
-  const dialogueSize = sseInitiative.getDialogueSize();
+  const dialogueSize = dataServices.getDialogueSize();
 
   const descriptionRatio = parseInt(dialogueSize.descriptionRatio);
   const descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
@@ -96,12 +96,9 @@ function init(registry) {
   var SpinMapMixin = {
     seaLoading: function (state, options) {
       if (!!state) {
-        options.datasetLoading =
-          options.datasetLoading.charAt(0).toUpperCase() + options.datasetLoading.slice(1);
-
         var myLoader = loader({
           error: options.error,
-          text: `${labels.loading} ${options.datasetLoading} ${labels.datasets}...`,
+          text: `${labels.loading}...`,
           container: "#map-app-leaflet-map", id: "loadingCircle",
         });
         myLoader();
@@ -486,7 +483,7 @@ function init(registry) {
   };
 
   proto.startLoading = function (data) {
-    this.map.seaLoading(true, { datasetLoading: data.dataset, error: data.error });
+    this.map.seaLoading(true, { error: data.error });
   };
 
   proto.stopLoading = function () {
