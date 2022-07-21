@@ -360,14 +360,14 @@ function init(registry) {
         activeClass = "sea-initiative-active";
       }
 
-      if (initiative.nongeo == 1) {
+      if (!initiative.hasLocation()) {
         nongeoClass = "sea-initiative-non-geo";
       }
 
       list
         .append("li")
         .text(initiative.name)
-        .attr("data-uid", initiative.uniqueId)
+        .attr("data-uid", initiative.uri)
         .classed(activeClass, true)
         .classed(nongeoClass, true)
         .on("click", function () {
@@ -409,7 +409,7 @@ function init(registry) {
   proto.populateInitiativeSidebar = function (initiative, initiativeContent) {
     // Highlight the correct initiative in the directory
     d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
-    d3.select('[data-uid="' + initiative.uniqueId + '"]').classed(
+    d3.select('[data-uid="' + initiative.uri + '"]').classed(
       "sea-initiative-active",
       true
     );

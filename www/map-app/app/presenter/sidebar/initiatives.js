@@ -57,11 +57,10 @@ function init(registry) {
     });
   };
   function arrayMax(array) {
-    return array.reduce((a, b) => Math.max(a, b));
-
+    return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
   }
   function arrayMin(array) {
-    return array.reduce((a, b) => Math.min(a, b));
+    return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
   }
   proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function (sidebarWidth) {
     const initiatives = this.contentStack.current().initiatives;
@@ -214,7 +213,7 @@ function init(registry) {
       //search results should be a subset of filtered
 
       data.results = data.results.filter(initiative =>
-        filterKeys.includes(initiative.uniqueId)
+        filterKeys.includes(initiative.uri)
       );
     }
 
@@ -432,7 +431,7 @@ function init(registry) {
     eventbus.subscribe({
       topic: "Initiatives.searchedInitiativeClicked",
       callback: function (data) {
-        p.searchedInitiativeClicked(data.initiative.uniqueId)
+        p.searchedInitiativeClicked(data.initiative.uri)
       }
     });
 

@@ -403,18 +403,22 @@ function add_query_data($result, $query_results) {
  * aggregated result as the response body, with content-type
  * `application/json`.
  */
+$dev_cache_file = "./get_vocabs.json";
 function main() {
+    global $dev_cache_file;
+    if (file_exists($dev_cache_file)) {
+        $content = file_get_contents($dev_cache_file);
+        header('Content-type: application/json');
+        echo $content;
+        return;
+    }
+
     // Predefined prefixes commonly seen in the data.  Any inferred
     // prefixes not in this list, or obtained from config.json, will
     // have names generated starting with an '_'
     $prefixes = [];
 
-    // allow override in tests
-    $config_dir = getenv('SEA_MAP_CONFIG_DIR');
-    if (!$config_dir) 
-        $config_dir = __DIR__ . "/../configuration";
-
-    $config = json_decode(file_get_contents("$config_dir/config.json"), true);
+    $config = json_decode(file_get_contents("php://input"), true);
 
     // Validate the required attributes are present.  This is fairly
     // rudimentary, exhaustive checks probably don't belong here.
@@ -438,7 +442,7 @@ function main() {
     // Aggregate the query results in $result
     foreach($vocab_srcs as $vocab_src) {
         $endpoint = $vocab_src['endpoint'] ?? croak_no_attr('vocabularies[{endpoint}]');
-        $default_graph_uri = $vocab_src['defaultGraphUri']; // optional, but speeds the query
+        $default_graph_uri = $vocab_src['defaultGraphUri'] ?? null; // optional, but speeds the query
 
         $uris = $vocab_src['uris'] ?? croak_no_attr('vocabularies[{uris}]');
         if (empty($uris)) {

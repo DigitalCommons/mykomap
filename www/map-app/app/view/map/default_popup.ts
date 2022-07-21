@@ -1,7 +1,7 @@
-"use strict";
 // FIXME prevent malicious content in replacements (like description)
+import type { SseInitiative, Initiative } from "../../model/sse_initiative";
 
-function htmlEscape(str) {
+export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality
     return undefined;
   return String(str)
@@ -11,50 +11,51 @@ function htmlEscape(str) {
     .replace(/"/g, '&quot;');
 }
 
-function getAddress(initiative) {
+export function getAddress(initiative: Initiative) {
   // We want to add the whole address into a single paragraph.
   // Not all orgs have an address, however.
-  let address = [];
+  let address = [] as string[];
   if (initiative.street)
     address = address.concat(
-      initiative.street.split(';')
-                .map(elem => elem.trim())
-                .filter(elem => elem !== initiative.name)
-                .map(htmlEscape)
+      String(initiative.street)
+        .split(';')
+        .map(elem => elem.trim())
+        .filter(elem => elem !== initiative.name)
+        .map(htmlEscape)
     );
   address = address.concat(
     [initiative.locality,
      initiative.region,
      initiative.postcode].map(htmlEscape)
   )
-  if (initiative.nongeo === 1 || !initiative.lat || !initiative.lng)
+  if (!initiative.hasLocation())
     address.push('<i>NO LOCATION AVAILABLE</i>');
 
   return address.join('<br/>\n        ');
 }
 
-function getEmail(initiative) {
+export function getEmail(initiative: Initiative) {
   // Not all orgs have an email
   if (initiative.email)
     return `<a class="fa fa-at" href="mailto:${initiative.email}" target="_blank" ></a>`;
   return "";
 }
 
-function getFacebook(initiative) {
+export function getFacebook(initiative: Initiative) {
   // not all have a facebook
   if (initiative.facebook)
     return `<a class="fab fa-facebook" href="https://facebook.com/${initiative.facebook}" target="_blank" ></a>`;
   return "";
 }  
 
-function getTwitter(initiative) {
+export function getTwitter(initiative: Initiative) {
   // not all have twitter
   if (initiative.twitter)
     return `<a class="fab fa-twitter" href="https://twitter.com/${initiative.twitter}" target="_blank" ></a>`;
   return '';
 }
 
-function getPopup(initiative, sse_initiatives) {
+export function getPopup(initiative: Initiative, sse_initiatives: SseInitiative): string {
   const labels = sse_initiatives.getFunctionalLabels();
   let popupHTML = `
     <div class="sea-initiative-details">
@@ -75,8 +76,4 @@ function getPopup(initiative, sse_initiatives) {
   `;
   
   return popupHTML;
-};
-
-module.exports = {
-  getPopup
-};
+}

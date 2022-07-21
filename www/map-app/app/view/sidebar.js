@@ -4,13 +4,14 @@ const eventbus = require('../eventbus');
 const d3 = require('d3');
 const viewBase = require('./base');
 
-function _init(config) {
-  const presenter = require('../presenter/sidebar')(config);
-  const about = require('../view/sidebar/about')(config);
-  const directory = require('../view/sidebar/directory')(config);
-  const datasets = require('../view/sidebar/datasets')(config);
-  const initiatives = require('../view/sidebar/initiatives')(config);
-  const sseInitiative = require('../model/sse_initiative')(config);
+function _init(registry) {
+  const config = registry('config');
+  const presenter = registry('presenter/sidebar');
+  const about = registry('view/sidebar/about');
+  const directory = registry('view/sidebar/directory');
+  const datasets = registry('view/sidebar/datasets');
+  const initiatives = registry('view/sidebar/initiatives');
+  const sseInitiative = registry('model/sse_initiative');
   
 
   //get labels for buttons and titles

@@ -20,12 +20,13 @@ function die(msg) {
 }
 
 const args = minimist(process.argv.slice(2), {
-  string: ['c', 'd', 'm'],
+  string: ['c', 'd', 'm', 's'],
 });
 
 const configPath = path.resolve(
   cwd, args.c || die("you must supply a path to the config files -c")
 );
+const srcPath = args.s? path.resolve(cwd, args.s) : undefined;
 const seaMapPath = path.resolve(
   cwd, args.m || die("you must supply a path to the sea-map module in -m")
 );
@@ -66,16 +67,15 @@ const variant = process.env.npm_package_name;
 
 const debug = variant == 'sea-map' || process.env.NODE_ENV !== "production";
 
-const versionJson = path.join(configPath, 'version.json');
+const versionJson = path.join(srcPath, 'version.json');
 let versionInfo;
-let srcDir;
+let seaMapSrcDir;
 let servicesDir;
 let entry;
 if (variant == 'sea-map') {
   // Infer development mode from sea-map package
 
-  entry = "./www/map-app/app.ts";
-  srcDir = "./www/map-app"; // locally
+  seaMapSrcDir = "./www/map-app"; // locally
   servicesDir = "./www/services";
   
   // Get the linked dependency config in ext/package.json 
@@ -91,8 +91,7 @@ if (variant == 'sea-map') {
 else {
   // Infer production mode
 
-  entry = "sea-map/www/map-app/app.ts";
-  srcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
+  seaMapSrcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
   servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
   
   // Get the sea-map git commit ID from the resolved version (we don't have
@@ -110,15 +109,27 @@ else {
 fs.writeFileSync(versionJson,
                  JSON.stringify(versionInfo, null, 2));
 
-const customPopupModulePath = path.join(configPath, 'popup.js');
-const defaultPopupModulePath = path.join(path.resolve(cwd, srcDir), 'app/view/map/default_popup.js');
-const popupModulePath = fs.existsSync(customPopupModulePath) ?
-                        customPopupModulePath : defaultPopupModulePath;
-console.log("popup.js:", popupModulePath);
+
+// Note, if the default entryModulePath is used, the tsconfig.json
+// file needs an `"exclude": [ "./ext/" ]` in order that
+// typescript files in ./ext are not loaded by `tsc` unless explicitly
+// linked via an entry point or an include. 
+let entryModulePath = path.join(path.resolve(cwd, seaMapSrcDir), 'default_app.ts');
+if (srcPath) { // -s was supplied, maybe override the default
+  const customTsEntryModulePath = path.join(srcPath, 'index.ts');
+  const customJsEntryModulePath = path.join(srcPath, 'index.js');
+  if (fs.existsSync(customTsEntryModulePath)) {
+    entryModulePath = customTsEntryModulePath;
+  }
+  else if (fs.existsSync(customJsEntryModulePath)) {
+    entryModulePath = customJsEntryModulePath;
+  }
+}
+console.log("entry point:", entryModulePath);
 
 const webpackConfig = {
   context: cwd,
-  entry: srcDir+"/app.ts", // path.join will strip leading '.'
+  entry: entryModulePath,
   devtool: debug ? "source-map" : false,
   mode: debug? 'development' : 'production',
   target: 'web',
@@ -131,8 +142,11 @@ const webpackConfig = {
     rules: [
 	    {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
+        loader: 'ts-loader',
+        // Allow TS compiling in node_modules, but exclude all except
+        // sea-map, which because it is a git dependency, contains
+        // uncompiled typescript.
+        options: { allowTsInNodeModules: true },
       },
       {
         test: /\.html$/i,
@@ -187,11 +201,13 @@ const webpackConfig = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
-      // Allows custom popup logic to be supplied config/popup.js (if detected)
-      "./view/map/popup$":  popupModulePath,
-      // Define this alias so that it works as before in popup.js
-      "model/sse_initiative$": path.resolve(srcDir, "app/model/sse_initiative.js"),
+      // Define this alias so that it works in user code's config/index.ts
+      // Note, it needs to be absolute to support use from ext/
+      "sea-map": path.resolve(seaMapSrcDir),
     },
+    // Tell webpack not to resolve symlinks. This would make typescript baulk
+    // on symlinked files outside this project.
+    symlinks: false,
   },
   plugins: [
     new MiniCssExtractPlugin({

@@ -20,7 +20,26 @@ Symlink the website project directory as `ext` (or move it here, if
 symlinks are not available).
 
 	ln -sfn ../sea-site-experiment ext
-	
+
+And in order for this to work with a typescript `index.ts` entry point
+(but not needed for a `index.js`, or indeed no custom entry point at
+all) the symlinked project under ext/ needs a tsconfig.json, and in
+particular, one with a path linking back to the map-app source dir in
+sea-map's repository:
+    
+    {
+      "include": [
+        "node_modules/sea-map"
+      ],
+      "compilerOptions": {
+        "paths": {
+          "sea-map/*": ["./node_modules/sea-map/www/map-app/*","../www/map-app/*"]
+        },
+        [... your options here ...]
+      }
+    }
+
+
 Install the prerequisites
 
 	apt install php php-curl rsync # On Debian

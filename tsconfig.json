@@ -1,8 +1,9 @@
 {
+  "exclude": [ "./ext/" ],
   "compilerOptions": {
     "outDir": "./build/",
     "noImplicitAny": true,
-    "module": "es6",
+    "sourceMap": true,
     "target": "es5",
     "jsx": "react",
     "allowJs": true,

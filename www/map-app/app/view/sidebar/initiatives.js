@@ -182,14 +182,14 @@ function init(registry) {
 		initiatives.forEach(function (initiative) {
 			let initiativeClass = "w3-bar-item w3-button w3-mobile srch-initiative";
 
-			if (initiative.nongeo == 1) {
+			if (!initiative.hasLocation()) {
 				initiativeClass += " sea-initiative-non-geo";
 			}
 
 			selection
 				.append("button")
 				.attr("class", initiativeClass)
-				.attr("data-uid", initiative.uniqueId)
+				.attr("data-uid", initiative.uri)
 				.attr("title", "Click to see details here and on map")
 				// TODO - shift-click should remove initiative from selection,
 				//        just like shift-clicking a marker.

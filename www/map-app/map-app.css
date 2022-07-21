@@ -1,4 +1,4 @@
-@import url("https://www.w3schools.com/w3css/4/w3.css");
+@import url("./w3.css");
 @import url("~leaflet.awesome-markers/dist/leaflet.awesome-markers.css");
 @import url("~@fortawesome/fontawesome-free/css/all.css");
 @import url("~leaflet-contextmenu/dist/leaflet.contextmenu.css");

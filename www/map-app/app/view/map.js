@@ -299,9 +299,9 @@ function init(registry) {
   proto.isVisible = function (initiatives) {
     //check if whether the passed initiatives are currently visible or not
     //for each marker check if the marker is directly visible 
-    //!!initative.marker && !!initative.marker._icon => marker is visible on the map
-    //this.unselectedClusterGroup.getVisibleParent(initative.marker) == initative.marker => marker does not have a parent (i.e. not in a cluster)
-    return initiatives.every((initative) => this.unselectedClusterGroup.getVisibleParent(initative.marker) == initative.marker);
+    //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
+    //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
+    return initiatives.every((initative) => this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker);
 
   };
   proto.boundsWithinCurrentBounds = function (bounds) {
@@ -414,15 +414,15 @@ function init(registry) {
     this.map.panTo(lngCentre, { animate: true });
 
     //trigger refresh if the marker is outside of the screen or if it's clustered
-    if (!this.map.getBounds().contains(data.initiatives[0].marker.getLatLng()) || !this.isVisible(data.initiatives))
+    if (!this.map.getBounds().contains(data.initiatives[0].__internal.marker.getLatLng()) || !this.isVisible(data.initiatives))
       this.refresh(centre);
 
 
 
     //zoom to layer if needed and unspiderify
-    this.unselectedClusterGroup.zoomToShowLayer(data.initiatives[0].marker, (m) =>
+    this.unselectedClusterGroup.zoomToShowLayer(data.initiatives[0].__internal.marker, (m) =>
       this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives }));
-    this.unselectedClusterGroup.refreshClusters(data.initiatives[0].marker);
+    this.unselectedClusterGroup.refreshClusters(data.initiatives[0].__internal.marker);
 
 
     //code for not destroying pop-up when zooming out

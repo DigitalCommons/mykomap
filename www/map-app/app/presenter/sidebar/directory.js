@@ -65,10 +65,10 @@ function init(registry) {
   };
 
   function arrayMax(array) {
-    return array.reduce((a, b) => Math.max(a, b));
+    return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
   }
   function arrayMin(array) {
-    return array.reduce((a, b) => Math.min(a, b));
+    return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
   }
 
   proto.doesDirectoryHaveColours = function () {
