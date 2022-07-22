@@ -90,8 +90,11 @@ export class SparqlDataAggregator implements DataAggregator {
     function buildVocab(id: string, def: VocabPropDef, params: InitiativeObj) {
       const paramName = def.from ?? id;
       const uri = params[paramName];
-      if (uri)
+      if (uri) {
+        if (typeof uri !== 'string')
+          throw new Error(`initiative paramter '${paramName}' should be a URI (a string), but has type '${typeof uri}'`);
         return vocabs.abbrevUri(uri);
+      }
       return undefined;
     };
     function buildValue(id: string, def: ValuePropDef, params: InitiativeObj) {
