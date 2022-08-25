@@ -101,7 +101,7 @@ export class SparqlDataLoader implements DataLoader {
       dataset.query = response.meta.query;
 
       // Return the dataset id and its data
-      result[1] = response.data;
+      result[1] = [...response.data];
     }
     catch(error) {
       console.error("load " + dataset.id + " data failed", error);
