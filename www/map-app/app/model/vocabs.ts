@@ -11,7 +11,7 @@ interface VocabMeta {
   };
 }
 
-interface Vocab {
+export interface Vocab {
   title: string;
   terms: Dictionary;
 }
