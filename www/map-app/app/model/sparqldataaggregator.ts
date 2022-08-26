@@ -304,10 +304,13 @@ export class SparqlDataAggregator implements DataAggregator {
       // First get the property definition (this will throw if it's not defined)
       const propDef = this.getPropertySchema(propName);
 
-      // If the field is a vocab field
       if (propDef.type === 'vocab') {
         // Look up the title via the vocab (this may also throw)
         title = this.vocabs.getVocabForProperty(propName, propDef, this.config.getLanguage()).title;
+      }
+      else if (propDef.type === 'multi') {
+        // Look up the title via the vocab (this may also throw)
+        title = this.vocabs.getVocabForProperty(propName, propDef.of, this.config.getLanguage()).title;
       }
       else {
         // Look up the title via functionalLabels, if present
