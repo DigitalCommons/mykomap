@@ -29,10 +29,20 @@ const eventbus = require('../eventbus');
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
 export class SparqlDataAggregator implements DataAggregator {
+  // An index of URIs to the initiative with that URI
   readonly initiativesByUid: Dictionary<Initiative> = {};
+
+  // An index of property titles to property values to lists of initiatives with that property value 
   readonly registeredValues: Dictionary<Dictionary<Initiative[]>> = {};
+
+  /// An index of property titles to lists of Initiatives with that property
   readonly allRegisteredValues: Dictionary<Initiative[]> = {};
+  
+  /// An list of all initiatives
   readonly loadedInitiatives: Initiative[] = [];
+
+  // An index of vocab URIs (of those filterableFields which are vocabs) to the referencing property ID (from the filterableFields)
+  // FIXME is this not going to be losing information when filterableFields have two items with the same vocab?
   readonly vocabFilteredFields: Dictionary = {};
   
   private readonly config: Config;
@@ -205,6 +215,7 @@ export class SparqlDataAggregator implements DataAggregator {
     filterableFields.forEach(filterable => {
       const labelKey: string = this.getTitleForProperty(filterable);
 
+      // Insert the initiative in the allRegisteredValues index
       if (labelKey in this.allRegisteredValues)
         this.insert(initiative, this.allRegisteredValues[labelKey]);
       else
@@ -217,6 +228,7 @@ export class SparqlDataAggregator implements DataAggregator {
         return;
       }
 
+      // Insert the initiative in the registeredValues index
       if (labelKey in this.registeredValues) {
         const values = this.registeredValues[labelKey];
         if (field in values) {
@@ -234,9 +246,13 @@ export class SparqlDataAggregator implements DataAggregator {
 
     });
 
+    // Insert the initiative into loadedInitiatives
     this.insert(initiative, this.loadedInitiatives);
+
+    // Insert the initiative into initiativesByUid
     this.initiativesByUid[initiative.uri] = initiative;
 
+    // Broadcast the creation of the initiative
     eventbus.publish({ topic: "Initiative.new", data: initiative });
   }
 
