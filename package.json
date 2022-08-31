@@ -20,6 +20,7 @@
     "lint": "eslint www/map-app/**/*.js",
     "browser-tests": "karma start --single-run --browsers FirefoxHeadless",
     "mocha-tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js",
+    "mocha-test": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace",
     "test": "npm run mocha-tests && npm run browser-tests",
     "generate-config-doc": "ts-node bin/generate-config-doc >CONFIG.md",
     "build": "bin/sea-site-build -c ext/config -s ext/src -m ./ -d ext/build ext/www/*",
