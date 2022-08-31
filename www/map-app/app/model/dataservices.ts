@@ -505,7 +505,7 @@ export class DataServices {
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
-  private static mkLocFromParam(from: string, overrideParam: string) {
+  static mkLocFromParam(from: string, overrideParam: string) {
     function isAlpha(str: string): boolean {
       if (!str) return false;
 
