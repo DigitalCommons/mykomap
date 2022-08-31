@@ -382,7 +382,7 @@ export class Config implements ReadableConfig, WritableConfig {
   private _fields: PropDefs;
 
   private stringsToPropDefs(fields: ConfigData['fields']): PropDefs {
-    const propDefEntries = Object.entries(fields).map(
+    const propDefEntries = Object.entries(fields ?? {}).map(
       ([id, field]) => {
         if (typeof field === 'string')
           return [id, { type: field, from: id }];
