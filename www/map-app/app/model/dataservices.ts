@@ -103,6 +103,7 @@ export class DataServices {
   readonly verboseDatasets: DatasetMap = {};
   readonly dataLoader: DataLoader;
   readonly functionalLabels: Dictionary<Dictionary<string>>;
+  
   // Define the properties in an initiative and how to manage them. Note, thanks to JS
   // variable hoisting semantics, we can reference initialiser functions below, if they are
   // normal functions.
@@ -112,7 +113,7 @@ export class DataServices {
   //   definition and a parameters object.
   // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
   //
-  readonly propertySchema: PropDefs = {
+  static readonly basePropertySchema: PropDefs = {
     uri: { type: 'value', as: 'string' },
     name: { type: 'value', as: 'string' },
     lat: { type: 'custom', builder: DataServices.mkLocFromParam('lat', 'manLat') },
@@ -122,6 +123,9 @@ export class DataServices {
     // Special-cased as it potentially depends on the contents all other properties.
     // (Actual list defined by config.getSearchedFields())
   };
+
+  // The per-instance propert schema, which can be extended by configuration.
+  readonly propertySchema: PropDefs = { ...DataServices.basePropertySchema };
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs: VocabServices | undefined = undefined;
