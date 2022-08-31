@@ -8,7 +8,7 @@ interface VocabMeta {
     defaultGraphUri: string;
     endpoint: string;
     uris: { [uri: string]: string };
-  };
+  }[];
 }
 
 export interface Vocab {
