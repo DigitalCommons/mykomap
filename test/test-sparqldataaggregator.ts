@@ -8,7 +8,7 @@ import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
 import { Dictionary } from '../www/map-app/common_types';
 
 // Makes a dummy InitiativeObj
-function mkInitiativeObj(name: string, regorg?: string, bmt?: string): InitiativeObj {
+function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string[]): InitiativeObj {
   const ini: InitiativeObj = {
     "name": name,
     "uri": "https://dev.lod.coop/nonesuch/"+name,
@@ -18,23 +18,25 @@ function mkInitiativeObj(name: string, regorg?: string, bmt?: string): Initiativ
   };
   if (regorg) 
     ini.regorg = "https://example.com/organisational-structure/"+regorg;
-  if (bmt)
-    ini.baseMembershipType = "https://example.com/base-membership-type/"+bmt;
-
+  if (ea)
+    ini.primaryActivity = "https://example.com/economic-activity/"+ea;
+  if (sa)
+    ini.secondaryActivities = sa.map(a => "https://example.com/economic-activity/"+a);
+  
   return ini;
 }
 
 
 // The minimal config (just sets what to aggregate)
 const config = new Config({
-  filterableFields: ['orgStructure', 'baseMembershipType'],
+  filterableFields: ['orgStructure', 'primaryActivity'],
 });
 
 // The Vocabs (just has a couple of kinds)
 const vocabIndex: VocabIndex = {
   "prefixes": {
     "https://example.com/organisational-structure/": "os",
-    "https://example.com/base-membership-type/": "bmt"
+    "https://example.com/economic-activity/": "ea"
   },
   "meta": {
     "vocab_srcs": [
@@ -42,7 +44,7 @@ const vocabIndex: VocabIndex = {
         "endpoint": "http://example.com:8890/sparql",
         "defaultGraphUri": "https://dev.lod.coop/coops-uk",
         "uris": {
-          "https://example.com/base-membership-type/": "bmt",
+          "https://example.com/economic-activity/": "ea",
           "https://example.com/organisational-structure/": "os"
         }
       }
@@ -87,23 +89,46 @@ const vocabIndex: VocabIndex = {
         }
       },
     },
-    "bmt:": {
+    "ea:": {
       "EN": {
-        "title": "Typology",
+        "title": "EcAc",
         "terms": {
-          "bmt:BMT10": "Consumer/Users",
-          "bmt:BMT20": "Producers",
-          "bmt:BMT30": "Workers",
-          "bmt:BMT40": "Multi-stakeholders",
-          "bmt:BMT50": "Residents",
-          "bmt:BMT60": "Others"
-        }
+          "ec:EC10": "Agriculture",
+          "ec:EC100": "Mining",
+          "ec:EC110": "Professional",
+          "ec:EC120": "Service",
+          "ec:EC130": "Tourism",
+          "ec:EC140": "Financial Services",
+          "ec:EC150": "Insurance",
+          "ec:EC160": "Education",
+          "ec:EC170": "Health",
+          "ec:EC180": "Community",
+          "ec:EC190": "Social",
+          "ec:EC20": "Dairy",
+          "ec:EC200": "Social Service",
+          "ec:EC210": "Housing",
+          "ec:EC220": "Transport",
+          "ec:EC230": "Utilities",
+          "ec:EC240": "Retail",
+          "ec:EC250": "Production",
+          "ec:EC260": "Wholesale and retail trade",
+          "ec:EC270": "Education / health / social work",
+          "ec:EC280": "Other Services",
+          "ec:EC290": "All (Services)",
+          "ec:EC30": "Forestry",
+          "ec:EC40": "Irrigation",
+          "ec:EC50": "Fishing",
+          "ec:EC60": "Artisans",
+          "ec:EC70": "Construction",
+          "ec:EC80": "Industry",
+          "ec:EC90": "Manufacturing"
+         }
       },
     },
   },
   "abbrevs": {
     "os": "https://example.com/organisational-structure/",
-    "bmt": "https://example.com/base-membership-type/"
+    "ea": "https://example.com/economic-activity/"
   }
 };
 // A vocab service
@@ -112,9 +137,16 @@ const vocabs = new VocabServiceImpl(vocabIndex, 'EN');
 // The property schema for the data
 const propertySchema: PropDefs = {
   ... DataServices.basePropertySchema, // common fields
-  baseMembershipType: {
+  primaryActivity: {
     type: 'vocab',
-    uri: 'bmt:',
+    uri: 'ea:',
+  },
+  secondaryActivities: {
+    type: 'multi',
+    of: {
+      type: 'vocab',
+      uri: 'ea:',
+    },
   },
   orgStructure: {
     type: 'vocab',
@@ -206,25 +238,25 @@ describe('SparqlDataAggregator', () => {
     it('with two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'BMT10'),
+        mkInitiativeObj('B', null, 'EA10'),
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},
-          'Typology': { 'bmt:BMT10': [ 'B' ]},
+          'EcAc': { 'ea:EA10': [ 'B' ]},
         });
     });
     
     it('with many values in two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'BMT10'),
+        mkInitiativeObj('B', null, 'EA10'),
         mkInitiativeObj('C'),
-        mkInitiativeObj('D', 'OS20', 'BMT20'),
-        mkInitiativeObj('E', 'OS10', 'BMT10'),        
+        mkInitiativeObj('D', 'OS20', 'EA20'),
+        mkInitiativeObj('E', 'OS10', 'EA10'),        
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A', 'E' ], 'os:OS20': [ 'D' ]},
-          'Typology': { 'bmt:BMT10': [ 'B', 'E' ], 'bmt:BMT20': [ 'D' ]},
+          'EcAc': { 'ea:EA10': [ 'B', 'E' ], 'ea:EA20': [ 'D' ]},
         });
     });
 
@@ -235,10 +267,9 @@ describe('SparqlDataAggregator', () => {
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},
-          'Typology': { 'bmt:OS10': [ 'B' ]}, // Oops, this probably shouldn't happen
+          'EcAc': { 'ea:OS10': [ 'B' ]}, // Oops, this probably shouldn't happen
         });
     });
-    
   });
 });
 
