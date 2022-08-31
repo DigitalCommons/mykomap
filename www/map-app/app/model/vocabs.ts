@@ -13,7 +13,7 @@ interface VocabMeta {
 
 export interface Vocab {
   title: string;
-  terms: Dictionary;
+  terms?: Dictionary;
 }
 
 export interface LocalisedVocab {
