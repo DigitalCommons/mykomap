@@ -1,11 +1,11 @@
 'use strict';
 //const fs = require('fs');
-const { assert } = require('chai');
-const configBuilder = require('../www/map-app/app/model/config');
+import { assert } from 'chai';
+import { init as configBuilder } from '../www/map-app/app/model/config';
 
 // Emulate what happens in ../www/map-app/app.js
-const rawConfig = require('./configs/typical/config.json');
-const version = require('./configs/typical/version.json');
+import rawConfig from './configs/typical/config.json';
+import version from './configs/typical/version.json';
 const about = `This is a dummy about.html!
 `;
 //fs.readFileSync('test/configs/typical/about.html');
@@ -29,7 +29,7 @@ describe('The config.js module', function () {
       assert.deepEqual(config.getFilterableFields(), [{ "field": "primaryActivity", "label": "Activities" }]);
       assert.equal(config.doesDirectoryHaveColours(), true);
       assert.equal(config.getDisableClusteringAtZoom(), 10);
-      assert.deepEqual(config.getSearchedFields(), ['name', 'www']);
+      assert.deepEqual(config.getSearchedFields(), ['name']);
       assert.equal(config.getMaxZoomOnGroup(), 12);
       assert.equal(config.getMaxZoomOnOne(), 14);
       assert.equal(config.getMaxZoomOnSearch(), 12);
