@@ -404,19 +404,30 @@ export class DataServices {
   // The vocabs are always loaded.
   async loadData() {
     // Active datasets indicated internally through `currentDatasets`
-    let datasets: string[] = [];
+    let datasetNames: string[] = [];
 
     if (this.currentDatasets === true) {
       console.log("reset: loading all datasets ", this.config.namedDatasets());
-      datasets = this.config.namedDatasets();
+      datasetNames = this.config.namedDatasets();
     }
     else if (this.allDatasets.includes(this.currentDatasets as string)) {
       console.log("reset: loading dataset '" + this.currentDatasets + "'");
-      datasets = [this.currentDatasets as string]
+      datasetNames = [this.currentDatasets as string]
     }
     else {
       console.log("reset: no matching dataset '" + this.currentDatasets + "'");
     }
+
+    const datasets = datasetNames.map(id => this.verboseDatasets[id]);
+
+    await this.loadDatasets(datasets);
+  }
+
+  // Load datasets as defined by the list given.
+  //
+  // Note that the dataset instances only need name and id fields set,
+  // the others should be '', and will be filled in on completion.
+  async loadDatasets(datasets: Dataset[]) {
 
     // Load the vocabs first, then on success, load the
     // initiatives. Handlers defined below.
@@ -436,7 +447,7 @@ export class DataServices {
       });
       
       await this.dataLoader.loadDatasets(
-        datasets.map(id => this.verboseDatasets[id]),
+        datasets,
         dataAggregator
       );
 
