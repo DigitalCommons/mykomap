@@ -20,6 +20,7 @@
     "lint": "eslint www/map-app/**/*.js",
     "browser-tests": "karma start --single-run --browsers FirefoxHeadless",
     "mocha-tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js",
+    "mocha-test": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace",
     "test": "npm run mocha-tests && npm run browser-tests",
     "generate-config-doc": "ts-node bin/generate-config-doc >CONFIG.md",
     "build": "bin/sea-site-build -c ext/config -s ext/src -m ./ -d ext/build ext/www/*",
@@ -49,6 +50,8 @@
   "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^9.1.1",
     "copy-webpack-plugin": "^7.0.0",
     "css-loader": "^5.2.7",
     "d3": "^5.7.0",

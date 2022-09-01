@@ -17,6 +17,14 @@ module.exports = {
   },*/
   module: {
     rules: [
+	    {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        // Allow TS compiling in node_modules, but exclude all except
+        // sea-map, which because it is a git dependency, contains
+        // uncompiled typescript.
+        options: { allowTsInNodeModules: true },
+      },
       {
         test: /\.html$/i,
         loader: 'html-loader',
@@ -64,10 +72,11 @@ module.exports = {
         generator: {
           filename: 'services/[name][ext][query]',
         },
-      }
+      },
     ],
   },
   resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
     alias: {
       // Allows loading modules in the test directory
       'test': `${__dirname}/test`,
@@ -76,6 +85,9 @@ module.exports = {
       // Define this alias so that it works as before in popup.js
       'model/dataservices$': 'www/map-app/app/model/dataservices.ts',
     },
+    // Tell webpack not to resolve symlinks. This would make typescript baulk
+    // on symlinked files outside this project.
+    symlinks: false,
   },
   plugins: [
     new MiniCssExtractPlugin({
