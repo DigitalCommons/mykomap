@@ -518,6 +518,18 @@ export class DataServices {
     eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 
+  // Implement the latitude/longitude fall-back logic for InitiativeObj.
+  //
+  // Creates a function which interprets a field of an InitiativeObj
+  // (the param in question) as a numeric latitude or longitude value
+  // (or undefined if this fails).  This works for string field values
+  // as well as numeric ones.
+  //
+  // Additionally, if manLat *and* manLng are defined in the
+  // InitiativeObj (and numeric or numeric strings, but not "0"), use
+  // the field named by overrideParam. This will typically be manLat
+  // or manLng, allowing these fields to override the original field,
+  // whatever it is.
   static mkLocFromParam(from: string, overrideParam: string) {
     return (id: string, def: CustomPropDef, params: InitiativeObj) => {
       let param = params[from];
