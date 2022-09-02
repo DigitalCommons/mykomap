@@ -174,24 +174,6 @@ export const basePropertySchema = Object.freeze({
 
 
 export interface DataServices {
-  readonly config: Config;
-  readonly allDatasets: string[];
-  readonly fallBackLanguage: string;
-  readonly verboseDatasets: DatasetMap;
-  readonly dataLoader: DataLoader;
-  readonly functionalLabels: Dictionary<Dictionary<string>>;
-  
-  // The per-instance propert schema, which can be extended by configuration.
-  readonly propertySchema: PropDefs;
-  
-  // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  vocabs?: VocabServices;
-  dataAggregator?: DataAggregator;
-  cachedLatLon?: Box2d;
-
-  // true means all available datasets from config are loaded
-  // otherwise a string to indicate which dataset is loaded
-  currentDatasets: string | boolean;
 
   //// dataAggregator proxies, should return default empty values if no dataAggregator set.
   
@@ -212,6 +194,7 @@ export interface DataServices {
   // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
   getVocabUriForProperty(name: string): string;
   
+
   //// vocab proxies
   getLocalisedVocabs(): LocalisedVocab;
   
@@ -223,15 +206,21 @@ export interface DataServices {
   
   getVocabForProperty(id: string, propDef: PropDef): void;
   
+
   //// Wraps both dataAggregator and vocabs
   
   getTerms(): Record<string, Partial<Record<string, string>>>;
 
+
   //// non-proxies
+
   getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[];
 
-  // Accessor for currentDatasets FIXME duplicate?
-  getCurrentDatasets(): string | boolean;
+  // Get the current dataset, or true
+  //
+  // True means all available datasets from config are loaded
+  // otherwise a string to indicate which dataset is loaded
+  getCurrentDatasets(): string | true;
 
   // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
   //
@@ -249,7 +238,7 @@ export interface DataServices {
   // - `dgu` is the default graph URI used for this query
   // - `endpoint` is the SPARQL endpoint queried
   //
-  getDatasets(): DatasetMap; // FIXME duplicate of verboseDatasets?
+  getDatasets(): DatasetMap;
 
   getDialogueSize(): DialogueSize;
 
@@ -311,7 +300,7 @@ export class DataServicesImpl implements DataServices {
 
   // true means all available datasets from config are loaded
   // otherwise a string to indicate which dataset is loaded
-  currentDatasets: string | boolean = true;
+  currentDatasets: string | true = true;
   
   constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
     this.config = config;
@@ -411,9 +400,7 @@ export class DataServicesImpl implements DataServices {
     return alternatePossibleFilterValues;
   }
   
-  getCurrentDatasets(): string | boolean {
-    // @returns eiter true (if all datasets are enabled) or the identifier of a the
-    // currently selected dataset.
+  getCurrentDatasets(): string | true {
     return this.currentDatasets;
   }
 
@@ -445,7 +432,7 @@ export class DataServicesImpl implements DataServices {
     else
       return dialogueSize;
   }
-  
+
   getFunctionalLabels() {
     return this.functionalLabels[this.getLanguage()];
   }
