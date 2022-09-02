@@ -2,15 +2,29 @@ import {
   Dataset,
   DataLoader,
   DataConsumer,
+  AggregatedData,
 } from './dataloader';
 
 import {
-  InitiativeObj, 
+  InitiativeObj,
+  PropDefs,
 } from './dataservices';
+
+import {
+  VocabServices,
+} from './vocabs';
 
 import {
   Config,
 } from './config';
+
+import {
+  SparqlDataAggregator,
+} from './sparqldataaggregator';
+
+import {
+  Dictionary
+} from '../../common_types';
 
 import { json } from 'd3';
 
@@ -30,9 +44,15 @@ interface SparqlDatasetResponse {
 export class SparqlDataLoader implements DataLoader {
   private readonly maxInitiativesToLoadPerFrame = 100;
   private readonly config: Config;
+  private readonly propertySchema: PropDefs;
+  private readonly vocabs: VocabServices;
+  private readonly labels: Dictionary<string>;
 
-  constructor(config: Config) {
+  constructor(config: Config, propertySchema: PropDefs, vocabs: VocabServices, labels: Dictionary<string>) {
     this.config = config;
+    this.propertySchema = propertySchema;
+    this.vocabs = vocabs;
+    this.labels = labels;
   }
     
   // Loads a set of initiatives
@@ -40,11 +60,12 @@ export class SparqlDataLoader implements DataLoader {
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
   // @param [String] dataset - the identifier of this dataset
-  // @param [DataConsumer] consumer - consumer for the data
   //
   // @returns a promise which resolves when all datasets are fully loaded and processed
   // by the consumer
-  async loadDatasets(datasets: Dataset[], consumer: DataConsumer) {
+  async loadDatasets(datasets: Dataset[]): Promise<AggregatedData> {
+
+    const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, this.labels);
     
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
@@ -52,7 +73,7 @@ export class SparqlDataLoader implements DataLoader {
     let outstanding = Object.fromEntries(datasets.map(
       (ds, ix) => [ds.id, this.loadDataset(ds)]
     ));
-    
+
     // Process the data as it arrives, in chunks    
     while(Object.keys(outstanding).length > 0) {
       try {
@@ -83,7 +104,7 @@ export class SparqlDataLoader implements DataLoader {
             }
             
             // Call addInitiatives in the background, to prevent it blocking other processes.
-            await (async () => consumer.addBatch(batch))();
+            await (async () => aggregator.addBatch(batch))();
           }
           
           // Publish completion event
@@ -99,7 +120,9 @@ export class SparqlDataLoader implements DataLoader {
     }
 
     // Having loaded all we can, finish off
-    consumer.complete();
+    aggregator.complete();
+
+    return aggregator;
   }
 
   // Amalgamates multiple records into the same InitiativeObj if they
@@ -134,7 +157,7 @@ export class SparqlDataLoader implements DataLoader {
   //
   // The plan is to make the server send more sensibly formatted
   // multiple fields later.
-private readInitiativeObj(records: InitiativeObj[]): InitiativeObj | undefined {
+  private readInitiativeObj(records: InitiativeObj[]): InitiativeObj | undefined {
     if (records.length === 0)
       return undefined; // No more records
 

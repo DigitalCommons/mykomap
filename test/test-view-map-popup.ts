@@ -75,7 +75,7 @@ aggregator.addBatch(cannedData.data);
 aggregator.complete();
 
 dataservices.vocabs = vocabs; // Hack this into place
-dataservices.dataAggregator = aggregator; // Hack this into place
+dataservices.aggregatedData = aggregator; // Hack this into place
 
 const initiatives = aggregator.initiativesByUid;
 

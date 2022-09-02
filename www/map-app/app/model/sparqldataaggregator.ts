@@ -1,7 +1,7 @@
 import type { Dictionary } from '../../common_types';
 
 import type {
-  DataAggregator,
+  AggregatedData, DataConsumer
 } from './dataloader';
 
 import {
@@ -28,7 +28,8 @@ const eventbus = require('../eventbus');
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
-export class SparqlDataAggregator implements DataAggregator {
+export class SparqlDataAggregator implements DataConsumer, AggregatedData {
+  
   // An index of URIs to the initiative with that URI
   readonly initiativesByUid: Dictionary<Initiative> = {};
 
