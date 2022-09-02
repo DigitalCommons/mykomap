@@ -17,6 +17,9 @@ export interface Dataset {
 }
 
 // For loading InitiativeObj data incrementally
+//
+// A variety of the visitor pattern. The details of what is done by the
+// consumer is abstracted, and so up to the implementation.
 export interface DataConsumer {
   // Add a batch of data. May be called multiple times.
   addBatch(initiatives: InitiativeObj[]): void;
@@ -25,17 +28,7 @@ export interface DataConsumer {
   complete(): void;
 }
 
-// For loading Datsets using a DataConsumer
-export interface DataLoader {
-  // Asynchronously load the datasets given, feeding it to the consumer given.
-  // @returns a promise indicating when this has been done.
-  loadDatasets(datasets: Dataset[], consumer: DataConsumer): Promise<void>;
-}
-
-// For aggregating Vocab and InitiativeObj data into a form used by DataServices
-//
-// This is a DataConsumer which builds up the required datastructures.
-export interface DataAggregator extends DataConsumer {
+export interface AggregatedData {
   initiativesByUid: Dictionary<Initiative>;
   loadedInitiatives: Initiative[];
   registeredValues: Dictionary<Dictionary<Initiative[]>>;
@@ -45,3 +38,12 @@ export interface DataAggregator extends DataConsumer {
   vocabFilteredFields: Dictionary;
 }
 
+// For loading Datsets using a DataConsumer
+//
+// This is explicitly intended to construct an instance of AggregatedData,
+// which is returned via the promise.
+export interface DataLoader {
+  // Asynchronously load the datasets given, 
+  // @returns the AggregatedData via a promise
+  loadDatasets(datasets: Dataset[]): Promise<AggregatedData>;
+}

@@ -9,7 +9,7 @@ import type {
   Dataset,
   DataConsumer,
   DataLoader,
-  DataAggregator,
+  AggregatedData,
 } from './dataloader';
 
 import {
@@ -281,13 +281,12 @@ export interface DataServices {
   reset(dataset: string): Promise<void>;
 }
 
-
+// Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
   readonly config: Config;
   readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
   readonly verboseDatasets: DatasetMap = {};
-  readonly dataLoader: DataLoader;
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   
   // The per-instance propert schema, which can be extended by configuration.
@@ -295,7 +294,7 @@ export class DataServicesImpl implements DataServices {
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs: VocabServices | undefined = undefined;
-  dataAggregator: DataAggregator | undefined = undefined;
+  aggregatedData: AggregatedData | undefined = undefined;
   cachedLatLon: Box2d | undefined = undefined;
 
   // true means all available datasets from config are loaded
@@ -305,7 +304,6 @@ export class DataServicesImpl implements DataServices {
   constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
     this.config = config;
     this.allDatasets = config.namedDatasets();
-    this.dataLoader = new SparqlDataLoader(this.config);
     this.functionalLabels = functionalLabels;
     
     {
@@ -362,9 +360,9 @@ export class DataServicesImpl implements DataServices {
 
 
   getAllRegisteredValues(): Dictionary<Initiative[]> {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.allRegisteredValues;
+    return this.aggregatedData.allRegisteredValues;
   }
 
   getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[] {
@@ -438,15 +436,15 @@ export class DataServicesImpl implements DataServices {
   }
   
   getInitiativeByUniqueId(uid: string): Initiative | undefined {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return undefined; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.initiativesByUid[uid];
+    return this.aggregatedData.initiativesByUid[uid];
   }
 
   getInitiativeUIDMap(): { [id: string]: Initiative; } {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.initiativesByUid;
+    return this.aggregatedData.initiativesByUid;
   }
 
   getLanguage(): string {
@@ -454,9 +452,9 @@ export class DataServicesImpl implements DataServices {
   }
   
   getLoadedInitiatives(): Initiative[] {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return [];  // Data has not yet been loaded.  Some dependencies call this early!
-    return this.dataAggregator.loadedInitiatives;
+    return this.aggregatedData.loadedInitiatives;
   }
 
   getLocalisedVocabs(): LocalisedVocab {
@@ -486,9 +484,9 @@ export class DataServicesImpl implements DataServices {
   }
   
   getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.registeredValues;
+    return this.aggregatedData.registeredValues;
   }
 
   getSidebarButtonColour(): string {
@@ -496,11 +494,11 @@ export class DataServicesImpl implements DataServices {
   }
 
   getTerms(): Record<string, Partial<Record<string, string>>> {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       throw new Error("Can't getTerms. Data has not yet been aggregated.");
     return this?.vocabs.getTerms(this.getLanguage(),
-                                 this.dataAggregator.vocabFilteredFields,
-                                 this.dataAggregator.initiativesByUid,
+                                 this.aggregatedData.vocabFilteredFields,
+                                 this.aggregatedData.initiativesByUid,
                                  this.propertySchema); 
   }
   
@@ -509,9 +507,9 @@ export class DataServicesImpl implements DataServices {
   }
   
   getVocabFilteredFields(): Dictionary {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       throw new Error("Can't getVocabFilteredFields. Data has not yet been aggregated.");
-    return this.dataAggregator.vocabFilteredFields;
+    return this.aggregatedData.vocabFilteredFields;
   }
   
   getVocabTerm(vocabUri: string, termUri: string): string {
@@ -524,7 +522,7 @@ export class DataServicesImpl implements DataServices {
   
   // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
   getVocabUriForProperty(name: string): string {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       throw new Error("Can't add initiatives. Data has not yet been aggregated.");
     const propDef = this.getPropertySchema(name);
     if (propDef.type === 'vocab')
@@ -545,10 +543,10 @@ export class DataServicesImpl implements DataServices {
       return this.cachedLatLon;
     }
 
-    const lats = (initiatives || this.dataAggregator.loadedInitiatives)
+    const lats = (initiatives || this.aggregatedData.loadedInitiatives)
                    .filter((obj: Initiative) => obj.lat !== null && !isNaN(obj.lat))
                    .map((obj: Initiative) => obj.lat);
-    const lngs = (initiatives || this.dataAggregator.loadedInitiatives)
+    const lngs = (initiatives || this.aggregatedData.loadedInitiatives)
                    .filter((obj: Initiative) => obj.lng !== null && !isNaN(obj.lng))
                    .map((obj: Initiative) => obj.lng);
     const west = Math.min.apply(Math, lngs);
@@ -600,29 +598,41 @@ export class DataServicesImpl implements DataServices {
       
       console.log("loaded vocabs", response);
 
-      this.setVocab(response, this.getLanguage());
+      this.vocabs = new VocabServiceImpl(response, this.getLanguage());
+      
+      eventbus.publish({ topic: "Vocabularies.loaded" });
+    }
+    catch(error) {
+      this.vocabs = undefined;
+      
+      console.error("vocabs load failed", error);
+
+      eventbus.publish({
+        topic: "Vocabularies.loadFailed",
+        data: { error: error }
+      });
+    }
+
+    try {
       const labels = this.functionalLabels[this.config.getLanguage()];
-      const dataAggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
-      this.dataAggregator = undefined;
+      const dataLoader = new SparqlDataLoader(this.config, this.propertySchema, this.vocabs, labels);
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
       
-      await this.dataLoader.loadDatasets(
-        datasets,
-        dataAggregator
-      );
+      this.aggregatedData = await dataLoader.loadDatasets(datasets);
 
-      this.dataAggregator = dataAggregator;
       eventbus.publish({ topic: "Initiative.complete" });
     }
     catch(error) {
-      console.error("vocabs load failed", error);
+      this.aggregatedData = undefined;
+      
+      console.error("data load failed", error);
 
       eventbus.publish({
-        topic: "Vocabularies.loadFailed",
+        topic: "Initiative.loadFailed",
         data: { error: error }
       });
     }
@@ -653,7 +663,7 @@ export class DataServicesImpl implements DataServices {
     if (dataset === this.currentDatasets)
       return;
 
-    this.dataAggregator = undefined;
+    this.aggregatedData = undefined;
 
     //publish reset to map markers
     eventbus.publish({
@@ -666,18 +676,13 @@ export class DataServicesImpl implements DataServices {
   }
   
   search(text: string): Initiative[] {
-    if (!this.dataAggregator)
+    if (!this.aggregatedData)
       return [];
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
-    return this.dataAggregator.loadedInitiatives.filter(
+    return this.aggregatedData.loadedInitiatives.filter(
       (i: Initiative) => i.searchstr.includes(up)
     ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
-  }
-
-  setVocab(data: VocabIndex, fallBackLanguage: string): void {
-    this.vocabs = new VocabServiceImpl(data, fallBackLanguage);
-    eventbus.publish({ topic: "Vocabularies.loaded" });
   }
 }
 
