@@ -3,6 +3,7 @@
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
+import type { DialogueSize } from './config_schema';
 
 import type {
   Dataset,
@@ -172,7 +173,127 @@ export const basePropertySchema = Object.freeze({
 
 
 
-export class DataServices {
+export interface DataServices {
+  readonly config: Config;
+  readonly allDatasets: string[];
+  readonly fallBackLanguage: string;
+  readonly verboseDatasets: DatasetMap;
+  readonly dataLoader: DataLoader;
+  readonly functionalLabels: Dictionary<Dictionary<string>>;
+  
+  // The per-instance propert schema, which can be extended by configuration.
+  readonly propertySchema: PropDefs;
+  
+  // An index of vocabulary terms in the data, obtained from get_vocabs.php
+  vocabs?: VocabServices;
+  dataAggregator?: DataAggregator;
+  cachedLatLon?: Box2d;
+
+  // true means all available datasets from config are loaded
+  // otherwise a string to indicate which dataset is loaded
+  currentDatasets: string | boolean;
+
+  //// dataAggregator proxies, should return default empty values if no dataAggregator set.
+  
+  getAllRegisteredValues(): Dictionary<Initiative[]>;
+
+  getLoadedInitiatives(): Initiative[];
+
+  getInitiativeByUniqueId(uid: string): Initiative | undefined;
+
+  getInitiativeUIDMap(): Dictionary<Initiative>;
+
+  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>>;
+
+  getVocabFilteredFields(): Dictionary;
+  
+  search(text: string): Initiative[];
+  
+  // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
+  getVocabUriForProperty(name: string): string;
+  
+  //// vocab proxies
+  getLocalisedVocabs(): LocalisedVocab;
+  
+  getVerboseValuesForFields(): void;
+
+  getVocabTerm(vocabUri: string, termUri: string): string;
+
+  getVocabTitlesAndVocabIDs(): Dictionary;
+  
+  getVocabForProperty(id: string, propDef: PropDef): void;
+  
+  //// Wraps both dataAggregator and vocabs
+  
+  getTerms(): Record<string, Partial<Record<string, string>>>;
+
+  //// non-proxies
+  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[];
+
+  // Accessor for currentDatasets FIXME duplicate?
+  getCurrentDatasets(): string | boolean;
+
+  // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
+  //
+  // This description is a map of values, which looks like:
+  //
+  //     { id: [String], name: [String], endpoint: [String],
+  //       dgu: [String], query: [String] }
+  //
+  // Where:
+  //
+  // - `id` is the dataset identifier (same as the key)
+  // - `name` is the long name from `namedDatasetsVerbose` if available,
+  //   else just the identifier is used)
+  // - `query` is the SPARQL query used to obtain it
+  // - `dgu` is the default graph URI used for this query
+  // - `endpoint` is the SPARQL endpoint queried
+  //
+  getDatasets(): DatasetMap; // FIXME duplicate of verboseDatasets?
+
+  getDialogueSize(): DialogueSize;
+
+  // Gets the functional labels for the current language (obtained via getLanguage)
+  getFunctionalLabels(): Dictionary<string>;
+
+  // Gets the current language set in the config (or the fallback language if unset)
+  getLanguage(): string;
+  
+  //get an array of possible filters from  a list of initiatives
+  getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
+
+  getPropertySchema(propName: string): PropDef | undefined;
+  
+  getSidebarButtonColour(): string;
+
+  // requires dataAggregator
+  latLngBounds(initiatives: Initiative[]): Box2d;
+
+  // Loads the currently active dataset(s) and configured vocabs
+  //
+  // This may be all of the datasets, or just a single selected one.
+  // The vocabs are always loaded.
+  //
+  // dataAggregator and vocabs should be available on completion
+  loadData(): Promise<void>;
+
+  // Load datasets as defined by the list given.
+  //
+  // Note that the dataset instances only need name and id fields set,
+  // the others should be '', and will be filled in on completion.
+  //
+  // dataAggregator and vocabs should be available on completion
+  loadDatasets(datasets: Dataset[]): Promise<void>;
+
+  // Reloads the active data set (or sets)
+  //
+  // @param dataset - if boolean `true`, then all datasets will be loaded.
+  // Otherwise, only the dataset with a matching name is loaded (if any).
+  reset(dataset: string): Promise<void>;
+}
+
+
+export class DataServicesImpl implements DataServices {
   readonly config: Config;
   readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
@@ -540,7 +661,7 @@ export class DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  reset(dataset: string): void {
+  async reset(dataset: string) {
     // If the dataset is the same as that currently selected, nothing to do
     if (dataset === this.currentDatasets)
       return;
@@ -554,7 +675,7 @@ export class DataServices {
     });
 
     this.currentDatasets = dataset;
-    this.loadData();
+    await this.loadData();
   }
   
   search(text: string): Initiative[] {
@@ -577,6 +698,6 @@ export class DataServices {
 export function init(registry: Registry): DataServices {
   const config = registry("config") as Config;
 
-  return new DataServices(config, functionalLabels);
+  return new DataServicesImpl(config, functionalLabels);
 }
 
