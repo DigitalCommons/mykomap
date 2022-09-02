@@ -291,9 +291,9 @@ export class DataServicesImpl implements DataServices {
   readonly propertySchema: PropDefs = { ...basePropertySchema };
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  vocabs: VocabServices | undefined = undefined;
-  aggregatedData: AggregatedData | undefined = undefined;
-  cachedLatLon: Box2d | undefined = undefined;
+  vocabs?: VocabServices = undefined;
+  aggregatedData?: AggregatedData = undefined;
+  cachedLatLon?: Box2d = undefined;
 
   // true means all available datasets from config are loaded
   // otherwise a string to indicate which dataset is loaded
