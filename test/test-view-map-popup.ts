@@ -3,7 +3,7 @@ import { init as configBuilder } from '../www/map-app/app/model/config';
 const config = configBuilder({});
 
 import { Dictionary } from '../www/map-app/common_types';
-import { DataServices, PropDefs } from '../www/map-app/app/model/dataservices';
+import { DataServices, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
 import { VocabServiceImpl } from '../www/map-app/app/model/vocabs';
 import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
 
@@ -13,7 +13,7 @@ const expectedContent = require('./expected/popups/default.json');
 // The standard schema as it was when the test was created, translated
 // into PropDefs
 const fieldSchema: PropDefs = {
-  ...DataServices.basePropertySchema,
+  ...basePropertySchema,
   desc: { type: 'value', as: 'string' },
   www: { type: 'value', as: 'string' },
   twitter: { type: 'value', as: 'string' },

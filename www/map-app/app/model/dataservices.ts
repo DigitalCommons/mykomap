@@ -98,6 +98,80 @@ export function sortInitiatives(a: Initiative, b: Initiative) {
   return a.name.localeCompare(b.name);
 }
 
+// Implement the latitude/longitude fall-back logic for InitiativeObj.
+//
+// Creates a function which interprets a field of an InitiativeObj
+// (the param in question) as a numeric latitude or longitude value
+// (or undefined if this fails).  This works for string field values
+// as well as numeric ones.
+//
+// Additionally, if manLat *and* manLng are defined in the
+// InitiativeObj (and numeric or numeric strings, but not "0"), use
+// the field named by overrideParam. This will typically be manLat
+// or manLng, allowing these fields to override the original field,
+// whatever it is.
+function mkLocFromParamBuilder(from: string, overrideParam: string) {
+  return (id: string, def: CustomPropDef, params: InitiativeObj) => {
+    let param = params[from];
+
+    // Overwrite with manually added lat lng if present For
+    // historical reasons, "0" counts as undefined (meaning, use
+    // lat/lng), cos it used to mean this in the old wonky data.
+    if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
+      'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
+      param = params[overrideParam];
+    }
+
+    // Ensure param is a number
+    if (isNaN(Number.parseFloat(param)))
+      return undefined;
+
+    // Preserve undefs/nulls/empty strings as undefined 
+    if (param === undefined || param === null || param === "")
+      return undefined;
+
+    return Number(param);
+  };
+}
+
+
+// Define the properties in an initiative and how to manage them. Note, thanks to JS
+// variable hoisting semantics, we can reference initialiser functions below, if they are
+// normal functions.
+//
+// - paramName: the name of the constructor paramter property. Not necessarily unique.
+// - init: a function to initialise the property, called with this property's schema
+//   definition and a parameters object.
+// - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
+//
+export const basePropertySchema = Object.freeze({
+  uri: {
+    type: 'value',
+    as: 'string',
+  },
+  name: {
+    type: 'value',
+    as: 'string',
+  },
+  lat: {
+    type: 'custom',
+    builder: mkLocFromParamBuilder('lat', 'manLat'),
+  },
+  lng: {
+    type: 'custom',
+    builder: mkLocFromParamBuilder('lng', 'manLng'),
+  },
+  dataset: {
+    type: 'value',
+    as: 'string',
+  },
+  // Note: a searchstr property is also inserted to Initiatives during construction
+  // Special-cased as it potentially depends on the contents all other properties.
+  // (Actual list defined by config.getSearchedFields())
+} as PropDefs);
+
+
+
 export class DataServices {
   readonly config: Config;
   readonly allDatasets: string[]; // FIXME inline
@@ -106,28 +180,8 @@ export class DataServices {
   readonly dataLoader: DataLoader;
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   
-  // Define the properties in an initiative and how to manage them. Note, thanks to JS
-  // variable hoisting semantics, we can reference initialiser functions below, if they are
-  // normal functions.
-  //
-  // - paramName: the name of the constructor paramter property. Not necessarily unique.
-  // - init: a function to initialise the property, called with this property's schema
-  //   definition and a parameters object.
-  // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
-  //
-  static readonly basePropertySchema: PropDefs = {
-    uri: { type: 'value', as: 'string' },
-    name: { type: 'value', as: 'string' },
-    lat: { type: 'custom', builder: DataServices.mkLocFromParam('lat', 'manLat') },
-    lng: { type: 'custom', builder: DataServices.mkLocFromParam('lng', 'manLng') },
-    dataset: { type: 'value', as: 'string' },
-    // Note: a searchstr property is also inserted to Initiatives during construction
-    // Special-cased as it potentially depends on the contents all other properties.
-    // (Actual list defined by config.getSearchedFields())
-  };
-
   // The per-instance propert schema, which can be extended by configuration.
-  readonly propertySchema: PropDefs = { ...DataServices.basePropertySchema };
+  readonly propertySchema: PropDefs = { ...basePropertySchema };
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs: VocabServices | undefined = undefined;
@@ -516,42 +570,6 @@ export class DataServices {
   setVocab(data: VocabIndex, fallBackLanguage: string): void {
     this.vocabs = new VocabServiceImpl(data, fallBackLanguage);
     eventbus.publish({ topic: "Vocabularies.loaded" });
-  }
-
-  // Implement the latitude/longitude fall-back logic for InitiativeObj.
-  //
-  // Creates a function which interprets a field of an InitiativeObj
-  // (the param in question) as a numeric latitude or longitude value
-  // (or undefined if this fails).  This works for string field values
-  // as well as numeric ones.
-  //
-  // Additionally, if manLat *and* manLng are defined in the
-  // InitiativeObj (and numeric or numeric strings, but not "0"), use
-  // the field named by overrideParam. This will typically be manLat
-  // or manLng, allowing these fields to override the original field,
-  // whatever it is.
-  static mkLocFromParam(from: string, overrideParam: string) {
-    return (id: string, def: CustomPropDef, params: InitiativeObj) => {
-      let param = params[from];
-      
-      // Overwrite with manually added lat lng if present For
-      // historical reasons, "0" counts as undefined (meaning, use
-      // lat/lng), cos it used to mean this in the old wonky data.
-      if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
-        'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
-        param = params[overrideParam];
-      }
-    
-      // Ensure param is a number
-      if (isNaN(Number.parseFloat(param)))
-        return undefined;
-
-      // Preserve undefs/nulls/empty strings as undefined 
-      if (param === undefined || param === null || param === "")
-        return undefined;
-      
-      return Number(param);
-    };
   }
 }
 
