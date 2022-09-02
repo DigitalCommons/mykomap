@@ -136,9 +136,7 @@ function mkLocFromParamBuilder(from: string, overrideParam: string) {
 }
 
 
-// Define the properties in an initiative and how to manage them. Note, thanks to JS
-// variable hoisting semantics, we can reference initialiser functions below, if they are
-// normal functions.
+// Define the properties in an initiative and how to manage them.
 //
 // - paramName: the name of the constructor paramter property. Not necessarily unique.
 // - init: a function to initialise the property, called with this property's schema
