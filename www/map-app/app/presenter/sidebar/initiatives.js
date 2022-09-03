@@ -89,7 +89,7 @@ function init(registry) {
   proto.changeFilters = (filterCategoryName, filterValue, filterValueText) => {
     //get category of filter as used in intiatives
     const vocabTitlesAndVocabIDs = dataServices.getVocabTitlesAndVocabIDs();
-    const vocabIDsAndInitiativeVariables = dataServices.getVocabFilteredFields();
+    const vocabIDsAndInitiativeVariables = dataServices.getAggregatedData().vocabFilteredFields;
 
     const filterCategory =
       vocabIDsAndInitiativeVariables[vocabTitlesAndVocabIDs[filterCategoryName]];
@@ -118,7 +118,7 @@ function init(registry) {
       return;
 
     //get initiatives for new filter
-    const allInitiatives = Object.values(dataServices.getInitiativeUIDMap());
+    const allInitiatives = Object.values(dataServices.getAggregatedData().initiativesByUid);
     const filteredInitiatives = allInitiatives.filter(initiative =>
       initiative[filterCategory] == filterValue
     )
@@ -338,7 +338,7 @@ function init(registry) {
       });
 
       //should be async
-      var results = dataServices.search(text);
+      var results = dataServices.getAggregatedData().search(text);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }
@@ -364,7 +364,7 @@ function init(registry) {
     });
 
     //should be async
-    var results = Object.values(dataServices.getInitiativeUIDMap());
+    var results = Object.values(dataServices.getAggregatedData().initiativesByUid);
 
     eventbus.publish({
       topic: "Search.initiativeResults",

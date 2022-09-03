@@ -41,11 +41,11 @@ function init(registry) {
   };
 
   proto.getRegisteredValues = function () {
-    return dataServices.getRegisteredValues();
+    return dataServices.getAggregatedData().registeredValues;
   };
 
   proto.getAllRegisteredValues = function () {
-    return dataServices.getAllRegisteredValues();
+    return dataServices.getAggregatedData().allRegisteredValues;
   };
 
   proto.notifyViewToBuildDirectory = function () {
@@ -55,13 +55,13 @@ function init(registry) {
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
   proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
     if (key == null)
-      return dataServices.getAllRegisteredValues()[field];
+      return dataServices.getAggregatedData().allRegisteredValues[field];
     else
-      return dataServices.getRegisteredValues()[field][key];
+      return dataServices.getAggregatedData().registeredValues[field][key];
   };
 
   proto.getInitiativeByUniqueId = function (uid) {
-    return dataServices.getInitiativeByUniqueId(uid);
+    return dataServices.getAggregatedData().initiativeByUniqueId[uid];
   };
 
   function arrayMax(array) {

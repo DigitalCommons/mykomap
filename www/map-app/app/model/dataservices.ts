@@ -9,8 +9,9 @@ import type {
   Dataset,
   DataConsumer,
   DataLoader,
-  AggregatedData,
 } from './dataloader';
+
+import { AggregatedData } from './dataloader';
 
 import {
   VocabServices,
@@ -173,26 +174,10 @@ export const basePropertySchema = Object.freeze({
 
 export interface DataServices {
 
-  //// dataAggregator proxies, should return default empty values if no dataAggregator set.
+  // Gets an AggregatedData value, which may be empty of data if
+  // the data isn't ready yet.
+  getAggregatedData(): AggregatedData;
   
-  getAllRegisteredValues(): Dictionary<Initiative[]>;
-
-  getLoadedInitiatives(): Initiative[];
-
-  getInitiativeByUniqueId(uid: string): Initiative | undefined;
-
-  getInitiativeUIDMap(): Dictionary<Initiative>;
-
-  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>>;
-
-  getVocabFilteredFields(): Dictionary;
-  
-  search(text: string): Initiative[];
-  
-  // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
-  getVocabUriForProperty(name: string): string;
-  
-
   //// vocab proxies
   getLocalisedVocabs(): LocalisedVocab;
   
@@ -292,7 +277,7 @@ export class DataServicesImpl implements DataServices {
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs?: VocabServices = undefined;
-  aggregatedData?: AggregatedData = undefined;
+  aggregatedData: AggregatedData = new AggregatedData();
   cachedLatLon?: Box2d = undefined;
 
   // true means all available datasets from config are loaded
@@ -356,11 +341,8 @@ export class DataServicesImpl implements DataServices {
     }
   }
 
-
-  getAllRegisteredValues(): Dictionary<Initiative[]> {
-    if (!this.aggregatedData)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.aggregatedData.allRegisteredValues;
+  getAggregatedData(): AggregatedData {
+    return this.aggregatedData;
   }
 
   getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[] {
@@ -385,7 +367,7 @@ export class DataServicesImpl implements DataServices {
 
     //find the initiative variable associated with the field
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    const initiativeVariable = this.getVocabFilteredFields()[vocabID];
+    const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
 
     //loop through the initiatives and get the possible values for the initiative variable
     let alternatePossibleFilterValues: Initiative[] = [];
@@ -433,28 +415,10 @@ export class DataServicesImpl implements DataServices {
     return this.functionalLabels[this.getLanguage()];
   }
   
-  getInitiativeByUniqueId(uid: string): Initiative | undefined {
-    if (!this.aggregatedData)
-      return undefined; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.aggregatedData.initiativesByUid[uid];
-  }
-
-  getInitiativeUIDMap(): { [id: string]: Initiative; } {
-    if (!this.aggregatedData)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.aggregatedData.initiativesByUid;
-  }
-
   getLanguage(): string {
     return this.config.getLanguage() || this.fallBackLanguage;
   }
   
-  getLoadedInitiatives(): Initiative[] {
-    if (!this.aggregatedData)
-      return [];  // Data has not yet been loaded.  Some dependencies call this early!
-    return this.aggregatedData.loadedInitiatives;
-  }
-
   getLocalisedVocabs(): LocalisedVocab {
     return this?.vocabs.getLocalisedVocabs(this.getLanguage());
   }
@@ -463,7 +427,7 @@ export class DataServicesImpl implements DataServices {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
-    const vocabFilteredFields = this.getVocabFilteredFields();
+    const vocabFilteredFields = this.aggregatedData.vocabFilteredFields;
 
     filteredInitiatives.forEach(initiative => {
       for (const vocabID in vocabFilteredFields) {
@@ -481,33 +445,22 @@ export class DataServicesImpl implements DataServices {
     return this.propertySchema[propName];
   }
   
-  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
-    if (!this.aggregatedData)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.aggregatedData.registeredValues;
-  }
-
   getSidebarButtonColour(): string {
     return this.config.getSidebarButtonColour();
   }
 
   getTerms(): Record<string, Partial<Record<string, string>>> {
-    if (!this.aggregatedData)
-      throw new Error("Can't getTerms. Data has not yet been aggregated.");
-    return this?.vocabs.getTerms(this.getLanguage(),
-                                 this.aggregatedData.vocabFilteredFields,
-                                 this.aggregatedData.initiativesByUid,
-                                 this.propertySchema); 
+    if (!this.vocabs)
+      return {};
+
+    return this.vocabs.getTerms(this.getLanguage(),
+                                this.aggregatedData.vocabFilteredFields,
+                                this.aggregatedData.initiativesByUid,
+                                this.propertySchema); 
   }
   
   getVerboseValuesForFields() {
     return this?.vocabs.getVerboseValuesForFields(this.getLanguage());
-  }
-  
-  getVocabFilteredFields(): Dictionary {
-    if (!this.aggregatedData)
-      throw new Error("Can't getVocabFilteredFields. Data has not yet been aggregated.");
-    return this.aggregatedData.vocabFilteredFields;
   }
   
   getVocabTerm(vocabUri: string, termUri: string): string {
@@ -516,16 +469,6 @@ export class DataServicesImpl implements DataServices {
 
   getVocabTitlesAndVocabIDs(): Dictionary {
     return this?.vocabs.getVocabTitlesAndVocabIDs(this.getLanguage());
-  }
-  
-  // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
-  getVocabUriForProperty(name: string): string {
-    if (!this.aggregatedData)
-      throw new Error("Can't add initiatives. Data has not yet been aggregated.");
-    const propDef = this.getPropertySchema(name);
-    if (propDef.type === 'vocab')
-      return propDef.uri;
-    throw new Error(`property ${name} is not a vocab property`);
   }
   
   getVocabForProperty(id: string, propDef: PropDef) {
@@ -625,7 +568,7 @@ export class DataServicesImpl implements DataServices {
       eventbus.publish({ topic: "Initiative.complete" });
     }
     catch(error) {
-      this.aggregatedData = undefined;
+      this.aggregatedData = new AggregatedData();
       
       console.error("data load failed", error);
 
@@ -661,7 +604,7 @@ export class DataServicesImpl implements DataServices {
     if (dataset === this.currentDatasets)
       return;
 
-    this.aggregatedData = undefined;
+    this.aggregatedData = new AggregatedData();
 
     //publish reset to map markers
     eventbus.publish({
@@ -671,17 +614,7 @@ export class DataServicesImpl implements DataServices {
 
     this.currentDatasets = dataset;
     await this.loadData();
-  }
-  
-  search(text: string): Initiative[] {
-    if (!this.aggregatedData)
-      return [];
-    // returns an array of sse objects whose name contains the search text
-    var up = text.toUpperCase();
-    return this.aggregatedData.loadedInitiatives.filter(
-      (i: Initiative) => i.searchstr.includes(up)
-    ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
-  }
+  }  
 }
 
 
