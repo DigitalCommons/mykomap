@@ -555,16 +555,22 @@ export class DataServicesImpl implements DataServices {
     }
 
     try {
+      // Note, caching currently doesn't work correctly with multiple data sets
+      // so until that's fixed, don't use it in that case.
+      const numDatasets = this.config.namedDatasets().length;
+      const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
+      const dataLoader = new SparqlDataLoader(!noCache);
+      
       const labels = this.functionalLabels[this.config.getLanguage()];
-      const dataLoader = new SparqlDataLoader(this.config, this.propertySchema, this.vocabs, labels);
+      const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
       
-      this.aggregatedData = await dataLoader.loadDatasets(datasets);
-
+      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator);
+      
       eventbus.publish({ topic: "Initiative.complete" });
     }
     catch(error) {

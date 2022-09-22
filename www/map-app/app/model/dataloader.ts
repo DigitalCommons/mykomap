@@ -67,7 +67,7 @@ export class AggregatedData {
 // This is explicitly intended to construct an instance of AggregatedData,
 // which is returned via the promise.
 export interface DataLoader {
-  // Asynchronously load the datasets given, 
-  // @returns the AggregatedData via a promise
-  loadDatasets(datasets: Dataset[]): Promise<AggregatedData>;
+  // Asynchronously load the datasets given, using the dataConsumer 
+  // @returns the dataConsumer via a promise
+  loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T): Promise<T>;
 }
