@@ -7,24 +7,11 @@ import {
 
 import {
   InitiativeObj,
-  PropDefs,
 } from './dataservices';
-
-import {
-  VocabServices,
-} from './vocabs';
 
 import {
   Config,
 } from './config';
-
-import {
-  SparqlDataAggregator,
-} from './sparqldataaggregator';
-
-import {
-  Dictionary
-} from '../../common_types';
 
 import { json } from 'd3';
 
@@ -43,16 +30,10 @@ interface SparqlDatasetResponse {
 
 export class SparqlDataLoader implements DataLoader {
   private readonly maxInitiativesToLoadPerFrame = 100;
-  private readonly config: Config;
-  private readonly propertySchema: PropDefs;
-  private readonly vocabs: VocabServices;
-  private readonly labels: Dictionary<string>;
+  private readonly useCache: boolean;
 
-  constructor(config: Config, propertySchema: PropDefs, vocabs: VocabServices, labels: Dictionary<string>) {
-    this.config = config;
-    this.propertySchema = propertySchema;
-    this.vocabs = vocabs;
-    this.labels = labels;
+  constructor(useCache: boolean = false) {
+    this.useCache = useCache;
   }
     
   // Loads a set of initiatives
@@ -60,13 +41,12 @@ export class SparqlDataLoader implements DataLoader {
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
   // @param [String] dataset - the identifier of this dataset
+  // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
   //
-  // @returns a promise which resolves when all datasets are fully loaded and processed
-  // by the consumer
-  async loadDatasets(datasets: Dataset[]): Promise<AggregatedData> {
+  // @returns a promise containing the dataConsumer which resolves when all
+  // datasets are fully loaded and processed by the consumer
+  async loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T): Promise<T> {
 
-    const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, this.labels);
-    
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
     // Make an index of datasetIds to expect to the relevant dataset loader promises
@@ -104,7 +84,7 @@ export class SparqlDataLoader implements DataLoader {
             }
             
             // Call addInitiatives in the background, to prevent it blocking other processes.
-            await (async () => aggregator.addBatch(batch))();
+            await (async () => dataConsumer.addBatch(batch))();
           }
           
           // Publish completion event
@@ -120,9 +100,9 @@ export class SparqlDataLoader implements DataLoader {
     }
 
     // Having loaded all we can, finish off
-    aggregator.complete();
+    dataConsumer.complete();
 
-    return aggregator;
+    return dataConsumer;
   }
 
   // Amalgamates multiple records into the same InitiativeObj if they
@@ -242,11 +222,7 @@ export class SparqlDataLoader implements DataLoader {
 
     let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
 
-    // Note, caching currently doesn't work correctly with multiple data sets
-    // so until that's fixed, don't use it in that case.
-    const numDatasets = this.config.namedDatasets().length;
-    const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
-    if (noCache) {
+    if (!this.useCache) {
       service += "&noLodCache=true";
     }
     console.debug("fetchDataset", service);
