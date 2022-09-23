@@ -67,7 +67,17 @@ export class AggregatedData {
 // This is explicitly intended to construct an instance of AggregatedData,
 // which is returned via the promise.
 export interface DataLoader {
-  // Asynchronously load the datasets given, using the dataConsumer 
-  // @returns the dataConsumer via a promise
-  loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T): Promise<T>;
+  // Asynchronously load the datasets given, using the dataConsumer .
+  //
+  // @param [Dataset[]] datasets - an array of incomplete dataset objects (only id and name fields required)
+  // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
+  // @param onDataset - a callback to invoke when each dataset loads (or fails)
+  //
+  // Individual datasets' success or failure is signalled via
+  // onDataset.
+  //
+  // @returns a promise containing the dataConsumer which resolves when all
+  // datasets are fully loaded and processed by the consumer
+  loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T,
+                                       onDataset?: (id: string, error?: Error) => void): Promise<T>;
 }

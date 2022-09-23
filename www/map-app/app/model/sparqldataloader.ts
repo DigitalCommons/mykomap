@@ -16,7 +16,6 @@ import {
 import { json } from 'd3';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
-const eventbus = require('../eventbus');
 
 interface SparqlDatasetResponse {
   meta: {
@@ -42,10 +41,12 @@ export class SparqlDataLoader implements DataLoader {
   //
   // @param [String] dataset - the identifier of this dataset
   // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
+  // @param onDataset - a callback to invoke when each dataset loads (or fails)
   //
   // @returns a promise containing the dataConsumer which resolves when all
   // datasets are fully loaded and processed by the consumer
-  async loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T): Promise<T> {
+  async loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T,
+                                             onDataset?: (id: string, error?: Error) => void): Promise<T> {
 
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
@@ -58,15 +59,37 @@ export class SparqlDataLoader implements DataLoader {
     while(Object.keys(outstanding).length > 0) {
       try {
         const outstandingPromises = Object.values(outstanding);
-        const [datasetId, dataset] = await Promise.any(outstandingPromises);
+
+        let dataset: Dataset | undefined;
+        let initiativeData: InitiativeObj[] | undefined;
+        try {
+          // Should always succeed, possibly with an error obect instead of the data.
+          // Failures in the promise machinery may cause it to throw.
+          const result = await Promise.any(outstandingPromises);
+          dataset = result.dataset;
+          
+          if (result.data instanceof Error)
+            throw result.data; // Normal failure
+
+          // Normal success
+          initiativeData = result.data;
+        }
+        catch(error) {
+          // If this is not a normal failure, dataset will be undefined.
+          console.error("loading dataset " + dataset?.id + " failed", error);
+
+          onDataset?.(dataset.id ?? '<unknown>', error);
+        }
         
-        // A dataset has arrived... check it off the list
-        delete outstanding[datasetId];
-        
-        if (dataset !== undefined) { // Skip failed datasets, which will be undefined
+        // A dataset has arrived (or failed)... check it off the list
+        if (dataset.id)
+          delete outstanding[dataset.id];
+
+        // Skip failed datasets, which will be undefined
+        if (dataset !== undefined && initiativeData !== undefined) {
           
           // Load initiatives in chunks, to keep the UI responsive
-          while(dataset.length > 0) {
+          while(initiativeData.length > 0) {
             const batch: InitiativeObj[] = [];
 
             // We have to be aware that an initiative can be spread
@@ -77,22 +100,29 @@ export class SparqlDataLoader implements DataLoader {
             //
             // Therefore, read in records with the same uri all at once
             while(batch.length < this.maxInitiativesToLoadPerFrame) {
-              const item = this.readInitiativeObj(dataset);
+              const item = this.readInitiativeObj(initiativeData);
               if (item === undefined) break; // stop if we run out of items
 
               batch.push(item);
             }
             
             // Call addInitiatives in the background, to prevent it blocking other processes.
-            await (async () => dataConsumer.addBatch(batch))();
+            try {
+              await (async () => dataConsumer.addBatch(batch))();
+              onDataset?.(dataset.id);
+            }
+            catch(error) {
+              // Abort this dataset.
+              initiativeData.length = 0;
+              
+              console.error("Error whilst processing datasets: ", error);
+              onDataset?.(dataset.id, error);
+            }
           }
-          
-          // Publish completion event
-          eventbus.publish({ topic: "Initiative.datasetLoaded" });
         }
       }
       catch(error) {
-        // All promises should succeed, even on error. Therefore this
+        // All promises should have errors caught already. Therefore this
         // shouldn't normally occur, except possibly if there are no
         // datasets.  Ignore this.
         console.debug("Unexpected exception whilst processing datasets: ", error);
@@ -176,32 +206,31 @@ export class SparqlDataLoader implements DataLoader {
     return first;
   }
 
-  // Calls this.loadDataset and handles the result, including event emission
-  async loadDataset(dataset: Dataset) {
-    const result: [string, InitiativeObj[]] | [string, undefined] = [dataset.id, undefined];
+  // Calls this.loadDataset and populates the dataset object.
+  //
+  // Shouldn't ever throw even on failure - the caller relies on
+  // getting the dataset id to report the failure. Although if the
+  // dataset.id field is not set of course this isn't possible.
+  //
+  // @returns If successful returns an object containing a copy of the
+  // dataset passed but with missing fields populated, and the
+  // data. On failure returns an object with the original dataset, and
+  // an error object.
+  async loadDataset(dataset: Dataset): Promise<{dataset: Dataset, data: InitiativeObj[] | Error}> {
     try {
       const response: SparqlDatasetResponse = await this.fetchDataset(dataset);
       console.debug("loaded " + dataset.id + " data", response);
 
-      // Record the dataset's metadata
-      dataset.endpoint = response.meta.endpoint;
-      dataset.dgu = response.meta.default_graph_uri;
-      dataset.query = response.meta.query;
-
-      // Return the dataset id and its data
-      result[1] = [...response.data];
+      return { dataset: {id: dataset.id,
+                         name: dataset.name,
+                         endpoint: response.meta.endpoint,
+                         dgu: response.meta.default_graph_uri,
+                         query: response.meta.query},
+               data: [...response.data] };
     }
     catch(error) {
-      console.error("load " + dataset.id + " data failed", error);
-      
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: error, dataset: dataset.id }
-      });
-
-      // Return the default, a failed dataset indicator
-    }
-    return result;
+      return error;
+    }    
   }
   
   // Loads the initiatives data for the given dataset (or all of them) from the server.

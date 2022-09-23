@@ -568,8 +568,20 @@ export class DataServicesImpl implements DataServices {
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
-      
-      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator);
+
+      const onDataset = (id: string, error?: Error) => {
+        if (error) {
+          eventbus.publish({
+            topic: "Initiative.loadFailed",
+            data: { error: error, dataset: id }
+          });
+        }
+        else {
+          // Publish completion event
+          eventbus.publish({ topic: "Initiative.datasetLoaded" });
+        }
+      }
+      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator, onDataset);
       
       eventbus.publish({ topic: "Initiative.complete" });
     }
