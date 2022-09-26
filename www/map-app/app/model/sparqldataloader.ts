@@ -15,8 +15,6 @@ import {
 
 import { json } from 'd3';
 
-const getDatasetPhp = require("../../../services/get_dataset.php");
-
 interface SparqlDatasetResponse {
   meta: {
     endpoint?: string;
@@ -30,8 +28,10 @@ interface SparqlDatasetResponse {
 export class SparqlDataLoader implements DataLoader {
   private readonly maxInitiativesToLoadPerFrame = 100;
   private readonly useCache: boolean;
+  private readonly serviceUrl: string;
 
-  constructor(useCache: boolean = false) {
+  constructor(serviceUrl: string, useCache: boolean = false) {
+    this.serviceUrl = serviceUrl;
     this.useCache = useCache;
   }
     
@@ -249,7 +249,7 @@ export class SparqlDataLoader implements DataLoader {
   //       is expected to self-resolve to the dataset's index webpage)
   async fetchDataset(dataset: Dataset): Promise<SparqlDatasetResponse> {
 
-    let service = `${getDatasetPhp}?dataset=${encodeURIComponent(dataset.id)}`;
+    let service = `${this.serviceUrl}?dataset=${encodeURIComponent(dataset.id)}`;
 
     if (!this.useCache) {
       service += "&noLodCache=true";
