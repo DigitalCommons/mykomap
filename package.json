@@ -9,7 +9,8 @@
     "deploy_group": "www-data"
   },
   "engines": {
-    "npm": ">=6.5.0"
+    "npm": ">=6.5.0",
+    "node": ">=15.0.0"
   },
   "bin": {
     "generate-version": "bin/generate-version",
