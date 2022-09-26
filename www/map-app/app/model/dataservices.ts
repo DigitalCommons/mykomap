@@ -30,6 +30,8 @@ import {
 
 import { json } from 'd3';
 
+const getDatasetPhp = require("../../../services/get_dataset.php");
+
 const eventbus = require('../eventbus');
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
@@ -559,7 +561,7 @@ export class DataServicesImpl implements DataServices {
       // so until that's fixed, don't use it in that case.
       const numDatasets = this.config.namedDatasets().length;
       const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
-      const dataLoader = new SparqlDataLoader(!noCache);
+      const dataLoader = new SparqlDataLoader(getDatasetPhp, !noCache);
       
       const labels = this.functionalLabels[this.config.getLanguage()];
       const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
