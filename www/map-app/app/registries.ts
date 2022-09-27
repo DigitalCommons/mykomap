@@ -41,7 +41,11 @@ export function makeRegistry(): Registry {
 
     console.debug(`registry('${name}')`);
     resolved[name] = false;
-    return resolved[name] = index[name]();
+    const initialiser = index[name];
+    if (initialiser === undefined)
+      throw Error(`undefined registry initialiser for ${name}`);
+    
+    return resolved[name] = initialiser();
   };
   
   registry.def = (name: string, service: () => Module): void => {

@@ -36,9 +36,9 @@ import type {
 class TypeDef<T> {
   constructor(params: {
     name: string;
-    parseString?: typeof this.parseString,
+    parseString?: TypeDef<T>['parseString'];
     descr?: string;
-    stringDescr?: typeof this.stringDescr}) {
+    stringDescr?: TypeDef<T>['stringDescr']}) {
     this.name = params.name;
     this.parseString = params.parseString;
     this.descr = params.descr || '';
