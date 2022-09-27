@@ -413,7 +413,7 @@ export class DataServicesImpl implements DataServices {
       return dialogueSize;
   }
 
-  getFunctionalLabels() {
+  getFunctionalLabels(): Dictionary<string> {
     return this.functionalLabels[this.getLanguage()];
   }
   

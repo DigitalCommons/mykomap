@@ -164,17 +164,27 @@ const labels = {};
 // populated with initatives.  These functions strip the initiatives
 // down to just the name, for convenient comparisons.
 
-function mapValues<I, J>(data: Dictionary<I>, fn: (d: I) => J[]) {
+function isDefinedVal<T>(item: [string, T | undefined]): item is [string, T] {
+  return item !== undefined;
+}
+
+function mapValues<I, J>(data: Dictionary<I>, fn: (d: I | undefined) => J[]) {
   const entries = Object.entries(data);
   return entries.map(e => [e[0], fn(e[1])]);
 }
 
-function initiatives2Strings(items: Initiative[]) {
-  return items.map(item => item.name as String);
+function initiatives2Strings(items?: Initiative[]) {
+  if (items)
+    return items.map(item => item.name as String);
+  else
+    return [];
 }
 
-function stripInitiatives2(items: Dictionary<Initiative[]>) {
-  return Object.fromEntries(mapValues(items, initiatives2Strings));
+function stripInitiatives2(items?: Dictionary<Initiative[]>) {
+  if (items)
+    return Object.fromEntries(mapValues(items, initiatives2Strings));
+  else
+    return {};
 }
 
 function stripInitiatives1(items: Dictionary<Dictionary<Initiative[]>>) {
@@ -240,7 +250,7 @@ describe('SparqlDataAggregator', () => {
     it('with two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'EA10'),
+        mkInitiativeObj('B', undefined, 'EA10'),
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},
@@ -251,7 +261,7 @@ describe('SparqlDataAggregator', () => {
     it('with many values in two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'EA10'),
+        mkInitiativeObj('B', undefined, 'EA10'),
         mkInitiativeObj('C'),
         mkInitiativeObj('D', 'OS20', 'EA20'),
         mkInitiativeObj('E', 'OS10', 'EA10'),        
@@ -265,7 +275,7 @@ describe('SparqlDataAggregator', () => {
     it('with invalid vocabs terms', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'OS10'), // Base Membership has no OS10 value
+        mkInitiativeObj('B', undefined, 'OS10'), // Base Membership has no OS10 value
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},
