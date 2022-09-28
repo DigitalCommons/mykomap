@@ -788,9 +788,11 @@ export class Config implements ReadableConfig, WritableConfig {
     const urisSeen = {} as Dictionary;
     if (this.data.vocabularies) {
       for(let ix = 0; ix < this.data.vocabularies.length; ix++) {
-        const vocabSource = this.data.vocabularies[ix];
+        const vocabSource: VocabSource = this.data.vocabularies[ix];
         for(const vocabUri in vocabSource.uris) {
           const vocabPrefix = vocabSource.uris[vocabUri];
+          if (vocabPrefix === undefined)
+            continue;
           if (vocabPrefix in prefixesSeen) {
             console.warn(`Duplicate prefix in vocabularies config, ${vocabPrefix} (for ${vocabUri})`);
           }
@@ -805,6 +807,8 @@ export class Config implements ReadableConfig, WritableConfig {
     // Make sure the fields all reference a known vocab
     for(const fieldId in this._fields ?? {}) {
       let field = this._fields[fieldId];
+      if (field === undefined)
+        continue;
       if (field.type === 'multi')
         field = field.of;
       if (field.type !== 'vocab')
@@ -881,12 +885,15 @@ ${def.descr}
   add(strcfg: Dictionary) {
     console.info("add", strcfg);
     
-    for(const id in strcfg) {      
+    for(const id in strcfg) {
+      const str = strcfg[id];
+      if (!str)
+        continue;
       if (id in this.configSchemas) {
         const def = this.configSchemas[id];
         
         if (def.setter && def.type.parseString) {
-          const val = def.type.parseString(strcfg[id]);
+          const val = def.type.parseString(str);
           const setter = this[def.setter] as (val: any) => void; // FIXME this was frigged
           setter.call(this, val);
         }
