@@ -52,7 +52,7 @@ export class SparqlDataLoader implements DataLoader {
     // for an [<id>, <data>] pair.
     // Make an index of datasetIds to expect to the relevant dataset loader promises
     let outstanding = Object.fromEntries(datasets.map(
-      (ds, ix) => [ds.id, this.loadDataset(ds)]
+      ds => [ds.id, this.loadDataset(ds)]
     ));
 
     // Process the data as it arrives, in chunks    
@@ -78,7 +78,7 @@ export class SparqlDataLoader implements DataLoader {
           // If this is not a normal failure, dataset will be undefined.
           console.error("loading dataset " + dataset?.id + " failed", error);
 
-          onDataset?.(dataset.id ?? '<unknown>', error);
+          onDataset?.(dataset?.id ?? '<unknown>', error);
         }
         
         // A dataset has arrived (or failed)... check it off the list
@@ -86,7 +86,7 @@ export class SparqlDataLoader implements DataLoader {
           delete outstanding[dataset.id];
 
         // Skip failed datasets, which will be undefined
-        if (dataset !== undefined && initiativeData !== undefined) {
+        if (dataset !== undefined && dataset.id !== undefined && initiativeData !== undefined) {
           
           // Load initiatives in chunks, to keep the UI responsive
           while(initiativeData.length > 0) {
@@ -229,7 +229,7 @@ export class SparqlDataLoader implements DataLoader {
                data: [...response.data] };
     }
     catch(error) {
-      return error;
+      return { dataset: dataset, data: error};
     }    
   }
   
