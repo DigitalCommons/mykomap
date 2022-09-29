@@ -25,6 +25,12 @@ interface SparqlDatasetResponse {
   status?: "success";
 }
 
+function isSparqlDatasetResponse(value: any): value is SparqlDatasetResponse {
+  if (typeof value === 'object')
+    return true; // FIXME this is a hack until we have more heavyweight type validation tools
+  return false;
+}
+
 export class SparqlDataLoader implements DataLoader {
   private readonly maxInitiativesToLoadPerFrame = 100;
   private readonly useCache: boolean;
@@ -74,11 +80,14 @@ export class SparqlDataLoader implements DataLoader {
           // Normal success
           initiativeData = result.data;
         }
-        catch(error) {
+        catch(e) {
           // If this is not a normal failure, dataset will be undefined.
-          console.error("loading dataset " + dataset?.id + " failed", error);
+          console.error("loading dataset " + dataset?.id + " failed", e);
 
+          const error =  e instanceof Error? e : new Error(String(e));
           onDataset?.(dataset?.id ?? '<unknown>', error);
+          
+          continue;
         }
         
         // A dataset has arrived (or failed)... check it off the list
@@ -111,11 +120,13 @@ export class SparqlDataLoader implements DataLoader {
               await (async () => dataConsumer.addBatch(batch))();
               onDataset?.(dataset.id);
             }
-            catch(error) {
+            catch(e) {
               // Abort this dataset.
               initiativeData.length = 0;
               
-              console.error("Error whilst processing datasets: ", error);
+              console.error("Error whilst processing datasets: ", e);
+
+              const error = e instanceof Error? e : new Error(String(e));
               onDataset?.(dataset.id, error);
             }
           }
@@ -180,8 +191,10 @@ export class SparqlDataLoader implements DataLoader {
     // field, we might not be able to tell it isn't single valued.
     // Live with this for now, later move this code to the
     // server-side, where this metadata is available.
-    while(records.length > 0 && records[0].uri === first.uri) {
+    while(records.length > 0 && records[0].uri === first?.uri) {
       const next = records.shift();
+      if (!next) continue;
+      
       Object.entries(next)
         .forEach(entry => {
           const [key, val] = entry;
@@ -223,12 +236,13 @@ export class SparqlDataLoader implements DataLoader {
 
       return { dataset: {id: dataset.id,
                          name: dataset.name,
-                         endpoint: response.meta.endpoint,
-                         dgu: response.meta.default_graph_uri,
-                         query: response.meta.query},
+                         endpoint: response.meta.endpoint ?? '',
+                         dgu: response.meta.default_graph_uri ?? '',
+                         query: response.meta.query ?? ''},
                data: [...response.data] };
     }
-    catch(error) {
+    catch(e) {
+      const error = e instanceof Error? e : new Error(String(e));
       return { dataset: dataset, data: error};
     }    
   }
@@ -256,6 +270,10 @@ export class SparqlDataLoader implements DataLoader {
     }
     console.debug("fetchDataset", service);
     
-    return await json(service);
+    const result = await json(service);
+    if (isSparqlDatasetResponse(result))
+      return result;
+
+    throw new Error(`Invalid response from endpoint '${this.serviceUrl}' is not a SparqlDatasetResponse`);
   }
 }

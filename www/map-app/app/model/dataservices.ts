@@ -14,10 +14,12 @@ import type {
 import { AggregatedData } from './dataloader';
 
 import {
+  Vocab,
   VocabServices,
   VocabIndex,
   LocalisedVocab,
-  VocabServiceImpl
+  VocabServiceImpl,
+  isVocabIndex,
 } from './vocabs';
 
 import {
@@ -183,18 +185,18 @@ export interface DataServices {
   //// vocab proxies
   getLocalisedVocabs(): LocalisedVocab;
   
-  getVerboseValuesForFields(): void;
+  getVerboseValuesForFields(): Dictionary<Dictionary>;
 
-  getVocabTerm(vocabUri: string, termUri: string): string;
+  getVocabTerm(vocabUri: string, termUri: string): string | undefined;
 
   getVocabTitlesAndVocabIDs(): Dictionary;
   
-  getVocabForProperty(id: string, propDef: PropDef): void;
+  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined;
   
 
   //// Wraps both dataAggregator and vocabs
   
-  getTerms(): Record<string, Partial<Record<string, string>>>;
+  getTerms(): Dictionary<Dictionary>;
 
 
   //// non-proxies
@@ -368,14 +370,20 @@ export class DataServicesImpl implements DataServices {
     });
 
     //find the initiative variable associated with the field
+    const alternatePossibleFilterValues: Initiative[] = [];
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
+    if (vocabID) {
+      const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
 
-    //loop through the initiatives and get the possible values for the initiative variable
-    let alternatePossibleFilterValues: Initiative[] = [];
-    sharedInitiatives.forEach(initiative => {
-      alternatePossibleFilterValues.push(initiative[initiativeVariable])
-    })
+      if (initiativeVariable) {
+        //loop through the initiatives and get the possible values for the initiative variable
+        sharedInitiatives.forEach(initiative => {
+          const prop = initiative[initiativeVariable]
+          if (prop !== undefined)
+            alternatePossibleFilterValues.push(prop);
+        })
+      }
+    }
 
     return alternatePossibleFilterValues;
   }
@@ -414,15 +422,17 @@ export class DataServicesImpl implements DataServices {
   }
 
   getFunctionalLabels(): Dictionary<string> {
-    return this.functionalLabels[this.getLanguage()];
+    return this.functionalLabels[this.getLanguage()] ?? {};
   }
   
   getLanguage(): string {
-    return this.config.getLanguage() || this.fallBackLanguage;
+    return this.config.getLanguage();
   }
   
   getLocalisedVocabs(): LocalisedVocab {
-    return this?.vocabs.getLocalisedVocabs(this.getLanguage());
+    if (this.vocabs)
+      return this.vocabs.getLocalisedVocabs(this.getLanguage());
+    return {};
   }
   
   //get an array of possible filters from  a list of initiatives
@@ -433,7 +443,10 @@ export class DataServicesImpl implements DataServices {
 
     filteredInitiatives.forEach(initiative => {
       for (const vocabID in vocabFilteredFields) {
-        let termIdentifier = initiative[vocabFilteredFields[vocabID]];
+        const vff = vocabFilteredFields[vocabID]
+        if (!vff)
+          continue;
+        let termIdentifier = initiative[vff];
 
         if (!possibleFilterValues.includes(termIdentifier))
           possibleFilterValues.push(termIdentifier);
@@ -451,7 +464,7 @@ export class DataServicesImpl implements DataServices {
     return this.config.getSidebarButtonColour();
   }
 
-  getTerms(): Record<string, Partial<Record<string, string>>> {
+  getTerms(): Dictionary<Dictionary> {
     if (!this.vocabs)
       return {};
 
@@ -461,20 +474,20 @@ export class DataServicesImpl implements DataServices {
                                 this.propertySchema); 
   }
   
-  getVerboseValuesForFields() {
-    return this?.vocabs.getVerboseValuesForFields(this.getLanguage());
+  getVerboseValuesForFields(): Dictionary<Dictionary> {
+    return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
   }
   
-  getVocabTerm(vocabUri: string, termUri: string): string {
-    return this?.vocabs.getVocabTerm(vocabUri, termUri, this.getLanguage());
+  getVocabTerm(vocabUri: string, termUri: string): string | undefined {
+    return this?.vocabs?.getVocabTerm(vocabUri, termUri, this.getLanguage());
   }
 
   getVocabTitlesAndVocabIDs(): Dictionary {
-    return this?.vocabs.getVocabTitlesAndVocabIDs(this.getLanguage());
+    return this?.vocabs?.getVocabTitlesAndVocabIDs(this.getLanguage()) ?? {};
   }
   
-  getVocabForProperty(id: string, propDef: PropDef) {
-    return this?.vocabs.getVocabForProperty(id, propDef, this.getLanguage());
+  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined {
+    return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
   }
   
   latLngBounds(initiatives: Initiative[]): Box2d {
@@ -563,7 +576,9 @@ export class DataServicesImpl implements DataServices {
       const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
       const dataLoader = new SparqlDataLoader(getDatasetPhp, !noCache);
       
-      const labels = this.functionalLabels[this.config.getLanguage()];
+      const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
+      if (this.vocabs === undefined)
+        throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
 
       eventbus.publish({
@@ -605,7 +620,7 @@ export class DataServicesImpl implements DataServices {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   private async loadVocabs(): Promise<VocabIndex> {
-    return json(getVocabsPhp, {
+    const result = json(getVocabsPhp, {
       method: 'POST',
       body: JSON.stringify({
         languages: [this.getLanguage()],
@@ -613,6 +628,10 @@ export class DataServicesImpl implements DataServices {
       }),
       headers: { 'content-type': 'application/json; charset=UTF-8' },
     });
+    if (isVocabIndex(result))
+      return result as VocabIndex;
+
+    throw new Error(`Invalid JSON result returned by vocab endpoint at ${getVocabsPhp}`);
   }
   
   // Reloads the active data set (or sets)
