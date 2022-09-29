@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { init as configBuilder } from '../www/map-app/app/model/config';
-const config = configBuilder({});
+const config = configBuilder();
 
 import { Dictionary } from '../www/map-app/common_types';
 import { DataServicesImpl, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
