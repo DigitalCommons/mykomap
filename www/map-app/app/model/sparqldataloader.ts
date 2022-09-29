@@ -81,13 +81,18 @@ export class SparqlDataLoader implements DataLoader {
           initiativeData = result.data;
         }
         catch(e) {
-          // If this is not a normal failure, dataset will be undefined.
-          console.error("loading dataset " + dataset?.id + " failed", e);
-
+          console.error("loading dataset " + dataset?.id + " failed:", e);
+          
           const error =  e instanceof Error? e : new Error(String(e));
           onDataset?.(dataset?.id ?? '<unknown>', error);
-          
-          continue;
+
+          // If this is not a normal failure, dataset will be
+          // undefined, ansd we don't know which dataset caused it.
+          // In this case we must assume that the outstanding promises
+          // may not get resolved, and abort (otherwise we get into an
+          // infinite loop)
+          if (!dataset)
+            break;
         }
         
         // A dataset has arrived (or failed)... check it off the list
@@ -128,6 +133,7 @@ export class SparqlDataLoader implements DataLoader {
 
               const error = e instanceof Error? e : new Error(String(e));
               onDataset?.(dataset.id, error);
+              break;
             }
           }
         }
@@ -236,9 +242,9 @@ export class SparqlDataLoader implements DataLoader {
 
       return { dataset: {id: dataset.id,
                          name: dataset.name,
-                         endpoint: response.meta.endpoint ?? '',
-                         dgu: response.meta.default_graph_uri ?? '',
-                         query: response.meta.query ?? ''},
+                         endpoint: response.meta?.endpoint ?? '',
+                         dgu: response?.meta?.default_graph_uri ?? '',
+                         query: response?.meta?.query ?? ''},
                data: [...response.data] };
     }
     catch(e) {
