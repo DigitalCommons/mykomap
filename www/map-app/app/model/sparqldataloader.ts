@@ -1,5 +1,5 @@
 import {
-  Dataset,
+  DatasetMeta,
   DataLoader,
   DataConsumer,
   AggregatedData,
@@ -15,12 +15,17 @@ import {
 
 import { json } from 'd3';
 
+export interface SparqlMeta {
+  endpoint?: string;
+  default_graph_uri?: string;
+  query?: string;
+}
+
+export interface SparqlDatasetMeta extends SparqlMeta, DatasetMeta {
+}
+
 interface SparqlDatasetResponse {
-  meta: {
-    endpoint?: string;
-    default_graph_uri?: string;
-    query?: string;
-  };
+  meta: SparqlMeta;
   data: InitiativeObj[];
   status?: "success";
 }
@@ -45,20 +50,20 @@ export class SparqlDataLoader implements DataLoader {
   //
   // Loading is done asynchronously in batches of `maxInitiativesToLoadPerFrame`.
   //
-  // @param [String] dataset - the identifier of this dataset
+  // @param [string[]] datasetIds - identifiers for the datasets to load
   // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
   // @param onDataset - a callback to invoke when each dataset loads (or fails)
   //
   // @returns a promise containing the dataConsumer which resolves when all
   // datasets are fully loaded and processed by the consumer
-  async loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T,
+  async loadDatasets<T extends DataConsumer>(datasetIds: string[], dataConsumer: T,
                                              onDataset?: (id: string, error?: Error) => void): Promise<T> {
 
     // Launch the dataset loaders asynchronously, obtaining an array of promises
     // for an [<id>, <data>] pair.
     // Make an index of datasetIds to expect to the relevant dataset loader promises
-    let outstanding = Object.fromEntries(datasets.map(
-      ds => [ds.id, this.loadDataset(ds)]
+    let outstanding = Object.fromEntries(datasetIds.map(
+      ds => [ds, this.loadDataset(ds)]
     ));
 
     // Process the data as it arrives, in chunks    
@@ -66,13 +71,15 @@ export class SparqlDataLoader implements DataLoader {
       try {
         const outstandingPromises = Object.values(outstanding);
 
-        let dataset: Dataset | undefined;
+        let meta: SparqlMeta | undefined;
+        let datasetId: string | undefined;
         let initiativeData: InitiativeObj[] | undefined;
         try {
           // Should always succeed, possibly with an error obect instead of the data.
           // Failures in the promise machinery may cause it to throw.
           const result = await Promise.any(outstandingPromises);
-          dataset = result.dataset;
+          meta = result.meta;
+          datasetId = result.id;
           
           if (result.data instanceof Error)
             throw result.data; // Normal failure
@@ -81,26 +88,26 @@ export class SparqlDataLoader implements DataLoader {
           initiativeData = result.data;
         }
         catch(e) {
-          console.error("loading dataset " + dataset?.id + " failed:", e);
+          console.error("loading dataset " + datasetId + " failed:", e);
           
           const error =  e instanceof Error? e : new Error(String(e));
-          onDataset?.(dataset?.id ?? '<unknown>', error);
+          onDataset?.(datasetId ?? '<unknown>', error);
 
           // If this is not a normal failure, dataset will be
-          // undefined, ansd we don't know which dataset caused it.
+          // undefined, and we don't know which dataset caused it.
           // In this case we must assume that the outstanding promises
           // may not get resolved, and abort (otherwise we get into an
           // infinite loop)
-          if (!dataset)
+          if (!datasetId)
             break;
         }
         
         // A dataset has arrived (or failed)... check it off the list
-        if (dataset.id)
-          delete outstanding[dataset.id];
+        if (datasetId)
+          delete outstanding[datasetId];
 
         // Skip failed datasets, which will be undefined
-        if (dataset !== undefined && dataset.id !== undefined && initiativeData !== undefined) {
+        if (meta !== undefined && datasetId !== undefined && initiativeData !== undefined) {
           
           // Load initiatives in chunks, to keep the UI responsive
           while(initiativeData.length > 0) {
@@ -123,7 +130,7 @@ export class SparqlDataLoader implements DataLoader {
             // Call addInitiatives in the background, to prevent it blocking other processes.
             try {
               await (async () => dataConsumer.addBatch(batch))();
-              onDataset?.(dataset.id);
+              onDataset?.(datasetId);
             }
             catch(e) {
               // Abort this dataset.
@@ -132,7 +139,7 @@ export class SparqlDataLoader implements DataLoader {
               console.error("Error whilst processing datasets: ", e);
 
               const error = e instanceof Error? e : new Error(String(e));
-              onDataset?.(dataset.id, error);
+              onDataset?.(datasetId, error);
               break;
             }
           }
@@ -235,21 +242,20 @@ export class SparqlDataLoader implements DataLoader {
   // dataset passed but with missing fields populated, and the
   // data. On failure returns an object with the original dataset, and
   // an error object.
-  async loadDataset(dataset: Dataset): Promise<{dataset: Dataset, data: InitiativeObj[] | Error}> {
+  async loadDataset(datasetId: string): Promise<{id: string, meta?: SparqlMeta, data: InitiativeObj[] | Error}> {
     try {
-      const response: SparqlDatasetResponse = await this.fetchDataset(dataset);
-      console.debug("loaded " + dataset.id + " data", response);
+      const response: SparqlDatasetResponse = await this.fetchDataset(datasetId);
+      console.debug(`loaded ${datasetId} data`, response);
 
-      return { dataset: {id: dataset.id,
-                         name: dataset.name,
-                         endpoint: response.meta?.endpoint ?? '',
-                         dgu: response?.meta?.default_graph_uri ?? '',
-                         query: response?.meta?.query ?? ''},
+      return { id: datasetId,
+               meta: {endpoint: response.meta?.endpoint ?? '',
+                      default_graph_uri: response?.meta?.default_graph_uri ?? '',
+                      query: response?.meta?.query ?? ''},
                data: [...response.data] };
     }
     catch(e) {
       const error = e instanceof Error? e : new Error(String(e));
-      return { dataset: dataset, data: error};
+      return { id: datasetId, data: error};
     }    
   }
   
@@ -257,19 +263,19 @@ export class SparqlDataLoader implements DataLoader {
   //
   // The query is defined in the relevant dataset directory's `query.rq` file.
   //
-  // @param dataset - the name of one of the configured datasets, or true to get all of them.
+  // @param datasetId - the ID of one of the configured datasets
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  // The data should be an object with the properties:
+  // The data should be a SparqlDatasetResponse object with the properties:
   // - `data`: [Array] list of inititive definitions, each a map of field names to values
   // - `meta`: [Object] a map of the following information:
   //    - `endpoint`: [String] the SPARQL endpoint queried 
   //    - `query`: [String] the SPARQL query used
   //    - `default_graph_uri`: [String] the default graph URI for the query (which
   //       is expected to self-resolve to the dataset's index webpage)
-  async fetchDataset(dataset: Dataset): Promise<SparqlDatasetResponse> {
+  async fetchDataset(datasetId: string): Promise<SparqlDatasetResponse> {
 
-    let service = `${this.serviceUrl}?dataset=${encodeURIComponent(dataset.id)}`;
+    let service = `${this.serviceUrl}?dataset=${encodeURIComponent(datasetId)}`;
 
     if (!this.useCache) {
       service += "&noLodCache=true";
