@@ -6,7 +6,7 @@ import type { Config } from './config';
 import type { DialogueSize } from './config_schema';
 
 import type {
-  Dataset,
+  DatasetMeta,
   DataConsumer,
   DataLoader,
 } from './dataloader';
@@ -24,6 +24,7 @@ import {
 
 import {
   SparqlDataLoader,
+  SparqlDatasetMeta,
 } from './sparqldataloader';
 
 import {
@@ -64,7 +65,7 @@ interface Filter {
   initiatives: Initiative[];
 }
 interface DatasetMap {
-  [id: string]: Dataset;    
+  [id: string]: DatasetMeta;    
 }
 export interface InitiativeObj {
   uri: string;
@@ -255,11 +256,8 @@ export interface DataServices {
 
   // Load datasets as defined by the list given.
   //
-  // Note that the dataset instances only need name and id fields set,
-  // the others should be '', and will be filled in on completion.
-  //
   // dataAggregator and vocabs should be available on completion
-  loadDatasets(datasets: Dataset[]): Promise<void>;
+  loadDatasets(datasetIds: string[]): Promise<void>;
 
   // Reloads the active data set (or sets)
   //
@@ -308,15 +306,17 @@ export class DataServicesImpl implements DataServices {
           this.config.namedDatasets().length == this.config.namedDatasetsVerbose().length) ?
         this.config.namedDatasetsVerbose()
         : [];
-      
+
+      const s: SparqlDatasetMeta = {id: '', name: '', default_graph_uri: '', query: '', endpoint: ''}
+      let d: DatasetMeta  = s
       if (dsNamed.length == this.allDatasets.length)
         this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
           id: x, name: dsNamed[i], endpoint: '', dgu: '', query: ''
-        });
+        } as SparqlDatasetMeta);
       else
         this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
           id: x, name: x, endpoint: '', dgu: '', query: ''
-        });
+        } as SparqlDatasetMeta);
     }
 
     {
@@ -522,30 +522,26 @@ export class DataServicesImpl implements DataServices {
   // The vocabs are always loaded.
   async loadData() {
     // Active datasets indicated internally through `currentDatasets`
-    let datasetNames: string[] = [];
+    let datasetIds: string[] = [];
 
     if (this.currentDatasets === true) {
       console.log("reset: loading all datasets ", this.config.namedDatasets());
-      datasetNames = this.config.namedDatasets();
+      datasetIds = this.config.namedDatasets();
     }
     else if (this.allDatasets.includes(this.currentDatasets as string)) {
       console.log("reset: loading dataset '" + this.currentDatasets + "'");
-      datasetNames = [this.currentDatasets as string]
+      datasetIds = [this.currentDatasets as string]
     }
     else {
       console.log("reset: no matching dataset '" + this.currentDatasets + "'");
     }
 
-    const datasets = datasetNames.map(id => this.verboseDatasets[id]);
-
-    await this.loadDatasets(datasets);
+    await this.loadDatasets(datasetIds);
   }
 
   // Load datasets as defined by the list given.
   //
-  // Note that the dataset instances only need name and id fields set,
-  // the others should be '', and will be filled in on completion.
-  async loadDatasets(datasets: Dataset[]) {
+  async loadDatasets(datasetIds: string[]) {
 
     // Load the vocabs first, then on success, load the
     // initiatives. Handlers defined below.
@@ -598,7 +594,7 @@ export class DataServicesImpl implements DataServices {
           eventbus.publish({ topic: "Initiative.datasetLoaded" });
         }
       }
-      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator, onDataset);
+      this.aggregatedData = await dataLoader.loadDatasets(datasetIds, aggregator, onDataset);
       
       eventbus.publish({ topic: "Initiative.complete" });
     }

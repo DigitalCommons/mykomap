@@ -12,12 +12,9 @@ import {
 } from './dataservices';
 
 // Defines properties of a dataset which can be loaded.
-export interface Dataset {
+export interface DatasetMeta {
   id: string;
   name: string;
-  endpoint: string;
-  dgu: string;
-  query: string;
 }
 
 // For loading InitiativeObj data incrementally
@@ -69,7 +66,7 @@ export class AggregatedData {
 export interface DataLoader {
   // Asynchronously load the datasets given, using the dataConsumer .
   //
-  // @param [Dataset[]] datasets - an array of incomplete dataset objects (only id and name fields required)
+  // @param [string[]] datasetIds - an array of dataset IDs
   // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
   // @param onDataset - a callback to invoke when each dataset loads (or fails)
   //
@@ -78,6 +75,10 @@ export interface DataLoader {
   //
   // @returns a promise containing the dataConsumer which resolves when all
   // datasets are fully loaded and processed by the consumer
-  loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T,
+  //
+  // @throws [Error] when an unrecoverable error occurs, which may or
+  // may not be associated with a dataset. Errors which are
+  // recoverable are indicated by calling the onData callback.
+  loadDatasets<T extends DataConsumer>(datasetIds: string[], dataConsumer: T,
                                        onDataset?: (id: string, error?: Error) => void): Promise<T>;
 }

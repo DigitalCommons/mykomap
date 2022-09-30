@@ -26,6 +26,8 @@ function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string
     ini.regorg = "https://example.com/organisational-structure/"+regorg;
   if (ea)
     ini.primaryActivity = "https://example.com/economic-activity/"+ea;
+
+  // Note that this is an *array* of values, as this field allows multiple values.
   if (sa)
     ini.secondaryActivities = sa.map(a => "https://example.com/economic-activity/"+a);
   
