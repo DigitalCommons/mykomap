@@ -9,7 +9,7 @@
     "deploy_group": "www-data"
   },
   "engines": {
-    "npm": ">=6.5.0",
+    "npm": ">=8.15.0",
     "node": ">=15.0.0"
   },
   "bin": {
