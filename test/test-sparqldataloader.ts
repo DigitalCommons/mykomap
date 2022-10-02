@@ -25,6 +25,9 @@ import {
   SparqlDataLoader,
 } from '../www/map-app/app/model/sparqldataloader';
 
+import {
+  TestConsumer,
+} from './testconsumer';
 
 use(chaiAsPromised);
 
@@ -56,26 +59,10 @@ const cannedData = {
 
 const datasetIds = ['testDataset1', 'testDataset2'];
 const dataLoaders = datasetIds.map(id => new SparqlDataLoader(id, serviceUrl));
-class TestConsumer implements DataConsumer {
-  constructor(readonly ids: string[], readonly data: InitiativeObj[] = []) { }
-  isComplete: boolean = false;
-  addBatch(id: string, initiatives: InitiativeObj[]) {
-    assert(this.ids.includes(id));
-    this.data.push(...initiatives);
-  };
-  complete(id: string) {
-    assert(this.ids.includes(id));
-    this.isComplete = true;
-  };
-  fail(id: string, error: Error) {
-    assert(this.ids.includes(id));
-    assert(false);
-  };
-};
 
 const urlQueries = datasetIds.map(id => `?dataset=${id}&noLodCache=true`);
 const scope = nock(serviceUrl)
-  .persist()
+  .persist();
 
 urlQueries.forEach(query => scope.get(query).reply(200, cannedData));
 
