@@ -69,10 +69,11 @@ const vocabs = new VocabServiceImpl(cannedVocabs, 'EN');
 // the server with a dataset name.
 
 const cannedData = require('./cannedData.json');
+const datasetId = 'testDataset';
 const dataservices = new DataServicesImpl(config, {'EN': {contact: 'Contact'}});
 const aggregator = new SparqlDataAggregator(config, fieldSchema, vocabs, {});
-aggregator.addBatch(cannedData.data);
-aggregator.complete();
+aggregator.addBatch(datasetId, cannedData.data);
+aggregator.complete(datasetId);
 
 dataservices.vocabs = vocabs; // Hack this into place
 dataservices.aggregatedData = aggregator; // Hack this into place

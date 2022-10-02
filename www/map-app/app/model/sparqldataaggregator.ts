@@ -32,30 +32,39 @@ const eventbus = require('../eventbus');
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
-export class SparqlDataAggregator extends AggregatedData implements DataConsumer {
-  
-  private readonly config: Config;
-  private readonly propertySchema: PropDefs;
-  private readonly vocabs: VocabServices;
+export class SparqlDataAggregator extends AggregatedData implements DataConsumer {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
-  private readonly labels: Dictionary<string>;
 
-  constructor(config: Config, propertySchema: PropDefs, vocabs: VocabServices, labels: Dictionary<string>) {
+  constructor(
+    private readonly config: Config,
+    private readonly propertySchema: PropDefs,
+    private readonly vocabs: VocabServices,
+    private readonly labels: Dictionary<string>,
+    public onSetComplete?: (datasetId: string) => void,
+    public onSetFail?: (datasetId: string, error: Error) => void)
+  {
     super();
-    this.config = config;
-    this.propertySchema = propertySchema;
-    this.vocabs = vocabs;
     this.paramBuilder = this.mkBuilder(vocabs);
     this.labels = labels;
   }
 
-  addBatch(initiatives: InitiativeObj[]): void {
+  addBatch(datasetId: string, initiatives: InitiativeObj[]): void {
     initiatives
       .forEach(elem => this.onData(elem));
   }
+
+  complete(datasetId: string) {
+    if (this.onSetComplete)
+      this.onSetComplete(datasetId);
+  }
+  
+  fail(datasetId: string, error: Error) {
+    if (this.onSetFail)
+      this.onSetFail(datasetId, error);
+  }
   
   // Finishes the load after all data has been seen.
-  complete() {
+  allComplete() {
     // Loop through the filters and sort them data, then sort the keys in order
     // Sorts only the filterable fields, not the initiatives they hold.
     // Populate vocabFilteredFields.
