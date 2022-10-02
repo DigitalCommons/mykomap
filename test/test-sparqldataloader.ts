@@ -54,29 +54,36 @@ const cannedData = {
   ]
 };
 
-const datasetId = 'testDataset';
-const dataLoader = new SparqlDataLoader(datasetId, serviceUrl);
+const datasetIds = ['testDataset1', 'testDataset2'];
+const dataLoaders = datasetIds.map(id => new SparqlDataLoader(id, serviceUrl));
 class TestConsumer implements DataConsumer {
-  constructor(readonly id: string, readonly data: InitiativeObj[] = []) { }
+  constructor(readonly ids: string[], readonly data: InitiativeObj[] = []) { }
   isComplete: boolean = false;
-  addBatch(id: string, initiatives: InitiativeObj[]) { assert(id === this.id); this.data.push(...initiatives) };
-  complete(id: string) { assert(id === this.id); this.isComplete = true };
-  fail(id: string, error: Error) { assert(id === this.id); assert(false); };
+  addBatch(id: string, initiatives: InitiativeObj[]) {
+    assert(this.ids.includes(id));
+    this.data.push(...initiatives);
+  };
+  complete(id: string) {
+    assert(this.ids.includes(id));
+    this.isComplete = true;
+  };
+  fail(id: string, error: Error) {
+    assert(this.ids.includes(id));
+    assert(false);
+  };
 };
 
-const consumer = new TestConsumer(datasetId);
-
-const urlQuery = `?dataset=${consumer.id}&noLodCache=true`;
+const urlQueries = datasetIds.map(id => `?dataset=${id}&noLodCache=true`);
 const scope = nock(serviceUrl)
   .persist()
-  .get(urlQuery)
-  .reply(200, cannedData);
+
+urlQueries.forEach(query => scope.get(query).reply(200, cannedData));
 
 // Finally, the tests
 describe('SparqlDataLoader', async () => {
   
   it('check d3.json alone works', () => {    
-    return json(serviceUrl + urlQuery)
+    return json(serviceUrl + urlQueries[0])
       .then(result => {
         expect(result)
           .to.deep.equal(cannedData);
@@ -84,16 +91,18 @@ describe('SparqlDataLoader', async () => {
   });
 
   it('check other URLs are rejected', () => {    
-    return expect(json(serviceUrl + `?dataset=${consumer.id}&noLodCache=false`))
+    return expect(json(serviceUrl + `?dataset=${datasetIds[0]}&noLodCache=false`))
       .to.be.rejected;
   });
 
   it('one simple dataset', () => {
+    const consumer = new TestConsumer([datasetIds[0]]);
+
 
     expect(consumer.data).to.deep.equal([]);
     expect(consumer.isComplete).to.equal(false);
     
-    return loadDatasets([dataLoader], consumer)
+    return loadDatasets([dataLoaders[0]], consumer)
       .then(result => {
         expect(result.data)
           .to.deep.equal(cannedData.data);
@@ -102,5 +111,20 @@ describe('SparqlDataLoader', async () => {
       });
   });
 
+  it('more than one dataset', () => {
+    // The test consumer will just concatenate all the datasets together as they arrive...
+    const consumer = new TestConsumer(datasetIds);
+
+    expect(consumer.data).to.deep.equal([]);
+    expect(consumer.isComplete).to.equal(false);
+    
+    return loadDatasets(dataLoaders, consumer)
+      .then(result => {
+        expect(result.data)
+          .to.deep.equal(cannedData.data.concat(cannedData.data)); // ...hence this works
+        expect(result.isComplete)
+          .to.equal(true);
+      });
+  });
 });
 
