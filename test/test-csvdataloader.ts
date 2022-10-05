@@ -27,6 +27,7 @@ import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
 import { Dictionary } from '../www/map-app/common_types';
 import {
   CsvDataLoader,
+  FieldSpec,
 } from '../www/map-app/app/model/csvdataloader';
 import {
   TestConsumer,
@@ -139,7 +140,12 @@ const cannedData2 = [
 
 const datasetIds = ['testDataset1', 'testDataset2', 'badDataset', 'error'];
 
-const dataLoaders = datasetIds.map(id => new CsvDataLoader(id, `${serviceUrl}/${id}.csv`));
+
+// This is the basic standard.csv field mapping to SPARQL query parameters.
+// May vary from dataset to dataset!
+const baseUri = 'http://dev.lod.coop/owned-by-oxford/';
+
+const dataLoaders = datasetIds.map(id => new CsvDataLoader(id, `${serviceUrl}/${id}.csv`, fieldMap));
 
 
 const urlQueries = dataLoaders.map(dl => dl.url.replace(serviceUrl, ''));
