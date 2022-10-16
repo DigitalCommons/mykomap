@@ -28,8 +28,6 @@ import {
   VocabServices,
 } from './vocabs';
 
-const eventbus = require('../eventbus');
-
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
 export class SparqlDataAggregator extends AggregatedData implements DataConsumer {  
@@ -40,6 +38,7 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
     private readonly propertySchema: PropDefs,
     private readonly vocabs: VocabServices,
     private readonly labels: Dictionary<string>,
+    public onItemComplete?: (initiative: Initiative) => void,
     public onSetComplete?: (datasetId: string) => void,
     public onSetFail?: (datasetId: string, error: Error) => void)
   {
@@ -264,8 +263,8 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
     // Insert the initiative into initiativesByUid
     this.initiativesByUid[initiative.uri] = initiative;
 
-    // Broadcast the creation of the initiative
-    eventbus.publish({ topic: "Initiative.new", data: initiative });
+    // Report the completion
+    this.onItemComplete?.(initiative);
   }
   
   private insert(element: any, array: any[]) {

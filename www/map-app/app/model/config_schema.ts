@@ -54,7 +54,13 @@ class TypeDef<T> {
   parseString?: (val: string) => T;
 };
 
-export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[];
+export interface DataSource {
+  id: string;
+  type: string;
+  label: string;
+};
+
+export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[]|DataSource[];
 export type TypeDefs = { readonly [key: string]: TypeDef<ConfigTypes> }
 
 export interface ReadableConfig {
@@ -64,6 +70,7 @@ export interface ReadableConfig {
   elem_id(): string;
   fields(): Dictionary<PropDef | PropDef['type']>;
   getCustomPopup(): InitiativeRenderFunction | undefined;
+  getDataSources(): DataSource[];
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
@@ -145,6 +152,11 @@ export class ConfigData {
   aboutHtml: string = '';
   attr_namespace: string = '';
   customPopup?: InitiativeRenderFunction;
+  dataSources: DataSource[] = [{
+    id: 'default',
+    type: 'hostSparql',
+    label: 'Default Set',
+  }];
   defaultLatLng: Point2d = [0, 0];
   defaultOpenSidebar: boolean = false;
   dialogueSize: DialogueSize = {
@@ -332,6 +344,11 @@ const types = {
       'a default graph URI, and an index of vocabulary URIs to their prefixes - '+
       'which must be unique to the whole array.',
   }),
+  dataSources: new TypeDef<DataSource[]>({
+    name: '{DataSource[]}',
+    descr: 'An array of data source definitions, defining the type, ID, and in certain cases '+
+      'other source-secific parameters needed for the source type',  
+  }),
 };
 
 
@@ -430,6 +447,12 @@ export class Config implements ReadableConfig, WritableConfig {
           "initiative's marker",
         getter: 'getCustomPopup',
         type: types.initiativeRenderFunction,
+      },
+      dataSources: {
+        id: 'dataSources',
+        descr: 'A list of data-source definitions',
+        getter: 'getDataSources',
+        type: types.dataSources,
       },
       defaultLatLng: {
         id: 'defaultLatLng',
@@ -855,6 +878,10 @@ ${def.descr}
 
   fields() {
     return this._fields;
+  }
+
+  getDataSources(): DataSource[] {
+    return this.data.dataSources;
   }
   
   getDefaultLatLng(): Point2d {

@@ -630,6 +630,10 @@ export class DataServicesImpl implements DataServices {
       const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
       const dataLoaders = datasets.map(id => new SparqlDataLoader(id, getDatasetPhp, !noCache));
 
+      const onItemComplete = (initiative: Initiative) => {
+        // Broadcast the creation of the initiative
+        eventbus.publish({ topic: "Initiative.new", data: initiative });
+      };
       const onSetComplete = (id: string) => {
         // Publish completion event
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
@@ -640,14 +644,13 @@ export class DataServicesImpl implements DataServices {
           data: { error: error, dataset: id }
         });
       };
- 
       
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new SparqlDataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
-        onSetComplete, onSetFail
+        onItemComplete, onSetComplete, onSetFail
       );
 
       eventbus.publish({
