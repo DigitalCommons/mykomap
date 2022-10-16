@@ -54,7 +54,7 @@ class TypeDef<T> {
   parseString?: (val: string) => T;
 };
 
-export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d;
+export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[];
 export type TypeDefs = { readonly [key: string]: TypeDef<ConfigTypes> }
 
 export interface ReadableConfig {
