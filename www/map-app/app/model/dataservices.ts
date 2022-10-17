@@ -226,8 +226,7 @@ export interface DataServices {
   //
   // Where:
   //
-  // - `name` is the long name from `namedDatasetsVerbose` if available,
-  //   else just the identifier is used)
+  // - `label` is the display name for the dataset.
   // - `loader` is a dataset loader instance
   //
   getDatasets(): DatasetMap;
