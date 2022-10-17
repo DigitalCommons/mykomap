@@ -1,11 +1,11 @@
 import {
-  DatasetMeta,
   DataLoader,
   DataConsumer,
   AggregatedData,
 } from './dataloader';
 
 import {
+  DatasetMeta,
   InitiativeObj,
 } from './dataservices';
 
@@ -19,9 +19,6 @@ export interface SparqlMeta {
   endpoint?: string;
   default_graph_uri?: string;
   query?: string;
-}
-
-export interface SparqlDatasetMeta extends SparqlMeta, DatasetMeta {
 }
 
 interface SparqlDatasetResponse {
