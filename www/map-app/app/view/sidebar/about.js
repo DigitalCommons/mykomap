@@ -70,7 +70,7 @@ function init(registry) {
       .enter()
       .append('li')
       .append('a')
-      .text(d => d.name)
+      .text(d => d.label)
       .attr('href', d => d.dgu.replace(/\/*$/, '/')) // ensure URI has trailing slash, needed for lod.coop
       .attr('target', '_blank');
 

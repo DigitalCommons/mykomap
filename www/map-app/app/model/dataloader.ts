@@ -11,12 +11,6 @@ import {
   sortInitiatives,
 } from './dataservices';
 
-// Defines properties of a dataset which can be loaded.
-export interface DatasetMeta {
-  id: string;
-  name: string;
-}
-
 // For loading InitiativeObj data incrementally
 //
 // A variety of the visitor pattern. The details of what is done by the
