@@ -98,8 +98,6 @@ export interface ReadableConfig {
   getVersionTag(): string;
   htmlTitle(): string;
   logo(): string | undefined;
-  namedDatasets(): string[];
-  namedDatasetsVerbose(): string[];
   vocabularies(): VocabSource[];
 };
 
@@ -181,8 +179,6 @@ export class ConfigData {
   maxZoomOnGroup: number = 18;
   maxZoomOnOne: number = 18;
   maxZoomOnSearch: number = 18;
-  namedDatasets: string[] = [];
-  namedDatasetsVerbose: string[] = [];
   noLodCache: boolean = true;
   seaMapVersion: string = '0';
   searchedFields: string[] = ['name'];
@@ -595,20 +591,6 @@ export class Config implements ReadableConfig, WritableConfig {
         setter: 'setMaxZoomOnSearch',
         type: types.int,
       },
-      namedDatasets: {
-        id: 'namedDatasets',
-        descr: 'A list of names that correspond to directories in www/services, which must contain ' +
-          'default-graph-uri.txt, endpoint.txt, query.rq.',
-        getter: 'namedDatasets',
-        type: types.arrayOfString,
-      },
-      namedDatasetsVerbose: {
-        id: 'namedDatasetsVerbose',
-        descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets' +
-          ' or this will not be used',
-        getter: 'namedDatasetsVerbose',
-        type: types.arrayOfString,
-      },
       noLodCache: {
         id: 'noLodCache',
         descr: `Responses to SPARQL queries will normally be cached in /services/locCache.txt `+
@@ -795,7 +777,6 @@ Here is an example of what you might put in this file:
 
 \`\`\`
  {
-  "namedDatasets": ["oxford"],
   "htmlTitle": "Solidarity Oxford",
   "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
@@ -965,12 +946,6 @@ ${def.descr}
   }
   logo(): string | undefined {
     return this.data.logo;
-  }
-  namedDatasets(): string[] {
-    return this.data.namedDatasets;
-  }
-  namedDatasetsVerbose(): string[] {
-    return this.data.namedDatasetsVerbose;
   }
   vocabularies(): VocabSource[] {
     return this.data.vocabularies;
