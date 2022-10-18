@@ -80,6 +80,10 @@ export interface DataLoader {
   // @throws [Error] when an error occurs, which will be a
   // DataLoaderError when associated with a dataset.
   load<T extends DataConsumer>(dataConsumer: T): Promise<this>;
+
+  // Subtypes of this class can expose metadata discovered during the load here
+  // (possibly suitably narrowed)
+  meta?: unknown;
 }
 
 // A DataLoader error which can be connected to a particular dataset loader.

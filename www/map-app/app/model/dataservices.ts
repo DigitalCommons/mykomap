@@ -70,8 +70,9 @@ interface Filter {
 }
 
 export interface DatasetMeta {
+  type: string;
   label: string;
-  loader: DataLoader;
+  loader: DataLoader; // Subtypes of loaders can expose metadata under .meta
 };
 type DatasetMap = Dictionary<DatasetMeta>;
 
@@ -368,6 +369,7 @@ export class DataServicesImpl implements DataServices {
         switch(ds.type) {
           case 'hostSparql':
             this.datasets[ds.id] = {
+              type: ds.type,
               label: ds.label,
               loader: new SparqlDataLoader(ds.id, getDatasetPhp, !noCache),
             };
