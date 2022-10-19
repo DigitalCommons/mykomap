@@ -33,6 +33,14 @@ import type {
   VocabSource
 } from './vocabs';
 
+import type {
+  ObjTransformFunc,
+} from '../../obj-transformer';
+
+import type {
+  InitiativeObj,
+} from './dataservices';
+
 class TypeDef<T> {
   constructor(params: {
     name: string;
@@ -60,7 +68,23 @@ export interface DataSource {
   label: string;
 };
 
-export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[]|DataSource[];
+export interface HostSparqlDataSource extends DataSource {
+  type: 'hostSparql';
+}
+
+
+type Row = Record<string, string|null|undefined>;
+type CsvTransformerFunc = ObjTransformFunc<Row, InitiativeObj>;
+
+export interface CsvDataSource extends DataSource {
+  type: 'csv';
+  url: string;
+  transform: CsvTransformerFunc;
+}
+
+export type AnyDataSource = HostSparqlDataSource | CsvDataSource;
+
+export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[]|AnyDataSource[];
 export type TypeDefs = { readonly [key: string]: TypeDef<ConfigTypes> }
 
 export interface ReadableConfig {
@@ -70,7 +94,7 @@ export interface ReadableConfig {
   elem_id(): string;
   fields(): Dictionary<PropDef | PropDef['type']>;
   getCustomPopup(): InitiativeRenderFunction | undefined;
-  getDataSources(): DataSource[];
+  getDataSources(): AnyDataSource[];
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
@@ -150,7 +174,7 @@ export class ConfigData {
   aboutHtml: string = '';
   attr_namespace: string = '';
   customPopup?: InitiativeRenderFunction;
-  dataSources: DataSource[] = [{
+  dataSources: AnyDataSource[] = [{
     id: 'default',
     type: 'hostSparql',
     label: 'Default Set',
@@ -340,8 +364,8 @@ const types = {
       'a default graph URI, and an index of vocabulary URIs to their prefixes - '+
       'which must be unique to the whole array.',
   }),
-  dataSources: new TypeDef<DataSource[]>({
-    name: '{DataSource[]}',
+  dataSources: new TypeDef<AnyDataSource[]>({
+    name: '{AnyDataSource[]}',
     descr: 'An array of data source definitions, defining the type, ID, and in certain cases '+
       'other source-secific parameters needed for the source type',  
   }),
@@ -861,7 +885,7 @@ ${def.descr}
     return this._fields;
   }
 
-  getDataSources(): DataSource[] {
+  getDataSources(): AnyDataSource[] {
     return this.data.dataSources;
   }
   
