@@ -42,6 +42,7 @@ const getDatasetPhp = require("../../../services/get_dataset.php");
 const eventbus = require('../eventbus');
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
+import { CsvDataLoader } from './csvdataloader';
 
 export class Initiative {
   //  This is used for associating internal data, like map markers
@@ -374,8 +375,15 @@ export class DataServicesImpl implements DataServices {
               loader: new SparqlDataLoader(ds.id, getDatasetPhp, !noCache),
             };
             break;
+          case 'csv':
+            this.datasets[ds.id] = {
+              type: ds.type,
+              label: ds.label,
+              loader: new CsvDataLoader(ds.id, ds.url, ds.transform),
+            };
+            break;
           default:
-            throw new Error(`Unknown dataset type '${ds.type}'`);
+            throw new Error(`Unknown dataset type '${(ds as any)?.type}'`);
         }
       });
     }
