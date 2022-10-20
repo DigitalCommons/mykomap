@@ -227,6 +227,10 @@ export function webRun(window: Window, base_config: ConfigData): void {
   
   const view = registry('view') as { init: () => void };
   const dataServices = registry('model/dataservices') as DataServices;
+
+  // Expose the data for debugging
+  /// @ts-ignore
+  window.dataServices = dataServices
   
   // Each view will ensure that the code for its presenter is loaded.
   view.init();
