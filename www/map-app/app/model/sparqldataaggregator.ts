@@ -50,7 +50,7 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
 
   addBatch(datasetId: string, initiatives: InitiativeObj[]): void {
     initiatives
-      .forEach(elem => this.onData(elem));
+      .forEach(elem => this.onData(elem, datasetId));
   }
 
   complete(datasetId: string) {
@@ -192,7 +192,7 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
   // So these are equivalent:
   // - { uri: 'xxx', multivalue: 1 }
   // - { uri: 'xxx', multivalue: [1] }
-  private onData(props: InitiativeObj) {
+  private onData(props: InitiativeObj, datasetId: string) {
     // Not all initiatives have activities
 
     const searchedFields = this.config.getSearchedFields();
@@ -205,6 +205,9 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
 
     const initiative = new Initiative();
     
+    // Set the dataset id
+    props.dataset = datasetId;
+
     // Define and initialise the instance properties.
     Object.entries(this.propertySchema).forEach(entry => {
       const [propertyName, propDef] = entry;
