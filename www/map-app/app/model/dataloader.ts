@@ -58,8 +58,6 @@ export class AggregatedData {
 
 // For loading Datsets using a DataConsumer
 //
-// This is explicitly intended to construct an instance of AggregatedData,
-// which is returned via the promise.
 export interface DataLoader {
 
   // Get the dataset ID this dataloader handles
@@ -75,7 +73,7 @@ export interface DataLoader {
   // dataConsumer.fail()
   //
   // @returns a promise containing the dataConsumer which resolves when all
-  // datasets are fully loaded and processed by the consumer
+  // data are fully loaded and processed by the consumer
   //
   // @throws [Error] when an error occurs, which will be a
   // DataLoaderError when associated with a dataset.
