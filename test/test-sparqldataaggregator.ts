@@ -10,7 +10,7 @@ import {
   DataServices,
   basePropertySchema
 } from '../www/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
+import { VocabIndex, VocabServiceImpl, SparqlVocabResponse } from '../www/map-app/app/model/vocabs';
 import { Dictionary } from '../www/map-app/common_types';
 
 // Makes a dummy InitiativeObj
@@ -41,7 +41,7 @@ const config = new Config({
 });
 
 // The Vocabs (just has a couple of kinds)
-const vocabIndex: VocabIndex = {
+const vocabIndex: SparqlVocabResponse = {
   "prefixes": {
     "https://example.com/organisational-structure/": "os",
     "https://example.com/economic-activity/": "ea"
