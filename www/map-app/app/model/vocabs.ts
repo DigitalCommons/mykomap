@@ -38,6 +38,12 @@ export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse 
   return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
 }
 
+export function isVocabIndex(value: any): value is VocabIndex {
+  if (typeof(value) !== 'object')
+    return false;
+  return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
+}
+
 // Supplies query functions for a VocabIndex
 export interface VocabServices {
   // Gets the fallBackLanguage used
