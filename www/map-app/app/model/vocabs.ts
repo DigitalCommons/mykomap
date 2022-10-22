@@ -1,16 +1,6 @@
 import type { Dictionary } from '../../common_types';
 import type { Initiative, PropDefs, PropDef } from './dataservices';
 
-interface VocabMeta {
-  languages: string[];
-  queries: string[];
-  vocab_srcs: {
-    defaultGraphUri: string;
-    endpoint: string;
-    uris: { [uri: string]: string };
-  }[];
-}
-
 export interface Vocab {
   title: string;
   terms: Dictionary;
@@ -20,13 +10,29 @@ export interface LocalisedVocab {
   [lang: string]: Vocab;
 }
 
+interface SparqlVocabMeta {
+  languages: string[];
+  queries: string[];
+  vocab_srcs: {
+    defaultGraphUri: string;
+    endpoint: string;
+    uris: { [uri: string]: string };
+  }[];
+}
+
 export interface VocabIndex {
   abbrevs: Dictionary;
-  meta: VocabMeta;
+  meta: SparqlVocabMeta;
   prefixes: Dictionary;
-  vocabs: { [prefix: string]: LocalisedVocab };
+  vocabs: Record<string, LocalisedVocab>;
 }
-export function isVocabIndex(value: any): value is VocabIndex {
+
+export type SparqlVocabResponse = VocabIndex & {
+  meta: SparqlVocabMeta;
+}
+
+
+export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse {
   if (typeof(value) !== 'object')
     return false;
   return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 

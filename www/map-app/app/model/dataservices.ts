@@ -21,10 +21,10 @@ import {
 import {
   Vocab,
   VocabServices,
-  VocabIndex,
   LocalisedVocab,
   VocabServiceImpl,
-  isVocabIndex,
+  SparqlVocabResponse,
+  isSparqlVocabResponse,
 } from './vocabs';
 
 import {
@@ -675,7 +675,7 @@ export class DataServicesImpl implements DataServices {
   // The list is defined in `config.json`
   //
   // @return the response data wrapped in a promise, direct from d3.json.
-  private async loadVocabs(): Promise<VocabIndex> {
+  private async loadVocabs(): Promise<SparqlVocabResponse> {
     const result = json(getVocabsPhp, {
       method: 'POST',
       body: JSON.stringify({
@@ -684,8 +684,8 @@ export class DataServicesImpl implements DataServices {
       }),
       headers: { 'content-type': 'application/json; charset=UTF-8' },
     });
-    if (isVocabIndex(result))
-      return result as VocabIndex;
+    if (isSparqlVocabResponse(result))
+      return result as SparqlVocabResponse;
 
     throw new Error(`Invalid JSON result returned by vocab endpoint at ${getVocabsPhp}`);
   }
