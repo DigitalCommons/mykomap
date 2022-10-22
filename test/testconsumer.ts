@@ -8,7 +8,7 @@ import {
   assert
 } from 'chai';
 
-export class TestConsumer implements DataConsumer {
+export class TestConsumer implements DataConsumer<InitiativeObj> {
   constructor(readonly ids: string[], readonly data: InitiativeObj[] = []) { }
   isComplete: boolean = false;
   errors: Error[] = [];
