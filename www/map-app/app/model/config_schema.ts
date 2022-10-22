@@ -787,6 +787,7 @@ export class Config implements ReadableConfig, WritableConfig {
     }
 
     // Make sure the fields all reference a known vocab
+    /* FIXME this no longer works - can we check it later?
     for(const fieldId in this._fields ?? {}) {
       let field = this._fields[fieldId];
       if (field === undefined)
@@ -811,7 +812,7 @@ export class Config implements ReadableConfig, WritableConfig {
           throw error;
         }
       }
-    } 
+    }*/ 
   }
 
   // This generates the documentation for this schema, in Markdown

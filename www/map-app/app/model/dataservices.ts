@@ -23,6 +23,10 @@ import {
 } from './sparqlvocabloader';
 
 import {
+  JsonVocabLoader,
+} from './jsonvocabloader';
+
+import {
   Vocab,
   VocabIndex,
   VocabServices,
@@ -384,7 +388,14 @@ export class DataServicesImpl implements DataServices {
             break;
 
           case 'json':
-            // ?? FIXME
+            this.vocabLoaders[vs.id] = {
+              type: vs.type,
+              label: vs.label,
+              loader: new JsonVocabLoader(
+                vs.id,
+                vs.url,
+              ), 
+            };
             break;
 
           default:
