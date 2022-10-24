@@ -125,10 +125,6 @@ const vocabIndex: VocabIndex = {
          }
       },
     },
-  },
-  "abbrevs": {
-    "os": "https://example.com/organisational-structure/",
-    "ea": "https://example.com/economic-activity/"
   }
 };
 // A vocab service
