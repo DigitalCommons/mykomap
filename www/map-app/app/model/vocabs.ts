@@ -251,12 +251,12 @@ export class VocabServiceImpl implements VocabServices {
   }
 
   getLocalisedVocabs(language: string): LocalisedVocab {
-    const vocabLang = this.vocabs.vocabs["aci:"][language] ? language : this.fallBackLanguage;
-
     let verboseValues: LocalisedVocab = {};
 
     for (const id in this.vocabs.vocabs) {
-      verboseValues[id] = this.vocabs.vocabs[id][vocabLang];
+      const vocab = this.vocabs.vocabs[id];
+      if (vocab)
+        verboseValues[id] = vocab[language] ?? vocab[this.fallBackLanguage];
     }
 
     return verboseValues;
