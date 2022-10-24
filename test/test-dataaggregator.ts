@@ -1,7 +1,7 @@
 
 import { expect } from 'chai';
 
-import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
+import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
 import { Config } from '../www/map-app/app/model/config';
 import {
   PropDefs,
@@ -196,7 +196,7 @@ function stripInitiatives1(items: Dictionary<Dictionary<Initiative[]>>) {
 
 // Function which does the aggregation of data:
 function aggregate(id: string, data: InitiativeObj[]) {
-  const dataAggregator = new SparqlDataAggregator(config, propertySchema, vocabs, labels);
+  const dataAggregator = new DataAggregator(config, propertySchema, vocabs, labels);
   dataAggregator.addBatch(id, data);
   dataAggregator.complete(id);
   return dataAggregator;
@@ -209,7 +209,7 @@ function registeredValues(data: InitiativeObj[]) {
 
 
 // Finally, the tests
-describe('SparqlDataAggregator', () => {
+describe('DataAggregator', () => {
   
   describe('should generate the correct registeredValues', () => {
 

@@ -42,8 +42,8 @@ import {
 } from './sparqldataloader';
 
 import {
-  SparqlDataAggregator,
-} from './sparqldataaggregator';
+  DataAggregator,
+} from './dataaggregator';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
@@ -687,7 +687,7 @@ export class DataServicesImpl implements DataServices {
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
-      const aggregator = new SparqlDataAggregator(
+      const aggregator = new DataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
         onItemComplete, onSetComplete, onSetFail
       );

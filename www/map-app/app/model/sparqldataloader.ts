@@ -133,7 +133,7 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
   // nulls or undefineds, which need to be interpreted downstream as
   // empty lists, not a list of a single undefined.
   //
-  // The SparqlDataAggregator then turns these objects into
+  // The DataAggregator then turns these objects into
   // Initiatives in one step. This makes it simpler to switch to a
   // source which is not coming from sparql (like a CSV).  It also
   // means, at a pinch, that this algorithm can still consume the old
