@@ -5,7 +5,7 @@ const config = configBuilder();
 import { Dictionary } from '../www/map-app/common_types';
 import { DataServicesImpl, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
 import { VocabServiceImpl } from '../www/map-app/app/model/vocabs';
-import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
+import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
 
 import { getPopup } from '../www/map-app/app/view/map/default_popup';
 const expectedContent = require('./expected/popups/default.json');
@@ -71,7 +71,7 @@ const vocabs = new VocabServiceImpl(cannedVocabs, 'EN');
 const cannedData = require('./cannedData.json');
 const datasetId = 'testDataset';
 const dataservices = new DataServicesImpl(config, {'EN': {contact: 'Contact'}});
-const aggregator = new SparqlDataAggregator(config, fieldSchema, vocabs, {});
+const aggregator = new DataAggregator(config, fieldSchema, vocabs, {});
 aggregator.addBatch(datasetId, cannedData.data);
 aggregator.complete(datasetId);
 

@@ -30,7 +30,7 @@ import {
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
-export class SparqlDataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
+export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
 
   constructor(
@@ -155,7 +155,7 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
       // Enusre we are dealing with an array. Promote non-arrays into an array
       //
       // FIXME should we actually throw an error? No- not for now,
-      // because the sparqldataloader cannot currently infer a
+      // because the dataloader cannot currently infer a
       // multivalue into an array when there is only one record, not
       // multiple. But the plan is to address this later.
       let ary: any[] = params[paramName];
