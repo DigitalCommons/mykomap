@@ -388,12 +388,13 @@ export class DataServicesImpl implements DataServices {
             break;
 
           case 'json':
+            const url = vs.url.match('^ */')? window.location.origin+vs.url : vs.url;
             this.vocabLoaders[vs.id] = {
               type: vs.type,
               label: vs.label,
               loader: new JsonVocabLoader(
                 vs.id,
-                vs.url,
+                url,
               ), 
             };
             break;
@@ -424,10 +425,11 @@ export class DataServicesImpl implements DataServices {
             };
             break;
           case 'csv':
+            const url = ds.url.match('^ */')? window.location.origin+ds.url : ds.url;
             this.datasets[ds.id] = {
               type: ds.type,
               label: ds.label,
-              loader: new CsvDataLoader(ds.id, ds.url, ds.transform),
+              loader: new CsvDataLoader(ds.id, url, ds.transform),
             };
             break;
           default:
