@@ -79,10 +79,6 @@ export interface VocabServices {
   // available, or the fallBackLanguage if not.
   getVerboseValuesForFields(language: string): Dictionary<Dictionary>;
 
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  // Returns '?' if there is no value found
-  getVocabTerm(vocabUri: string, termUri: string, language: string): string;
-
   // Gets a localised map of vocab titles to the relevant vocab
   // prefixes (in the given language). (May be empty or only partially
   // populated!)
