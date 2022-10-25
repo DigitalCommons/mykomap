@@ -4,7 +4,6 @@ import type {
 
 import type {
   Initiative,
-  InitiativeObj,
 } from './dataservices';
 
 import {
