@@ -1,5 +1,3 @@
-import type { Dictionary } from '../../common_types';
-
 import {
   DataLoader,
   DataConsumer,
@@ -7,19 +5,10 @@ import {
 
 import {
   InitiativeObj,
-  PropDef,
-  PropDefs,
 } from './dataservices';
 
 import {
-  Config,
-} from './config';
-
-import {
-  ObjTransform,
   ObjTransformFunc,
-  mkObjTransformer,
-  Transforms as T,
 } from '../../obj-transformer';
 
 import {
@@ -32,25 +21,26 @@ import {
 } from "papaparse";
 
 
+// Loads map pins from CSV data
 export class CsvDataLoader<R extends object = string[]> implements DataLoader<InitiativeObj> {
   constructor(readonly id: string, readonly url: string, readonly rowTransform: ObjTransformFunc<R,InitiativeObj>) {}
   
   load(dataConsumer: DataConsumer<InitiativeObj>): Promise<this> {
-    const executor = (resolve: (v: this | PromiseLike<this>) => void , reject: (r?: any) => void) => {
-      const onStep = (result: ParseStepResult<R>, parser: PapaParser) => {
-        if (result.errors.length == 0) {
-          // console.debug("CsvDataLoader step", results.data);
-          const initiative = this.rowTransform(result.data);
-          dataConsumer.addBatch(this.id, [initiative])
-        }
-        else {
-          // console.debug("CsvDataLoader step error", results.errors);
+	  const executor = (resolve: (v: this | PromiseLike<this>) => void , reject: (r?: any) => void) => {
+	    const onStep = (result: ParseStepResult<R>, _: PapaParser) => {
+		    if (result.errors.length == 0) {
+		      // console.debug("CsvDataLoader step", results.data);
+		      const initiative = this.rowTransform(result.data);
+		      dataConsumer.addBatch(this.id, [initiative])
+		    }
+		    else {
+		      // console.debug("CsvDataLoader step error", results.errors);
           result.errors
             .filter((e): e is ParseError => !!e)
             .forEach(e => reject(e));
         }
       };
-      const onComplete = (results: ParseResult<R>) => {
+      const onComplete = (_: ParseResult<R>) => {
         // console.debug("CsvDataLoader complete", results);
         resolve(this);
       };
