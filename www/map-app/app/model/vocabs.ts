@@ -69,6 +69,11 @@ export interface VocabServices {
   // or only partially populated!)
   getLocalisedVocabs(language: string): LocalisedVocab;
 
+  // Gets a vocab term from the (possibly abbreviated) URI in the given language
+  // Falls back to the default fall-back language if no language given, or
+  // the term is not localised in that language
+  getTerm(termUri: string, language?: string): string;
+  
   // Construct the object of terms for advanced search
   //
   // Returns a Dictionary of localised vocab titles, to Dictionaries
@@ -218,6 +223,30 @@ export class VocabServiceImpl implements VocabServices {
     }
 
     return localVocab;
+  }
+
+  // Gets a vocab term from the (possibly abbreviated) URI in the given language
+  // Falls back to the default fall-back language if no language given, or
+  // the term is not localised in that language
+  getTerm(termUri: string, language?: string) {
+    language ??= this.fallBackLanguage;
+    termUri = this.abbrevUri(termUri);
+    
+    const [prefix, id] = termUri.split(':', 2);
+    const vocab = this.vocabs.vocabs[prefix]?.[language];
+    
+    let term = vocab?.terms?.[termUri];
+    if (term !== undefined)
+      return term;
+
+    // Fall back to the default language if none found in the target language
+    term = this.vocabs.vocabs[prefix]?.[this.fallBackLanguage]?.terms?.[termUri];
+    if (term !== undefined)
+      return term;
+
+    // Even the fallback failed! 
+    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
+    return '?';
   }
   
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
