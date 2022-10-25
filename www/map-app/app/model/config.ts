@@ -6,17 +6,9 @@
  * It returns an object with accessor methods for obtaining configured data.
  */
 
-//"use strict";
-
-import { Point2d, Box2d } from '../../common_types';
 import {
-  ConfigTypes,
-  ConfigSchemas,
   ConfigData,
   Config,
-  ReadableConfig,
-  WritableConfig,
-  DialogueSize
 } from './config_schema';
 
 export { ConfigData, Config };
