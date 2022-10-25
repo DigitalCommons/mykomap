@@ -1,7 +1,6 @@
 import type { Dictionary } from '../../common_types';
 import type { Initiative, PropDefs, PropDef } from './dataservices';
 import type { DataConsumer } from './dataloader';
-import type { VocabSource, HostSparqlVocabSource } from './config_schema';
 
 export interface Vocab {
   title: string;
