@@ -5,7 +5,6 @@ import type { Registry } from '../registries';
 import type { Config } from './config';
 import type {
   DialogueSize,
-  DataSource,
 } from './config_schema';
 
 import type {
@@ -32,9 +31,6 @@ import {
   VocabServices,
   VocabAggregator,
   LocalisedVocab,
-  VocabServiceImpl,
-  SparqlVocabResponse,
-  isSparqlVocabResponse,
 } from './vocabs';
 
 import {
