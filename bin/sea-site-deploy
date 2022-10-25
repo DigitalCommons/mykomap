@@ -60,6 +60,12 @@
 #
 
 # Get the defaults
+for val in user group to; do
+    # Work around the loss of the ability for .npmrc to override
+    # npm_package_config_* environment variables:
+    # https://github.com/npm/rfcs/blob/main/implemented/0021-reduce-lifecycle-script-environment.md
+    export "npm_package_config_deploy_$val=$(npm config get sea-map:deploy_$val)"
+done
 deploy_user=${npm_package_config_deploy_user:?No config.deploy_user setting in package.json}
 deploy_group=${npm_package_config_deploy_group:?No config.deploy_group setting in package.json}
 deploy_from=build/out/
