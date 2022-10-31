@@ -11,6 +11,7 @@ import {
 export class TestConsumer implements DataConsumer {
   constructor(readonly ids: string[], readonly data: InitiativeObj[] = []) { }
   isComplete: boolean = false;
+  errors: Error[] = [];
   addBatch(id: string, initiatives: InitiativeObj[]) {
     assert(this.ids.includes(id));
     this.data.push(...initiatives);
@@ -21,6 +22,6 @@ export class TestConsumer implements DataConsumer {
   };
   fail(id: string, error: Error) {
     assert(this.ids.includes(id));
-    assert(false);
+    this.errors.push(error);
   };
 };
