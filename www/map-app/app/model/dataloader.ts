@@ -12,12 +12,9 @@ import {
 } from './dataservices';
 
 // Defines properties of a dataset which can be loaded.
-export interface Dataset {
+export interface DatasetMeta {
   id: string;
   name: string;
-  endpoint: string;
-  dgu: string;
-  query: string;
 }
 
 // For loading InitiativeObj data incrementally
@@ -26,10 +23,13 @@ export interface Dataset {
 // consumer is abstracted, and so up to the implementation.
 export interface DataConsumer {
   // Add a batch of data. May be called multiple times.
-  addBatch(initiatives: InitiativeObj[]): void;
+  addBatch(datasetId: string, initiatives: InitiativeObj[]): void;
 
-  // Finishes the load after all data has been seen.
-  complete(): void;
+  // Finishes the load successfully after all data has been seen
+  complete(datasetId: string): void;
+
+  // Finishes the load unsuccessfully after an error occurs  
+  fail(datasetId: string, error: Error): void;
 }
 
 export class AggregatedData {
@@ -67,17 +67,31 @@ export class AggregatedData {
 // This is explicitly intended to construct an instance of AggregatedData,
 // which is returned via the promise.
 export interface DataLoader {
-  // Asynchronously load the datasets given, using the dataConsumer .
+
+  // Get the dataset ID this dataloader handles
+  get id(): string;
+  
+  // Asynchronously load the dataset given, passing it to the dataConsumer.
   //
-  // @param [Dataset[]] datasets - an array of incomplete dataset objects (only id and name fields required)
-  // @param [T] dataConsumer - a DataConsumer object to feed the data to incrementally.
-  // @param onDataset - a callback to invoke when each dataset loads (or fails)
+  // @param [T] dataConsumer - a DataConsumer object to feed the data
+  // to incrementally.
   //
-  // Individual datasets' success or failure is signalled via
-  // onDataset.
+  // Individual datasets' success is signalled by callng
+  // dataConsumer.complete(), and failure is signalled via
+  // dataConsumer.fail()
   //
   // @returns a promise containing the dataConsumer which resolves when all
   // datasets are fully loaded and processed by the consumer
-  loadDatasets<T extends DataConsumer>(datasets: Dataset[], dataConsumer: T,
-                                       onDataset?: (id: string, error?: Error) => void): Promise<T>;
+  //
+  // @throws [Error] when an error occurs, which will be a
+  // DataLoaderError when associated with a dataset.
+  load<T extends DataConsumer>(dataConsumer: T): Promise<this>;
 }
+
+// A DataLoader error which can be connected to a particular dataset loader.
+export class DataLoaderError<T extends DataLoader> extends Error {
+  constructor(message: string, readonly loader: T) {
+    super(message);
+  }
+}
+

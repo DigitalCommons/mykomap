@@ -6,12 +6,15 @@ import type { Config } from './config';
 import type { DialogueSize } from './config_schema';
 
 import type {
-  Dataset,
+  DatasetMeta,
   DataConsumer,
   DataLoader,
 } from './dataloader';
 
-import { AggregatedData } from './dataloader';
+import {
+  AggregatedData,
+  DataLoaderError,
+} from './dataloader';
 
 import {
   Vocab,
@@ -24,6 +27,7 @@ import {
 
 import {
   SparqlDataLoader,
+  SparqlDatasetMeta,
 } from './sparqldataloader';
 
 import {
@@ -64,7 +68,7 @@ interface Filter {
   initiatives: Initiative[];
 }
 interface DatasetMap {
-  [id: string]: Dataset;    
+  [id: string]: DatasetMeta;    
 }
 export interface InitiativeObj {
   uri: string;
@@ -255,11 +259,8 @@ export interface DataServices {
 
   // Load datasets as defined by the list given.
   //
-  // Note that the dataset instances only need name and id fields set,
-  // the others should be '', and will be filled in on completion.
-  //
   // dataAggregator and vocabs should be available on completion
-  loadDatasets(datasets: Dataset[]): Promise<void>;
+  loadDatasets(datasetIds: string[]): Promise<void>;
 
   // Reloads the active data set (or sets)
   //
@@ -267,6 +268,60 @@ export interface DataServices {
   // Otherwise, only the dataset with a matching name is loaded (if any).
   reset(dataset: string): Promise<void>;
 }
+
+// Loads zero or more datasets incrementally using the supplied dataLoaders.
+//
+// Data is passed to the given consumer, and its complete or fail
+// methods called approriately on success or failure.
+//
+// @returns a promise which resolves to the consumer parameter on
+// success, or an Error object on failure.
+export async function loadDatasets<T extends DataConsumer>(dataLoaders: DataLoader[], consumer: T): Promise<T> {
+
+  // Launch the dataset loaders asynchronously, obtaining an map
+  // dataset ids to promises for the appropriate dataset loader
+  let outstanding = Object.fromEntries(
+    dataLoaders.map(ds => [ds.id, ds.load(consumer)])
+  );
+
+  // Process the data as it arrives, in chunks    
+  while(Object.keys(outstanding).length > 0) {
+    try {
+      // Await for the next loader
+      const loader = await Promise.any(Object.values(outstanding));
+
+      // A dataset has completed
+      delete outstanding[loader.id];
+      consumer.complete(loader.id);
+    }    
+    catch(e) {
+      if (e instanceof DataLoaderError) {
+        console.error(`loading dataset ${e.loader.id} failed:`, e);
+
+        delete outstanding[e.loader.id];
+        consumer.fail(e.loader.id, e);
+      }
+      else {
+        // We don't know which dataset caused an error without a
+        // DataLoaderError.  In this case we must assume that the
+        // outstanding promises may not get resolved, and abort
+        // (otherwise one or more datasets are unresolvable and we get
+        // into an infinite loop).
+        
+        // Ensure we have an error instance to rethrow
+        const error = e instanceof Error? e : new Error();
+        console.error(
+          error.message =
+            `loading datasets failed, no information which dataset at fault, aborting all: ${e}`
+        );
+        throw error;
+      }
+    }
+  }
+
+  return consumer;
+}
+
 
 // Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
@@ -308,15 +363,17 @@ export class DataServicesImpl implements DataServices {
           this.config.namedDatasets().length == this.config.namedDatasetsVerbose().length) ?
         this.config.namedDatasetsVerbose()
         : [];
-      
+
+      const s: SparqlDatasetMeta = {id: '', name: '', default_graph_uri: '', query: '', endpoint: ''}
+      let d: DatasetMeta  = s
       if (dsNamed.length == this.allDatasets.length)
         this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
           id: x, name: dsNamed[i], endpoint: '', dgu: '', query: ''
-        });
+        } as SparqlDatasetMeta);
       else
         this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
           id: x, name: x, endpoint: '', dgu: '', query: ''
-        });
+        } as SparqlDatasetMeta);
     }
 
     {
@@ -522,30 +579,26 @@ export class DataServicesImpl implements DataServices {
   // The vocabs are always loaded.
   async loadData() {
     // Active datasets indicated internally through `currentDatasets`
-    let datasetNames: string[] = [];
+    let datasetIds: string[] = [];
 
     if (this.currentDatasets === true) {
       console.log("reset: loading all datasets ", this.config.namedDatasets());
-      datasetNames = this.config.namedDatasets();
+      datasetIds = this.config.namedDatasets();
     }
     else if (this.allDatasets.includes(this.currentDatasets as string)) {
       console.log("reset: loading dataset '" + this.currentDatasets + "'");
-      datasetNames = [this.currentDatasets as string]
+      datasetIds = [this.currentDatasets as string]
     }
     else {
       console.log("reset: no matching dataset '" + this.currentDatasets + "'");
     }
 
-    const datasets = datasetNames.map(id => this.verboseDatasets[id]);
-
-    await this.loadDatasets(datasets);
+    await this.loadDatasets(datasetIds);
   }
 
   // Load datasets as defined by the list given.
   //
-  // Note that the dataset instances only need name and id fields set,
-  // the others should be '', and will be filled in on completion.
-  async loadDatasets(datasets: Dataset[]) {
+  async loadDatasets(datasetIds: string[]) {
 
     // Load the vocabs first, then on success, load the
     // initiatives. Handlers defined below.
@@ -572,33 +625,40 @@ export class DataServicesImpl implements DataServices {
     try {
       // Note, caching currently doesn't work correctly with multiple data sets
       // so until that's fixed, don't use it in that case.
-      const numDatasets = this.config.namedDatasets().length;
+      const datasets = this.config.namedDatasets();
+      const numDatasets = datasets.length;
       const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
-      const dataLoader = new SparqlDataLoader(getDatasetPhp, !noCache);
+      const dataLoaders = datasets.map(id => new SparqlDataLoader(id, getDatasetPhp, !noCache));
+
+      const onSetComplete = (id: string) => {
+        // Publish completion event
+        eventbus.publish({ topic: "Initiative.datasetLoaded" });
+      };
+      const onSetFail = (id: string, error: Error) => {
+        eventbus.publish({
+          topic: "Initiative.loadFailed",
+          data: { error: error, dataset: id }
+        });
+      };
+ 
       
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
-      const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
+      const aggregator = new SparqlDataAggregator(
+        this.config, this.propertySchema, this.vocabs, labels,
+        onSetComplete, onSetFail
+      );
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
 
-      const onDataset = (id: string, error?: Error) => {
-        if (error) {
-          eventbus.publish({
-            topic: "Initiative.loadFailed",
-            data: { error: error, dataset: id }
-          });
-        }
-        else {
-          // Publish completion event
-          eventbus.publish({ topic: "Initiative.datasetLoaded" });
-        }
-      }
-      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator, onDataset);
+      await loadDatasets(dataLoaders, aggregator);
+      aggregator.allComplete(); // finish the aggregation
+      
+      this.aggregatedData = aggregator;
       
       eventbus.publish({ topic: "Initiative.complete" });
     }
