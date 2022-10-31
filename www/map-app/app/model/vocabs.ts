@@ -13,7 +13,7 @@ interface VocabMeta {
 
 export interface Vocab {
   title: string;
-  terms?: Dictionary;
+  terms: Dictionary;
 }
 
 export interface LocalisedVocab {
@@ -25,6 +25,11 @@ export interface VocabIndex {
   meta: VocabMeta;
   prefixes: Dictionary;
   vocabs: { [prefix: string]: LocalisedVocab };
+}
+export function isVocabIndex(value: any): value is VocabIndex {
+  if (typeof(value) !== 'object')
+    return false;
+  return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
 }
 
 export interface VocabSource {
@@ -106,6 +111,9 @@ export class VocabServiceImpl implements VocabServices {
       .sort((a, b) => b.length - a.length)
       .forEach(prefix => {
         const abbrev = this.vocabs.prefixes[prefix];
+        if (!abbrev)
+          throw new Error(`VocabIndex used for VocabServiceImpl has an undefined abbreviation for prefix '${prefix}'`);
+        
         abbrevs[abbrev] = prefix;
         prefixes[prefix] = abbrev;
       });
@@ -156,19 +164,30 @@ export class VocabServiceImpl implements VocabServices {
 
     for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
+      if (!initiative)
+        continue;
 
       for (const vocabID in vocabFilteredFields) {
+        const propName = vocabFilteredFields[vocabID];
+        if (!propName)
+          continue;
+        
+        const id = initiative[propName];
+        if (!id)
+          continue;
+
         vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
 
         const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-        const propName = vocabFilteredFields[vocabID];
-        const id = initiative[propName];
+        
+        
         const propDef = propertySchema[propName];
         if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
 
-        // Currently still keeping the output data strucutre the same, so use id not term
-        if (!usedTerms[vocabTitle][id] && id)
-          usedTerms[vocabTitle][id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+        // Currently still keeping the output data structure the same, so use id not term
+        const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
+        if (!temp[id])
+          temp[id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
       }
     }
 
