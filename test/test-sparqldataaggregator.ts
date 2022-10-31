@@ -26,6 +26,8 @@ function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string
     ini.regorg = "https://example.com/organisational-structure/"+regorg;
   if (ea)
     ini.primaryActivity = "https://example.com/economic-activity/"+ea;
+
+  // Note that this is an *array* of values, as this field allows multiple values.
   if (sa)
     ini.secondaryActivities = sa.map(a => "https://example.com/economic-activity/"+a);
   
@@ -193,16 +195,16 @@ function stripInitiatives1(items: Dictionary<Dictionary<Initiative[]>>) {
 
 
 // Function which does the aggregation of data:
-function aggregate(data: InitiativeObj[]) {
+function aggregate(id: string, data: InitiativeObj[]) {
   const dataAggregator = new SparqlDataAggregator(config, propertySchema, vocabs, labels);
-  dataAggregator.addBatch(data);
-  dataAggregator.complete();
+  dataAggregator.addBatch(id, data);
+  dataAggregator.complete(id);
   return dataAggregator;
 }
 
 // Function which aggregates, then returns stripped registeredValues
 function registeredValues(data: InitiativeObj[]) {
-  return stripInitiatives1(aggregate(data).registeredValues);
+  return stripInitiatives1(aggregate('testDataset', data).registeredValues);
 }
 
 
