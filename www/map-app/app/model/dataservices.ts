@@ -3,13 +3,15 @@
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
+import type { DialogueSize } from './config_schema';
 
 import type {
   Dataset,
   DataConsumer,
   DataLoader,
-  DataAggregator,
 } from './dataloader';
+
+import { AggregatedData } from './dataloader';
 
 import {
   VocabServices,
@@ -27,6 +29,8 @@ import {
 } from './sparqldataaggregator';
 
 import { json } from 'd3';
+
+const getDatasetPhp = require("../../../services/get_dataset.php");
 
 const eventbus = require('../eventbus');
 const getVocabsPhp = require("../../../services/get_vocabs.php");
@@ -81,11 +85,13 @@ export interface VocabPropDef {
 }
 export interface CustomPropDef {
   type: 'custom'
+  from?: string;
   builder: (id: string, def: CustomPropDef, params: InitiativeObj) => any;
 }
 export interface MultiPropDef {
   type: 'multi';
   of: PropDef;
+  from?: string;
 }
 
 export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;
@@ -96,50 +102,193 @@ export function sortInitiatives(a: Initiative, b: Initiative) {
   return a.name.localeCompare(b.name);
 }
 
-export class DataServices {
+// Implement the latitude/longitude fall-back logic for InitiativeObj.
+//
+// Creates a function which interprets a field of an InitiativeObj
+// (the param in question) as a numeric latitude or longitude value
+// (or undefined if this fails).  This works for string field values
+// as well as numeric ones.
+//
+// Additionally, if manLat *and* manLng are defined in the
+// InitiativeObj (and numeric or numeric strings, but not "0"), use
+// the field named by overrideParam. This will typically be manLat
+// or manLng, allowing these fields to override the original field,
+// whatever it is.
+function mkLocFromParamBuilder(from: string, overrideParam: string) {
+  return (id: string, def: CustomPropDef, params: InitiativeObj) => {
+    let param = params[from];
+
+    // Overwrite with manually added lat lng if present For
+    // historical reasons, "0" counts as undefined (meaning, use
+    // lat/lng), cos it used to mean this in the old wonky data.
+    if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
+      'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
+      param = params[overrideParam];
+    }
+
+    // Ensure param is a number
+    if (isNaN(Number.parseFloat(param)))
+      return undefined;
+
+    // Preserve undefs/nulls/empty strings as undefined 
+    if (param === undefined || param === null || param === "")
+      return undefined;
+
+    return Number(param);
+  };
+}
+
+
+// Define the properties in an initiative and how to manage them.
+//
+// - paramName: the name of the constructor paramter property. Not necessarily unique.
+// - init: a function to initialise the property, called with this property's schema
+//   definition and a parameters object.
+// - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
+//
+export const basePropertySchema = Object.freeze({
+  uri: {
+    type: 'value',
+    as: 'string',
+  },
+  name: {
+    type: 'value',
+    as: 'string',
+  },
+  lat: {
+    type: 'custom',
+    builder: mkLocFromParamBuilder('lat', 'manLat'),
+  },
+  lng: {
+    type: 'custom',
+    builder: mkLocFromParamBuilder('lng', 'manLng'),
+  },
+  dataset: {
+    type: 'value',
+    as: 'string',
+  },
+  // Note: a searchstr property is also inserted to Initiatives during construction
+  // Special-cased as it potentially depends on the contents all other properties.
+  // (Actual list defined by config.getSearchedFields())
+} as PropDefs);
+
+
+
+export interface DataServices {
+
+  // Gets an AggregatedData value, which may be empty of data if
+  // the data isn't ready yet.
+  getAggregatedData(): AggregatedData;
+  
+  //// vocab proxies
+  getLocalisedVocabs(): LocalisedVocab;
+  
+  getVerboseValuesForFields(): void;
+
+  getVocabTerm(vocabUri: string, termUri: string): string;
+
+  getVocabTitlesAndVocabIDs(): Dictionary;
+  
+  getVocabForProperty(id: string, propDef: PropDef): void;
+  
+
+  //// Wraps both dataAggregator and vocabs
+  
+  getTerms(): Record<string, Partial<Record<string, string>>>;
+
+
+  //// non-proxies
+
+  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[];
+
+  // Get the current dataset, or true
+  //
+  // True means all available datasets from config are loaded
+  // otherwise a string to indicate which dataset is loaded
+  getCurrentDatasets(): string | true;
+
+  // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
+  //
+  // This description is a map of values, which looks like:
+  //
+  //     { id: [String], name: [String], endpoint: [String],
+  //       dgu: [String], query: [String] }
+  //
+  // Where:
+  //
+  // - `id` is the dataset identifier (same as the key)
+  // - `name` is the long name from `namedDatasetsVerbose` if available,
+  //   else just the identifier is used)
+  // - `query` is the SPARQL query used to obtain it
+  // - `dgu` is the default graph URI used for this query
+  // - `endpoint` is the SPARQL endpoint queried
+  //
+  getDatasets(): DatasetMap;
+
+  getDialogueSize(): DialogueSize;
+
+  // Gets the functional labels for the current language (obtained via getLanguage)
+  getFunctionalLabels(): Dictionary<string>;
+
+  // Gets the current language set in the config (or the fallback language if unset)
+  getLanguage(): string;
+  
+  //get an array of possible filters from  a list of initiatives
+  getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
+
+  getPropertySchema(propName: string): PropDef | undefined;
+  
+  getSidebarButtonColour(): string;
+
+  // requires dataAggregator
+  latLngBounds(initiatives: Initiative[]): Box2d;
+
+  // Loads the currently active dataset(s) and configured vocabs
+  //
+  // This may be all of the datasets, or just a single selected one.
+  // The vocabs are always loaded.
+  //
+  // dataAggregator and vocabs should be available on completion
+  loadData(): Promise<void>;
+
+  // Load datasets as defined by the list given.
+  //
+  // Note that the dataset instances only need name and id fields set,
+  // the others should be '', and will be filled in on completion.
+  //
+  // dataAggregator and vocabs should be available on completion
+  loadDatasets(datasets: Dataset[]): Promise<void>;
+
+  // Reloads the active data set (or sets)
+  //
+  // @param dataset - if boolean `true`, then all datasets will be loaded.
+  // Otherwise, only the dataset with a matching name is loaded (if any).
+  reset(dataset: string): Promise<void>;
+}
+
+// Implements the DataServices interface
+export class DataServicesImpl implements DataServices {
   readonly config: Config;
   readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
   readonly verboseDatasets: DatasetMap = {};
-  readonly dataLoader: DataLoader;
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   
-  // Define the properties in an initiative and how to manage them. Note, thanks to JS
-  // variable hoisting semantics, we can reference initialiser functions below, if they are
-  // normal functions.
-  //
-  // - paramName: the name of the constructor paramter property. Not necessarily unique.
-  // - init: a function to initialise the property, called with this property's schema
-  //   definition and a parameters object.
-  // - vocabUri: a legacy look-up key in `vocabs.vocabs`, needed when the initialiser is `fromCode`.
-  //
-  static readonly basePropertySchema: PropDefs = {
-    uri: { type: 'value', as: 'string' },
-    name: { type: 'value', as: 'string' },
-    lat: { type: 'custom', builder: DataServices.mkLocFromParam('lat', 'manLat') },
-    lng: { type: 'custom', builder: DataServices.mkLocFromParam('lng', 'manLng') },
-    dataset: { type: 'value', as: 'string' },
-    // Note: a searchstr property is also inserted to Initiatives during construction
-    // Special-cased as it potentially depends on the contents all other properties.
-    // (Actual list defined by config.getSearchedFields())
-  };
-
   // The per-instance propert schema, which can be extended by configuration.
-  readonly propertySchema: PropDefs = { ...DataServices.basePropertySchema };
+  readonly propertySchema: PropDefs = { ...basePropertySchema };
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
-  vocabs: VocabServices | undefined = undefined;
-  dataAggregator: DataAggregator | undefined = undefined;
-  cachedLatLon: Box2d | undefined = undefined;
+  vocabs?: VocabServices = undefined;
+  aggregatedData: AggregatedData = new AggregatedData();
+  cachedLatLon?: Box2d = undefined;
 
   // true means all available datasets from config are loaded
   // otherwise a string to indicate which dataset is loaded
-  currentDatasets: string | boolean = true;
+  currentDatasets: string | true = true;
   
   constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
     this.config = config;
     this.allDatasets = config.namedDatasets();
-    this.dataLoader = new SparqlDataLoader(this.config);
     this.functionalLabels = functionalLabels;
     
     {
@@ -194,11 +343,8 @@ export class DataServices {
     }
   }
 
-
-  getAllRegisteredValues(): Dictionary<Initiative[]> {
-    if (!this.dataAggregator)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.allRegisteredValues;
+  getAggregatedData(): AggregatedData {
+    return this.aggregatedData;
   }
 
   getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[] {
@@ -223,7 +369,7 @@ export class DataServices {
 
     //find the initiative variable associated with the field
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    const initiativeVariable = this.getVocabFilteredFields()[vocabID];
+    const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
 
     //loop through the initiatives and get the possible values for the initiative variable
     let alternatePossibleFilterValues: Initiative[] = [];
@@ -234,9 +380,7 @@ export class DataServices {
     return alternatePossibleFilterValues;
   }
   
-  getCurrentDatasets(): string | boolean {
-    // @returns eiter true (if all datasets are enabled) or the identifier of a the
-    // currently selected dataset.
+  getCurrentDatasets(): string | true {
     return this.currentDatasets;
   }
 
@@ -268,33 +412,15 @@ export class DataServices {
     else
       return dialogueSize;
   }
-  
+
   getFunctionalLabels() {
     return this.functionalLabels[this.getLanguage()];
   }
   
-  getInitiativeByUniqueId(uid: string): Initiative | undefined {
-    if (!this.dataAggregator)
-      return undefined; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.initiativesByUid[uid];
-  }
-
-  getInitiativeUIDMap(): { [id: string]: Initiative; } {
-    if (!this.dataAggregator)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.initiativesByUid;
-  }
-
   getLanguage(): string {
     return this.config.getLanguage() || this.fallBackLanguage;
   }
   
-  getLoadedInitiatives(): Initiative[] {
-    if (!this.dataAggregator)
-      return [];  // Data has not yet been loaded.  Some dependencies call this early!
-    return this.dataAggregator.loadedInitiatives;
-  }
-
   getLocalisedVocabs(): LocalisedVocab {
     return this?.vocabs.getLocalisedVocabs(this.getLanguage());
   }
@@ -303,7 +429,7 @@ export class DataServices {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
-    const vocabFilteredFields = this.getVocabFilteredFields();
+    const vocabFilteredFields = this.aggregatedData.vocabFilteredFields;
 
     filteredInitiatives.forEach(initiative => {
       for (const vocabID in vocabFilteredFields) {
@@ -321,33 +447,22 @@ export class DataServices {
     return this.propertySchema[propName];
   }
   
-  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
-    if (!this.dataAggregator)
-      return {}; // Data has not yet been aggregated.  Some dependencies call this early!
-    return this.dataAggregator.registeredValues;
-  }
-
   getSidebarButtonColour(): string {
     return this.config.getSidebarButtonColour();
   }
 
   getTerms(): Record<string, Partial<Record<string, string>>> {
-    if (!this.dataAggregator)
-      throw new Error("Can't getTerms. Data has not yet been aggregated.");
-    return this?.vocabs.getTerms(this.getLanguage(),
-                                 this.dataAggregator.vocabFilteredFields,
-                                 this.dataAggregator.initiativesByUid,
-                                 this.propertySchema); 
+    if (!this.vocabs)
+      return {};
+
+    return this.vocabs.getTerms(this.getLanguage(),
+                                this.aggregatedData.vocabFilteredFields,
+                                this.aggregatedData.initiativesByUid,
+                                this.propertySchema); 
   }
   
   getVerboseValuesForFields() {
     return this?.vocabs.getVerboseValuesForFields(this.getLanguage());
-  }
-  
-  getVocabFilteredFields(): Dictionary {
-    if (!this.dataAggregator)
-      throw new Error("Can't getVocabFilteredFields. Data has not yet been aggregated.");
-    return this.dataAggregator.vocabFilteredFields;
   }
   
   getVocabTerm(vocabUri: string, termUri: string): string {
@@ -356,16 +471,6 @@ export class DataServices {
 
   getVocabTitlesAndVocabIDs(): Dictionary {
     return this?.vocabs.getVocabTitlesAndVocabIDs(this.getLanguage());
-  }
-  
-  // Kept around for API back-compat as courtesy to popup.js, remove next breaking change.
-  getVocabUriForProperty(name: string): string {
-    if (!this.dataAggregator)
-      throw new Error("Can't add initiatives. Data has not yet been aggregated.");
-    const propDef = this.getPropertySchema(name);
-    if (propDef.type === 'vocab')
-      return propDef.uri;
-    throw new Error(`property ${name} is not a vocab property`);
   }
   
   getVocabForProperty(id: string, propDef: PropDef) {
@@ -381,10 +486,10 @@ export class DataServices {
       return this.cachedLatLon;
     }
 
-    const lats = (initiatives || this.dataAggregator.loadedInitiatives)
+    const lats = (initiatives || this.aggregatedData.loadedInitiatives)
                    .filter((obj: Initiative) => obj.lat !== null && !isNaN(obj.lat))
                    .map((obj: Initiative) => obj.lat);
-    const lngs = (initiatives || this.dataAggregator.loadedInitiatives)
+    const lngs = (initiatives || this.aggregatedData.loadedInitiatives)
                    .filter((obj: Initiative) => obj.lng !== null && !isNaN(obj.lng))
                    .map((obj: Initiative) => obj.lng);
     const west = Math.min.apply(Math, lngs);
@@ -436,29 +541,59 @@ export class DataServices {
       
       console.log("loaded vocabs", response);
 
-      this.setVocab(response, this.getLanguage());
+      this.vocabs = new VocabServiceImpl(response, this.getLanguage());
+      
+      eventbus.publish({ topic: "Vocabularies.loaded" });
+    }
+    catch(error) {
+      this.vocabs = undefined;
+      
+      console.error("vocabs load failed", error);
+
+      eventbus.publish({
+        topic: "Vocabularies.loadFailed",
+        data: { error: error }
+      });
+    }
+
+    try {
+      // Note, caching currently doesn't work correctly with multiple data sets
+      // so until that's fixed, don't use it in that case.
+      const numDatasets = this.config.namedDatasets().length;
+      const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
+      const dataLoader = new SparqlDataLoader(getDatasetPhp, !noCache);
+      
       const labels = this.functionalLabels[this.config.getLanguage()];
-      const dataAggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
-      this.dataAggregator = undefined;
+      const aggregator = new SparqlDataAggregator(this.config, this.propertySchema, this.vocabs, labels);
 
       eventbus.publish({
         topic: "Initiative.loadStarted",
         data: { message: "Started loading data" }
       });
-      
-      await this.dataLoader.loadDatasets(
-        datasets,
-        dataAggregator
-      );
 
-      this.dataAggregator = dataAggregator;
+      const onDataset = (id: string, error?: Error) => {
+        if (error) {
+          eventbus.publish({
+            topic: "Initiative.loadFailed",
+            data: { error: error, dataset: id }
+          });
+        }
+        else {
+          // Publish completion event
+          eventbus.publish({ topic: "Initiative.datasetLoaded" });
+        }
+      }
+      this.aggregatedData = await dataLoader.loadDatasets(datasets, aggregator, onDataset);
+      
       eventbus.publish({ topic: "Initiative.complete" });
     }
     catch(error) {
-      console.error("vocabs load failed", error);
+      this.aggregatedData = new AggregatedData();
+      
+      console.error("data load failed", error);
 
       eventbus.publish({
-        topic: "Vocabularies.loadFailed",
+        topic: "Initiative.loadFailed",
         data: { error: error }
       });
     }
@@ -484,12 +619,12 @@ export class DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  reset(dataset: string): void {
+  async reset(dataset: string) {
     // If the dataset is the same as that currently selected, nothing to do
     if (dataset === this.currentDatasets)
       return;
 
-    this.dataAggregator = undefined;
+    this.aggregatedData = new AggregatedData();
 
     //publish reset to map markers
     eventbus.publish({
@@ -498,63 +633,14 @@ export class DataServices {
     });
 
     this.currentDatasets = dataset;
-    this.loadData();
-  }
-  
-  search(text: string): Initiative[] {
-    if (!this.dataAggregator)
-      return [];
-    // returns an array of sse objects whose name contains the search text
-    var up = text.toUpperCase();
-    return this.dataAggregator.loadedInitiatives.filter(
-      (i: Initiative) => i.searchstr.includes(up)
-    ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
-  }
-
-  setVocab(data: VocabIndex, fallBackLanguage: string): void {
-    this.vocabs = new VocabServiceImpl(data, fallBackLanguage);
-    eventbus.publish({ topic: "Vocabularies.loaded" });
-  }
-
-  static mkLocFromParam(from: string, overrideParam: string) {
-    function isAlpha(str: string): boolean {
-      if (!str) return false;
-
-      for (let i = 0, len = str.length; i < len; i++) {
-        const code = str.charCodeAt(i);
-        if (!(code > 64 && code < 91) && // upper alpha (A-Z)
-          !(code > 96 && code < 123)) { // lower alpha (a-z)
-          return false;
-        }
-      }
-      return true;
-    }
-    return (id: string, def: CustomPropDef, params: InitiativeObj) => {
-      let param = params[from];
-      
-      // Overwrite with manually added lat lng if present
-      if (params.manLat && params.manLat != "0" ||
-        params.manLng && params.manLng != "0") {
-        param = params[overrideParam];
-      }
-    
-      // Ensure param is a number
-      if (isAlpha(param))
-        return undefined;
-
-      // Preserve undefs
-      if (param === undefined)
-        return undefined;
-      
-      return Number(param);
-    };
-  }
+    await this.loadData();
+  }  
 }
 
 
 export function init(registry: Registry): DataServices {
   const config = registry("config") as Config;
 
-  return new DataServices(config, functionalLabels);
+  return new DataServicesImpl(config, functionalLabels);
 }
 

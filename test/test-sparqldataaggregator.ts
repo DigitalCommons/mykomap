@@ -3,7 +3,13 @@ import { expect } from 'chai';
 
 import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
 import { Config } from '../www/map-app/app/model/config';
-import { PropDefs, Initiative, InitiativeObj, DataServices } from '../www/map-app/app/model/dataservices';
+import {
+  PropDefs,
+  Initiative,
+  InitiativeObj,
+  DataServices,
+  basePropertySchema
+} from '../www/map-app/app/model/dataservices';
 import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
 import { Dictionary } from '../www/map-app/common_types';
 
@@ -132,7 +138,7 @@ const vocabs = new VocabServiceImpl(vocabIndex, 'EN');
 
 // The property schema for the data
 const propertySchema: PropDefs = {
-  ... DataServices.basePropertySchema, // common fields
+  ... basePropertySchema, // common fields
   primaryActivity: {
     type: 'vocab',
     uri: 'ea:',
