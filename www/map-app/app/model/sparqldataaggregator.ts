@@ -68,7 +68,7 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
       
       const label = this.getTitleForProperty(filterable);
 
-      const labelValues: Dictionary<Initiative[]> = this.registeredValues[label];
+      const labelValues = this.registeredValues[label];
       if (labelValues) {
         const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
         const ordered = Object
@@ -198,12 +198,14 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
     
     // Define and initialise the instance properties.
     Object.entries(this.propertySchema).forEach(entry => {
-      let [propertyName, propDef] = entry;
-      Object.defineProperty(initiative, propertyName, {
-        value: this.paramBuilder(propertyName, propDef, props),
-        enumerable: true,
-        writable: false,
-      });
+      const [propertyName, propDef] = entry;
+      if (propDef) {
+        Object.defineProperty(initiative, propertyName, {
+          value: this.paramBuilder(propertyName, propDef, props),
+          enumerable: true,
+          writable: false,
+        });
+      }
     });
 
     // loop through the filterable fields AKA properties, and register
@@ -212,8 +214,9 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
       const labelKey: string = this.getTitleForProperty(filterable);
 
       // Insert the initiative in the allRegisteredValues index
-      if (labelKey in this.allRegisteredValues)
-        this.insert(initiative, this.allRegisteredValues[labelKey]);
+      const registeredInitiatives = this.allRegisteredValues[labelKey];
+      if (registeredInitiatives)
+        this.insert(initiative, registeredInitiatives);
       else
         this.allRegisteredValues[labelKey] = [initiative];
 
@@ -225,10 +228,11 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
       }
 
       // Insert the initiative in the registeredValues index
-      if (labelKey in this.registeredValues) {
-        const values = this.registeredValues[labelKey];
-        if (field in values) {
-          this.insert(initiative, values[field]);
+      const values = this.registeredValues[labelKey];
+      if (values) {
+        const registeredInitiatives2 = values[field]
+        if (registeredInitiatives2) {
+          this.insert(initiative, registeredInitiatives2);
         } else {
           values[field] = [initiative];
         }
@@ -317,8 +321,9 @@ export class SparqlDataAggregator extends AggregatedData implements DataConsumer
       return title;
     }
     catch (e) {
-      e.message = `invalid filterableFields config for '${propName}' - ${e.message}`;
-      throw e; // rethrow.
+      const error: Error = e instanceof Error? e : new Error();
+      error.message = `invalid filterableFields config for '${propName}' - ${e}`;
+      throw error;
     }
   }
   

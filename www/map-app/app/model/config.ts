@@ -21,6 +21,6 @@ import {
 
 export { ConfigData, Config };
 
-export function init(inits: ConfigData): Config {
+export function init(inits: Partial<ConfigData> = new ConfigData()): Config {
   return new Config(inits);
 }

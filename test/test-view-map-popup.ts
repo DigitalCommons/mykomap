@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { init as configBuilder } from '../www/map-app/app/model/config';
-const config = configBuilder({});
+const config = configBuilder();
 
 import { Dictionary } from '../www/map-app/common_types';
 import { DataServicesImpl, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
@@ -83,8 +83,10 @@ describe('The default_popup.js module', function () {
 
   const allContent: Dictionary<string> = {};
   Object.entries(initiatives).forEach((ent) => {
-    const content = getPopup(ent[1], dataservices);
-    allContent[ent[0]] = content;
+    if (ent[1]) {
+      const content = getPopup(ent[1], dataservices);
+      allContent[ent[0]] = content;
+    }
   })
 
   // To save the generated data in nodejs (under instant-mocha) set:

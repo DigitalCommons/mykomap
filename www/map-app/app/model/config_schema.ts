@@ -36,9 +36,9 @@ import type {
 class TypeDef<T> {
   constructor(params: {
     name: string;
-    parseString?: typeof this.parseString,
+    parseString?: TypeDef<T>['parseString'];
     descr?: string;
-    stringDescr?: typeof this.stringDescr}) {
+    stringDescr?: TypeDef<T>['stringDescr']}) {
     this.name = params.name;
     this.parseString = params.parseString;
     this.descr = params.descr || '';
@@ -63,7 +63,7 @@ export interface ReadableConfig {
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
   fields(): Dictionary<PropDef | PropDef['type']>;
-  getCustomPopup(): InitiativeRenderFunction;
+  getCustomPopup(): InitiativeRenderFunction | undefined;
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
@@ -87,10 +87,10 @@ export interface ReadableConfig {
   getSoftwareGitCommit(): string;
   getSoftwareTimestamp(): string;
   getSoftwareVariant(): string;
-  getTileUrl(): string;
+  getTileUrl(): string | undefined;
   getVersionTag(): string;
   htmlTitle(): string;
-  logo(): string;
+  logo(): string | undefined;
   namedDatasets(): string[];
   namedDatasetsVerbose(): string[];
   vocabularies(): VocabSource[];
@@ -117,7 +117,7 @@ export interface WritableConfig {
   setShowSearchPanel(val: boolean): void;
 };
 
-export class ConfigSchema<T> {
+export interface ConfigSchema<T> {
   // An identifier string
   id: keyof ConfigData;
   // A short description of the config value
@@ -128,8 +128,6 @@ export class ConfigSchema<T> {
   getter: keyof ReadableConfig;
   // An optional setter name, there will be no setter if this is undefined
   setter?: keyof WritableConfig;
-  // An initialiser function
-  init: () => void;
   // A type definition
   type: TypeDef<T>;
 }
@@ -143,46 +141,56 @@ export interface DialogueSize {
 export type InitiativeRenderFunction =
   (initiative: Initiative, model: DataServices) => string;
 
-export interface ConfigData {
-  aboutHtml?: string;
-  attr_namespace?: string;
+export class ConfigData {
+  aboutHtml: string = '';
+  attr_namespace: string = '';
   customPopup?: InitiativeRenderFunction;
-  defaultLatLng?: Point2d;
-  defaultOpenSidebar?: boolean;
-  dialogueSize?: DialogueSize;
-  disableClusteringAtZoom?: number;
-  doesDirectoryHaveColours?: boolean;
-  elem_id?: string;
-  fields?: Dictionary<PropDef | PropDef['type']>;
-  filterableFields?: string[];
-  gitcommit?: string;
-  htmlTitle?: string;
+  defaultLatLng: Point2d = [0, 0];
+  defaultOpenSidebar: boolean = false;
+  dialogueSize: DialogueSize = {
+    "width": "35vw",
+    "height": "225px",
+    "descriptionRatio": 2.5,
+  };
+  disableClusteringAtZoom: number = 0;
+  doesDirectoryHaveColours: boolean = false;
+  elem_id: string = 'map-app';
+  fields: Dictionary<PropDef | PropDef['type']> = {};
+  filterableFields: string[] = [];
+  gitcommit: string = '0';
+  htmlTitle: string = '';
   initialBounds?: Box2d;
-  language?: string;
-  languages?: string[];
+  language: string = 'EN';
+  languages: string[] = ['EN'];
   logo?: string;
-  mapAttribution?: string;
-  maxZoomOnGroup ?: number;
-  maxZoomOnOne?: number;
-  maxZoomOnSearch?: number;
-  namedDatasets?: string[];
-  namedDatasetsVerbose?: string[];
-  noLodCache?: boolean;
-  seaMapVersion?: string;
-  searchedFields?: string[];
-  servicesPath?: string;
-  showAboutPanel?: boolean;
-  showDatasetsPanel?: boolean;
-  showDirectoryPanel?: boolean;
-  showSearchPanel?: boolean;
-  sidebarButtonColour?: string;
+  mapAttribution: string = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
+    'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> ' +
+    '| Powered by <a href="https://www.geoapify.com/">Geoapify</a>';
+  maxZoomOnGroup: number = 18;
+  maxZoomOnOne: number = 18;
+  maxZoomOnSearch: number = 18;
+  namedDatasets: string[] = [];
+  namedDatasetsVerbose: string[] = [];
+  noLodCache: boolean = true;
+  seaMapVersion: string = '0';
+  searchedFields: string[] = ['name'];
+  servicesPath: string = 'services/';
+  showAboutPanel: boolean = true;
+  showDatasetsPanel: boolean = true;
+  showDirectoryPanel: boolean = true;
+  showSearchPanel: boolean = true;
+  sidebarButtonColour: string = '#39cccc';
   tileUrl?: string;
-  timestamp?: string;
-  variant?: string;
-  vocabularies?: VocabSource[];
+  timestamp: string = '2000-01-01T00:00:00.000Z';
+  variant: string = '';
+  vocabularies: VocabSource[] = [];
   
   // This index accessor is required for Typescript to allow dynamic assignment, it seems
   [name: string]: unknown;
+
+  constructor(params: Partial<ConfigData> = {}) {
+    Object.assign(this, params);
+  }
 };
 
 // This type is constrained to have the same keys as ConfigData, and
@@ -392,51 +400,9 @@ export class Config implements ReadableConfig, WritableConfig {
     return Object.fromEntries(propDefEntries);
   }
   
-  constructor({
-    aboutHtml = '',
-    attr_namespace = '',
-    customPopup = undefined,
-    elem_id = 'map-app',
-    fields = undefined,
-    variant = '',
-    timestamp = '2000-01-01T00:00:00.000Z',
-    gitcommit = '0',
-    seaMapVersion = '0',
-    namedDatasets = [],
-    namedDatasetsVerbose = [],
-    htmlTitle = '',
-    initialBounds = undefined,
-    defaultLatLng = [0, 0],
-    filterableFields = [],
-    doesDirectoryHaveColours = false,
-    disableClusteringAtZoom = 0,
-    searchedFields = ["name"],
-    servicesPath = 'services/',
-    showDirectoryPanel = true,
-    showSearchPanel = true,
-    showAboutPanel = true,
-    showDatasetsPanel = true,
-    maxZoomOnGroup = 18,
-    maxZoomOnSearch = 18,
-    maxZoomOnOne = 18,
-    logo = undefined,
-    tileUrl = undefined,
-    mapAttribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
-            'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> ' +
-            '| Powered by <a href="https://www.geoapify.com/">Geoapify</a>',
-    noLodCache = true,
-    language = undefined,
-    languages = ['EN'],
-    dialogueSize = {
-      "width": "35vw",
-      "height": "225px",
-      "descriptionRatio": 2.5
-    },
-    defaultOpenSidebar = false,
-    sidebarButtonColour = "#39cccc",
-    vocabularies = undefined,
-  }: ConfigData = {}) {
-    this.data = {};
+  constructor(config: Partial<ConfigData> = new ConfigData()) {
+    const defaultConfig = new ConfigData();
+    this.data = { ...defaultConfig, ...config };
     this.configSchemas = {
       aboutHtml: {
         id: 'aboutHtml',
@@ -448,14 +414,12 @@ export class Config implements ReadableConfig, WritableConfig {
           'work as they did. Note however that the about text is always followed by links '+
           'to the data and docs now, so you should no longer link to this in the about text.',
         defaultDescr: "The contents of the consuming project's file `config/about.html`",
-        init: () => { this.data.aboutHtml = aboutHtml; },
         getter: 'aboutHtml',
         type: types.string,
       },
       attr_namespace: {
         id: 'attr_namespace',
         descr: "Sets the namespace prefix expected on the sea-map anchor element's attributes.",
-        init: () => { this.data.attr_namespace = attr_namespace; },
         getter: 'attr_namespace',
         type: types.string,
       },
@@ -464,7 +428,6 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: "An optional function accepting an Initiative and an DataServices object, "+
           "which returns an HTML string which will be used as the pop-up contents for that "+
           "initiative's marker",
-        init: () => { this.data.customPopup = customPopup; },
         getter: 'getCustomPopup',
         type: types.initiativeRenderFunction,
       },
@@ -472,7 +435,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'defaultLatLng',
         descr: 'The position on the map that an initiative\'s dialog is positioned if it ' +
           'has no resolvable geolocation, as an array: [lat,lon]; these are set to [0,0] if it is unset.',
-        init: () => { this.data.defaultLatLng = defaultLatLng; },
         getter: 'getDefaultLatLng',
         setter: 'setDefaultLatLng',
         type: types.latLng,
@@ -480,7 +442,6 @@ export class Config implements ReadableConfig, WritableConfig {
       defaultOpenSidebar: {
         id: 'defaultOpenSidebar',
         descr: 'Set whether the sidebar is by default open on starting the app.',
-        init: () => { this.data.defaultOpenSidebar = defaultOpenSidebar; },
         getter: 'getDefaultOpenSidebar',
         type: types.boolean,
       },
@@ -489,8 +450,7 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
           'descriptionRatio is how many times larger the description section is than the ' +
           'contact section. These values are used in view/map.js',
-        defaultDescr: "```\n"+JSON.stringify(dialogueSize, null, 2)+"\n```",
-        init: () => { this.data.dialogueSize = dialogueSize; },
+        defaultDescr: "```\n"+JSON.stringify(defaultConfig.dialogueSize, null, 2)+"\n```",
         getter: 'getDialogueSize',
         setter: 'setDialogueSize',
         type: types.dialogueSize,
@@ -504,7 +464,6 @@ export class Config implements ReadableConfig, WritableConfig {
                 'If omitted, clustering is always off. ',
                 'See: https://leaflet.github.io/Leaflet.markercluster/#other-options',
                 'and https://leafletjs.com/examples/zoom-levels/'].join(' '),
-        init: () => { this.data.disableClusteringAtZoom = disableClusteringAtZoom; },
         getter: 'getDisableClusteringAtZoom',
         setter: 'setDisableClusteringAtZoom',
         type: types.int,
@@ -512,7 +471,6 @@ export class Config implements ReadableConfig, WritableConfig {
       doesDirectoryHaveColours: {
         id: 'doesDirectoryHaveColours',
         descr: 'True if the directory should feature coloured entries',
-        init: () => { this.data.doesDirectoryHaveColours = doesDirectoryHaveColours; },
         getter: 'doesDirectoryHaveColours',
         setter: 'setDirectoryHasColours',
         type: types.boolean,
@@ -520,14 +478,12 @@ export class Config implements ReadableConfig, WritableConfig {
       elem_id: {
         id: 'elem_id',
         descr: '',
-        init: () => { this.data.elem_id = elem_id; },
         getter: 'elem_id',
         type: types.string,
       },
       fields: {
         id: 'fields',
         descr: 'Defines extended definitions of new or existing initiative fields',
-        init: () => { this.data.fields = fields; },
         getter: 'fields',
         type: types.propDefs,
       },
@@ -535,7 +491,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'filterableFields',
         descr: 'Defines the instance properties that can populate the directory. Must be '+
           'a list of instance property names which are associated with vocabularies.',
-        init: () => { this.data.filterableFields = filterableFields; },
         getter: 'getFilterableFields',
         setter: 'setFilterableFields',
         type: types.arrayOfString,
@@ -545,14 +500,12 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'The git commit-ID of the sea-map source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
-        init: () => { this.data.gitcommit = gitcommit; },
         getter: 'getSoftwareGitCommit',
         type: types.string,
       },
       htmlTitle: {
         id: 'htmlTitle',
         descr: `If set, this will override the default value for the map's HTML <title> tag.`,
-        init: () => { this.data.htmlTitle = htmlTitle; },
         getter: 'htmlTitle',
         setter: 'setHtmlTitle',
         type: types.string,
@@ -561,7 +514,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'initialBounds',
         descr: 'The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; ' +
           'these are chosen automatically if this is unset',
-        init: () => { this.data.initialBounds = initialBounds; },
         getter: 'getInitialBounds',
         setter: 'setInitialBounds',
         type: types.latLng2,
@@ -571,7 +523,6 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'The language to use for internationalised text. Must be one of those listed in '+
           '`languages`, or it will be set to the first language code in `languages`. '+
           'Will be upcased if not already.',
-        init: () => { this.data.language = normLanguage(language || languages[0], languages); },
         getter: 'getLanguage',
         setter: 'setLanguage',
         type: types.string,
@@ -583,20 +534,13 @@ export class Config implements ReadableConfig, WritableConfig {
           'Any other language code used will be replaced with the first in this list. '+
           'A phrases for the first code will also used as a fallback if an individual '+
           'phrase is missing.',
-        defaultDescr: "```\n"+JSON.stringify(languages, null, 2)+"\n```",
-        init: () => {
-          if (!(languages instanceof Array) || languages.length <= 0)
-            throw new Error("languages is not an Array, or configured empty, this should not happen");
-          
-          this.data.languages = languages.map(validateLang);
-        },
+        defaultDescr: "```\n"+JSON.stringify(defaultConfig.languages, null, 2)+"\n```",
         getter: 'getLanguages',
         type: types.arrayOfString,
       },
       logo: {
         id: 'logo',
         descr: `If set this will display the logo of the organisation. This takes in a link to a logo image loaded into an HTML <image>`,
-        init: () => { this.data.logo = logo; },
         getter: 'logo',
         setter: 'setLogo',
         type: types.string, // FIXME maybeString?  check other maybes
@@ -604,14 +548,12 @@ export class Config implements ReadableConfig, WritableConfig {
       mapAttribution: {
         id: 'mapAttribution',
         descr: 'the attribution message to put at the bottom of the map',
-        init: () => { this.data.mapAttribution = mapAttribution; },
         getter: 'getMapAttribution',
         type: types.string,
       },
       maxZoomOnGroup: {
         id: 'maxZoomOnGroup',
         descr: 'The maximum zoom in that can happen when selecting any particular group in directory, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-        init: () => { this.data.maxZoomOnGroup = maxZoomOnGroup; },
         getter: 'getMaxZoomOnGroup',
         setter: 'setMaxZoomOnGroup',
         type: types.int,
@@ -619,7 +561,6 @@ export class Config implements ReadableConfig, WritableConfig {
       maxZoomOnOne: {
         id: 'maxZoomOnOne',
         descr: 'The maximum zoom in that can happen when selecting an initiative, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-        init: () => { this.data.maxZoomOnOne = maxZoomOnOne; },
         getter: 'getMaxZoomOnOne',
         setter: 'setMaxZoomOnOne',
         type: types.int,
@@ -627,7 +568,6 @@ export class Config implements ReadableConfig, WritableConfig {
       maxZoomOnSearch: {
         id: 'maxZoomOnSearch',
         descr: 'The maximum zoom in that can happen when searching any particular group, if 0 does no zooming. Defaults to 18 and auto decides best max zoom',
-        init: () => { this.data.maxZoomOnSearch = maxZoomOnSearch; },
         getter: 'getMaxZoomOnSearch',
         setter: 'setMaxZoomOnSearch',
         type: types.int,
@@ -636,7 +576,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'namedDatasets',
         descr: 'A list of names that correspond to directories in www/services, which must contain ' +
           'default-graph-uri.txt, endpoint.txt, query.rq.',
-        init: () => { this.data.namedDatasets = namedDatasets; },
         getter: 'namedDatasets',
         type: types.arrayOfString,
       },
@@ -644,7 +583,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'namedDatasetsVerbose',
         descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets' +
           ' or this will not be used',
-        init: () => { this.data.namedDatasetsVerbose = namedDatasetsVerbose; },
         getter: 'namedDatasetsVerbose',
         type: types.arrayOfString,
       },
@@ -655,7 +593,6 @@ export class Config implements ReadableConfig, WritableConfig {
           `The cache file is only updated if the static linked data's top-level index.rdf `+
           `file is newer than the cache's timestamp. But if this option is set to true, `+
           `this cache is disabled and a query is made each time the map is loaded.`,
-        init: () => { this.data.noLodCache = noLodCache; },
         defaultDescr: "True",
         getter: 'getNoLodCache',
         setter: 'setNoLodCache',
@@ -666,7 +603,6 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'The git tag of the sea-map source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
-        init: () => { this.data.seaMapVersion = seaMapVersion; },
         getter: 'getVersionTag',
         type: types.string,
       },
@@ -685,7 +621,6 @@ export class Config implements ReadableConfig, WritableConfig {
           "\nCurrently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other." +
           "\nThe 'searchstr' is then converted into uppercase. No other string transformations are currently applied" +
           "\nWhen a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.",
-        init: () => { this.data.searchedFields = searchedFields; },
         getter: 'getSearchedFields',
         setter: 'setSearchedFields',
         type: types.arrayOfString,
@@ -693,14 +628,12 @@ export class Config implements ReadableConfig, WritableConfig {
       servicesPath: {
         id: 'servicesPath',
         descr: 'Preset location of the data source script(s).',
-        init: () => { this.data.servicesPath = servicesPath; },
         getter: 'getServicesPath',
         type: types.string,
       },
       showAboutPanel: {
         id: 'showAboutPanel',
         descr: `If true this will load the datasets panel`,
-        init: () => { this.data.showAboutPanel = showAboutPanel; },
         getter: 'getShowAboutPanel',
         setter: 'setShowAboutPanel',
         type: types.boolean,
@@ -708,7 +641,6 @@ export class Config implements ReadableConfig, WritableConfig {
       showDatasetsPanel: {
         id: 'showDatasetsPanel',
         descr: `If true this will load the datasets panel`,
-        init: () => { this.data.showDatasetsPanel = showDatasetsPanel; },
         getter: 'getShowDatasetsPanel',
         setter: 'setShowDatasetsPanel',
         type: types.boolean,
@@ -716,7 +648,6 @@ export class Config implements ReadableConfig, WritableConfig {
       showDirectoryPanel: {
         id: 'showDirectoryPanel',
         descr: `If true this will load the datasets panel`,
-        init: () => { this.data.showDirectoryPanel = showDirectoryPanel; },
         getter: 'getShowDirectoryPanel',
         setter: 'setShowDirectoryPanel',
         type: types.boolean,
@@ -724,7 +655,6 @@ export class Config implements ReadableConfig, WritableConfig {
       showSearchPanel: {
         id: 'showSearchPanel',
         descr: `If true this will load the datasets panel`,
-        init: () => { this.data.showSearchPanel = showSearchPanel; },
         getter: 'getShowSearchPanel',
         setter: 'setShowSearchPanel',
         type: types.boolean,
@@ -732,7 +662,6 @@ export class Config implements ReadableConfig, WritableConfig {
       sidebarButtonColour: {
         id: "sidebarButtonColour",
         descr: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
-        init: () => { this.data.sidebarButtonColour = sidebarButtonColour; },
         getter: 'getSidebarButtonColour',
         type: types.string
       },
@@ -740,7 +669,6 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'tileUrl',
         descr: 'the tile map url',
         defaultDescr: "uses the OSM standard tile maps if nothing is provided",
-        init: () => { this.data.tileUrl = tileUrl; },
         getter: 'getTileUrl',
         type: types.string,
       },
@@ -749,7 +677,6 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'A timestamp string indicating when this application was deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
-        init: () => { this.data.timestamp = timestamp; },
         getter: 'getSoftwareTimestamp',
         type: types.string,
       },
@@ -758,7 +685,6 @@ export class Config implements ReadableConfig, WritableConfig {
         descr: 'The name of the variant used to generate this map application.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
-        init: () => { this.data.variant = variant; },
         getter: 'getSoftwareVariant',
         type: types.string,
       },
@@ -766,18 +692,18 @@ export class Config implements ReadableConfig, WritableConfig {
         id: 'vocabularies',
         descr: 'Specifies the vocabularies to obtain via SPARQL query for use in `fields`',
         defaultDescr: 'No vocabs are queried if nothing is provided',
-        init: () => { this.data.vocabularies = vocabularies; },
         getter: 'vocabularies',
         type: types.vocabSources,
       },
       //  [name: string]: unknown;
     };
 
-    // Invoke all the init functions in configSchema
-    for(const id in this.configSchemas) {
-      this.configSchemas[id].init();
-    }
-
+    // Some validation / defaults
+    this.data.language = normLanguage(this.data.language ?? this.data.languages[0], ['EN']);
+    if (this.data.languages.length === 0)
+      throw new Error("languages is configured empty, this should not happen");
+    this.data.languages = this.data.languages.map(validateLang);
+    
     // Expand abbreviated field defs
     this._fields = this.stringsToPropDefs(this.data.fields);
     
@@ -788,9 +714,11 @@ export class Config implements ReadableConfig, WritableConfig {
     const urisSeen = {} as Dictionary;
     if (this.data.vocabularies) {
       for(let ix = 0; ix < this.data.vocabularies.length; ix++) {
-        const vocabSource = this.data.vocabularies[ix];
+        const vocabSource: VocabSource = this.data.vocabularies[ix];
         for(const vocabUri in vocabSource.uris) {
           const vocabPrefix = vocabSource.uris[vocabUri];
+          if (vocabPrefix === undefined)
+            continue;
           if (vocabPrefix in prefixesSeen) {
             console.warn(`Duplicate prefix in vocabularies config, ${vocabPrefix} (for ${vocabUri})`);
           }
@@ -805,6 +733,8 @@ export class Config implements ReadableConfig, WritableConfig {
     // Make sure the fields all reference a known vocab
     for(const fieldId in this._fields ?? {}) {
       let field = this._fields[fieldId];
+      if (field === undefined)
+        continue;
       if (field.type === 'multi')
         field = field.of;
       if (field.type !== 'vocab')
@@ -881,12 +811,15 @@ ${def.descr}
   add(strcfg: Dictionary) {
     console.info("add", strcfg);
     
-    for(const id in strcfg) {      
+    for(const id in strcfg) {
+      const str = strcfg[id];
+      if (!str)
+        continue;
       if (id in this.configSchemas) {
         const def = this.configSchemas[id];
         
         if (def.setter && def.type.parseString) {
-          const val = def.type.parseString(strcfg[id]);
+          const val = def.type.parseString(str);
           const setter = this[def.setter] as (val: any) => void; // FIXME this was frigged
           setter.call(this, val);
         }
@@ -908,7 +841,7 @@ ${def.descr}
     return this.data.attr_namespace;
   }
 
-  getCustomPopup(): InitiativeRenderFunction {
+  getCustomPopup(): InitiativeRenderFunction | undefined {
     return this.data.customPopup;
   }
   
@@ -940,7 +873,7 @@ ${def.descr}
   getFilterableFields(): string[] {
     return this.data.filterableFields;
   }
-  getInitialBounds(): Box2d {
+  getInitialBounds(): Box2d | undefined {
     return this.data.initialBounds;
   }
   getLanguage(): string {
@@ -994,7 +927,7 @@ ${def.descr}
   getSoftwareVariant(): string {
     return this.data.variant;
   }
-  getTileUrl(): string {
+  getTileUrl(): string | undefined {
     return this.data.tileUrl;
   }
   getVersionTag(): string {
@@ -1003,7 +936,7 @@ ${def.descr}
   htmlTitle(): string {
     return this.data.htmlTitle;
   }
-  logo(): string {
+  logo(): string | undefined {
     return this.data.logo;
   }
   namedDatasets(): string[] {

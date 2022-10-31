@@ -3,7 +3,7 @@ import type { DataServices, Initiative } from "../../model/dataservices";
 
 export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality
-    return undefined;
+    return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
