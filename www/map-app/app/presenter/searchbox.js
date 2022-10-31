@@ -22,7 +22,7 @@ function init(registry) {
           selected: []
         }
       });
-      var results = dataServices.search(text);
+      var results = dataServices.getAggregatedData().search(text);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }
