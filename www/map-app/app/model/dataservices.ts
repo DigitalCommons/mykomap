@@ -3,10 +3,12 @@
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Registry } from '../registries';
 import type { Config } from './config';
-import type { DialogueSize } from './config_schema';
+import type {
+  DialogueSize,
+  DataSource,
+} from './config_schema';
 
 import type {
-  DatasetMeta,
   DataConsumer,
   DataLoader,
 } from './dataloader';
@@ -27,7 +29,6 @@ import {
 
 import {
   SparqlDataLoader,
-  SparqlDatasetMeta,
 } from './sparqldataloader';
 
 import {
@@ -41,6 +42,7 @@ const getDatasetPhp = require("../../../services/get_dataset.php");
 const eventbus = require('../eventbus');
 const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
+import { CsvDataLoader } from './csvdataloader';
 
 export class Initiative {
   //  This is used for associating internal data, like map markers
@@ -67,9 +69,14 @@ interface Filter {
   verboseName: string;
   initiatives: Initiative[];
 }
-interface DatasetMap {
-  [id: string]: DatasetMeta;    
-}
+
+export interface DatasetMeta {
+  type: string;
+  label: string;
+  loader: DataLoader; // Subtypes of loaders can expose metadata under .meta
+};
+type DatasetMap = Dictionary<DatasetMeta>;
+
 export interface InitiativeObj {
   uri: string;
   [name: string]: any;
@@ -213,21 +220,16 @@ export interface DataServices {
   // otherwise a string to indicate which dataset is loaded
   getCurrentDatasets(): string | true;
 
-  // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
+  // @returns a map of dataset identifiers to dataset metadata
   //
   // This description is a map of values, which looks like:
   //
-  //     { id: [String], name: [String], endpoint: [String],
-  //       dgu: [String], query: [String] }
+  //     { label: [String], loader: [DataLoader] }
   //
   // Where:
   //
-  // - `id` is the dataset identifier (same as the key)
-  // - `name` is the long name from `namedDatasetsVerbose` if available,
-  //   else just the identifier is used)
-  // - `query` is the SPARQL query used to obtain it
-  // - `dgu` is the default graph URI used for this query
-  // - `endpoint` is the SPARQL endpoint queried
+  // - `label` is the display name for the dataset.
+  // - `loader` is a dataset loader instance
   //
   getDatasets(): DatasetMap;
 
@@ -326,9 +328,8 @@ export async function loadDatasets<T extends DataConsumer>(dataLoaders: DataLoad
 // Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
   readonly config: Config;
-  readonly allDatasets: string[]; // FIXME inline
   readonly fallBackLanguage: string;
-  readonly verboseDatasets: DatasetMap = {};
+  readonly datasets: DatasetMap = {};
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   
   // The per-instance propert schema, which can be extended by configuration.
@@ -345,7 +346,6 @@ export class DataServicesImpl implements DataServices {
   
   constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
     this.config = config;
-    this.allDatasets = config.namedDatasets();
     this.functionalLabels = functionalLabels;
     
     {
@@ -357,23 +357,35 @@ export class DataServicesImpl implements DataServices {
     }
 
     {
-      //setup map
-      const dsNamed: string[] =
-        (this.config.namedDatasetsVerbose() &&
-          this.config.namedDatasets().length == this.config.namedDatasetsVerbose().length) ?
-        this.config.namedDatasetsVerbose()
-        : [];
+      const dataSources = this.config.getDataSources();
+      
+      // Note, caching is only for hostSparql datasets, but currently
+      // doesn't work correctly with multiple hostSparql data sets so
+      // until that's fixed, don't use it in that case.
+      const numDatasets = dataSources.reduce((ix, ds) => ds.type == 'hostSparql'? ix+1 : ix, 0);
+      const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
 
-      const s: SparqlDatasetMeta = {id: '', name: '', default_graph_uri: '', query: '', endpoint: ''}
-      let d: DatasetMeta  = s
-      if (dsNamed.length == this.allDatasets.length)
-        this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
-          id: x, name: dsNamed[i], endpoint: '', dgu: '', query: ''
-        } as SparqlDatasetMeta);
-      else
-        this.allDatasets.forEach((x, i) => this.verboseDatasets[x] = {
-          id: x, name: x, endpoint: '', dgu: '', query: ''
-        } as SparqlDatasetMeta);
+      // Build the datasources      
+      dataSources.forEach((ds) => {
+        switch(ds.type) {
+          case 'hostSparql':
+            this.datasets[ds.id] = {
+              type: ds.type,
+              label: ds.label,
+              loader: new SparqlDataLoader(ds.id, getDatasetPhp, !noCache),
+            };
+            break;
+          case 'csv':
+            this.datasets[ds.id] = {
+              type: ds.type,
+              label: ds.label,
+              loader: new CsvDataLoader(ds.id, ds.url, ds.transform),
+            };
+            break;
+          default:
+            throw new Error(`Unknown dataset type '${(ds as any)?.type}'`);
+        }
+      });
     }
 
     {
@@ -450,23 +462,7 @@ export class DataServicesImpl implements DataServices {
   }
 
   getDatasets(): DatasetMap {
-    // @returns a map of dataset identifiers (from `namedDatasets`) to dataset descriptions.
-    //
-    // This description is a map of values, which looks like:
-    //
-    //     { id: [String], name: [String], endpoint: [String],
-    //       dgu: [String], query: [String] }
-    //
-    // Where:
-    //
-    // - `id` is the dataset identifier (same as the key)
-    // - `name` is the long name from `namedDatasetsVerbose` if available,
-    //   else just the identifier is used)
-    // - `query` is the SPARQL query used to obtain it
-    // - `dgu` is the default graph URI used for this query
-    // - `endpoint` is the SPARQL endpoint queried
-    //
-    return this.verboseDatasets;
+    return this.datasets;
   }
 
   getDialogueSize() {
@@ -582,15 +578,15 @@ export class DataServicesImpl implements DataServices {
     let datasetIds: string[] = [];
 
     if (this.currentDatasets === true) {
-      console.log("reset: loading all datasets ", this.config.namedDatasets());
-      datasetIds = this.config.namedDatasets();
+      datasetIds = Object.keys(this.datasets);
+      console.log(`reset: loading all datasets ${datasetIds}`);
     }
-    else if (this.allDatasets.includes(this.currentDatasets as string)) {
-      console.log("reset: loading dataset '" + this.currentDatasets + "'");
-      datasetIds = [this.currentDatasets as string]
+    else if (this.currentDatasets in this.datasets) {
+      console.log(`reset: loading dataset '${this.currentDatasets}'`);
+      datasetIds = [this.currentDatasets]
     }
     else {
-      console.log("reset: no matching dataset '" + this.currentDatasets + "'");
+      console.log(`reset: no matching dataset '${this.currentDatasets}'`);
     }
 
     await this.loadDatasets(datasetIds);
@@ -623,13 +619,14 @@ export class DataServicesImpl implements DataServices {
     }
 
     try {
-      // Note, caching currently doesn't work correctly with multiple data sets
-      // so until that's fixed, don't use it in that case.
-      const datasets = this.config.namedDatasets();
-      const numDatasets = datasets.length;
-      const noCache = numDatasets > 1 ? true : this.config.getNoLodCache();
-      const dataLoaders = datasets.map(id => new SparqlDataLoader(id, getDatasetPhp, !noCache));
+      const dataLoaders = datasetIds
+        .map(id => this.datasets[id]?.loader)
+        .filter((ds): ds is DataLoader => ds !== undefined)
 
+      const onItemComplete = (initiative: Initiative) => {
+        // Broadcast the creation of the initiative
+        eventbus.publish({ topic: "Initiative.new", data: initiative });
+      };
       const onSetComplete = (id: string) => {
         // Publish completion event
         eventbus.publish({ topic: "Initiative.datasetLoaded" });
@@ -640,14 +637,13 @@ export class DataServicesImpl implements DataServices {
           data: { error: error, dataset: id }
         });
       };
- 
       
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new SparqlDataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
-        onSetComplete, onSetFail
+        onItemComplete, onSetComplete, onSetFail
       );
 
       eventbus.publish({

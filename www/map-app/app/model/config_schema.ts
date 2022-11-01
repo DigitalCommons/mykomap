@@ -33,6 +33,14 @@ import type {
   VocabSource
 } from './vocabs';
 
+import type {
+  ObjTransformFunc,
+} from '../../obj-transformer';
+
+import type {
+  InitiativeObj,
+} from './dataservices';
+
 class TypeDef<T> {
   constructor(params: {
     name: string;
@@ -54,7 +62,29 @@ class TypeDef<T> {
   parseString?: (val: string) => T;
 };
 
-export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[];
+export interface DataSource {
+  id: string;
+  type: string;
+  label: string;
+};
+
+export interface HostSparqlDataSource extends DataSource {
+  type: 'hostSparql';
+}
+
+
+type Row = Record<string, string|null|undefined>;
+type CsvTransformerFunc = ObjTransformFunc<Row, InitiativeObj>;
+
+export interface CsvDataSource extends DataSource {
+  type: 'csv';
+  url: string;
+  transform: CsvTransformerFunc;
+}
+
+export type AnyDataSource = HostSparqlDataSource | CsvDataSource;
+
+export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[]|AnyDataSource[];
 export type TypeDefs = { readonly [key: string]: TypeDef<ConfigTypes> }
 
 export interface ReadableConfig {
@@ -64,6 +94,7 @@ export interface ReadableConfig {
   elem_id(): string;
   fields(): Dictionary<PropDef | PropDef['type']>;
   getCustomPopup(): InitiativeRenderFunction | undefined;
+  getDataSources(): AnyDataSource[];
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
@@ -91,8 +122,6 @@ export interface ReadableConfig {
   getVersionTag(): string;
   htmlTitle(): string;
   logo(): string | undefined;
-  namedDatasets(): string[];
-  namedDatasetsVerbose(): string[];
   vocabularies(): VocabSource[];
 };
 
@@ -145,6 +174,11 @@ export class ConfigData {
   aboutHtml: string = '';
   attr_namespace: string = '';
   customPopup?: InitiativeRenderFunction;
+  dataSources: AnyDataSource[] = [{
+    id: 'default',
+    type: 'hostSparql',
+    label: 'Default Set',
+  }];
   defaultLatLng: Point2d = [0, 0];
   defaultOpenSidebar: boolean = false;
   dialogueSize: DialogueSize = {
@@ -169,8 +203,6 @@ export class ConfigData {
   maxZoomOnGroup: number = 18;
   maxZoomOnOne: number = 18;
   maxZoomOnSearch: number = 18;
-  namedDatasets: string[] = [];
-  namedDatasetsVerbose: string[] = [];
   noLodCache: boolean = true;
   seaMapVersion: string = '0';
   searchedFields: string[] = ['name'];
@@ -332,6 +364,11 @@ const types = {
       'a default graph URI, and an index of vocabulary URIs to their prefixes - '+
       'which must be unique to the whole array.',
   }),
+  dataSources: new TypeDef<AnyDataSource[]>({
+    name: '{AnyDataSource[]}',
+    descr: 'An array of data source definitions, defining the type, ID, and in certain cases '+
+      'other source-secific parameters needed for the source type',  
+  }),
 };
 
 
@@ -430,6 +467,12 @@ export class Config implements ReadableConfig, WritableConfig {
           "initiative's marker",
         getter: 'getCustomPopup',
         type: types.initiativeRenderFunction,
+      },
+      dataSources: {
+        id: 'dataSources',
+        descr: 'A list of data-source definitions',
+        getter: 'getDataSources',
+        type: types.dataSources,
       },
       defaultLatLng: {
         id: 'defaultLatLng',
@@ -571,20 +614,6 @@ export class Config implements ReadableConfig, WritableConfig {
         getter: 'getMaxZoomOnSearch',
         setter: 'setMaxZoomOnSearch',
         type: types.int,
-      },
-      namedDatasets: {
-        id: 'namedDatasets',
-        descr: 'A list of names that correspond to directories in www/services, which must contain ' +
-          'default-graph-uri.txt, endpoint.txt, query.rq.',
-        getter: 'namedDatasets',
-        type: types.arrayOfString,
-      },
-      namedDatasetsVerbose: {
-        id: 'namedDatasetsVerbose',
-        descr: 'A list of names for the named datasets. Length must be exactly the same as namedDatasets' +
-          ' or this will not be used',
-        getter: 'namedDatasetsVerbose',
-        type: types.arrayOfString,
       },
       noLodCache: {
         id: 'noLodCache',
@@ -772,7 +801,6 @@ Here is an example of what you might put in this file:
 
 \`\`\`
  {
-  "namedDatasets": ["oxford"],
   "htmlTitle": "Solidarity Oxford",
   "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
@@ -856,6 +884,10 @@ ${def.descr}
   fields() {
     return this._fields;
   }
+
+  getDataSources(): AnyDataSource[] {
+    return this.data.dataSources;
+  }
   
   getDefaultLatLng(): Point2d {
     return this.data.defaultLatLng;
@@ -938,12 +970,6 @@ ${def.descr}
   }
   logo(): string | undefined {
     return this.data.logo;
-  }
-  namedDatasets(): string[] {
-    return this.data.namedDatasets;
-  }
-  namedDatasetsVerbose(): string[] {
-    return this.data.namedDatasetsVerbose;
   }
   vocabularies(): VocabSource[] {
     return this.data.vocabularies;
