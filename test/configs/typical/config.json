@@ -1,5 +1,11 @@
 {
-  "namedDatasets": ["test-dataset"],
+  "dataSources": [
+    {
+      "id": "test-dataset",
+      "label": "Test Dataset",
+      "type": "hostSparql"
+    }
+  ],
   "htmlTitle": "Test Title",
   "defaultLatLng": ["55.55", "66.66" ],
   "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],

@@ -20,8 +20,13 @@ describe('The config.js module', function () {
       assert.equal(config.getSoftwareVariant(), 'testing!');
       assert.equal(config.getSoftwareTimestamp(), '2020-06-13T18:38:04+0100');
       assert.equal(config.getSoftwareGitCommit(), 'fb9982f');
-      assert.deepEqual(config.namedDatasets(), ['test-dataset']);
-      assert.deepEqual(config.namedDatasetsVerbose(), []);
+      assert.deepEqual(config.getDataSources(), [
+        {
+          id: "test-dataset",
+          label: "Test Dataset",
+          type: "hostSparql"
+        }
+      ]);
       assert.equal(config.htmlTitle(), 'Test Title');
       assert.equal(config.getShowDatasetsPanel(), true);
       assert.equal(config.getInitialBounds(), undefined);

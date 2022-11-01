@@ -21,8 +21,8 @@ export class PresenterFactory {
   }
 
   onNewInitiatives() {
-    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.dataservices.getInitiativeUIDMap());
-    this.loadedInitiatives = this.dataservices.getLoadedInitiatives();
+    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.dataservices.getAggregatedData().initiativesByUid);
+    this.loadedInitiatives = this.dataservices.getAggregatedData().loadedInitiatives;
   }
   
   createPresenter(view) {
@@ -451,7 +451,7 @@ export class Presenter extends BasePresenter {
 
     //if this is the first filter, add items to the filteredInitiativesUIDMap
     if (Object.keys(this.factory.filtered).length <= 1) {
-      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getInitiativeUIDMap());
+      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getAggregatedData().initiativesByUid);
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
@@ -481,7 +481,7 @@ export class Presenter extends BasePresenter {
     //remove filters
     this.factory.filtered = {};
     this.factory.filteredInitiativesUIDMap = {};
-    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getInitiativeUIDMap());
+    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getAggregatedData().initiativesByUid);
     this.factory.verboseNamesMap = {};
     //show all markers
     this.factory.markerView.showMarkers(this.factory.loadedInitiatives);

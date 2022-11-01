@@ -1,10 +1,16 @@
 
 import { expect } from 'chai';
 
-import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
+import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
 import { Config } from '../www/map-app/app/model/config';
-import { PropDefs, Initiative, InitiativeObj, DataServices } from '../www/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
+import {
+  PropDefs,
+  Initiative,
+  InitiativeObj,
+  DataServices,
+  basePropertySchema
+} from '../www/map-app/app/model/dataservices';
+import { VocabIndex, VocabServiceImpl, SparqlVocabResponse } from '../www/map-app/app/model/vocabs';
 import { Dictionary } from '../www/map-app/common_types';
 
 // Makes a dummy InitiativeObj
@@ -20,6 +26,8 @@ function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string
     ini.regorg = "https://example.com/organisational-structure/"+regorg;
   if (ea)
     ini.primaryActivity = "https://example.com/economic-activity/"+ea;
+
+  // Note that this is an *array* of values, as this field allows multiple values.
   if (sa)
     ini.secondaryActivities = sa.map(a => "https://example.com/economic-activity/"+a);
   
@@ -33,7 +41,7 @@ const config = new Config({
 });
 
 // The Vocabs (just has a couple of kinds)
-const vocabIndex: VocabIndex = {
+const vocabIndex: SparqlVocabResponse = {
   "prefixes": {
     "https://example.com/organisational-structure/": "os",
     "https://example.com/economic-activity/": "ea"
@@ -132,7 +140,7 @@ const vocabs = new VocabServiceImpl(vocabIndex, 'EN');
 
 // The property schema for the data
 const propertySchema: PropDefs = {
-  ... DataServices.basePropertySchema, // common fields
+  ... basePropertySchema, // common fields
   primaryActivity: {
     type: 'vocab',
     uri: 'ea:',
@@ -158,17 +166,27 @@ const labels = {};
 // populated with initatives.  These functions strip the initiatives
 // down to just the name, for convenient comparisons.
 
-function mapValues<I, J>(data: Dictionary<I>, fn: (d: I) => J[]) {
+function isDefinedVal<T>(item: [string, T | undefined]): item is [string, T] {
+  return item !== undefined;
+}
+
+function mapValues<I, J>(data: Dictionary<I>, fn: (d: I | undefined) => J[]) {
   const entries = Object.entries(data);
   return entries.map(e => [e[0], fn(e[1])]);
 }
 
-function initiatives2Strings(items: Initiative[]) {
-  return items.map(item => item.name as String);
+function initiatives2Strings(items?: Initiative[]) {
+  if (items)
+    return items.map(item => item.name as String);
+  else
+    return [];
 }
 
-function stripInitiatives2(items: Dictionary<Initiative[]>) {
-  return Object.fromEntries(mapValues(items, initiatives2Strings));
+function stripInitiatives2(items?: Dictionary<Initiative[]>) {
+  if (items)
+    return Object.fromEntries(mapValues(items, initiatives2Strings));
+  else
+    return {};
 }
 
 function stripInitiatives1(items: Dictionary<Dictionary<Initiative[]>>) {
@@ -177,21 +195,21 @@ function stripInitiatives1(items: Dictionary<Dictionary<Initiative[]>>) {
 
 
 // Function which does the aggregation of data:
-function aggregate(data: InitiativeObj[]) {
-  const dataAggregator = new SparqlDataAggregator(config, propertySchema, vocabs, labels);
-  dataAggregator.addBatch(data);
-  dataAggregator.complete();
+function aggregate(id: string, data: InitiativeObj[]) {
+  const dataAggregator = new DataAggregator(config, propertySchema, vocabs, labels);
+  dataAggregator.addBatch(id, data);
+  dataAggregator.complete(id);
   return dataAggregator;
 }
 
 // Function which aggregates, then returns stripped registeredValues
 function registeredValues(data: InitiativeObj[]) {
-  return stripInitiatives1(aggregate(data).registeredValues);
+  return stripInitiatives1(aggregate('testDataset', data).registeredValues);
 }
 
 
 // Finally, the tests
-describe('SparqlDataAggregator', () => {
+describe('DataAggregator', () => {
   
   describe('should generate the correct registeredValues', () => {
 
@@ -234,7 +252,7 @@ describe('SparqlDataAggregator', () => {
     it('with two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'EA10'),
+        mkInitiativeObj('B', undefined, 'EA10'),
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},
@@ -245,7 +263,7 @@ describe('SparqlDataAggregator', () => {
     it('with many values in two vocabs', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'EA10'),
+        mkInitiativeObj('B', undefined, 'EA10'),
         mkInitiativeObj('C'),
         mkInitiativeObj('D', 'OS20', 'EA20'),
         mkInitiativeObj('E', 'OS10', 'EA10'),        
@@ -259,7 +277,7 @@ describe('SparqlDataAggregator', () => {
     it('with invalid vocabs terms', () => {
       expect(registeredValues([
         mkInitiativeObj('A', 'OS10'),
-        mkInitiativeObj('B', null, 'OS10'), // Base Membership has no OS10 value
+        mkInitiativeObj('B', undefined, 'OS10'), // Base Membership has no OS10 value
       ]))
         .to.deep.equal({
           'OrgStruct': { 'os:OS10': [ 'A' ]},

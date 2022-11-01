@@ -2,7 +2,7 @@
   "exclude": [ "./ext/" ],
   "compilerOptions": {
     "outDir": "./build/",
-    "noImplicitAny": true,
+    "strict": true,
     "sourceMap": true,
     "target": "es5",
     "lib": ["DOM", "ES2021"],
