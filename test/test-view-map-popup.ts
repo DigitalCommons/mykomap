@@ -1,11 +1,11 @@
 import { assert } from 'chai';
 import { init as configBuilder } from '../www/map-app/app/model/config';
-const config = configBuilder({});
+const config = configBuilder();
 
 import { Dictionary } from '../www/map-app/common_types';
-import { DataServices, PropDefs } from '../www/map-app/app/model/dataservices';
+import { DataServicesImpl, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
 import { VocabServiceImpl } from '../www/map-app/app/model/vocabs';
-import { SparqlDataAggregator } from '../www/map-app/app/model/sparqldataaggregator';
+import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
 
 import { getPopup } from '../www/map-app/app/view/map/default_popup';
 const expectedContent = require('./expected/popups/default.json');
@@ -13,7 +13,7 @@ const expectedContent = require('./expected/popups/default.json');
 // The standard schema as it was when the test was created, translated
 // into PropDefs
 const fieldSchema: PropDefs = {
-  ...DataServices.basePropertySchema,
+  ...basePropertySchema,
   desc: { type: 'value', as: 'string' },
   www: { type: 'value', as: 'string' },
   twitter: { type: 'value', as: 'string' },
@@ -69,13 +69,14 @@ const vocabs = new VocabServiceImpl(cannedVocabs, 'EN');
 // the server with a dataset name.
 
 const cannedData = require('./cannedData.json');
-const dataservices = new DataServices(config, {'EN': {contact: 'Contact'}});
-const aggregator = new SparqlDataAggregator(config, fieldSchema, vocabs, {});
-aggregator.addBatch(cannedData.data);
-aggregator.complete();
+const datasetId = 'testDataset';
+const dataservices = new DataServicesImpl(config, {'EN': {contact: 'Contact'}});
+const aggregator = new DataAggregator(config, fieldSchema, vocabs, {});
+aggregator.addBatch(datasetId, cannedData.data);
+aggregator.complete(datasetId);
 
 dataservices.vocabs = vocabs; // Hack this into place
-dataservices.dataAggregator = aggregator; // Hack this into place
+dataservices.aggregatedData = aggregator; // Hack this into place
 
 const initiatives = aggregator.initiativesByUid;
 
@@ -83,8 +84,10 @@ describe('The default_popup.js module', function () {
 
   const allContent: Dictionary<string> = {};
   Object.entries(initiatives).forEach((ent) => {
-    const content = getPopup(ent[1], dataservices);
-    allContent[ent[0]] = content;
+    if (ent[1]) {
+      const content = getPopup(ent[1], dataservices);
+      allContent[ent[0]] = content;
+    }
   })
 
   // To save the generated data in nodejs (under instant-mocha) set:

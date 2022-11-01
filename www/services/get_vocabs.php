@@ -377,6 +377,12 @@ function add_query_data($result, $query_results) {
         $label = $row['label']['value'];       
         $lang = $row['label']['xml:lang'] ?? 'EN';
         $lang = strtoupper($lang);
+
+        // Ensure terms field is an object, even if empty
+        // PHP only has arrays, so empty ones are encoded as '[]', not '{}'
+        // Using an ArrayObject will result in empty cases being encoded as '{}',
+        // whilst still allowing the array-like behaviour (necessary for adding values).
+        $result['vocabs'][$shortVocab][$lang]['terms'] ??= new ArrayObject();
         
         $term = $row['term']['value'] ?? '';
         // FIXME check for overwriting data
@@ -416,7 +422,7 @@ function main() {
     // Predefined prefixes commonly seen in the data.  Any inferred
     // prefixes not in this list, or obtained from config.json, will
     // have names generated starting with an '_'
-    $prefixes = [];
+    $prefixes = new ArrayObject();
 
     $config = json_decode(file_get_contents("php://input"), true);
 
@@ -460,7 +466,7 @@ function main() {
     }
 
     header('Content-type: application/json');
-    echo json_encode($result);
+    echo json_encode($result, JSON_FORCE_OBJECT);
 }
 
 // Call the entrypoint.
