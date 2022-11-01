@@ -19,12 +19,22 @@ import {
 } from './dataloader';
 
 import {
+  SparqlVocabLoader,
+} from './sparqlvocabloader';
+
+import {
+  JsonVocabLoader,
+} from './jsonvocabloader';
+
+import {
   Vocab,
-  VocabServices,
   VocabIndex,
+  VocabServices,
+  VocabAggregator,
   LocalisedVocab,
   VocabServiceImpl,
-  isVocabIndex,
+  SparqlVocabResponse,
+  isSparqlVocabResponse,
 } from './vocabs';
 
 import {
@@ -35,12 +45,10 @@ import {
   SparqlDataAggregator,
 } from './sparqldataaggregator';
 
-import { json } from 'd3';
-
 const getDatasetPhp = require("../../../services/get_dataset.php");
+const getVocabsPhp  = require("../../../services/get_vocabs.php");
 
 const eventbus = require('../eventbus');
-const getVocabsPhp = require("../../../services/get_vocabs.php");
 import { functionalLabels } from '../../localisations';
 import { CsvDataLoader } from './csvdataloader';
 
@@ -70,12 +78,12 @@ interface Filter {
   initiatives: Initiative[];
 }
 
-export interface DatasetMeta {
+export interface DataLoaderMeta<T> {
   type: string;
   label: string;
-  loader: DataLoader; // Subtypes of loaders can expose metadata under .meta
+  loader: DataLoader<T>; // Subtypes of loaders can expose metadata under .meta
 };
-type DatasetMap = Dictionary<DatasetMeta>;
+type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
 
 export interface InitiativeObj {
   uri: string;
@@ -231,7 +239,7 @@ export interface DataServices {
   // - `label` is the display name for the dataset.
   // - `loader` is a dataset loader instance
   //
-  getDatasets(): DatasetMap;
+  getDatasets(): DataLoaderMap<InitiativeObj>;
 
   getDialogueSize(): DialogueSize;
 
@@ -278,7 +286,7 @@ export interface DataServices {
 //
 // @returns a promise which resolves to the consumer parameter on
 // success, or an Error object on failure.
-export async function loadDatasets<T extends DataConsumer>(dataLoaders: DataLoader[], consumer: T): Promise<T> {
+export async function loadDatasets<D, T extends DataConsumer<D>>(dataLoaders: DataLoader<D>[], consumer: T): Promise<T> {
 
   // Launch the dataset loaders asynchronously, obtaining an map
   // dataset ids to promises for the appropriate dataset loader
@@ -329,7 +337,8 @@ export async function loadDatasets<T extends DataConsumer>(dataLoaders: DataLoad
 export class DataServicesImpl implements DataServices {
   readonly config: Config;
   readonly fallBackLanguage: string;
-  readonly datasets: DatasetMap = {};
+  readonly datasets: DataLoaderMap<InitiativeObj> = {};
+  readonly vocabLoaders: DataLoaderMap<VocabIndex> = {};
   readonly functionalLabels: Dictionary<Dictionary<string>>;
   
   // The per-instance propert schema, which can be extended by configuration.
@@ -354,6 +363,45 @@ export class DataServicesImpl implements DataServices {
         const fieldDef = fields[fieldId];
         this.propertySchema[fieldId] = fieldDef;
       }
+    }
+
+    {
+      const vocabSources = this.config.vocabularies();
+        
+      vocabSources.forEach(vs => {
+        switch(vs.type) {
+          case 'hostSparql':
+            this.vocabLoaders[vs.id] = {
+              type: vs.type,
+              label: vs.label,
+              loader: new SparqlVocabLoader(
+                vs.id,
+                getVocabsPhp,
+                config.getLanguages(),
+                [{
+                  endpoint: vs.endpoint,
+                  defaultGraphUri: vs.defaultGraphUri,
+                  uris: vs.uris,
+                }],
+              ), 
+            };
+            break;
+
+          case 'json':
+            this.vocabLoaders[vs.id] = {
+              type: vs.type,
+              label: vs.label,
+              loader: new JsonVocabLoader(
+                vs.id,
+                vs.url,
+              ), 
+            };
+            break;
+
+          default:
+            throw new Error(`Unknown dataset type '${(vs as any)?.type}'`);
+        }
+      });
     }
 
     {
@@ -461,7 +509,7 @@ export class DataServicesImpl implements DataServices {
     return this.currentDatasets;
   }
 
-  getDatasets(): DatasetMap {
+  getDatasets(): DataLoaderMap<InitiativeObj> {
     return this.datasets;
   }
 
@@ -599,12 +647,8 @@ export class DataServicesImpl implements DataServices {
     // Load the vocabs first, then on success, load the
     // initiatives. Handlers defined below.
     try {
-      const response = await this.loadVocabs();
-      
-      console.log("loaded vocabs", response);
-
-      this.vocabs = new VocabServiceImpl(response, this.getLanguage());
-      
+      await this.loadVocabs();
+        
       eventbus.publish({ topic: "Vocabularies.loaded" });
     }
     catch(error) {
@@ -621,7 +665,7 @@ export class DataServicesImpl implements DataServices {
     try {
       const dataLoaders = datasetIds
         .map(id => this.datasets[id]?.loader)
-        .filter((ds): ds is DataLoader => ds !== undefined)
+        .filter((ds): ds is DataLoader<InitiativeObj> => ds !== undefined)
 
       const onItemComplete = (initiative: Initiative) => {
         // Broadcast the creation of the initiative
@@ -672,22 +716,19 @@ export class DataServicesImpl implements DataServices {
 
   // Loads the configured list of vocabs from the server.
   //
-  // The list is defined in `config.json`
+  // The list is defined in the configuration.
   //
-  // @return the response data wrapped in a promise, direct from d3.json.
-  private async loadVocabs(): Promise<VocabIndex> {
-    const result = json(getVocabsPhp, {
-      method: 'POST',
-      body: JSON.stringify({
-        languages: [this.getLanguage()],
-        vocabularies: this.config.vocabularies(),
-      }),
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-    });
-    if (isVocabIndex(result))
-      return result as VocabIndex;
+  // @return a promise which resolves when the vocabs are completely loaded
+  private async loadVocabs(): Promise<void> {
+    const aggregator = new VocabAggregator(this.fallBackLanguage);
 
-    throw new Error(`Invalid JSON result returned by vocab endpoint at ${getVocabsPhp}`);
+    const loaders = Object.values(this.vocabLoaders)
+      .filter((meta): meta is DataLoaderMeta<VocabIndex> => meta !== undefined)
+      .map(meta => meta.loader)
+    
+    await loadDatasets<VocabIndex, VocabAggregator>(loaders, aggregator);
+    this.vocabs = aggregator.allComplete(); // finish the aggregation
+    return;
   }
   
   // Reloads the active data set (or sets)

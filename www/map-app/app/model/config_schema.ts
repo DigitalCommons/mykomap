@@ -30,10 +30,6 @@ import type {
 } from './dataservices';
 
 import type {
-  VocabSource
-} from './vocabs';
-
-import type {
   ObjTransformFunc,
 } from '../../obj-transformer';
 
@@ -62,6 +58,30 @@ class TypeDef<T> {
   parseString?: (val: string) => T;
 };
 
+
+export interface VocabSource {
+  id: string;
+  type: string;
+  label: string;
+}
+
+export interface HostSparqlVocabParams {
+  endpoint: string;
+  defaultGraphUri?: string;
+  uris: Record<string, string>;
+}  
+
+export interface HostSparqlVocabSource extends VocabSource, HostSparqlVocabParams {
+  type: 'hostSparql';
+}
+
+export interface JsonVocabSource extends VocabSource {
+  type: 'json';
+  url: string;
+}
+
+export type AnyVocabSource = HostSparqlVocabSource | JsonVocabSource;
+
 export interface DataSource {
   id: string;
   type: string;
@@ -84,7 +104,7 @@ export interface CsvDataSource extends DataSource {
 
 export type AnyDataSource = HostSparqlDataSource | CsvDataSource;
 
-export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|VocabSource[]|AnyDataSource[];
+export type ConfigTypes = string|string[]|number|boolean|DialogueSize|Point2d|Box2d|AnyVocabSource[]|AnyDataSource[];
 export type TypeDefs = { readonly [key: string]: TypeDef<ConfigTypes> }
 
 export interface ReadableConfig {
@@ -122,7 +142,7 @@ export interface ReadableConfig {
   getVersionTag(): string;
   htmlTitle(): string;
   logo(): string | undefined;
-  vocabularies(): VocabSource[];
+  vocabularies(): AnyVocabSource[];
 };
 
 export interface WritableConfig {
@@ -215,7 +235,7 @@ export class ConfigData {
   tileUrl?: string;
   timestamp: string = '2000-01-01T00:00:00.000Z';
   variant: string = '';
-  vocabularies: VocabSource[] = [];
+  vocabularies: AnyVocabSource[] = [];
   
   // This index accessor is required for Typescript to allow dynamic assignment, it seems
   [name: string]: unknown;
@@ -358,8 +378,8 @@ const types = {
     name: '{InitiativeRenderFunction}',
     descr: 'A function which accepts an Initiative instance and returns an HTML string',
   }),
-  vocabSources: new TypeDef<VocabSource[]>({
-    name: '{VocabSource[]}',
+  vocabSources: new TypeDef<AnyVocabSource[]>({
+    name: '{AnyVocabSource[]}',
     descr: 'An array of vocab source definitions, defining a SPARQL endpoint URL, '+
       'a default graph URI, and an index of vocabulary URIs to their prefixes - '+
       'which must be unique to the whole array.',
@@ -743,23 +763,31 @@ export class Config implements ReadableConfig, WritableConfig {
     const urisSeen = {} as Dictionary;
     if (this.data.vocabularies) {
       for(let ix = 0; ix < this.data.vocabularies.length; ix++) {
-        const vocabSource: VocabSource = this.data.vocabularies[ix];
-        for(const vocabUri in vocabSource.uris) {
-          const vocabPrefix = vocabSource.uris[vocabUri];
-          if (vocabPrefix === undefined)
-            continue;
-          if (vocabPrefix in prefixesSeen) {
-            console.warn(`Duplicate prefix in vocabularies config, ${vocabPrefix} (for ${vocabUri})`);
-          }
-          else {
-            prefixesSeen[vocabPrefix] = vocabUri;
-            urisSeen[vocabUri] = vocabPrefix;
-          }          
+        const vocabSource: AnyVocabSource = this.data.vocabularies[ix];
+        switch(vocabSource.type) {
+          case 'hostSparql':
+            Object.entries(vocabSource.uris).forEach(([vocabUri, vocabPrefix]) => {
+              if (vocabPrefix === undefined)
+                return;
+              if (vocabPrefix in prefixesSeen) {
+                console.warn(`Duplicate prefix in vocabularies config, ${vocabPrefix} (for ${vocabUri})`);
+              }
+              else {
+                prefixesSeen[vocabPrefix] = vocabUri;
+                urisSeen[vocabUri] = vocabPrefix;
+              }          
+            })
+            break;
+          case 'json':
+            // We don't know what vocab URIs are included until after
+            // loading, so can't check these
+            break;
         }
       }
     }
 
     // Make sure the fields all reference a known vocab
+    /* FIXME this no longer works - can we check it later?
     for(const fieldId in this._fields ?? {}) {
       let field = this._fields[fieldId];
       if (field === undefined)
@@ -784,7 +812,7 @@ export class Config implements ReadableConfig, WritableConfig {
           throw error;
         }
       }
-    } 
+    }*/ 
   }
 
   // This generates the documentation for this schema, in Markdown
@@ -971,7 +999,7 @@ ${def.descr}
   logo(): string | undefined {
     return this.data.logo;
   }
-  vocabularies(): VocabSource[] {
+  vocabularies(): AnyVocabSource[] {
     return this.data.vocabularies;
   }
   

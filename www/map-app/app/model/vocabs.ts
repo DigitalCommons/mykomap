@@ -1,15 +1,7 @@
 import type { Dictionary } from '../../common_types';
 import type { Initiative, PropDefs, PropDef } from './dataservices';
-
-interface VocabMeta {
-  languages: string[];
-  queries: string[];
-  vocab_srcs: {
-    defaultGraphUri: string;
-    endpoint: string;
-    uris: { [uri: string]: string };
-  }[];
-}
+import type { DataConsumer } from './dataloader';
+import type { VocabSource, HostSparqlVocabSource } from './config_schema';
 
 export interface Vocab {
   title: string;
@@ -20,22 +12,36 @@ export interface LocalisedVocab {
   [lang: string]: Vocab;
 }
 
-export interface VocabIndex {
-  abbrevs: Dictionary;
-  meta: VocabMeta;
-  prefixes: Dictionary;
-  vocabs: { [prefix: string]: LocalisedVocab };
+export interface SparqlVocabMeta {
+  languages: string[];
+  queries: string[];
+  vocab_srcs: {
+    defaultGraphUri: string;
+    endpoint: string;
+    uris: { [uri: string]: string };
+  }[];
 }
-export function isVocabIndex(value: any): value is VocabIndex {
+
+export interface VocabIndex {
+  prefixes: Dictionary;
+  vocabs: Record<string, LocalisedVocab>;
+}
+
+export type SparqlVocabResponse = VocabIndex & {
+  meta: SparqlVocabMeta;
+}
+
+
+export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse {
   if (typeof(value) !== 'object')
     return false;
   return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
 }
 
-export interface VocabSource {
-  endpoint: string;
-  defaultGraphUri?: string;
-  uris: Dictionary<string>;
+export function isVocabIndex(value: any): value is VocabIndex {
+  if (typeof(value) !== 'object')
+    return false;
+  return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
 }
 
 // Supplies query functions for a VocabIndex
@@ -87,11 +93,10 @@ export interface VocabServices {
 
 // Supplies query functions for a VocabIndex
 export class VocabServiceImpl implements VocabServices {
-  readonly vocabs: VocabIndex;
+  readonly vocabs: VocabIndex & { abbrevs: Dictionary };
   readonly fallBackLanguage: string;
   
   constructor(data: VocabIndex, fallBackLanguage: string) {
-    this.vocabs = data;
     this.fallBackLanguage = fallBackLanguage;
     
     // Add an inverted look-up `abbrevs` mapping abbreviations to uris
@@ -103,10 +108,10 @@ export class VocabServiceImpl implements VocabServices {
     const prefixes: Dictionary = {};
     const abbrevs: Dictionary = {};
     Object
-      .keys(this.vocabs.prefixes)
+      .keys(data.prefixes)
       .sort((a, b) => b.length - a.length)
       .forEach(prefix => {
-        const abbrev = this.vocabs.prefixes[prefix];
+        const abbrev = data.prefixes[prefix];
         if (!abbrev)
           throw new Error(`VocabIndex used for VocabServiceImpl has an undefined abbreviation for prefix '${prefix}'`);
         
@@ -114,11 +119,10 @@ export class VocabServiceImpl implements VocabServices {
         prefixes[prefix] = abbrev;
       });
 
-    this.vocabs.prefixes = prefixes;
-    this.vocabs.abbrevs = abbrevs;
-    if (!this.vocabs.vocabs)
-      this.vocabs.vocabs = {}; // Ensure this is here
-  }
+    this.vocabs = {
+      abbrevs, prefixes, vocabs: data.vocabs ?? {}
+    };
+   }
 
   getFallBackLanguage(): string {
     return this.fallBackLanguage;
@@ -275,8 +279,13 @@ export class VocabServiceImpl implements VocabServices {
       if (abbrev == 'http' || abbrev == 'https')
         return uri; // No more expansion needed
 
-      if (abbrev in this.vocabs.abbrevs) // Expand this abbreviation
+      if (abbrev in this.vocabs.abbrevs) { // Expand this abbreviation
         uri = this.vocabs.abbrevs[abbrev] + uri.substring(delimIx + 1);
+        continue;
+      }
+
+      // If we get here, there's an unexpandable abbreviation
+      throw new Error(`unrecognised abbreviation: '${abbrev}' in uri '${uri}'`)
     }
   }
 
@@ -298,4 +307,47 @@ export class VocabServiceImpl implements VocabServices {
     return uri; // No abbreviation possible.
   }
 
+}
+
+
+export class VocabAggregator implements DataConsumer<VocabIndex> {
+  readonly prefixes: Dictionary = {};
+  readonly vocabs: Record<string, LocalisedVocab> = {};
+  onItemComplete?: (id: string) => void;
+  onSetComplete?: (id: string) => void;
+  onSetFail?: (id: string, error: Error) => void;
+
+  constructor(readonly fallbackLanguage: string) {}
+  
+  // Add a batch of data. May be called multiple times.
+  addBatch(id: string, data: VocabIndex[]): void {
+
+    data.forEach((vi, ix) => {
+      Object.assign(this.prefixes, vi.prefixes);
+      Object.assign(this.vocabs, vi.vocabs);
+      // FIXME detect clobbering?
+      console.log("loaded vocab", id, ix); // DEBUG
+      this.onItemComplete?.(id);
+    });
+  }
+
+  // Finishes the load successfully after all data has been seen
+  complete(id: string): void {
+    this.onSetComplete?.(id);
+  }
+
+  // Finishes the load unsuccessfully after an error occurs  
+  fail(id: string, error: Error): void {
+    this.onSetFail?.(id, error);
+  }
+
+  // Finishes the load after all data has been seen.
+  allComplete(): VocabServices {
+    const vocabIndex: VocabIndex = {
+      prefixes: this.prefixes,
+      vocabs: this.vocabs,
+    };
+    console.log("loaded vocabs", vocabIndex);
+    return new VocabServiceImpl(vocabIndex, this.fallbackLanguage);
+  }
 }

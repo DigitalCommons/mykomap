@@ -30,7 +30,7 @@ import {
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
-export class SparqlDataAggregator extends AggregatedData implements DataConsumer {  
+export class SparqlDataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
 
   constructor(

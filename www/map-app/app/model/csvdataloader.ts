@@ -32,10 +32,10 @@ import {
 } from "papaparse";
 
 
-export class CsvDataLoader<R extends object = string[]> implements DataLoader {
+export class CsvDataLoader<R extends object = string[]> implements DataLoader<InitiativeObj> {
   constructor(readonly id: string, readonly url: string, readonly rowTransform: ObjTransformFunc<R,InitiativeObj>) {}
   
-  load<T extends DataConsumer>(dataConsumer: T): Promise<this> {
+  load(dataConsumer: DataConsumer<InitiativeObj>): Promise<this> {
     const executor = (resolve: (v: this | PromiseLike<this>) => void , reject: (r?: any) => void) => {
       const onStep = (result: ParseStepResult<R>, parser: PapaParser) => {
         if (result.errors.length == 0) {
