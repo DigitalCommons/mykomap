@@ -63,16 +63,32 @@ function init(registry) {
     const sourceParag = dataSection.append('p')
     sourceParag.text(labels.source)
 
-    sourceParag
+    const li = sourceParag
       .append('ul')
       .selectAll('li')
       .data(Object.values(dataServices.getDatasets()))
       .enter()
-      .append('li')
+      .append('li');
+
+    // Different data sources currently need different code here.
+    // Ideally make this more uniform later
+    li
+      .filter(d => d.type !== 'hostSparql') // non hostSparql
+      .text(d => d.label);
+    
+    li
+      .filter(d => d.type === 'hostSparql') // The rest is hostSparql specific currently
       .append('a')
-      .text(d => d.name)
-      .attr('href', d => d.dgu.replace(/\/*$/, '/')) // ensure URI has trailing slash, needed for lod.coop
-      .attr('target', '_blank');
+      .text(d => d.label)
+      .attr('target', '_blank')
+          .attr('href', d => {
+            console.log(d)
+        if (typeof d?.loader?.meta?.default_graph_uri === 'string') {
+          // ensure URI has trailing slash, needed for lod.coop
+          return d.loader.meta.default_graph_uri.replace(/\/*$/, '/');
+        }
+        return '#'; // placeholder
+      });
 
     dataSection.append('p')
       .text(labels.technicalInfo);

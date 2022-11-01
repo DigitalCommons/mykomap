@@ -11,12 +11,6 @@ import {
   sortInitiatives,
 } from './dataservices';
 
-// Defines properties of a dataset which can be loaded.
-export interface DatasetMeta {
-  id: string;
-  name: string;
-}
-
 // For loading InitiativeObj data incrementally
 //
 // A variety of the visitor pattern. The details of what is done by the
@@ -86,6 +80,10 @@ export interface DataLoader {
   // @throws [Error] when an error occurs, which will be a
   // DataLoaderError when associated with a dataset.
   load<T extends DataConsumer>(dataConsumer: T): Promise<this>;
+
+  // Subtypes of this class can expose metadata discovered during the load here
+  // (possibly suitably narrowed)
+  meta?: unknown;
 }
 
 // A DataLoader error which can be connected to a particular dataset loader.
