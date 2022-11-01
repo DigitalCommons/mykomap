@@ -11,19 +11,19 @@ import {
   sortInitiatives,
 } from './dataservices';
 
-// For loading InitiativeObj data incrementally
+// For loading data incrementally
 //
 // A variety of the visitor pattern. The details of what is done by the
 // consumer is abstracted, and so up to the implementation.
-export interface DataConsumer {
+export interface DataConsumer<T> {
   // Add a batch of data. May be called multiple times.
-  addBatch(datasetId: string, initiatives: InitiativeObj[]): void;
+  addBatch(id: string, data: T[]): void;
 
   // Finishes the load successfully after all data has been seen
-  complete(datasetId: string): void;
+  complete(id: string): void;
 
   // Finishes the load unsuccessfully after an error occurs  
-  fail(datasetId: string, error: Error): void;
+  fail(id: string, error: Error): void;
 }
 
 export class AggregatedData {
@@ -58,7 +58,7 @@ export class AggregatedData {
 
 // For loading Datsets using a DataConsumer
 //
-export interface DataLoader {
+export interface DataLoader<D> {
 
   // Get the dataset ID this dataloader handles
   get id(): string;
@@ -77,7 +77,7 @@ export interface DataLoader {
   //
   // @throws [Error] when an error occurs, which will be a
   // DataLoaderError when associated with a dataset.
-  load<T extends DataConsumer>(dataConsumer: T): Promise<this>;
+  load<T extends DataConsumer<D>>(dataConsumer: T): Promise<this>;
 
   // Subtypes of this class can expose metadata discovered during the load here
   // (possibly suitably narrowed)
@@ -85,7 +85,7 @@ export interface DataLoader {
 }
 
 // A DataLoader error which can be connected to a particular dataset loader.
-export class DataLoaderError<T extends DataLoader> extends Error {
+export class DataLoaderError<D, T extends DataLoader<D>> extends Error {
   constructor(message: string, readonly loader: T) {
     super(message);
   }

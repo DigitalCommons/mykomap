@@ -5,7 +5,6 @@ import {
 } from './dataloader';
 
 import {
-  DatasetMeta,
   InitiativeObj,
 } from './dataservices';
 
@@ -33,7 +32,7 @@ function isSparqlDatasetResponse(value: any): value is SparqlDatasetResponse {
   return false;
 }
 
-export class SparqlDataLoader implements DataLoader {
+export class SparqlDataLoader implements DataLoader<InitiativeObj> {
   private readonly maxInitiativesToLoadPerFrame = 100;
   private readonly useCache: boolean;
   private readonly serviceUrl: string;
@@ -56,7 +55,7 @@ export class SparqlDataLoader implements DataLoader {
   // @returns a promise containing this DataConsumer which resolves
   // when all datasets are fully loaded and processed by the consumer,
   // or a failure has occurred.
-  async load<T extends DataConsumer>(dataConsumer: T): Promise<this> {
+  async load<T extends DataConsumer<InitiativeObj>>(dataConsumer: T): Promise<this> {
     
     const initiativeData: InitiativeObj[] = [];
     this.meta = undefined; // Ensure this is reset
