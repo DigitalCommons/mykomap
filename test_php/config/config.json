@@ -3,17 +3,17 @@
   
   "vocabularies": [
     { "endpoint": "http:\/\/dev.data.solidarityeconomy.coop:8890/sparql",
-      "uris": [
-        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities/",
-        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/organisational-structure/"
-      ]
+      "uris": {
+        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/activities/": "aci:",
+        "https:\/\/w3id.solidarityeconomy.coop/essglobal/V2a/standard/organisational-structure/": "os:"
+      }
     }
   ],
   
   "namedDatasets": ["newbridge"],
   "htmlTitle": "For Solidarity",
   "defaultLatLng": ["54.973239","-1.610048"],
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "filterableFields": ["primaryActivity"],
   "doesDirectoryHaveColours": true,
   "disableClusteringAtZoom": false,
   "maxZoomOnGroup":12,
