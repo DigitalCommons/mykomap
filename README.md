@@ -2,6 +2,15 @@
 
 sea-map - A web application for mapping initiatives in the Solidarity & Co-operative Economies
 
+## Status
+
+| Service: | `master` | `dev` |
+| -------: | :------: | :---: |
+| Testing: | ![npm test master] | ![npm test dev] |
+
+[npm test master]: https://github.com/DigitalCommons/mykomap/actions/workflows/node.js.yml/badge.svg?branch=master
+[npm test dev]: https://github.com/DigitalCommons/mykomap/actions/workflows/node.js.yml/badge.svg?branch=dev
+
 # USAGE
 
 (Also prerequisites section below)
