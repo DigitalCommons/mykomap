@@ -36,6 +36,7 @@ module.exports = function(config) {
       // add webpack as preprocessor
       //'test/test-test.js': [ 'webpack' ],
       'test/**/*.js': [ 'webpack', 'sourcemap' ],
+      'test/**/*.ts': [ 'webpack', 'sourcemap' ],
       //'www/map-app/**/*.js': [ 'webpack' ],
     },
 
@@ -93,6 +94,14 @@ module.exports = function(config) {
          },*/
       module: {
         rules: [
+	        {
+            test: /\.tsx?$/,
+            loader: 'ts-loader',
+            // Allow TS compiling in node_modules, but exclude all except
+            // sea-map, which because it is a git dependency, contains
+            // uncompiled typescript.
+            options: { allowTsInNodeModules: true },
+          },
           {
             test: /\.html$/i,
             loader: 'html-loader',
@@ -144,6 +153,7 @@ module.exports = function(config) {
         ],
       },
       resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
         alias: {
           // Allows loading modules in the test directory
           'test': `${__dirname}/test`,
