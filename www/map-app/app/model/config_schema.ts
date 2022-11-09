@@ -224,7 +224,7 @@ export class ConfigData {
   maxZoomOnOne: number = 18;
   maxZoomOnSearch: number = 18;
   noLodCache: boolean = true;
-  seaMapVersion: string = '0';
+  mykoMapVersion: string = '0';
   searchedFields: string[] = ['name'];
   servicesPath: string = 'services/';
   showAboutPanel: boolean = true;
@@ -430,7 +430,7 @@ const types = {
  * Note, the schema is initialised via a function call. The parameters to this
  * should match the configuration attributes, and can be used to initialise
  * these attributes from an external source, if supplied by the caller
- * when requiring sea-map.
+ * when requiring mykomap.
  *
  * Therefore, the default value of the parameters below will (typically) 
  * define the default value to use when the user does not supply one (unless
@@ -476,7 +476,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       attr_namespace: {
         id: 'attr_namespace',
-        descr: "Sets the namespace prefix expected on the sea-map anchor element's attributes.",
+        descr: "Sets the namespace prefix expected on the mykomap anchor element's attributes.",
         getter: 'attr_namespace',
         type: types.string,
       },
@@ -560,7 +560,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       gitcommit: {
         id: 'gitcommit',
-        descr: 'The git commit-ID of the sea-map source code deployed.',
+        descr: 'The git commit-ID of the mykomap source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
         getter: 'getSoftwareGitCommit',
@@ -647,9 +647,9 @@ export class Config implements ReadableConfig, WritableConfig {
         setter: 'setNoLodCache',
         type: types.boolean,
       },
-      seaMapVersion: {
-        id: 'seaMapVersion',
-        descr: 'The git tag of the sea-map source code deployed.',
+      mykoMapVersion: {
+        id: 'mykoMapVersion',
+        descr: 'The git tag of the mykomap source code deployed.',
         defaultDescr: "Defined by `variant` attribute of the consuming project's " +
           "file `config/version.json`",
         getter: 'getVersionTag',
@@ -669,7 +669,7 @@ export class Config implements ReadableConfig, WritableConfig {
           "this is populated using the values from the fields of the initiative (only the fields specified in the 'searchedFields' parameter are used)" +
           "\nCurrently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other." +
           "\nThe 'searchstr' is then converted into uppercase. No other string transformations are currently applied" +
-          "\nWhen a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.",
+          "\nWhen a user uses the mykomap search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.",
         getter: 'getSearchedFields',
         setter: 'setSearchedFields',
         type: types.arrayOfString,
@@ -991,7 +991,7 @@ ${def.descr}
     return this.data.tileUrl;
   }
   getVersionTag(): string {
-    return this.data.seaMapVersion;
+    return this.data.mykoMapVersion;
   }
   htmlTitle(): string {
     return this.data.htmlTitle;

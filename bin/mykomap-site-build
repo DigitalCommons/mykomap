@@ -2,4 +2,4 @@
 // This is here to allow the actual code to be in a file with a .js
 // extension, which helps my editor figure out the right indentation to
 // use.
-require("./sea-site-build.js");
+require("./mykomap-site-build.js");

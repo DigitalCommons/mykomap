@@ -21,7 +21,7 @@
 node_modules/
 
 # Optional link to an external map project for development purposes
-# (e.g. playground)
+# (e.g. mykomap-site-example)
 /ext
 
 # Configuration for local testing

@@ -93,7 +93,7 @@ function init(registry) {
     dataSection.append('p')
       .text(labels.technicalInfo);
 
-    const technicalInfoUrl = 'https://github.com/SolidarityEconomyAssociation/sea-map/wiki';
+    const technicalInfoUrl = 'https://github.com/DigitalCommons/mykomap/wiki';
     dataSection
       .append('p')
       .append('a')
@@ -110,7 +110,7 @@ function init(registry) {
         .attr("class", "w3-container about-version")
         .append("p")
         .attr("style", "font-style: italic;")
-        .text(`sea-map@${version}`);
+        .text(`mykomap@${version}`);
     }
   };
 
