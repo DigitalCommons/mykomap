@@ -27,8 +27,8 @@ const configPath = path.resolve(
   cwd, args.c || die("you must supply a path to the config files -c")
 );
 const srcPath = args.s? path.resolve(cwd, args.s) : undefined;
-const seaMapPath = path.resolve(
-  cwd, args.m || die("you must supply a path to the sea-map module in -m")
+const mykoMapPath = path.resolve(
+  cwd, args.m || die("you must supply a path to the mykomap module in -m")
 );
 const destPath = path.resolve(
   cwd, args.d || die("you must supply a path to the build destination in -d"), 'out'
@@ -61,21 +61,21 @@ function getGitCommit(cwd) {
   return commit;
 }
 
-// This resolves to sea-map's package.json.
-const seaMapPackageJson = require(path.join(seaMapPath, 'package.json'));
+// This resolves to mykomap's package.json.
+const mykoMapPackageJson = require(path.join(mykoMapPath, 'package.json'));
 const variant = process.env.npm_package_name;
 
-const debug = variant == 'sea-map' || process.env.NODE_ENV !== "production";
+const debug = variant == 'mykomap' || process.env.NODE_ENV !== "production";
 
 const versionJson = path.join(srcPath, 'version.json');
 let versionInfo;
-let seaMapSrcDir;
+let mykoMapSrcDir;
 let servicesDir;
 let entry;
-if (variant == 'sea-map') {
-  // Infer development mode from sea-map package
+if (variant == 'mykomap') {
+  // Infer development mode from mykomap package
 
-  seaMapSrcDir = "./www/map-app"; // locally
+  mykoMapSrcDir = "./www/map-app"; // locally
   servicesDir = "./www/services";
   
   // Get the linked dependency config in ext/package.json 
@@ -84,26 +84,26 @@ if (variant == 'sea-map') {
     variant: mapPackageJson.name,
     timestamp: timestamp,
     gitcommit: getGitCommit(path.join(cwd, '/ext')),
-    seaMapVersion: seaMapPackageJson.version+'_'+getGitCommit()+'-dev',
-    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    mykoMapVersion: mykoMapPackageJson.version+'_'+getGitCommit()+'-dev',
+    mykoMapResolvedVersion: mykoMapPackageJson._resolved, // may be undefined
   };
 }
 else {
   // Infer production mode
 
-  seaMapSrcDir = "./node_modules/sea-map/www/map-app"; // in the sea-map module dep
-  servicesDir = "./node_modules/sea-map/www/services"; // in the sea-map module dep
+  mykoMapSrcDir = "./node_modules/mykomap/www/map-app"; // in the mykomap module dep
+  servicesDir = "./node_modules/mykomap/www/services"; // in the mykomap module dep
   
-  // Get the sea-map git commit ID from the resolved version (we don't have
+  // Get the mykomap git commit ID from the resolved version (we don't have
   // access to the git repo in this case).
-  const seaMapResolved = (seaMapPackageJson._resolved || '');
-  const seaMapCommit = seaMapResolved.replace(/^.*#/, '_').substr(0, 8);
+  const mykoMapResolved = (mykoMapPackageJson._resolved || '');
+  const mykoMapCommit = mykoMapResolved.replace(/^.*#/, '_').substr(0, 8);
   versionInfo = {
     variant: variant,
     timestamp: timestamp,
     gitcommit: getGitCommit(),
-    seaMapVersion: seaMapPackageJson.version+seaMapCommit,
-    seaMapResolvedVersion: seaMapPackageJson._resolved, // may be undefined
+    mykoMapVersion: mykoMapPackageJson.version+mykoMapCommit,
+    mykoMapResolvedVersion: mykoMapPackageJson._resolved, // may be undefined
   };
 }
 fs.writeFileSync(versionJson,
@@ -114,7 +114,7 @@ fs.writeFileSync(versionJson,
 // file needs an `"exclude": [ "./ext/" ]` in order that
 // typescript files in ./ext are not loaded by `tsc` unless explicitly
 // linked via an entry point or an include. 
-let entryModulePath = path.join(path.resolve(cwd, seaMapSrcDir), 'default_app.ts');
+let entryModulePath = path.join(path.resolve(cwd, mykoMapSrcDir), 'default_app.ts');
 if (srcPath) { // -s was supplied, maybe override the default
   const customTsEntryModulePath = path.join(srcPath, 'index.ts');
   const customJsEntryModulePath = path.join(srcPath, 'index.js');
@@ -144,7 +144,7 @@ const webpackConfig = {
         test: /\.tsx?$/,
         loader: 'ts-loader',
         // Allow TS compiling in node_modules, but exclude all except
-        // sea-map, which because it is a git dependency, contains
+        // mykomap, which because it is a git dependency, contains
         // uncompiled typescript.
         options: { allowTsInNodeModules: true },
       },
@@ -203,7 +203,7 @@ const webpackConfig = {
     alias: {
       // Define this alias so that it works in user code's config/index.ts
       // Note, it needs to be absolute to support use from ext/
-      "sea-map": path.resolve(seaMapSrcDir),
+      "mykomap": path.resolve(mykoMapSrcDir),
     },
     // Tell webpack not to resolve symlinks. This would make typescript baulk
     // on symlinked files outside this project.

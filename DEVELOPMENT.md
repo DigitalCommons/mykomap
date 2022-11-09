@@ -2,38 +2,38 @@
 
 ## Synopsis
 
-Clone sea-map, and a website project to develop with:
+Clone mykomap, and a website project to develop with:
 
-    git clone http://github.com/SolidarityEconomyAssociation/sea-map
-    git clone http://github.com/SolidarityEconomyAssociation/sea-site-experiment
+    git clone http://github.com/DigitalCommons/mykomap
+    git clone http://github.com/DigitalCommons/mykomap-site-example
 
-Check out the `dev` branch of sea-map and (typically) create a feature
+Check out the `dev` branch of mykomap and (typically) create a feature
 branch, named with the a prefix indicating the issue the branch
 addresses. Try and be consistent with the initials, see [FEATURE
 BRANCHES][#FEATURE-BRANCHES] below.
 
-	cd sea-map
+	cd mykomap
 	git co dev
 	git co -b sm99-some-feature
 	
 Symlink the website project directory as `ext` (or move it here, if
 symlinks are not available).
 
-	ln -sfn ../sea-site-experiment ext
+	ln -sfn ../mykomap-site-example ext
 
 And in order for this to work with a typescript `index.ts` entry point
 (but not needed for a `index.js`, or indeed no custom entry point at
 all) the symlinked project under ext/ needs a tsconfig.json, and in
 particular, one with a path linking back to the map-app source dir in
-sea-map's repository:
+mykomap's repository:
     
     {
       "include": [
-        "node_modules/sea-map"
+        "node_modules/mykomap"
       ],
       "compilerOptions": {
         "paths": {
-          "sea-map/*": ["./node_modules/sea-map/www/map-app/*","../www/map-app/*"]
+          "mykomap/*": ["./node_modules/mykomap/www/map-app/*","../www/map-app/*"]
         },
         [... your options here ...]
       }
@@ -68,47 +68,47 @@ example):
 
     npm update # You may need to specify versions if a major version increment,
     # like this (where $NEW_VERSION is for example '1.0.0')
-    # npm install github:SolidarityEconomyAssociation/sea-map#semver:^$NEW_VERION 
+    # npm install github:DigitalCommons/mykomap#semver:^$NEW_VERION 
     npm run build
 	npm run deploy
 
 
 ## Deployment
 
-The standard way to deploy a website which uses sea-map is to execute
+The standard way to deploy a website which uses mykomap is to execute
 the following *within the website project directory* (assuming
 run-scripts have been set up as recommended).
 
     npm install
-	# or: `npm upgrade` if you merely wish to update deps like sea-map
+	# or: `npm upgrade` if you merely wish to update deps like mykomap
 	# See https://www.npmjs.com/package/npm-upgrade
 	
 	npm run build
 	npm run deploy # this will deploy to the configured `deploy_to` URL
 
 See the [USAGE](README.md#USAGE) section of README.md and the
-documentation within [sea-site-deploy][] script for these
+documentation within [mykomap-site-deploy][] script for these
 recommendations and how specifying where to deploy.
 
-For development, however, the sea-map run-script `dev-deploy` is
+For development, however, the mykomap run-script `dev-deploy` is
 designed to make a deployment which is correctly labelled as a
 development build in `version.json`, and the sidebar then reports this
-version.  From *within the sea-map project directory*:
+version.  From *within the mykomap project directory*:
 
     npm run build
 	npm run dev-deploy -- -t me@example.com:/path/to/webroot 
 
 
-## Versioning sea-map
+## Versioning mykomap
 
-Currently we typically add the sea-map repository as a git
+Currently we typically add the mykomap repository as a git
 dependency. Meaning the library is sourced directly from git, rather
 than needing to be published in the NPM package registry. So the
 dependency in a consuming project's `package.json` looks something
 like this:
 
 	  "dependencies": {
-		"sea-map": "github:SolidarityEconomyAssociation/sea-map#semver:^0.1.45",
+		"mykomap": "github:DigitalCommons/mykomap#semver:^0.1.45",
 		...
 	  },
 
@@ -129,11 +129,11 @@ to get installed.
 
 Consequentially we need to apply a new version number every time a
 change is made which we want deployed, to name that version in the
-packages depending on sea-map.
+packages depending on mykomap.
 
 It is also important that the Git tag is not applied *before* the
 `package.json` version is changed. Otherwise `npm update` in a project
-using `sea-map` will update it to the latest *tagged version*, but
+using `mykomap` will update it to the latest *tagged version*, but
 that will not have the latest version in `package.json`. This could
 cause problems in the consuming package, or miss out features, or at
 least create confusion should the user run `npm outdated`, as npm gets
@@ -149,7 +149,7 @@ Furthermore:
 ## Release process
 
 In order to avoid problems as described above, the suggested release
-process, having committed changes to sea-map is:
+process, having committed changes to mykomap is:
 
     git commit -m "my latest change..."
 	npm version $NEW_VERSION
@@ -167,14 +167,14 @@ commits.
 
 ## Updating websites
 
-Websites depending on sea-map can be updated to use the latest version
-of sea-map when it has been changed, using:
+Websites depending on mykomap can be updated to use the latest version
+of mykomap when it has been changed, using:
 
     npm update
 	
 This should output something like this:
 
-    + sea-map@0.1.47
+    + mykomap@0.1.47
     updated 1 package and audited 2 packages in 3.358s
     found 0 vulnerabilities
 
@@ -186,4 +186,4 @@ committed in the dependent's repository.
 [version]: https://docs.npmjs.com/cli-commands/version.html
 [semver]: https://docs.npmjs.com/about-semantic-versioning
 [dependencies]: https://docs.npmjs.com/configuring-npm/package-json#dependencies
-[sea-site-deploy]: ./bin/sea-site-deploy
+[mykomap-site-deploy]: ./bin/mykomap-site-deploy

@@ -301,7 +301,7 @@ export class Presenter extends BasePresenter {
         }
       },
       resize: (e) => {
-        window.seaMap.invalidateSize();
+        window.mykoMap.invalidateSize();
         console.log("Map resize", window.outerWidth);
       }
     };
