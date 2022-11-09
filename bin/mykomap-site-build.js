@@ -67,7 +67,7 @@ const variant = process.env.npm_package_name;
 
 const debug = variant == 'mykomap' || process.env.NODE_ENV !== "production";
 
-const versionJson = path.join(srcPath, 'version.json');
+const versionJson = srcPath? path.join(srcPath, 'version.json') : path.resolve(cwd, 'src/version.json');
 let versionInfo;
 let mykoMapSrcDir;
 let servicesDir;
