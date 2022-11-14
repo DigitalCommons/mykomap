@@ -51,9 +51,11 @@
   "homepage": "https://github.com/DigitalCommons/mykomap",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
+    "@types/d3": "^7.1.0",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^9.1.1",
     "@types/papaparse": "^5.3.5",
+    "@types/postal": "^1.0.31",
     "copy-webpack-plugin": "^7.0.0",
     "css-loader": "^5.2.7",
     "d3": "^5.7.0",
@@ -76,9 +78,7 @@
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.5",
-    "@types/d3": "^7.1.0",
     "@types/nock": "^11.1.0",
-    "@types/postal": "^1.0.31",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "cross-fetch": "^3.1.5",
