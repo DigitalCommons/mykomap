@@ -216,6 +216,8 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
           enumerable: true,
           writable: false,
         });
+        if (searchedFields.includes(propertyName))
+          initiative.appendSearchableValue(String(initiative[propertyName]));
       }
     });
 
