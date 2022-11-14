@@ -1,3 +1,6 @@
+FIXME
+- fieldIsCountries is hacked, not general! (see directory.js)
+
 optimise vocab loading
 - only load the current language (adjust gv to accept a parameter)
 - cache the vocab on the server
