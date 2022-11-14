@@ -112,6 +112,12 @@ export class NullableTextTransform extends CommonValTransform<string|null> {
   }
 
   override transform(input: DataVal): string|null {
+    // Convert "" into null. In text fields, converting a null back into a ""
+    // can be done by setting the default, but converting a "" into a  null isn't
+    // possible.  Therefore, by doing this, we allow both interpretations, configurably.
+    if (input === "")
+      input = null;
+    
     if (input === undefined) {
       return this.invalidCase(`undefined values are not permitted here`);
     }
@@ -130,7 +136,10 @@ export class StrictTextTransform extends CommonValTransform<string> {
   }
 
   override transform(input: DataVal): string {
-    if (input === undefined || input === null) {
+    // Treat "" as null. By the same token as in NullableTextTransform
+    // conversion of "" to null, we interpret "" as null because if we
+    // don't there's no easy way to detect and disallow it.
+    if (input === "" || input === undefined || input === null) {
       return this.invalidCase(`null or undefined values are not permitted here`);
     }
 
