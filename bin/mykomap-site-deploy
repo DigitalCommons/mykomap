@@ -15,8 +15,8 @@
 #
 # https://docs.npmjs.com/cli/v6/using-npm/scripts#environment
 #
-# The main parameters you must define are the defaults in the `config`
-# block, which default to:
+# The main parameters you need to define override the defaults in the
+# `config` block, which are:
 #
 #     "config": {
 #       "deploy_to": "",
@@ -47,6 +47,11 @@
 #
 # https://docs.npmjs.com/cli/v6/commands/npm-run-script
 #
+# (Also, as of NPM v7, npm_package_config_* variables no longer get
+# their values from the configured values in .npmrc; therefore it is
+# neccessary to get them using `npm config get ...` and set the
+# variables as a workaround within this script.)
+#
 # This means you can deploy to a host `joe@example.com:/some/other/path`
 # whatever the configuration, using:
 #
@@ -59,17 +64,23 @@
 #     },
 #
 
+set -e
+
 # Get the defaults
-for val in user group to; do
+for suffix in user group to; do
     # Work around the loss of the ability for .npmrc to override
     # npm_package_config_* environment variables:
     # https://github.com/npm/rfcs/blob/main/implemented/0021-reduce-lifecycle-script-environment.md
-    export "npm_package_config_deploy_$val=$(npm config get mykomap:deploy_$val)"
+    var=${npm_package_name:?npm_package_name unset}:deploy_$suffix
+    val=$(npm config get $var)
+    if [ "$val" = "undefined" ]; then
+	eval deploy_$suffix="\$npm_package_config_deploy_$suffix"
+    else
+	eval deploy_$suffix="$val"
+    fi
+
 done
-deploy_user=${npm_package_config_deploy_user:?No config.deploy_user setting in package.json}
-deploy_group=${npm_package_config_deploy_group:?No config.deploy_group setting in package.json}
 deploy_from=build/out/
-deploy_to=${npm_package_config_deploy_to:?No config.deploy_to setting in package.json}
 
 # Parse options
 while getopts "f:t:u:g:" OPTION
@@ -101,6 +112,11 @@ if [ -n "$*" ]; then
     printf "Unknown parameters: $*\n"
     exit -1
 fi
+
+echo "# deploy_from=$deploy_from"
+echo "# deploy_to=$deploy_to"
+echo "# deploy_user=$deploy_user"
+echo "# deploy_group=$deploy_group"
 
 # Echo command with arguments expanded
 set -x
