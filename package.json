@@ -58,7 +58,7 @@
     "@types/postal": "^1.0.31",
     "copy-webpack-plugin": "^7.0.0",
     "css-loader": "^5.2.7",
-    "d3": "^5.16.0",
+    "d3": "^7.6.1",
     "file-loader": "^6.2.0",
     "html-loader": "^3.1.0",
     "leaflet": "^1.5.1",
