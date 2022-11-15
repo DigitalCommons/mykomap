@@ -223,10 +223,10 @@ function init(registry) {
 				"class",
 				"w3-card-2 w3-round map-app-search-form"
 			)
-			.on("submit", function () {
+			.on("submit", function (event) {
 				// By default, submitting the form will cause a page reload!
-				d3.event.preventDefault();
-				//d3.event.stopPropagation();
+				event.preventDefault();
+				//event.stopPropagation();
 
 				var searchText = d3.select("#search-box").property("value");
 
@@ -263,11 +263,11 @@ function init(registry) {
 		const item = presenter.currentItem();
 
 		//function used in the dropdown to change the filter
-		const changeFilter = () => {
+		const changeFilter = (event) => {
 			//create the filter from the event of selecting the option
-			const filterCategoryName = d3.event.target.id.split("-dropdown")[0];
-			const filterValue = d3.event.target.value;
-			const filterValueText = d3.event.target.selectedOptions[0].text;
+			const filterCategoryName = event.target.id.split("-dropdown")[0];
+			const filterValue = event.target.value;
+			const filterValueText = event.target.selectedOptions[0].text;
 			presenter.changeFilters(filterCategoryName, filterValue, filterValueText);
 
 			//repeat the last search after changing the filter
@@ -297,7 +297,7 @@ function init(registry) {
 				.append("select")
 				.attr("id", field + "-dropdown")
 				.attr("class", "w3-input w3-border-0 w3-round w3-mobile advanced-select")
-				.on("change", () => changeFilter());
+				.on("change", (event) => changeFilter(event));
 
 			dropDown
 				.append("option")
