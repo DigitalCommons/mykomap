@@ -359,7 +359,6 @@ function init(registry) {
 					.text(labels.clearFilters)
 					.on("click", function () {
 						//redo search
-						console.log("this one")
 						that.presenter.removeFilters();
 						if (item.searchedFor)
 							that.presenter.performSearch(item.searchedFor);
