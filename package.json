@@ -96,5 +96,10 @@
     "nock": "^13.2.9",
     "webpack-cli": "^4.8.0",
     "xhr2-cookies": "^1.1.0"
+  },
+  "overrides": {
+    "instant-mocha": {
+      "mocha": ">8"
+    }
   }
 }
