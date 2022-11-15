@@ -6,7 +6,7 @@ export SEA_MAP_CONFIG_DIR=$(readlink -f config)
 
 
 set errexit pipefail
-cd ../www/
+cd ../src/
 
 
 export REDIRECT_STATUS=200

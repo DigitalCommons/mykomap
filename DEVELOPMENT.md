@@ -33,7 +33,7 @@ mykomap's repository:
       ],
       "compilerOptions": {
         "paths": {
-          "mykomap/*": ["./node_modules/mykomap/www/map-app/*","../www/map-app/*"]
+          "mykomap/*": ["./node_modules/mykomap/src/map-app/*","../src/map-app/*"]
         },
         [... your options here ...]
       }

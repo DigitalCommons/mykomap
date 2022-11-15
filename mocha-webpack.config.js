@@ -7,7 +7,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
 //  context: __dirname,
-  entry: 'www/map-app/app.js', // path.join will strip leading '.'
+  entry: 'src/map-app/app.js', // path.join will strip leading '.'
   devtool: 'source-map',
   mode: 'development',
   target: 'node',
@@ -81,9 +81,9 @@ module.exports = {
       // Allows loading modules in the test directory
       'test': `${__dirname}/test`,
       // Allows custom popup logic to be supplied config/popup.js (if detected)
-      './view/map/popup$':  'www/map-app/app/view/map/default_popup.js',
+      './view/map/popup$':  'src/map-app/app/view/map/default_popup.js',
       // Define this alias so that it works as before in popup.js
-      'model/dataservices$': 'www/map-app/app/model/dataservices.ts',
+      'model/dataservices$': 'src/map-app/app/model/dataservices.ts',
     },
     // Tell webpack not to resolve symlinks. This would make typescript baulk
     // on symlinked files outside this project.
@@ -98,7 +98,7 @@ module.exports = {
 //        { from: configPath, to: 'configuration',
 //          globOptions: { ignore: ['**/*~'] },
 //        },
-        { context: 'www/services', from: '**/*.php', to: 'services' },
+        { context: 'src/services', from: '**/*.php', to: 'services' },
 //        ...copyPaths.map(p => {
 //          let { dir, base } = path.parse(p);
 //          if (!fs.statSync(p).isFile())

@@ -75,8 +75,8 @@ let entry;
 if (variant == 'mykomap') {
   // Infer development mode from mykomap package
 
-  mykoMapSrcDir = "./www/map-app"; // locally
-  servicesDir = "./www/services";
+  mykoMapSrcDir = "./src/map-app"; // locally
+  servicesDir = "./src/services";
   
   // Get the linked dependency config in ext/package.json 
   const mapPackageJson = require(path.join(cwd, 'ext/package.json'));
@@ -91,8 +91,8 @@ if (variant == 'mykomap') {
 else {
   // Infer production mode
 
-  mykoMapSrcDir = "./node_modules/mykomap/www/map-app"; // in the mykomap module dep
-  servicesDir = "./node_modules/mykomap/www/services"; // in the mykomap module dep
+  mykoMapSrcDir = "./node_modules/mykomap/src/map-app"; // in the mykomap module dep
+  servicesDir = "./node_modules/mykomap/src/services"; // in the mykomap module dep
   
   // Get the mykomap git commit ID from the resolved version (we don't have
   // access to the git repo in this case).

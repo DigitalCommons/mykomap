@@ -1,17 +1,17 @@
 
 import { expect } from 'chai';
 
-import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
-import { Config } from '../www/map-app/app/model/config';
+import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
+import { Config } from '../src/map-app/app/model/config';
 import {
   PropDefs,
   Initiative,
   InitiativeObj,
   DataServices,
   basePropertySchema
-} from '../www/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl, SparqlVocabResponse } from '../www/map-app/app/model/vocabs';
-import { Dictionary } from '../www/map-app/common_types';
+} from '../src/map-app/app/model/dataservices';
+import { VocabIndex, VocabServiceImpl, SparqlVocabResponse } from '../src/map-app/app/model/vocabs';
+import { Dictionary } from '../src/map-app/common_types';
 
 // Makes a dummy InitiativeObj
 function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string[]): InitiativeObj {

@@ -10,10 +10,10 @@ import { use, expect, assert } from 'chai';
 import * as nock from 'nock';
 import { json } from 'd3';
 
-import { Config } from '../www/map-app/app/model/config';
+import { Config } from '../src/map-app/app/model/config';
 import {
   DataConsumer,
-} from '../www/map-app/app/model/dataloader';
+} from '../src/map-app/app/model/dataloader';
 
 import {
   PropDefs,
@@ -22,18 +22,18 @@ import {
   DataServices,
   basePropertySchema,
   loadDatasets,
-} from '../www/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
+} from '../src/map-app/app/model/dataservices';
+import { VocabIndex, VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 
-import { Dictionary } from '../www/map-app/common_types';
+import { Dictionary } from '../src/map-app/common_types';
 import {
   CsvDataLoader,
-} from '../www/map-app/app/model/csvdataloader';
+} from '../src/map-app/app/model/csvdataloader';
 import {
   ObjTransform,
   Transforms as T,
   mkObjTransformer,
-} from '../www/map-app/obj-transformer';
+} from '../src/map-app/obj-transformer';
 import {
   TestConsumer,
 } from './testconsumer';

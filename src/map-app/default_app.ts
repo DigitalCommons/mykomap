@@ -9,7 +9,7 @@
 // The paths are deliberately relative, to allow mykomap applications to be deployed at
 // arbitrary paths.
 //
-// Specify this as an entry point in webpack as "mykomap/www/map-app/app.js"
+// Specify this as an entry point in webpack as "mykomap/src/map-app/app.js"
 
 import { webRun, fetchConfigs } from "./index";
 

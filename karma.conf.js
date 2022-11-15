@@ -37,7 +37,7 @@ module.exports = function(config) {
       //'test/test-test.js': [ 'webpack' ],
       'test/**/*.js': [ 'webpack', 'sourcemap' ],
       'test/**/*.ts': [ 'webpack', 'sourcemap' ],
-      //'www/map-app/**/*.js': [ 'webpack' ],
+      //'src/map-app/**/*.js': [ 'webpack' ],
     },
 
     // test results reporter to use
@@ -158,9 +158,9 @@ module.exports = function(config) {
           // Allows loading modules in the test directory
           'test': `${__dirname}/test`,
           // Allows custom popup logic to be supplied config/popup.js (if detected)
-          './view/map/popup$':  `${__dirname}/www/map-app/app/view/map/default_popup.js`,
+          './view/map/popup$':  `${__dirname}/src/map-app/app/view/map/default_popup.js`,
           // Define this alias so that it works as before in popup.js
-          'model/dataservices$': `${__dirname}/www/map-app/app/model/dataservices.ts`,
+          'model/dataservices$': `${__dirname}/src/map-app/app/model/dataservices.ts`,
         },
       },
       plugins: [
@@ -172,7 +172,7 @@ module.exports = function(config) {
             //        { from: configPath, to: 'configuration',
             //          globOptions: { ignore: ['**/*~'] },
             //        },
-            { context: 'www/services', from: '**/*.php', to: 'services' },
+            { context: 'src/services', from: '**/*.php', to: 'services' },
             //        ...copyPaths.map(p => {
             //          let { dir, base } = path.parse(p);
             //          if (!fs.statSync(p).isFile())

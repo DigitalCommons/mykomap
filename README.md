@@ -26,7 +26,7 @@ script exported by this package.
 
 ```
   "scripts": {
-    "build": "mykomap-site-build -c config -m -s src node_modules/mykomap -d build www/*",
+    "build": "mykomap-site-build -c config -m -s src node_modules/mykomap -d build src/*",
     "deploy": "mykomap-site-deploy",
     "server": "php -t build/out -S localhost:8080"
   },
@@ -110,7 +110,7 @@ The NPM `mykomap` package needs to be a dependency, which exports the
 The package needs to invoke it like this(typically as an npm build
 script target):
 
-    mykomap-site-build -c config -s src -m node_modules/mykomap  -d build www/*
+    mykomap-site-build -c config -s src -m node_modules/mykomap  -d build src/*
 
 Where:
 
@@ -119,7 +119,7 @@ Where:
    index.js) and related source code
  - `node_modules/mykomap` is the path to the `mykomap` package directory
  - `build` is the directory in which to build the site
- - `www/*` expands to a list of directories to include in the build
+ - `src/*` expands to a list of directories to include in the build
   
 `build` will be populated with two directories:
 
@@ -141,7 +141,7 @@ quotes are the only string delimiter.
 
 The valid configuration attributes defined in [CONFIG.md][CONFIG.md].
 This is regenerated automatically from the config schema defined in
-[www/map-app/app/model/config.js][config.js]) by running the
+[src/map-app/app/model/config.js][config.js]) by running the
 `generate-config-doc` NPM run script. Run this whenever the config changes.
 
 
@@ -387,5 +387,5 @@ the configuration files.
 [1]: https://github.com/DigitalCommons/mykomap-site-example
 [WSL]: https://docs.microsoft.com/en-gb/windows/wsl/install-win10
 [CONFIG.md]: ./CONFIG.md
-[config.js]: ./www/map-app/app/model/config.js
+[config.js]: ./src/map-app/app/model/config.js
 

@@ -1,9 +1,9 @@
 import type {
   DataConsumer
-} from '../www/map-app/app/model/dataloader';
+} from '../src/map-app/app/model/dataloader';
 import {
   InitiativeObj,
-} from '../www/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/dataservices';
 import {
   assert
 } from 'chai';

@@ -25,7 +25,7 @@ node_modules/
 /ext
 
 # Configuration for local testing
-/www/configuration
-/www/services/locCache.json
-/www/services/latest_timestamp.txt
+/src/configuration
+/src/services/locCache.json
+/src/services/latest_timestamp.txt
 /dist/

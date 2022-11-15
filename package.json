@@ -2,7 +2,7 @@
   "name": "mykomap",
   "version": "2.0.0",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
-  "main": "www/map-app/index.ts",
+  "main": "src/map-app/index.ts",
   "config": {
     "deploy_to": "",
     "deploy_user": "www-data",
@@ -18,7 +18,7 @@
     "mykomap-site-deploy": "bin/mykomap-site-deploy"
   },
   "scripts": {
-    "lint": "eslint www/map-app/**/*.js",
+    "lint": "eslint src/map-app/**/*.js",
     "browser-tests": "karma start --single-run --browsers FirefoxHeadless",
     "mocha-tests": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace test/mocha-all.js",
     "mocha-test": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace",

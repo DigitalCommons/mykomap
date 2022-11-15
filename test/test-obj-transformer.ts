@@ -4,11 +4,11 @@ import {
   ObjTransform,
   Transforms as t,
   mkObjTransformer,
-} from '../www/map-app/obj-transformer'
+} from '../src/map-app/obj-transformer'
 
 import {
   Dictionary
-} from '../www/map-app/common_types';
+} from '../src/map-app/common_types';
 
 interface Period {
   start: Date|null;

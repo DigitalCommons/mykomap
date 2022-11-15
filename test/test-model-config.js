@@ -1,9 +1,9 @@
 'use strict';
 //const fs = require('fs');
 import { assert } from 'chai';
-import { init as configBuilder } from '../www/map-app/app/model/config';
+import { init as configBuilder } from '../src/map-app/app/model/config';
 
-// Emulate what happens in ../www/map-app/app.js
+// Emulate what happens in ../src/map-app/app.js
 import rawConfig from './configs/typical/config.json';
 import version from './configs/typical/version.json';
 const about = `This is a dummy about.html!

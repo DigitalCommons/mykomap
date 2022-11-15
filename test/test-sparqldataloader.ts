@@ -4,13 +4,13 @@ import { use, expect, assert } from 'chai';
 import * as nock from 'nock';
 import { json } from 'd3';
 
-import { Config } from '../www/map-app/app/model/config';
+import { Config } from '../src/map-app/app/model/config';
 import type {
   DataConsumer
-} from '../www/map-app/app/model/dataloader';
+} from '../src/map-app/app/model/dataloader';
 import {
   loadDatasets,
-} from '../www/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/dataservices';
 
 import {
   PropDefs,
@@ -18,12 +18,12 @@ import {
   InitiativeObj,
   DataServices,
   basePropertySchema
-} from '../www/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../www/map-app/app/model/vocabs';
-import { Dictionary } from '../www/map-app/common_types';
+} from '../src/map-app/app/model/dataservices';
+import { VocabIndex, VocabServiceImpl } from '../src/map-app/app/model/vocabs';
+import { Dictionary } from '../src/map-app/common_types';
 import {
   SparqlDataLoader,
-} from '../www/map-app/app/model/sparqldataloader';
+} from '../src/map-app/app/model/sparqldataloader';
 
 import {
   TestConsumer,

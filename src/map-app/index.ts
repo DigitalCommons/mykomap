@@ -106,7 +106,7 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/sidebar', () => require('./app/view/sidebar')(registry));
   registry.def('presenter/sidebar/mainmenu', () => require('./app/presenter/sidebar/mainmenu')(registry));
   
-  // The code for each view is loaded by www/app/view.js
+  // The code for each view is loaded by src/app/view.js
   // Initialize the views:
   registry.def('view', () => require('./app/view.js')(registry));
 

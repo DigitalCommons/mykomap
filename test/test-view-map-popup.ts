@@ -1,13 +1,13 @@
 import { assert } from 'chai';
-import { init as configBuilder } from '../www/map-app/app/model/config';
+import { init as configBuilder } from '../src/map-app/app/model/config';
 const config = configBuilder();
 
-import { Dictionary } from '../www/map-app/common_types';
-import { DataServicesImpl, PropDefs, basePropertySchema } from '../www/map-app/app/model/dataservices';
-import { VocabServiceImpl } from '../www/map-app/app/model/vocabs';
-import { DataAggregator } from '../www/map-app/app/model/dataaggregator';
+import { Dictionary } from '../src/map-app/common_types';
+import { DataServicesImpl, PropDefs, basePropertySchema } from '../src/map-app/app/model/dataservices';
+import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
+import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
 
-import { getPopup } from '../www/map-app/app/view/map/default_popup';
+import { getPopup } from '../src/map-app/app/view/map/default_popup';
 const expectedContent = require('./expected/popups/default.json');
 
 // The standard schema as it was when the test was created, translated
