@@ -271,8 +271,6 @@ function init(registry) {
     this.map.invalidateSize();
     this.map.setView(centre, this.map.getZoom() - 1, { animate: false });
     this.map.setView(centre, this.map.getZoom() + 1, { animate: false });
-
-    console.log("refreshed")
   }
 
   // proto.getZoom = function (){
