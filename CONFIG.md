@@ -10,11 +10,10 @@ Here is an example of what you might put in this file:
 
 ```
  {
-  "namedDatasets": ["oxford"],
   "htmlTitle": "Solidarity Oxford",
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "filterableFields": ["countryId", "primaryActivity"],
   "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom": false
+  "disableClusteringAtZoom": 10
 }
 ```
 
@@ -45,7 +44,7 @@ Raw HTML definition of the map's "about" text. This can be internationalised in 
 - *default:* ``
 - *settable?:* no
 
-Sets the namespace prefix expected on the sea-map anchor element's attributes.
+Sets the namespace prefix expected on the mykomap anchor element's attributes.
 
 
 
@@ -57,7 +56,19 @@ Sets the namespace prefix expected on the sea-map anchor element's attributes.
 - *default:* `undefined`
 - *settable?:* no
 
-An optional function accepting an Initiative and an SseInitiative object, which returns an HTML string which will be used as the pop-up contents for that initiative's marker
+An optional function accepting an Initiative and an DataServices object, which returns an HTML string which will be used as the pop-up contents for that initiative's marker
+
+
+
+
+### `dataSources`
+
+- *type:* `{AnyDataSource[]}` An array of data source definitions, defining the type, ID, and in certain cases other source-secific parameters needed for the source type
+- *in string context:* parsed as-is
+- *default:* `[object Object]`
+- *settable?:* no
+
+A list of data-source definitions
 
 
 
@@ -142,9 +153,9 @@ True if the directory should feature coloured entries
 
 ### `fields`
 
-- *type:* `{PropDefs}` A dictionary of initiative property definitions, keyed by property id
+- *type:* `{PropDefs}` A dictionary of initiative property definitions, or just a property type string, keyed by property id
 - *in string context:* parsed as-is
-- *default:* `undefined`
+- *default:* `[object Object]`
 - *settable?:* no
 
 Defines extended definitions of new or existing initiative fields
@@ -171,7 +182,7 @@ Defines the instance properties that can populate the directory. Must be a list 
 - *default:* Defined by `variant` attribute of the consuming project's file `config/version.json`
 - *settable?:* no
 
-The git commit-ID of the sea-map source code deployed.
+The git commit-ID of the mykomap source code deployed.
 
 
 
@@ -288,26 +299,14 @@ The maximum zoom in that can happen when searching any particular group, if 0 do
 
 
 
-### `namedDatasets`
+### `mykoMapVersion`
 
-- *type:* `{string[]}` An array of strings.
-- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* ``
+- *type:* `{string}` 
+- *in string context:* parsed as-is
+- *default:* Defined by `variant` attribute of the consuming project's file `config/version.json`
 - *settable?:* no
 
-A list of names that correspond to directories in www/services, which must contain default-graph-uri.txt, endpoint.txt, query.rq.
-
-
-
-
-### `namedDatasetsVerbose`
-
-- *type:* `{string[]}` An array of strings.
-- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* ``
-- *settable?:* no
-
-A list of names for the named datasets. Length must be exactly the same as namedDatasets or this will not be used
+The git tag of the mykomap source code deployed.
 
 
 
@@ -324,18 +323,6 @@ Responses to SPARQL queries will normally be cached in /services/locCache.txt if
 
 
 
-### `seaMapVersion`
-
-- *type:* `{string}` 
-- *in string context:* parsed as-is
-- *default:* Defined by `variant` attribute of the consuming project's file `config/version.json`
-- *settable?:* no
-
-The git tag of the sea-map source code deployed.
-
-
-
-
 ### `searchedFields`
 
 - *type:* `{string[]}` An array of strings.
@@ -343,8 +330,8 @@ The git tag of the sea-map source code deployed.
 - *default:* `name`
 - *settable?:* yes
 
-A list of fields that are looked at when using the search function. Valid values for this parameter are:name,uri,www,regorg,sameas,desc,street,locality,region,postcode,country,primaryActivity,otherActivities,orgStructure,tel,email,qualifiers
-if non-valid values are passed, the app will fail silently (no errors will be produced)
+A list of fields that are looked at when using the search function. Valid values for this parameter are 'name', 'uri', and any custom field names supplied in the configuration.
+If non-valid values are passed, the app will fail silently (no errors will be produced)
 The default values are 'name'
 Users can pass single arguments and multiple arguments, separated with a comma
 Passing multiple values example: https://dev.ica.solidarityeconomy.coop/?searchedFields=regorg,otherActivities
@@ -353,7 +340,7 @@ Passing a single value example: https://dev.ica.solidarityeconomy.coop/?searched
 The search functionality works by creating a 'searchstr' string parameter for every initiative,this is populated using the values from the fields of the initiative (only the fields specified in the 'searchedFields' parameter are used)
 Currently the field values added to the 'searchstr' parameter are concatenated (without spacing) to each other.
 The 'searchstr' is then converted into uppercase. No other string transformations are currently applied
-When a user uses the sea-map search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.
+When a user uses the mykomap search the entered text will be converted into uppercase as well. If the searched text is included anywhere in the 'searchstr' value, the initiative is added to the results.
 
 
 
@@ -462,6 +449,18 @@ A timestamp string indicating when this application was deployed.
 - *settable?:* no
 
 The name of the variant used to generate this map application.
+
+
+
+
+### `vocabularies`
+
+- *type:* `{AnyVocabSource[]}` An array of vocab source definitions, defining a SPARQL endpoint URL, a default graph URI, and an index of vocabulary URIs to their prefixes - which must be unique to the whole array.
+- *in string context:* parsed as-is
+- *default:* No vocabs are queried if nothing is provided
+- *settable?:* no
+
+Specifies the vocabularies to obtain via SPARQL query for use in `fields`
 
 
 

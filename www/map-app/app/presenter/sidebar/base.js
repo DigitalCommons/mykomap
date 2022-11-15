@@ -73,10 +73,10 @@ function init(registry) {
           initiativeListBounds = data.initiativeListBounds;
     this.sidebarWidth =
       directoryBounds.x -
-      window.seaMap.getContainer().getBoundingClientRect().x +
+      window.mykoMap.getContainer().getBoundingClientRect().x +
       directoryBounds.width +
        (initiativeListBounds.x -
-        window.seaMap.getContainer().getBoundingClientRect().x >
+        window.mykoMap.getContainer().getBoundingClientRect().x >
          0
          ? initiativeListBounds.width
          : 0);

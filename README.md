@@ -1,6 +1,6 @@
 # PACKAGE
 
-sea-map - A web application for mapping initiatives in the Solidarity & Co-operative Economies
+mykomap - A web application for mapping initiatives in the Solidarity & Co-operative Economies
 
 ## Status
 
@@ -16,18 +16,18 @@ sea-map - A web application for mapping initiatives in the Solidarity & Co-opera
 (Also prerequisites section below)
 
 This package is designed to supply the basic source and web assets for
-a Solidarity Economy Association map website.  This is tailored for a
+a Digital Commons map website.  This is tailored for a
 particular case by a configuration file, and an about.html page,
 supplied by the consumer site package.
 
 The consumer package should supply a run-script target to build
-itself, as in the example below, which uses the `sea-site-build`
+itself, as in the example below, which uses the `mykomap-site-build`
 script exported by this package.
 
 ```
   "scripts": {
-    "build": "sea-site-build -c config -m -s src node_modules/sea-map -d build www/*",
-    "deploy": "sea-site-deploy",
+    "build": "mykomap-site-build -c config -m -s src node_modules/mykomap -d build www/*",
+    "deploy": "mykomap-site-deploy",
     "server": "php -t build/out -S localhost:8080"
   },
 ```
@@ -41,7 +41,7 @@ command-line PHP executable's facility to launch a web
 server. (Remember to build the site before running this.)
 
 The `deploy` run-script illustrates how to deploy the web site to a
-remote location. It uses the `sea-site-deploy` script, which
+remote location. It uses the `mykomap-site-deploy` script, which
 internally uses `rsync`. (Again, remember to build first.) 
 
 Given these, basic usage of a consuming NPM package therefore would
@@ -63,11 +63,11 @@ this:
 	npm run deploy -- -f some/where -t joe@example.com:/some/path
 
 This is to support scripting the deploy step. See the inline
-documentation within [sea-site-deploy](bin/sea-site-deploy) for further
+documentation within [mykomap-site-deploy](bin/mykomap-site-deploy) for further
 details.
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information about
-building and deploying sea-map websites during development of sea-map.
+building and deploying mykomap websites during development of mykomap.
 
 
 # PREREQUISITES
@@ -104,20 +104,20 @@ These need to have a configuration directory containing:
    - `default-graph-uri.txt` - the `default-graph-uri` parameter to pass
    - `endpoint.txt` - the base URL to the Virtuoso server
 
-The NPM `sea-map` package needs to be a dependency, which exports the
-`sea-site-build` script.
+The NPM `mykomap` package needs to be a dependency, which exports the
+`mykomap-site-build` script.
 
 The package needs to invoke it like this(typically as an npm build
 script target):
 
-    sea-site-build -c config -s src -m node_modules/sea-map  -d build www/*
+    mykomap-site-build -c config -s src -m node_modules/mykomap  -d build www/*
 
 Where:
 
  - `config` is the path to the configuration directory mentioned above
  - `src` is an optional path to a custom entry point (index.ts or
    index.js) and related source code
- - `node_modules/sea-map` is the path to the `sea-map` package directory
+ - `node_modules/mykomap` is the path to the `mykomap` package directory
  - `build` is the directory in which to build the site
  - `www/*` expands to a list of directories to include in the build
   
@@ -133,8 +133,8 @@ or packaged for deployment.
 
 ## CONFIG.JSON
  
-This JSON file defines the defaults for a sea-map. Put in at the path
-`config/config.json` within the NPM project consuming sea-map
+This JSON file defines the defaults for a mykomap. Put in at the path
+`config/config.json` within the NPM project consuming mykomap
 (relative to `package.json`). Note, because it is JSON, comments are
 not allowed and all keys must be delimited by double-quotes. Double
 quotes are the only string delimiter.
@@ -250,13 +250,13 @@ doing this, as it requires understanding of RequireJS.
 
 # DEVELOPMENT
 
-Developing `sea-map` needs a way to deploy a website using it for
-testing. Doing this via a dependency from (say) the [`playground`][1]
-project to `sea-map` is a bit cumbersome if changes to `sea-map` need
+Developing `mykomap` needs a way to deploy a website using it for
+testing. Doing this via a dependency from (say) the [`mykomap-site-example`][1]
+project to `mykomap` is a bit cumbersome if changes to `mykomap` need
 to be propagated back to the consuming project via pushing the changes
 under test to github.
 
-It is also possible to change a `package.json` dependency on `sea-map`
+It is also possible to change a `package.json` dependency on `mykomap`
 to a relative path. But this also doesn't work well, because
 
 1. This change mustn't be checked in, but more seriously
@@ -265,7 +265,7 @@ to a relative path. But this also doesn't work well, because
 The latter seems to be a known problem with `npm`.
 
 So, a suggested simpler way is to embed a simple project using
-`sea-map` within a subdirectory `ext`, either directly (from within
+`mykomap` within a subdirectory `ext`, either directly (from within
 the same directory as this README):
 
     git clone $PROJECT_URL ext
@@ -278,15 +278,15 @@ A pair of npm script tasks to build and serve that directly have been
 added to `package.json`, so given the above, you can the build and
 serve the project like this:
 
-    npm install    # installs sea-map deps
+    npm install    # installs mykomap deps
 	npm run build  # builds the embedded project in ext/build/out/
 	npm run server  # serves the embedded project in ext/build/out/
 
-The website, using the under-development version of `sea-map`, will
+The website, using the under-development version of `mykomap`, will
 then be accessible locally via the URL http://localhost:8080
 
 *Caveat:* the embedded project should not have any extra dependencies
-beyond `sea-map`, because the `npm install` above will not find those.
+beyond `mykomap`, because the `npm install` above will not find those.
 
 
 # SCRIPT TARGETS
@@ -300,15 +300,15 @@ Runs a static analysis of the source, highlighting possible improvements
 
     npm build
 
-Assuming a project consuming sea-map (such as [playground][1])has been
+Assuming a project consuming mykomap (such as [mykomap-site-example][1])has been
 symlinked (or installed) into `ext/`, this builds that dependent
-project. Primarily for the sea-map developers' convenience, rather
-than any users of sea-map.
+project. Primarily for the mykomap developers' convenience, rather
+than any users of mykomap.
 
     npm server
 
-As above, a sea-map developers' convenience. Launches a PHP
-development web-server, publishing a project consuming sea-map in
+As above, a mykomap developers' convenience. Launches a PHP
+development web-server, publishing a project consuming mykomap in
 `ext/`
 
     npm generate-config-doc
@@ -321,12 +321,12 @@ in `config_schema.js` are changed.
 
 Information which doesn't quite fit in anywhere above.
 
-## Tips for identifying deployed sea-map parameters
+## Tips for identifying deployed mykomap parameters
 
-Sometimes you might want to see just what version a sea-map deployment 
+Sometimes you might want to see just what version a mykomap deployment 
 is, which datasets it is using, or what the SPARQL query is. 
 
-Even if this isn't possible to infer from the map, the sea-map
+Even if this isn't possible to infer from the map, the mykomap
 configuration resources (described above) can be inspected in a browser.
 
 The following files will be present, at least, and possibly more 
@@ -359,7 +359,7 @@ Specifically, `config.json` will be here:
 
 https://dotcoop.solidarityeconomy.coop/configuration/config.json
 
-So if your app deploys `sea-map` code like the example, you can append 
+So if your app deploys `mykomap` code like the example, you can append 
 `configuration/config.json` to the default map URL to find 
 `config.json` and the other resources. Like this:
 
@@ -369,12 +369,12 @@ So if your app deploys `sea-map` code like the example, you can append
 - https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/endpoint.txt
 - https://dotcoop.solidarityeconomy.coop/configuration/dotcoop/default-graph-uri.txt
 
-### Pre `sea-map` versions of the map app
+### Pre `mykomap` versions of the map app
 
 Note that before the map-app was converted into this NPM package, 
 the configuration was located in a slightly different path relative to
 `map-app/map-app.js`. For example, at the time of writing the Oxford
-map predates `sea-map` and the configuration can be found here (and the 
+map predates `mykomap` and the configuration can be found here (and the 
 other files in their respective relative locations):
 
 https://oxford.solidarityeconomy.coop/map-app/configuration/config.json
@@ -384,7 +384,7 @@ the configuration files.
 
 
 
-[1]: https://github.com/SolidarityEconomyAssociation/playground
+[1]: https://github.com/DigitalCommons/mykomap-site-example
 [WSL]: https://docs.microsoft.com/en-gb/windows/wsl/install-win10
 [CONFIG.md]: ./CONFIG.md
 [config.js]: ./www/map-app/app/model/config.js

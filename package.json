@@ -1,5 +1,5 @@
 {
-  "name": "sea-map",
+  "name": "mykomap",
   "version": "2.0.0",
   "description": "A web application for mapping initiatives in the Solidarity Economy",
   "main": "www/map-app/index.ts",
@@ -14,8 +14,8 @@
   },
   "bin": {
     "generate-version": "bin/generate-version",
-    "sea-site-build": "bin/sea-site-build",
-    "sea-site-deploy": "bin/sea-site-deploy"
+    "mykomap-site-build": "bin/mykomap-site-build",
+    "mykomap-site-deploy": "bin/mykomap-site-deploy"
   },
   "scripts": {
     "lint": "eslint www/map-app/**/*.js",
@@ -24,17 +24,17 @@
     "mocha-test": "instant-mocha --webpack-config mocha-webpack.config.js --full-trace",
     "test": "npm run mocha-tests && npm run browser-tests",
     "generate-config-doc": "ts-node bin/generate-config-doc >CONFIG.md",
-    "build": "bin/sea-site-build -c ext/config -s ext/src -m ./ -d ext/build ext/www/*",
-    "build-windows": "node bin/sea-site-build -c ext/config -m ./ -d ext/build ext/src/",
+    "build": "bin/mykomap-site-build -c ext/config -s ext/src -m ./ -d ext/build ext/www/*",
+    "build-windows": "node bin/mykomap-site-build -c ext/config -m ./ -d ext/build ext/src/",
     "server": "php -t ext/build/out -S localhost:8080",
     "webpack": "webpack",
     "server2": "php -t dist -S localhost:8080",
     "public-server": "php -t ext/build/out -S 0.0.0.0:8080",
-    "dev-deploy": "bin/sea-site-deploy -f ext/build/out/"
+    "dev-deploy": "bin/mykomap-site-deploy -f ext/build/out/"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:SolidarityEconomyAssociation/sea-map.git"
+    "url": "git+ssh://git@github.com:DigitalCommons/mykomap.git"
   },
   "keywords": [
     "mapping",
@@ -43,12 +43,12 @@
     "semantic",
     "web"
   ],
-  "author": "Solidarity Economy Association",
+  "author": "Digital Commons Co-op",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/SolidarityEconomyAssociation/sea-map/issues"
+    "url": "https://github.com/DigitalCommons/mykomap/issues"
   },
-  "homepage": "https://github.com/SolidarityEconomyAssociation/sea-map#readme",
+  "homepage": "https://github.com/DigitalCommons/mykomap",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
     "@types/chai": "^4.3.3",

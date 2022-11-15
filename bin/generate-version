@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/** Generates a version.json file for use by a map-app consumer site 
+/** Generates a version.json file for use by a mykomap consumer site 
  *
  * invoke like this:
  *
@@ -10,7 +10,7 @@
  * property value.
  * 
  * Note, assumes it is run in the project directory of the package
- * (i.e. website) consuming sea-map, not sea-map itself.
+ * (i.e. website) consuming mykomap, not mykomap itself.
  */
 const path = require('path');
 const spawn = require('child_process').spawnSync;
@@ -38,14 +38,14 @@ function get_git_commit(cwd) {
 }
 
 // When run by a dependent package P, this resolves to
-// P/node_modules/sea-map/package.json.
+// P/node_modules/mykomap/package.json.
 //
-// When run by sea-map itself (from bin/, in debug mode), it resolves
+// When run by mykomap itself (from bin/, in debug mode), it resolves
 // to its own package.json
 const sea_map_package_json = require('../package.json');
 
 const variant = process.argv[2];
-if (variant == 'sea-map') {
+if (variant == 'mykomap') {
     // Infer development mode
 
     // Get the linked dependency config in ext/package.json 
@@ -54,15 +54,15 @@ if (variant == 'sea-map') {
 	variant: map_package_json.name,
 	timestamp: timestamp,
 	gitcommit: get_git_commit(path.join(process.cwd(), '/ext')),
-	seaMapVersion: sea_map_package_json.version+'_'+get_git_commit()+'-dev',
-	seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
+	mykoMapVersion: sea_map_package_json.version+'_'+get_git_commit()+'-dev',
+	mykoMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
     };
     console.log(JSON.stringify(config));
 }
 else {
     // Infer production mode
 
-    // Get the sea-map git commit ID from the resolved version (we don't have
+    // Get the mykomap git commit ID from the resolved version (we don't have
     // access to the git repo in this case).
     const sea_map_resolved = (sea_map_package_json._resolved || '');
     const sea_map_commit = sea_map_resolved.replace(/^.*#/, '_').substr(0, 8);
@@ -70,8 +70,8 @@ else {
 	variant: variant,
 	timestamp: timestamp,
 	gitcommit: get_git_commit(),
-	seaMapVersion: sea_map_package_json.version+sea_map_commit,
-	seaMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
+	mykoMapVersion: sea_map_package_json.version+sea_map_commit,
+	mykoMapResolvedVersion: sea_map_package_json._resolved, // may be undefined
     };
     console.log(JSON.stringify(config));
 }

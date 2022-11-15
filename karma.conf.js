@@ -98,7 +98,7 @@ module.exports = function(config) {
             test: /\.tsx?$/,
             loader: 'ts-loader',
             // Allow TS compiling in node_modules, but exclude all except
-            // sea-map, which because it is a git dependency, contains
+            // mykomap, which because it is a git dependency, contains
             // uncompiled typescript.
             options: { allowTsInNodeModules: true },
           },

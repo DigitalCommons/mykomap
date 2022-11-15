@@ -1,14 +1,14 @@
 #!/bin/sh
 
-# This script deploys a mini-website that is built/uses sea-map. It
+# This script deploys a mini-website that is built/uses mykomap. It
 # uses `rsync` to synchronise a remote directory to match a local
 # directory (`rsync` is therefore obviously a requirement).
 #
 # General usage:
 #
-#     sea-site-deploy [-f <from dir> ] [-t <to url>] [-u <user>] [-g <group>]
+#     mykomap-site-deploy [-f <from dir> ] [-t <to url>] [-u <user>] [-g <group>]
 #  
-# It is intended to be run as an NPM run-script, both within `sea-map`
+# It is intended to be run as an NPM run-script, both within `mykomap`
 # itself, and consuming packages.  Therefore it accepts by default
 # package.json parameters values exposed by NPM via the environment
 # variables prefixed with `npm_`, as described here:
@@ -55,7 +55,7 @@
 # ...assuming the run script is named `deploy` like below:
 #
 #     "scripts": {
-#       "deploy": "bin/sea-site-deploy"
+#       "deploy": "bin/mykomap-site-deploy"
 #     },
 #
 
@@ -64,7 +64,7 @@ for val in user group to; do
     # Work around the loss of the ability for .npmrc to override
     # npm_package_config_* environment variables:
     # https://github.com/npm/rfcs/blob/main/implemented/0021-reduce-lifecycle-script-environment.md
-    export "npm_package_config_deploy_$val=$(npm config get sea-map:deploy_$val)"
+    export "npm_package_config_deploy_$val=$(npm config get mykomap:deploy_$val)"
 done
 deploy_user=${npm_package_config_deploy_user:?No config.deploy_user setting in package.json}
 deploy_group=${npm_package_config_deploy_group:?No config.deploy_group setting in package.json}

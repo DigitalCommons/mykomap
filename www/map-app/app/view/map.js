@@ -168,7 +168,7 @@ function init(registry) {
     });
     this.map.zoomControl.setPosition("bottomright");
 
-    window.seaMap = this.map;
+    window.mykoMap = this.map;
 
 
     for (i = 0; i < k.length; ++i) {
@@ -493,7 +493,7 @@ function init(registry) {
 
   proto.setActiveArea = function (data) {
     if (this._settingActiveArea) return;
-    window.seaMap.once("moveend", () => {
+    window.mykoMap.once("moveend", () => {
       this._settingActiveArea = undefined;
     });
     this._settingActiveArea = true;
