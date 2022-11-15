@@ -25,7 +25,6 @@
     "test": "npm run mocha-tests && npm run browser-tests",
     "generate-config-doc": "ts-node bin/generate-config-doc >CONFIG.md",
     "build": "bin/mykomap-site-build -c ext/config -s ext/src -m ./ -d ext/build ext/www/*",
-    "build-windows": "node bin/mykomap-site-build -c ext/config -m ./ -d ext/build ext/src/",
     "server": "php -t ext/build/out -S localhost:8080",
     "webpack": "webpack",
     "server2": "php -t dist -S localhost:8080",
