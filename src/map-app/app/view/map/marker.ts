@@ -1,47 +1,60 @@
-"use strict";
-const leaflet = require('leaflet');
-const leafletMarkerCluster = require('leaflet.markercluster');
-const leafletAwesomeMarkers = require('leaflet.awesome-markers');
-const cssesc = require('cssesc');
+import * as leaflet from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.awesome-markers';
+import * as cssesc from 'cssesc';
 const eventbus = require('../../eventbus');
 
-const { base } = require('../base');
+import { base } from '../base';
+import { Dictionary } from '../../../common_types';
+import type { Registry } from '../../registries';
+import type { Config } from '../../model/config_schema';
+import type { Initiative, PropDef } from '../../model/dataservices';
+
+interface MapObj {
+  closePopup: () => void;
+  selectedInitiative?: Initiative;
+}
+
+interface Presenter {};
+
+interface PresenterFactory {
+  createPresenter: (view: MarkerView) => Presenter;
+}
+
 
 class MarkerFactory  {
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
-  markerForInitiative = {};
+  readonly markerForInitiative = {} as Dictionary<MarkerView>;
   // CAUTION: this may be either a ClusterGroup, or the map itself
-  hiddenClusterGroup = null;
-  unselectedClusterGroup = null;
-  
+  hiddenClusterGroup?: leaflet.MarkerClusterGroup;
+  unselectedClusterGroup?: leaflet.MarkerClusterGroup;
+  readonly config: Config;
+  readonly presenterFactory: PresenterFactory;
 
-  constructor(config, presenterFactory) {
+  constructor(config: Config, presenterFactory: PresenterFactory) {
     this.config = config;
     this.presenterFactory = presenterFactory;
   }
-  setSelected(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].setSelected(initiative);
+  setSelected(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.setSelected(initiative);
   }
 
-  setUnselected(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].setUnselected(initiative);
+  setUnselected(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.setUnselected(initiative);
   }
 
   destroyAll() {
     let initiatives = Object.keys(this.markerForInitiative);
     initiatives.forEach(initiative => {
-      if (this.markerForInitiative[initiative])
-        this.markerForInitiative[initiative].destroy();
+      this.markerForInitiative[initiative]?.destroy();
     });
-    this.markerForInitiative = {};
+    Object.keys(this.markerForInitiative).forEach(key => delete this.markerForInitiative[key]);
   }
 
 
 
-  showMarkers(initiatives) {
+  showMarkers(initiatives: Initiative[]) {
     //show markers only if it is not currently vissible
     initiatives.forEach(initiative => {
       const marker = this.markerForInitiative[initiative.uri];
@@ -51,52 +64,46 @@ class MarkerFactory  {
 
   }
 
-  hideMarkers(initiatives) {
+  hideMarkers(initiatives: Initiative[]) {
     initiatives.forEach(initiative => {
-      if (this.markerForInitiative[initiative.uri])
-        this.markerForInitiative[initiative.uri].destroy();
+      this.markerForInitiative[initiative.uri]?.destroy();
     });
   }
 
-  createMarker(map, initiative) {
+  createMarker(map: MapObj, initiative: Initiative): MarkerView {
     const view = new MarkerView(this, map, initiative);
     return view;
   }
 
-  refreshMarker(initiative) {
-    if (!this.markerForInitiative[initiative.uri])
-      return;
-    this.markerForInitiative[initiative.uri]
-        .marker
-        .setPopupContent(this.markerForInitiative[initiative.uri].presenter.getInitiativeContent(initiative));
+  refreshMarker(initiative: Initiative) {
+    const marker = this.markerForInitiative[initiative.uri];
+    if (marker)
+      marker.marker
+      ?.setPopupContent(marker.presenter.getInitiativeContent(initiative));
   }
 
-  setSelectedClusterGroup(clusterGroup) {
+  setSelectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
     // CAUTION: this may be either a ClusterGroup, or the map itself
     this.hiddenClusterGroup = clusterGroup;
   }
-  setUnselectedClusterGroup(clusterGroup) {
+  setUnselectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
     this.unselectedClusterGroup = clusterGroup;
   }
-  showTooltip(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].showTooltip(initiative);
+  showTooltip(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.showTooltip(initiative);
   }
-  hideTooltip(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].hideTooltip(initiative);
+  hideTooltip(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.hideTooltip(initiative);
   }
 
-  getInitiativeContent(initiative) {
+  getInitiativeContent(initiative: Initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    if (this.markerForInitiative[initiative.uri])
-      return this.markerForInitiative[initiative.uri].getInitiativeContent(
-        initiative
-      );
-    else return null;
+    return this.markerForInitiative[initiative.uri]?.getInitiativeContent(
+      initiative
+    );
   }
 
-  getClusterGroup() {
+  getClusterGroup(): leaflet.MarkerClusterGroup | undefined {
     return this.unselectedClusterGroup;
   }
 }
@@ -108,13 +115,13 @@ class MarkerView extends base {
   static dfltOptions = { prefix: "fa" };
   
   // Convert a field id / definition into an array of CSS classes
-  static classesForField(fieldId, fieldDef, value) {
+  static classesForField(fieldId: string, fieldDef: PropDef, value: any): string[] {
     if (!fieldDef.isStyled)
       return [];
 
     // Multi fields are special
-    if (fieldDef.type === 'multi')
-      return value.map(elem => this.classesForFields(fieldId, fieldDef.of, elem));
+    if (fieldDef.type === 'multi' && 'map' in value && typeof(value.map) == 'function')
+      return value.map((elem: any) => this.classesForField(fieldId, fieldDef.of, elem));
 
     // Other field types all equivalent
     const components = ['sea-marker', fieldId, String(value)];
@@ -122,14 +129,21 @@ class MarkerView extends base {
   }
 
   // Converts the field definitions
-  static classesForFields(initiative, fields) {
+  static classesForFields(initiative: Initiative, fields: Dictionary<PropDef>) {
     // Iterate the fields, converting each of them into an array CSS classes
     return Object.entries(fields).flatMap(
-      ([fieldId, fieldDef]) => this.classesForField(fieldId, fieldDef, initiative[fieldId])
+      ([fieldId, fieldDef]) => fieldDef? this.classesForField(fieldId, fieldDef, initiative[fieldId]) : []
     );
   }
 
-  constructor(markerFactory, map, initiative) {
+  marker?: leaflet.Marker;
+  cluster?: leaflet.MarkerClusterGroup;
+  readonly markerFactory: MarkerFactory;
+  readonly initiative: Initiative;
+  readonly mapObj: MapObj;
+  readonly config: Config;
+  
+  constructor(markerFactory: MarkerFactory, map: MapObj, initiative: Initiative) {
     super();
     this.markerFactory = markerFactory;
     this.initiative = initiative;
@@ -138,7 +152,7 @@ class MarkerView extends base {
     this.setPresenter(markerFactory.presenterFactory.createPresenter(this));
     
     // options argument overrides our default options:
-    const opts = Object.assign(this.constructor.dfltOptions, {
+    const opts = Object.assign(MarkerView.dfltOptions, {
       popuptext: this.presenter.getInitiativeContent(initiative)
     });
 
@@ -146,52 +160,53 @@ class MarkerView extends base {
     // TODO: Content generation should live somewhere else.
     // const ukPostcode = /([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/;
     if (!initiative.hasLocation()) {
-      const classes = ['awesome-marker', 'sea-non-geo-marker']
-        .concat(this.constructor.classesForFields(initiative, this.config.fields()));
+      const classes = [
+        'awesome-marker', 'sea-non-geo-marker'
+      ].concat(MarkerView.classesForFields(initiative, this.config.fields()));
       
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: 'fa',
         icon: 'certificate',
         className: classes.join(' '),
-        cluster: false
+//        cluster: false
       });
 
       this.marker = leaflet.marker(this.config.getDefaultLatLng(), {
         icon: icon,
-        initiative: this.initiative
+//        initiative: this.initiative
       });
 
       this.initiative.__internal.marker = this.marker;
 
       this.marker.bindPopup(opts.popuptext, {
         autoPan: false,
-        minWidth: "472",
-        maxWidth: "472",
+        minWidth: 472,
+        maxWidth: 472,
         closeButton: false,
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
 
       this.cluster = this.markerFactory.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
-      this.marker.hasPhysicalLocation = false;
+      //this.marker.hasPhysicalLocation = false;
     }
     else {
       const hovertext = this.presenter.getHoverText(initiative);
       const classes = ['awesome-marker', 'sea-marker']
-        .concat(this.constructor.classesForFields(initiative, this.config.fields()));
+        .concat(MarkerView.classesForFields(initiative, this.config.fields()));
       
       
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: 'fa',
         icon: 'certificate',
         className: classes.join(' '),
-        cluster: false,
+        //cluster: false,
       });
       
       //this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {icon: icon, title: hovertext});
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
-        initiative: this.initiative
+        //initiative: this.initiative
       });
 
       this.initiative.__internal.marker = this.marker;
@@ -206,18 +221,16 @@ class MarkerView extends base {
         className: "sea-initiative-popup"
       });
       this.marker.bindTooltip(this.presenter.getHoverText(initiative));
-      this.marker.on("click", (e) => {
-        this.onClick(e);
-      });
+      this.marker.on("click", this.onClick);
       this.cluster = this.markerFactory.unselectedClusterGroup;
-      this.cluster.addLayer(this.marker);
-      this.marker.hasPhysicalLocation = true;
+      this.cluster?.addLayer(this.marker);
+      //this.marker.hasPhysicalLocation = true;
     }
 
     this.markerFactory.markerForInitiative[initiative.uri] = this;
   }
 
-  onClick(e) {
+  onClick(e: leaflet.LeafletMouseEvent) {
     // console.log("MarkerView.onclick");
     // Browser seems to consume the ctrl key: ctrl-click is like right-buttom-click (on Chrome)
     if (e.originalEvent.ctrlKey) {
@@ -246,7 +259,7 @@ class MarkerView extends base {
 
 
 
-  setUnselected(initiative) {
+  setUnselected(initiative: Initiative) {
     //close pop-up
     this.mapObj.closePopup();
     //close information on the left hand side (for smaller screens)
@@ -259,33 +272,33 @@ class MarkerView extends base {
     //change the color of an initiative with a location
     if (this.initiative.hasLocation()) {
       const classes = ['awesome-marker', 'sea-marker']
-        .concat(this.constructor.classesForFields(this.initiative, this.config.fields()));
+        .concat(MarkerView.classesForFields(this.initiative, this.config.fields()));
       
-      this.marker.setIcon(
+      this.marker?.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: 'fa',
           icon: 'certificate',
           className: classes.join(' '),
-          cluster: false
+          //cluster: false
         })
       );
     }
   };
 
-  setSelected(initiative) {
+  setSelected(initiative: Initiative) {
     //set initiative for selection
     this.mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (this.initiative.hasLocation()) {
       const classes = ['awesome-marker', 'sea-marker', 'sea-selected']
-        .concat(this.constructor.classesForFields(this.initiative, this.config.fields()));
+        .concat(MarkerView.classesForFields(this.initiative, this.config.fields()));
       
       this.initiative.__internal.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: 'fa',
           icon: 'certificate',
           className: classes.join(' '),
-          cluster: false
+          //cluster: false
         })
       );
     }
@@ -294,11 +307,12 @@ class MarkerView extends base {
       this.initiative.__internal.marker.openPopup();
     }
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
+    // @ts-ignore:next-line which accesses a private property
     else if (this.markerFactory.unselectedClusterGroup._inZoomAnimation) {
-      this.markerFactory.unselectedClusterGroup.on("animationend", e => {
+      this.markerFactory.unselectedClusterGroup?.on("animationend", e => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
-          this.markerFactory.unselectedClusterGroup.getVisibleParent(this.initiative.__internal.marker) !==
+          this.markerFactory.unselectedClusterGroup?.getVisibleParent(this.initiative.__internal.marker) !==
             this.initiative.__internal.marker
         ) {
           if (this.initiative.__internal.marker.__parent) //if it has a parent
@@ -307,13 +321,13 @@ class MarkerView extends base {
           }
         }
         this.initiative.__internal.marker.openPopup();
-        this.markerFactory.unselectedClusterGroup.off("animationend");
+        this.markerFactory.unselectedClusterGroup?.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
       if (
-        this.markerFactory.unselectedClusterGroup.getVisibleParent(this.initiative.__internal.marker) !==
+        this.markerFactory.unselectedClusterGroup?.getVisibleParent(this.initiative.__internal.marker) !==
           this.initiative.__internal.marker
       ) {
 
@@ -324,20 +338,20 @@ class MarkerView extends base {
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = () => {
-      if (this.markerFactory.unselectedClusterGroup.getVisibleParent(this.initiative.__internal.marker) !==
+      if (this.markerFactory.unselectedClusterGroup?.getVisibleParent(this.initiative.__internal.marker) !==
         this.initiative.__internal.marker) {
         this.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
-        this.markerFactory.unselectedClusterGroup.off("animationend", deselectInitiative);
+        this.markerFactory.unselectedClusterGroup?.off("animationend", deselectInitiative);
       }
     };
     //check for clustering at each animation of the layer
-    this.markerFactory.unselectedClusterGroup.on("animationend", deselectInitiative);
+    this.markerFactory.unselectedClusterGroup?.on("animationend", deselectInitiative);
 
   };
-  showTooltip(initiative) {
+  showTooltip(initiative: Initiative) {
     // This variation zooms the map, and makes sure the marker can
     // be seen, spiderifying if needed.
     // But this auto-zooming maybe more than the user bargained for!
@@ -350,34 +364,36 @@ class MarkerView extends base {
     // if (cluster && typeof cluster.spiderfy === 'function') {
     //   cluster.spiderfy();
     // }
-    this.marker.openTooltip();
-    this.marker.setZIndexOffset(1000);
+    this.marker?.openTooltip();
+    this.marker?.setZIndexOffset(1000);
   };
-  hideTooltip(initiative) {
-    this.marker.closeTooltip();
-    this.marker.setZIndexOffset(0);
+  hideTooltip(initiative: Initiative) {
+    this.marker?.closeTooltip();
+    this.marker?.setZIndexOffset(0);
   };
-  getInitiativeContent(initiative) {
+  getInitiativeContent(initiative: Initiative) {
     return this.presenter.getInitiativeContent(initiative);
   };
   destroy() {
     //this.marker.hasPhysicalLocation = false;
-    this.cluster.removeLayer(this.marker);
+    if (this.marker && this.cluster)
+      this.cluster.removeLayer(this.marker);
   };
 
   show() {
-    this.cluster.addLayer(this.marker);
+    if (this.marker && this.cluster)
+      this.cluster.addLayer(this.marker);
   }
   isVisible() {
-    return this.cluster.hasLayer(this.marker);
+    if (this.marker && this.cluster)
+      return this.cluster.hasLayer(this.marker);
+    return false;
   }
 }
 
-function init(registry) {
-  const config = registry('config');
-  const presenterFactory = registry('presenter/map/marker');
+export function init(registry: Registry) {
+  const config = registry('config') as Config;
+  const presenterFactory = registry('presenter/map/marker') as PresenterFactory;
 
   return new MarkerFactory(config, presenterFactory);
 }
-
-module.exports = init;
