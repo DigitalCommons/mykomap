@@ -1,7 +1,7 @@
 import * as leaflet from 'leaflet';
 import 'leaflet.markercluster';
 import * as cssesc from 'cssesc';
-const eventbus = require('../../eventbus');
+import * as eventbus from '../../eventbus';
 
 import { base } from '../base';
 import { Dictionary } from '../../../common_types';
