@@ -78,7 +78,6 @@
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.5",
-    "@types/nock": "^11.1.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "cross-fetch": "^3.1.5",
