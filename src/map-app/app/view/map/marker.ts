@@ -123,8 +123,8 @@ class MarkerView extends base {
       return value.map((elem: any) => this.classesForField(fieldId, fieldDef.of, elem));
 
     // Other field types all equivalent
-    const components = ['sea-marker', fieldId, String(value)];
-    return [components.join('_').toLowerCase()];
+    const components = ['sea-marker', fieldId, cssesc(String(value))];
+    return [cssesc(components.join('_').toLowerCase())];
   }
 
   // Converts the field definitions
