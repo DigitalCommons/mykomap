@@ -5,11 +5,35 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   viewBox="0 0 28 42"
-   height="42"
-   width="28"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   viewBox="0 0 39 32"
+   height="32"
+   width="39"
    id="svg2"
-   version="1.1">
+   version="1.1"
+   sodipodi:docname="sea-marker-shadow.svg"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="956"
+     inkscape:window-height="1024"
+     id="namedview1602"
+     showgrid="false"
+     inkscape:zoom="5.6190476"
+     inkscape:cx="10.885593"
+     inkscape:cy="21"
+     inkscape:window-x="960"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
   <metadata
      id="metadata8">
     <rdf:RDF>
@@ -70,8 +94,9 @@
     </filter>
   </defs>
   <path
-     transform="matrix(0.94542347,0,0,1.010613,6.081143,8.0833578)"
+     transform="matrix(0.94542347,0,0,1.010613,6.081143,-1.9166422)"
      style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;stroke-width:0.852301;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter3967)"
      d="M 8.3759894,33.560465 C 41.074971,15.559798 37.660691,3.0509515 24.288309,3.0509515 c -13.372381,0 -29.8347074,12.5088455 -15.9123196,30.5095135 z"
-     id="path845" />
+     id="path845"
+     inkscape:connector-curvature="0" />
 </svg>

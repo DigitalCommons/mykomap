@@ -221,7 +221,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
           <symbol id="svg-icon" class="svg-icon" viewBox="0 0 28 42">
             <path
               class="svg-icon-path"
-              d="M 14,6.4e-7 C 0.62761898,6.4e-7 -9.3106853,17.219925 14,42 37.310685,17.219926 27.372381,6.4e-7 14,6.4e-7 Z" />
+              d="M 14,0 C 0.62761898,0 -9.3106853,17.219925 14,42 37.310685,17.219926 27.372381,0 14,0 Z" />
           </symbol>
         </defs>
         <!-- to make the svg-icon.svg file
