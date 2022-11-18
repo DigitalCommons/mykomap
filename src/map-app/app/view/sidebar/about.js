@@ -58,8 +58,11 @@ function init(registry) {
       .remove();
     
     const dataSection = selection.append('div')
-      .attr("class", "w3-container about-data");
+                                 .attr("class", "w3-container about-data");
 
+    
+    /*********************************************************************************
+     * COMMENTED PENDING A REVIEW/REFRESH OF THE DATA AND WIKI DOCS
     const sourceParag = dataSection.append('p')
     sourceParag.text(labels.source)
 
@@ -101,7 +104,8 @@ function init(registry) {
       .attr('href', technicalInfoUrl)
       .attr('target', '_blank');
 
-
+    *********************************************************************************/
+    
     // If a version is available display it
     const version = config.getVersionTag();
     if (version) {
