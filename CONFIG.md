@@ -101,13 +101,13 @@ Set whether the sidebar is by default open on starting the app.
 
 - *type:* `{DialogueSize}` An object containing only string values.
 - *in string context:* A comma-delimited list of name-value pairs, each delimited by a colon. Therefore no commas or colons can exist in either names or values. Spaces are not trimmed, and later key duplicates will overwrite earlier ones.
-- *default:* ```
+- *default:* 
 {
   "width": "35vw",
   "height": "225px",
   "descriptionRatio": 2.5
 }
-```
+
 - *settable?:* yes
 
 Set the dimensions of the dialogue box. Height and width are raw css values descriptionRatio is how many times larger the description section is than the contact section. These values are used in view/map.js
@@ -227,11 +227,11 @@ The language to use for internationalised text. Must be one of those listed in `
 
 - *type:* `{string[]}` An array of strings.
 - *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* ```
+- *default:* 
 [
   "EN"
 ]
-```
+
 - *settable?:* no
 
 An array of supported languages which can be used for internationalised text. Should not be empty, and all codes should be upper case. Any other language code used will be replaced with the first in this list. A phrases for the first code will also used as a fallback if an individual phrase is missing.
