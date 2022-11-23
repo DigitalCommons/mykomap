@@ -1,3 +1,5 @@
+ensure servers enable headers mod and site.conf is deployed for data
+
 FIXME
 - fieldIsCountries is hacked, not general! (see directory.js)
 
