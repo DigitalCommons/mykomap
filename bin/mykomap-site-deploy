@@ -125,9 +125,9 @@ rsync \
     -avzc \
     --delete \
     --rsync-path='sudo rsync' \
-    --usermap="*:$deploy_user" \
-    --groupmap="*:$deploy_group" \
+    --usermap="*:${deploy_user:?}" \
+    --groupmap="*:${deploy_group:?}" \
     --exclude=build.txt \
     --exclude=.* \
-    "$deploy_from" \
-    "$deploy_to"
+    "${deploy_from:?}" \
+    "${deploy_to:?}"
