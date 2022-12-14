@@ -4,9 +4,13 @@
  * Emulates the older RequireJS script sea-site-build, but invokes webpack
  * and builds using commonJS modules.
  *
+ * a file `src/config.ts` is defined in the project using this which exports a `config` value
+ * that when converted to JSON can be used as the config.json file used by
+ * Shipshape and other monitoring tools.
  */
 const fs = require('fs');
 const minimist = require('minimist');
+const os = require('os');
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -68,7 +72,10 @@ const variant = process.env.npm_package_name;
 const debug = variant == 'mykomap' || process.env.NODE_ENV !== "production";
 
 const versionJson = srcPath? path.join(srcPath, 'version.json') : path.resolve(cwd, 'src/version.json');
+const mapConfigModule = srcPath? path.join(srcPath, 'config.ts') : path.resolve(cwd, 'src/config.ts');
+const configJson = path.join(configPath, 'config.json');
 let versionInfo;
+let tsConfigFile;
 let mykoMapSrcDir;
 let servicesDir;
 let entry;
@@ -77,6 +84,7 @@ if (variant == 'mykomap') {
 
   mykoMapSrcDir = "./src/map-app"; // locally
   servicesDir = "./src/services";
+  tsConfigFile = path.resolve(cwd, "ext/tsconfig.json");
   
   // Get the linked dependency config in ext/package.json 
   const mapPackageJson = require(path.join(cwd, 'ext/package.json'));
@@ -93,6 +101,7 @@ else {
 
   mykoMapSrcDir = "./node_modules/mykomap/src/map-app"; // in the mykomap module dep
   servicesDir = "./node_modules/mykomap/src/services"; // in the mykomap module dep
+  tsConfigFile = path.resolve(cwd, "./tsconfig.json");
   
   // Get the mykomap git commit ID from the resolved version (we don't have
   // access to the git repo in this case).
@@ -127,7 +136,8 @@ if (srcPath) { // -s was supplied, maybe override the default
 }
 console.log("entry point:", entryModulePath);
 
-const webpackConfig = {
+// Webpack config for the application
+const webpackAppConfig = {
   context: cwd,
   entry: entryModulePath,
   devtool: debug ? "source-map" : false,
@@ -232,14 +242,99 @@ const webpackConfig = {
   ],
 };
 
-webpack(
-  webpackConfig,
-  (err, stats) => {
-    if (err || stats.hasErrors()) {
-      die(`webpack error: ${stats}`);
-    }
-    else
-      console.log(`webpack: ${stats}`);
-  }
-);
+const tempdir = fs.mkdtempSync(path.resolve(os.tmpdir(),'mykomap-site-build'));
+const metaGeneratorStem = 'mkMeta';
+const metaEntry = path.resolve(tempdir, `${metaGeneratorStem}.ts`);
+const metaGeneratorFile = `${metaGeneratorStem}.js`;
+const metaGenerator = path.resolve(tempdir, metaGeneratorFile);
 
+// Webpack config for the metaGenerator script
+const webpackMkMetaConfig = {
+  context: cwd,
+  entry: metaEntry,
+  devtool: false,
+  mode: 'production',
+  target: 'node',
+  output: {
+    path: tempdir,
+    filename: metaGeneratorFile,
+    clean: true,
+  },
+  module: {
+    rules: [
+	    {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        // Allow TS compiling in node_modules, but exclude all except
+        // mykomap, which because it is a git dependency, contains
+        // uncompiled typescript.
+        options: { allowTsInNodeModules: true, onlyCompileBundledFiles: true,
+                   configFile: tsConfigFile },
+      },
+      { // for about.html
+        test: /\.html$/i,
+        loader: 'html-loader',
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      // Define this alias so that it works in user code's config/index.ts
+      // Note, it needs to be absolute to support use from ext/
+      "mykomap": path.resolve(mykoMapSrcDir),
+    },
+    // Tell webpack not to resolve symlinks. This would make typescript baulk
+    // on symlinked files outside this project.
+    symlinks: false,
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: 'map-app/map-app.css',
+    }),
+  ],
+};
+
+// A promise-API invocation for webpack
+const webpackPromise = (config) => {
+  return new Promise((resolve, reject) => {
+    const cb = (err, stats) => {
+      if (err || stats.hasErrors()) {
+        reject(new Error(`webpack error: ${stats}, ${err}`));
+      }
+      else {
+        resolve(stats);
+      }
+    };
+    webpack(config, cb);
+  });
+}
+
+// Function to run the webpack build process
+const build = async () => {
+  try {
+    // Gets the map metadata in a form we can access from the build
+    fs.writeFileSync(metaEntry, `
+const fs = require('fs');
+const outfile = '${configJson}';
+const mapMeta = require('${mapConfigModule}').config;
+fs.writeFileSync(outfile, JSON.stringify(mapMeta));
+    `);
+    const metaStats = await webpackPromise(webpackMkMetaConfig);
+    console.log(`metadata webpack: ${metaStats}`);
+
+    // Now write the config metadata where the app can pick it up
+    console.log("metadata generator is at", metaGenerator);
+    console.log("writing map metatdata to", configJson);
+    require(metaGenerator); // Executes metaGenerator. We can't get any result back though...?
+    
+    // Generates the application
+    const appStats = await webpackPromise(webpackAppConfig);
+    console.log(`application webpack: ${appStats}`);
+  }
+  catch(err) {
+    die(err.message);
+  }
+}
+
+build();
