@@ -34,8 +34,6 @@ instead load the config in the code from somewhere
 
 no more fetching of files on start.
 
-to support shipshape, generate config.json etc. on build?
-
 this config should be versioned, and defines all the pop-ups, fields, etc.
 
 it should support a single-sea-map server by allowing config to be loaded from more than one place - possibly from a database or API?
