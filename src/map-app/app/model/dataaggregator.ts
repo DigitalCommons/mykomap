@@ -17,8 +17,16 @@ import {
   MultiPropDef,
   ValuePropDef,
   VocabPropDef,
-  sortInitiatives,
+  sortedInsert,
 } from './dataservices';
+
+import {
+  PropertyIndexer
+} from './propertyindexer';
+
+import {
+  PropDefIndex
+} from './propdefindex';
 
 import {
   Config,
@@ -30,21 +38,31 @@ import {
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
+
 export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
+  private readonly propIndex: PropertyIndexer;
 
   constructor(
     private readonly config: Config,
-    private readonly propertySchema: PropDefs,
+    private readonly propDefs: PropDefs,
     private readonly vocabs: VocabServices,
-    private readonly labels: Dictionary<string>,
+    labels: Dictionary<string>,
     public onItemComplete?: (initiative: Initiative) => void,
     public onSetComplete?: (datasetId: string) => void,
     public onSetFail?: (datasetId: string, error: Error) => void)
   {
     super();
     this.paramBuilder = this.mkBuilder(vocabs);
-    this.labels = labels;
+    this.propIndex = new PropertyIndexer(
+      this.registeredValues,
+      this.allRegisteredValues,
+      this.vocabFilteredFields,
+      config.getFilterableFields(),
+      new PropDefIndex(this.propDefs, vocabs, labels, config.getLanguage()),
+      this.vocabs,
+      config.getLanguage()
+    );
   }
 
   addBatch(datasetId: string, initiatives: InitiativeObj[]): void {
@@ -61,37 +79,12 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     if (this.onSetFail)
       this.onSetFail(datasetId, error);
   }
+
+
   
   // Finishes the load after all data has been seen.
   allComplete() {
-    // Loop through the filters and sort them data, then sort the keys in order
-    // Sorts only the filterable fields, not the initiatives they hold.
-    // Populate vocabFilteredFields.
-    const filterableFields: string[] = this.config.getFilterableFields();
-    filterableFields.forEach(filterable => {
-      // Populate vocabFilteredFields
-      const propDef = this.getPropertySchema(filterable);
-      if (propDef.type === 'vocab')
-        this.vocabFilteredFields[propDef.uri] = filterable;
-      
-      const label = this.getTitleForProperty(filterable);
-
-      const labelValues = this.registeredValues[label];
-      if (labelValues) {
-        const sorter = propDef.type === 'vocab' ? this.sortByVocabLabel(filterable, propDef) : sortAsString;
-        const ordered = Object
-          .entries(labelValues)
-          .sort(sorter)
-        // FIXME ideally we'd sort numbers, booleans, etc. appropriately
-
-        this.registeredValues[label] = Object.fromEntries(ordered);
-      }
-
-      // Sort entries as strings
-      function sortAsString(a: [string, any], b: [string, any]): number {
-        return String(a[0]).localeCompare(String(b[0]));
-      }
-    });
+    this.propIndex.onComplete();
   }
   
   private mkBuilder(vocabs: VocabServices): ParamBuilder<PropDef> {
@@ -195,7 +188,6 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     // Not all initiatives have activities
 
     const searchedFields = this.config.getSearchedFields();
-    const language = this.config.getLanguage();
     
     // If this initiative exists already, something is wrong!
     if (this.initiativesByUid[props.uri] !== undefined) {
@@ -208,7 +200,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     props.dataset = datasetId;
 
     // Define and initialise the instance properties.
-    Object.entries(this.propertySchema).forEach(entry => {
+    Object.entries(this.propDefs).forEach(entry => {
       const [propertyName, propDef] = entry;
       if (propDef) {
         Object.defineProperty(initiative, propertyName, {
@@ -221,57 +213,17 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       }
     });
 
-    // loop through the filterable fields AKA properties, and register
-    const filterableFields: string[] = this.config.getFilterableFields();
-    filterableFields.forEach(filterable => {
-      const labelKey: string = this.getTitleForProperty(filterable);
-
-      // Insert the initiative in the allRegisteredValues index
-      const registeredInitiatives = this.allRegisteredValues[labelKey];
-      if (registeredInitiatives)
-        this.insert(initiative, registeredInitiatives);
-      else
-        this.allRegisteredValues[labelKey] = [initiative];
-
-      const field = initiative[filterable];
-      if (field == null) {
-        // This initiative has no value for `filterable`, so can't be indexed further.
-        console.warn(`Initiative has no value for filter field ${filterable}: ${initiative.uri}`);
-        return;
-      }
-
-      // Insert the initiative in the registeredValues index
-      const values = this.registeredValues[labelKey];
-      if (values) {
-        const registeredInitiatives2 = values[field]
-        if (registeredInitiatives2) {
-          this.insert(initiative, registeredInitiatives2);
-        } else {
-          values[field] = [initiative];
-        }
-      }
-      else {
-        // Create the object that holds the registered values for the current
-        // field if it hasn't already been created
-        const values: Dictionary<Initiative[]> = this.registeredValues[labelKey] = {};
-        values[field] = [initiative];
-      }
-
-    });
+    // Index the initiative in terms of filterableFields
+    this.propIndex.onData(initiative);
 
     // Insert the initiative into loadedInitiatives
-    this.insert(initiative, this.loadedInitiatives);
+    sortedInsert(initiative, this.loadedInitiatives);
 
     // Insert the initiative into initiativesByUid
     this.initiativesByUid[initiative.uri] = initiative;
 
     // Report the completion
     this.onItemComplete?.(initiative);
-  }
-  
-  private insert(element: any, array: any[]) {
-    array.splice(this.locationOf(element, array), 0, element);
-    return array;
   }
   
   // Get a searchable value which can be added to an initiative's searchstr field
@@ -290,77 +242,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     return term;
   }
   
-  private locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
-    var pivot = Math.floor(start + (end - start) / 2);
-    if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
-      //SPECIAL CASE FOR ARRAY WITH LEN = 1
-      if (array.length == 1) {
-        return sortInitiatives(array[0], element) == 1 ? 0 : 1;
-      }
-      else if
-        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
-      else
-        return pivot + 1;
-    }
-
-    if (sortInitiatives(array[pivot], element) > 0) {
-      return this.locationOf(element, array, start, pivot);
-    } else {
-      return this.locationOf(element, array, pivot, end);
-    }
-  }
   
-  private getTitleForProperty(propName: string): string {
-    let title = propName; // Fallback value
-
-    try {
-      // First get the property definition (this will throw if it's not defined)
-      const propDef = this.getPropertySchema(propName);
-
-      if (propDef.type === 'vocab') {
-        // Look up the title via the vocab (this may also throw)
-        title = this.vocabs.getVocabForProperty(propName, propDef, this.config.getLanguage()).title;
-      }
-      else if (propDef.type === 'multi') {
-        // Look up the title via the vocab (this may also throw)
-        title = this.vocabs.getVocabForProperty(propName, propDef.of, this.config.getLanguage()).title;
-      }
-      else {
-        // Look up the title via functionalLabels, if present
-        const label = this.labels[`property_${propName}`];
-        if (label)
-          title = label;
-      }
-      return title;
-    }
-    catch (e) {
-      const error: Error = e instanceof Error? e : new Error();
-      error.message = `invalid filterableFields config for '${propName}' - ${e}`;
-      throw error;
-    }
-  }
-  
-  // Gets the schema definition for a property.
-  //
-  // Returns a schema definition, or throws an error null if there is no such property. 
-  getPropertySchema(propName: string): PropDef {
-    const propDef = this.propertySchema[propName];
-    if (!propDef) {
-      throw new Error(`unrecognised property name: '${propName}'`);
-    }
-    return propDef;
-  }
-
-  // Sort entries by the vocab label for the ID used as the key
-  private sortByVocabLabel(id: string, propDef: PropDef) {
-    const vocab = this.vocabs.getVocabForProperty(id, propDef, this.config.getLanguage());
-    return (a: [string, any], b: [string, any]): number => {
-      const alab = vocab.terms[a[0]];
-      const blab = vocab.terms[b[0]];
-      return String(alab).localeCompare(String(blab));
-    };
-  }
-
   // Returns an array of sse objects whose dataset is the same as dbSource.
   // If boolean all is set to true returns all instead.
   private filterDatabases(dbSource: string, all: boolean): Initiative[] {

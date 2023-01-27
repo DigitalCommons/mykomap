@@ -10,6 +10,7 @@ import {
   sortInitiatives,
 } from './dataservices';
 
+
 // For loading data incrementally
 //
 // A variety of the visitor pattern. The details of what is done by the
