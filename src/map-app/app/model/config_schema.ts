@@ -27,6 +27,7 @@ import type {
   Initiative,
   PropDef,
   PropDefs,
+  FieldDefs,
 } from './dataservices';
 
 import type {
@@ -112,7 +113,7 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
-  fields(): Dictionary<PropDef | PropDef['type']>;
+  fields(): FieldDefs;
   getCustomPopup(): InitiativeRenderFunction | undefined;
   getDataSources(): AnyDataSource[];
   getDefaultLatLng(): Point2d;

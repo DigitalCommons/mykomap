@@ -115,6 +115,9 @@ export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef
 
 export type PropDefs = Dictionary<PropDef>;
 
+// A convenience variation of PropDefs used in ConfigData
+export type FieldDefs = Dictionary<PropDef | PropDef['type']>;
+
 export function sortInitiatives(a: Initiative, b: Initiative) {
   return a.name.localeCompare(b.name);
 }
