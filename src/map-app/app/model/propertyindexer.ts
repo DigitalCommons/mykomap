@@ -14,52 +14,53 @@ export class PropertyIndexer {
   constructor(
     /// An index of property titles to property values to lists of
     /// initiatives with that property value
-    readonly registeredValues: Dictionary<Dictionary<Initiative[]>>,
+    readonly byTitleThenValue: Dictionary<Dictionary<Initiative[]>>,
     
     /// An index of property titles to lists of Initiatives with that
     /// property
-    readonly allRegisteredValues: Dictionary<Initiative[]>,
+    readonly byTitle: Dictionary<Initiative[]>,
   
-    /// An index of vocab URIs (of those filterableFields which are
+    /// An index of vocab URIs (of those propNames which are
     /// vocabs) to the referencing property ID (from the
-    /// filterableFields)
+    /// propNames)
     ///
     /// FIXME is this not going to be losing information when
-    /// filterableFields have two items with the same vocab?
-    readonly vocabFilteredFields: Dictionary,
+    /// propNames have two items with the same vocab?
+    readonly propIdByVocabUri: Dictionary,
     
-    private readonly filterableFields: string[],
+    private readonly propNames: string[],
     private readonly propDefs: PropDefIndex,
     private readonly vocabs: VocabServices,
     private readonly language: string,
   ) {}
-  
+
+  /// Stores this initiative and it the values of the selected properties
+  /// in the indexes.
   onData(initiative: Initiative): void {
 
-    // loop through the filterable fields AKA properties, and register
-    this.filterableFields.forEach(filterable => {
-      const labelKey: string = this.propDefs.getTitle(filterable);
+    this.propNames.forEach(propName => {
+      const title: string = this.propDefs.getTitle(propName);
 
-      // Insert the initiative in the allRegisteredValues index
-      const registeredInitiatives = this.allRegisteredValues[labelKey];
-      if (registeredInitiatives)
-        sortedInsert(initiative, registeredInitiatives);
+      // Insert the initiative in the byTitle index
+      const initiatives = this.byTitle[title];
+      if (initiatives)
+        sortedInsert(initiative, initiatives);
       else
-        this.allRegisteredValues[labelKey] = [initiative];
+        this.byTitle[title] = [initiative];
 
-      const field = initiative[filterable];
+      const field = initiative[propName];
       if (field == null) {
-        // This initiative has no value for `filterable`, so can't be indexed further.
-        console.warn(`Initiative has no value for filter field ${filterable}: ${initiative.uri}`);
+        // This initiative has no value for `propName`, so can't be indexed further.
+        console.warn(`Initiative has no value for filter field ${propName}: ${initiative.uri}`);
         return;
       }
 
-      // Insert the initiative in the registeredValues index
-      const values = this.registeredValues[labelKey];
+      // Insert the initiative in the byTitleThenValue index
+      const values = this.byTitleThenValue[title];
       if (values) {
-        const registeredInitiatives2 = values[field]
-        if (registeredInitiatives2) {
-          sortedInsert(initiative, registeredInitiatives2);
+        const initiatives2 = values[field]
+        if (initiatives2) {
+          sortedInsert(initiative, initiatives2);
         } else {
           values[field] = [initiative];
         }
@@ -67,52 +68,56 @@ export class PropertyIndexer {
       else {
         // Create the object that holds the registered values for the current
         // field if it hasn't already been created
-        const values: Dictionary<Initiative[]> = this.registeredValues[labelKey] = {};
+        const values: Dictionary<Initiative[]> = this.byTitleThenValue[title] = {};
         values[field] = [initiative];
       }
     });
     
   }
   
-  // Loop through the filteredFields and sort the data, then sort the
-  // keys in order. Sorts only the filterable fields, not the
-  // initiatives they hold.  Populate vocabFilteredFields.
+  /// Loop through the filteredFields and sort the data, then sort the
+  /// keys in order. Sorts only the propName fields, not the
+  /// initiatives they hold.  Also populates propIdByVocabUri.
   onComplete(): void {
     
-    this.filterableFields.forEach(propName => {
-      // Populate vocabFilteredFields
+    this.propNames.forEach(propName => {
+      // Populate propIdByVocabUri
       const propDef = this.propDefs.getDef(propName);
       
       if (propDef.type === 'vocab')
-        this.vocabFilteredFields[propDef.uri] = propName;
+        this.propIdByVocabUri[propDef.uri] = propName;
       
-      const label = this.propDefs.getTitle(propName);
+      const title = this.propDefs.getTitle(propName);
 
-      const labelValues = this.registeredValues[label];
-      if (!labelValues)
+      const titleValues = this.byTitleThenValue[title];
+      if (!titleValues)
         return; // Nothing to do here... loop to next value
       
       let sorter = sortAsString; // Default for simple case
       
       if (propDef.type === 'vocab') { // But when it's a vocab...
         const vocab = this.vocabs.getVocabForProperty(propName, propDef, this.language);
-        sorter = sortByVocabLabel(vocab);
+        sorter = sortByVocabTitle(vocab);
       }
       
       // Now we can sort the value entries.
       // FIXME ideally we'd sort numbers, booleans, etc. appropriately
       const ordered = Object
-        .entries(labelValues)
+        .entries(titleValues)
         .sort(sorter);
-      
-      this.registeredValues[label] = Object.fromEntries(ordered);
 
+      // Reconstitute ordered elements as an object (which preserves this order in the key order)
+      this.byTitleThenValue[title] = Object.fromEntries(ordered);
+
+      // Done - helper functions follow.
+      return;
+      
       // Sort entries as strings
       function sortAsString(a: [string, any], b: [string, any]): number {
         return String(a[0]).localeCompare(String(b[0]));
       }
-      // Sort entries by the vocab label for the ID used as the key
-      function sortByVocabLabel(vocab: Vocab) {
+      // Sort entries by the vocab title for the ID used as the key
+      function sortByVocabTitle(vocab: Vocab) {
         return (a: [string, any], b: [string, any]): number => {
           const alab = vocab.terms[a[0]];
           const blab = vocab.terms[b[0]];
