@@ -2,6 +2,9 @@ import { Dictionary } from "../../common_types";
 import { PropDef, PropDefs } from "./dataservices";
 import { VocabLookup } from "./vocabs";
 
+/// Wraps a PropDefs instance, providing localised titles
+///
+/// To do this, it also needs a VocabLookup and a labels Dictionary, 
 export class PropDefIndex {
 
   constructor(
