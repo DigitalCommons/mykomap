@@ -1,14 +1,13 @@
 import { Dictionary } from "../../common_types";
 import { PropDef, PropDefs } from "./dataservices";
-import { VocabServices } from "./vocabs";
+import { VocabLookup } from "./vocabs";
 
 export class PropDefIndex {
 
   constructor(
     readonly propDefs: PropDefs,
-    readonly vocabs: VocabServices,
-    readonly labels: Dictionary,
-    readonly language: string) {
+    readonly getVocab: VocabLookup,
+    readonly labels: Dictionary) {
   }
   
   // Gets the schema definition for a property.
@@ -32,11 +31,11 @@ export class PropDefIndex {
 
       if (propDef.type === 'vocab') {
         // Look up the title via the vocab (this may also throw)
-        title = this.vocabs.getVocabForProperty(propName, propDef, this.language).title;
+        title = this.getVocab(propDef.uri).title;
       }
-      else if (propDef.type === 'multi') {
+      else if (propDef.type === 'multi' && propDef.of.type === 'vocab') {
         // Look up the title via the vocab (this may also throw)
-        title = this.vocabs.getVocabForProperty(propName, propDef.of, this.language).title;
+        title = this.getVocab(propDef.of.uri).title;
       }
       else {
         // Look up the title via functionalLabels, if present
