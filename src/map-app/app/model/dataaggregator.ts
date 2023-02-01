@@ -60,8 +60,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       this.vocabFilteredFields,
       config.getFilterableFields(),
       new PropDefIndex(this.propDefs, vocabs, labels, config.getLanguage()),
-      this.vocabs,
-      config.getLanguage()
+      (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
     );
   }
 

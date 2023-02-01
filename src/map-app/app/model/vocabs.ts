@@ -30,6 +30,7 @@ export type SparqlVocabResponse = VocabIndex & {
   meta: SparqlVocabMeta;
 }
 
+export type VocabLookup = (url: string) => Vocab;
 
 export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse {
   if (typeof(value) !== 'object')
@@ -52,6 +53,12 @@ export interface VocabServices {
   //
   // Keeps trying until all abbreviations applied.
   abbrevUri(uri: string): string;
+
+  // Gets a vocab for the given URI / language
+  // Throws an exception if the URI can't be found.
+  // Uses the value of getFallBackLanguage() if the language can't be found.
+  // Returns the Vocab found.
+  getVocabForUri(uri: string, language: string): Vocab;
   
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   // Returns '?' if there is no value found
@@ -208,23 +215,37 @@ export class VocabServiceImpl implements VocabServices {
 
     if (propDef.type !== 'vocab')
       throw new Error(`property ${id} is not a vocab property`);
-    
+
+    try {
+      return this.getVocabForUri(propDef.uri, language);
+    }
+    catch(e) {
+      if (e instanceof Error) {
+        e.message += `, for property ${id}`;
+        throw(e);
+      }
+      else {
+        throw new Error(`${e}. for property ${id}`);
+      }
+    }
+  }
+
+  getVocabForUri(uri: string, language: string = this.fallBackLanguage): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
-    const vocab = this.vocabs.vocabs[this.abbrevUri(propDef.uri)];
-    if (!vocab) {
-      throw new Error(`no vocab defined with URI ${propDef.uri} ` +
+    const vocab = this.vocabs.vocabs[this.abbrevUri(uri)];
+    if (!vocab)
+      throw new Error(`no vocab defined with URI ${uri} ` +
         `(expecting one of: ${Object.keys(this.vocabs.vocabs).join(', ')})`);
-    }
-    const vocabLang = vocab[language] ? language : this.fallBackLanguage;
+
+    const vocabLang = vocab[language]? language : this.fallBackLanguage;
     const localVocab = vocab[vocabLang];
-    if (!localVocab) {
-      throw new Error(`no title in lang ${vocabLang} for property: '${id}'`);
-    }
+    if (!localVocab)
+      throw new Error(`no title in lang ${language} for uri ${uri}'`);
 
     return localVocab;
   }
-
+  
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   // Falls back to the default fall-back language if no language given, or
   // the term is not localised in that language

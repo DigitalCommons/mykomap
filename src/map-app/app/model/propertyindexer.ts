@@ -1,6 +1,6 @@
 import { Dictionary } from "../../common_types";
 import { Initiative, sortedInsert } from "./dataservices";
-import { Vocab, VocabServices } from "./vocabs";
+import { Vocab, VocabLookup } from "./vocabs";
 import { PropDefIndex } from "./propdefindex";
 
 // Aggregates selected Initiative properties into an index
@@ -30,8 +30,7 @@ export class PropertyIndexer {
     
     private readonly propNames: string[],
     private readonly propDefs: PropDefIndex,
-    private readonly vocabs: VocabServices,
-    private readonly language: string,
+    private readonly getVocab: VocabLookup
   ) {}
 
   /// Stores this initiative and it the values of the selected properties
@@ -96,7 +95,7 @@ export class PropertyIndexer {
       let sorter = sortAsString; // Default for simple case
       
       if (propDef.type === 'vocab') { // But when it's a vocab...
-        const vocab = this.vocabs.getVocabForProperty(propName, propDef, this.language);
+        const vocab = this.getVocab(propDef.uri);
         sorter = sortByVocabTitle(vocab);
       }
       
