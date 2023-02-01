@@ -42,7 +42,8 @@ export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any
 export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
   private readonly propIndex: PropertyIndexer;
-
+  private readonly mkInitiative: (props: InitiativeObj) => Initiative;
+  
   constructor(
     private readonly config: Config,
     private readonly propDefs: PropDefs,
@@ -64,6 +65,9 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
                        labels),
       (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
     );
+    this.mkInitiative = Initiative.mkFactory(this.propDefs,
+                                                  this.paramBuilder,
+                                                  config.getSearchedFields());
   }
 
   addBatch(datasetId: string, initiatives: InitiativeObj[]): void {
@@ -188,31 +192,14 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
   private onData(props: InitiativeObj, datasetId: string) {
     // Not all initiatives have activities
 
-    const searchedFields = this.config.getSearchedFields();
-    
     // If this initiative exists already, something is wrong!
     if (this.initiativesByUid[props.uri] !== undefined) {
       throw new Error(`duplicate initiative uri: ${props.uri}`);
     }
 
-    const initiative = new Initiative();
-    
     // Set the dataset id
     props.dataset = datasetId;
-
-    // Define and initialise the instance properties.
-    Object.entries(this.propDefs).forEach(entry => {
-      const [propertyName, propDef] = entry;
-      if (propDef) {
-        Object.defineProperty(initiative, propertyName, {
-          value: this.paramBuilder(propertyName, propDef, props),
-          enumerable: true,
-          writable: false,
-        });
-        if (searchedFields.includes(propertyName))
-          initiative.appendSearchableValue(String(initiative[propertyName]));
-      }
-    });
+    const initiative = this.mkInitiative(props);
 
     // Index the initiative in terms of filterableFields
     this.propIndex.onData(initiative);
