@@ -13,23 +13,29 @@ export class PropertyIndexer {
   
   constructor(
     /// An index of property titles to property values to lists of
-    /// initiatives with that property value
+    /// initiatives with that property value. Expected to begin empty,
+    /// will be constructed.
     readonly byTitleThenValue: Dictionary<Dictionary<Initiative[]>>,
     
     /// An index of property titles to lists of Initiatives with that
-    /// property
+    /// property. Expected to begin empty, will be constructed.
     readonly byTitle: Dictionary<Initiative[]>,
   
     /// An index of vocab URIs (of those propNames which are
     /// vocabs) to the referencing property ID (from the
-    /// propNames)
+    /// propNames). Expected to begin empty, will be constructed.
     ///
     /// FIXME is this not going to be losing information when
     /// propNames have two items with the same vocab?
     readonly propIdByVocabUri: Dictionary,
-    
+
+    /// Identifiers of the properties to index
     private readonly propNames: string[],
+
+    /// The property definitions, used to get names of properties and their values.
     private readonly propDefs: PropDefIndex,
+
+    /// A vocab lookup (for naming vocab properties)
     private readonly getVocab: VocabLookup
   ) {}
 
