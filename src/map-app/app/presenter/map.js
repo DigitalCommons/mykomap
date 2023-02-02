@@ -3,11 +3,11 @@ const eventbus = require('../eventbus');
 
 export class PresenterFactory {
   
-  constructor(config, dataservices, markerView, sidebarView) {
+  constructor(config, dataservices, markerView, registry) {
     this.config = config;
     this.dataservices = dataservices;
     this.markerView = markerView;
-    this.sidebarView = sidebarView;
+    this.registry = registry; // for deferred load of sidebarView - breaking a recursive dep
     this.initiativesOutsideOfFilterUIDMap = {};
     this.loadedInitiatives = [];
     this.filtered = {};
@@ -296,7 +296,7 @@ export class Presenter extends BasePresenter {
         let defaultOpenSidebar = this.factory.config.getDefaultOpenSidebar();
         
         if (defaultOpenSidebar) {
-          const sidebarView = registry('view/sidebar');
+          const sidebarView = this.factory.registry('view/sidebar');
           sidebarView.showSidebar();
         }
       },
