@@ -42,8 +42,8 @@ export class PropertyIndexer {
     this.propNames.forEach(propName => {
       const title: string = this.propDefs.getTitle(propName);
 
-      const field = initiative[propName];
-      if (field == null) {
+      const value = initiative[propName];
+      if (value == null) {
         // This initiative has no value for `propName`, so can't be indexed further.
         console.warn(`Initiative has no value for filter field ${propName}: ${initiative.uri}`);
         return;
@@ -52,18 +52,18 @@ export class PropertyIndexer {
       // Insert the initiative in the byTitleThenValue index
       const values = this.byTitleThenValue[title];
       if (values) {
-        const initiatives2 = values[field]
+        const initiatives2 = values[value]
         if (initiatives2) {
           sortedInsert(initiative, initiatives2);
         } else {
-          values[field] = [initiative];
+          values[value] = [initiative];
         }
       }
       else {
         // Create the object that holds the registered values for the current
         // field if it hasn't already been created
         const values: Dictionary<Initiative[]> = this.byTitleThenValue[title] = {};
-        values[field] = [initiative];
+        values[value] = [initiative];
       }
     });
     
