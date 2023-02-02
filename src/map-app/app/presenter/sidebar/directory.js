@@ -44,10 +44,6 @@ function init(registry) {
     return dataServices.getAggregatedData().registeredValues;
   };
 
-  proto.getAllRegisteredValues = function () {
-    return dataServices.getAggregatedData().allRegisteredValues;
-  };
-
   proto.notifyViewToBuildDirectory = function () {
     this.view.refresh();
   };
@@ -55,7 +51,7 @@ function init(registry) {
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
   proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
     if (key == null)
-      return dataServices.getAggregatedData().allRegisteredValues[field];
+      return dataServices.getAggregatedData().loadedInitiatives;
     else
       return dataServices.getAggregatedData().registeredValues[field][key];
   };

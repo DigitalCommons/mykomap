@@ -34,9 +34,6 @@ export class AggregatedData {
   // An index of property titles to property values to lists of initiatives with that property value 
   readonly registeredValues: Dictionary<Dictionary<Initiative[]>> = {};
 
-  /// An index of property titles to lists of Initiatives with that property
-  readonly allRegisteredValues: Dictionary<Initiative[]> = {};
-  
   /// An list of all initiatives
   readonly loadedInitiatives: Initiative[] = [];
 

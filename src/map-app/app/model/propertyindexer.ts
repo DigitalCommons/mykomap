@@ -17,10 +17,6 @@ export class PropertyIndexer {
     /// will be constructed.
     readonly byTitleThenValue: Dictionary<Dictionary<Initiative[]>>,
     
-    /// An index of property titles to lists of Initiatives with that
-    /// property. Expected to begin empty, will be constructed.
-    readonly byTitle: Dictionary<Initiative[]>,
-  
     /// An index of vocab URIs (of those propNames which are
     /// vocabs) to the referencing property ID (from the
     /// propNames). Expected to begin empty, will be constructed.
@@ -45,13 +41,6 @@ export class PropertyIndexer {
 
     this.propNames.forEach(propName => {
       const title: string = this.propDefs.getTitle(propName);
-
-      // Insert the initiative in the byTitle index
-      const initiatives = this.byTitle[title];
-      if (initiatives)
-        sortedInsert(initiative, initiatives);
-      else
-        this.byTitle[title] = [initiative];
 
       const field = initiative[propName];
       if (field == null) {
