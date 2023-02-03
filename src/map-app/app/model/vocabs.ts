@@ -164,10 +164,8 @@ export class VocabServiceImpl implements VocabServices {
 
     let usedTerms: Dictionary<Dictionary> = {};
 
-    let vocabLang = this.fallBackLanguage;
-
     for (const vocabID in vocabFilteredFields) {
-      vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+      const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
 
       const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
       usedTerms[vocabTitle] = {};
@@ -187,7 +185,7 @@ export class VocabServiceImpl implements VocabServices {
         if (!id)
           continue;
 
-        vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+        const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
 
         const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
         
