@@ -648,7 +648,6 @@ export class DataServicesImpl implements DataServices {
       return {};
 
     return this.vocabs.getTerms(this.getLanguage(),
-                                this.aggregatedData.vocabFilteredFields,
                                 this.aggregatedData.initiativesByUid,
                                 this.propertySchema); 
   }

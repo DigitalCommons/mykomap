@@ -87,7 +87,6 @@ export interface VocabServices {
   // of vocab ID to term label (in the given language, if available,
   // else the fallBackLanguage)
   getTerms(language: string,
-           vocabFilteredFields: Dictionary,
            initiativesByUid: Dictionary<Initiative>,
            propertySchema: PropDefs): Dictionary<Dictionary>;
 
@@ -160,43 +159,35 @@ export class VocabServiceImpl implements VocabServices {
   }
   
   //construct the object of terms for advanced search
-  getTerms(language: string, vocabFilteredFields: Dictionary, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
+  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
 
     let usedTerms: Dictionary<Dictionary> = {};
-
-    for (const vocabID in vocabFilteredFields) {
-      const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-
-      const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-      usedTerms[vocabTitle] = {};
-    }
 
     for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
       if (!initiative)
         continue;
 
-      for (const vocabID in vocabFilteredFields) {
-        const propName = vocabFilteredFields[vocabID];
-        if (!propName)
-          continue;
-        
-        const id = initiative[propName];
-        if (!id)
-          continue;
-
-        const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-
-        const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-        
-        
+      for(const propName in propertySchema) {
         const propDef = propertySchema[propName];
-        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
+        let vocabID;
+        if (propDef?.type === 'vocab') {
+          vocabID = propDef.uri;
+        }
+        else if (propDef?.type === 'multi' && propDef?.of.type === 'vocab') {
+          vocabID = propDef.of.uri;
+        }
 
-        // Currently still keeping the output data structure the same, so use id not term
-        const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-        if (!temp[id])
-          temp[id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+        const id = initiative[propName]
+        if (vocabID && id) {
+          const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+          const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
+
+          // Currently still keeping the output data structure the same, so use id not term
+          const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
+          if (!temp[id])
+            temp[id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+        }
       }
     }
 
