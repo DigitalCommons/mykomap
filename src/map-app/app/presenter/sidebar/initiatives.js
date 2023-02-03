@@ -1,11 +1,11 @@
 "use strict";
 const eventbus = require('../../eventbus');
+const { SidebarPresenter } = require('./base');
 
 
 function init(registry) {
   const config = registry('config');
   const dataServices = registry('model/dataservices');
-  const sidebarPresenter = registry('presenter/sidebar/base');
   const map = registry('presenter/map');
 
   //get labels for buttons and titles
@@ -35,7 +35,7 @@ function init(registry) {
 
   function Presenter() { }
 
-  var proto = Object.create(sidebarPresenter.base.prototype);
+  var proto = Object.create(SidebarPresenter.prototype);
 
   proto.currentItem = function () {
     return this.contentStack.current();

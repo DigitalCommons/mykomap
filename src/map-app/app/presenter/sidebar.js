@@ -1,14 +1,11 @@
 "use strict";
 const eventbus = require('../eventbus');
 const presenter = require('../presenter');
+const { SidebarPresenter } = require('./sidebar/base');
 
 function init(registry) {
   const config = registry('config');
   
-  // This is the presenter for the view/sidebar object.
-  // Don't confuse this with the base object for all sidebar objects, which is in presenter/sidebar/base.
-  const sidebarPresenter = registry('presenter/sidebar/base');
-
   function Presenter() {}
 
   var proto = Object.create(presenter.base.prototype);
@@ -107,7 +104,7 @@ function init(registry) {
     eventbus.subscribe({
       topic: "Sidebar.updateSidebarWidth",
       callback: function(data) {
-        sidebarPresenter.updateSidebarWidth(data);
+        SidebarPresenter.updateSidebarWidth(data);
       }
     });
 

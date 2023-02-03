@@ -1,37 +1,49 @@
-"use strict";
 import * as eventbus from '../../eventbus';
 import { base as BasePresenter }from '../../presenter';
 import { Stack } from '../../../stack';
 
-export function init(registry) {
-  const config = registry('config');
+/// This class is a base for sidebar presenters.
+///
+/// Weirdly, for historical reasons which are largely unknown
+/// at the point of writing this, it has only members on the *prototype*
+/// which all derivatives will share... See the static initializer.
+export class SidebarPresenter extends BasePresenter {
+
+  static {
+    // This static initialiser is a new ES feature.
+    // Using it we can emulate setting properties on the class prototype, which
+    // all inherited class instances will share... This isn't the same
+    // as a static member, as this is not a property of instances,
+    // derived or otherwise. This is here to keep the class semantics close to what was
+    // present before ES classes were introduced to the code.
+    
+    this.prototype.sidebarWidth = 0;
+    
+    /// A stack of content.
+    ///
+    /// Sidebars can manage a stack of content.
+    /// For example, a sidebar for Search Results may maintain a stack of search results,
+    /// allowing the possilility of going back/forward through previous/next search results.
+    this.prototype.contentStack = new Stack();
+  }
   
-  // Set up the object from which all sidebar presenters are derived:
-  function base() {}
+  constructor() {
+    super();
+  }
 
-  // All sidebar presenters are derived from the base presenter:
-  var proto = Object.create(BasePresenter.prototype);
-
-  proto.sidebarWidth = 0;
-
-  // Sidebars can manage a stack of content.
-  // For example, a sidebar for Search Results may maintain a stack of search results,
-  // allowing the possilility of going back/forward through previous/next search results.
-  proto.contentStack = new Stack();
-
-  function updateSidebarWidth(data) {
+  static updateSidebarWidth(data) {
     const directoryBounds = data.directoryBounds,
           initiativeListBounds = data.initiativeListBounds;
     this.sidebarWidth =
       directoryBounds.x -
       window.mykoMap.getContainer().getBoundingClientRect().x +
       directoryBounds.width +
-       (initiativeListBounds.x -
-        window.mykoMap.getContainer().getBoundingClientRect().x >
-         0
-         ? initiativeListBounds.width
-         : 0);
-
+        (initiativeListBounds.x -
+         window.mykoMap.getContainer().getBoundingClientRect().x >
+          0
+          ? initiativeListBounds.width
+          : 0);
+    
     eventbus.publish({
       topic: "Map.setActiveArea",
       data: {
@@ -39,26 +51,24 @@ export function init(registry) {
       }
     });
   }
-
-  function getSidebarWidth() {
+  
+  static getSidebarWidth() {
     return this.sidebarWidth;
   }
 
-  proto.backButtonClicked = function() {
-    // Closure to retain reference to this
-    var pres = this;
-    return function() {
+  backButtonClicked() {
+    return () => {
       //console.log("backButtonClicked");
-      //console.log(pres);
-      const lastContent = pres.contentStack.current();
-      const newContent = pres.contentStack.previous();
+      //console.log(this);
+      const lastContent = this.contentStack.current();
+      const newContent = this.contentStack.previous();
       if (newContent == lastContent)
         return;
-      // TODO: Think: maybe better to call a method on pres that indicates thay
+      // TODO: Think: maybe better to call a method on this that indicates thay
       //       the contentStack has been changed.
-      //       Then it is up to the pres to perform other actions related to this
+      //       Then it is up to the this to perform other actions related to this
       //       (e.g. where it affects which initiatives are selected)
-      //pres.view.refresh();
+      //this.view.refresh();
 
       eventbus.publish({
         topic: "Map.removeFilters",
@@ -85,18 +95,17 @@ export function init(registry) {
 
       pres.historyButtonsUsed(lastContent);
     };
-  };
-  proto.forwardButtonClicked = function() {
-    // Closure to retain reference to this
-    var pres = this;
-    return function() {
+  }
+  
+  forwardButtonClicked() {
+    return () => {
       //console.log("forwardButtonClicked");
-      //console.log(pres);
-      const lastContent = pres.contentStack.current();
-      const newContent = pres.contentStack.next();
+      //console.log(this);
+      const lastContent = this.contentStack.current();
+      const newContent = this.contentStack.next();
       if (newContent == lastContent)
         return;
-      //pres.view.refresh();
+      //this.view.refresh();
       if(newContent){
         eventbus.publish({
           topic: "Map.removeFilters",
@@ -126,18 +135,18 @@ export function init(registry) {
           data: {}
         });
       }
-      pres.historyButtonsUsed(lastContent);
+      this.historyButtonsUsed(lastContent);
     };
-  };
+  }
 
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
-  proto.historyButtonsUsed = function(lastContent) {
+  historyButtonsUsed(lastContent) {
     
     this.view.refresh();
-  };
+  }
 
-  proto.deselectInitiatives = function(){
+  deselectInitiatives(){
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
@@ -146,7 +155,7 @@ export function init(registry) {
     });
   }
 
-  proto.historyNavigation = function() {
+  historyNavigation() {
     return {
       back: {
         disabled: this.contentStack.isAtStart(),
@@ -157,14 +166,7 @@ export function init(registry) {
         onClick: this.forwardButtonClicked()
       }
     };
-  };
-
-  base.prototype = proto;
-
-  return {
-    base: base,
-    updateSidebarWidth: updateSidebarWidth,
-    getSidebarWidth: getSidebarWidth
-  };
+  }
 }
+
 
