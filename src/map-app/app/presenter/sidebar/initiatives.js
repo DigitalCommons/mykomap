@@ -87,12 +87,17 @@ function init(registry) {
   };
 
   proto.changeFilters = (filterCategoryName, filterValue, filterValueText) => {
-    //get category of filter as used in intiatives
-    const vocabTitlesAndVocabIDs = dataServices.getVocabTitlesAndVocabIDs();
-    const vocabIDsAndInitiativeVariables = dataServices.getAggregatedData().vocabFilteredFields;
-
-    const filterCategory =
-      vocabIDsAndInitiativeVariables[vocabTitlesAndVocabIDs[filterCategoryName]];
+    // Get the vocab URI from a map of vocab titles to abbreviated vocab URIs
+    // FIXME if titles of vocabs match, this map will be incomplete!
+    const vocabTitlesAndVocabIDs = dataServices.getVocabTitlesAndVocabIDs(); 
+    const vocabID = vocabTitlesAndVocabIDs[filterCategoryName];
+    
+    // Get the category of filter (AKA the property ID used in intiatives)
+    // from a map of abbreviated vocab URIs to property IDs
+    // FIXME if more than one property uses a vocab, this map will be incomplete!
+    const vocabIDsAndInitiativeVariables =
+      dataServices.getAggregatedData().vocabFilteredFields;    
+    const filterCategory = vocabIDsAndInitiativeVariables[vocabID];
 
     //remove old filter 
     const currentFilters = map.getFiltersFull();
