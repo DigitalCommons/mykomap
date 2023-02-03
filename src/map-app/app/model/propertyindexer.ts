@@ -33,7 +33,43 @@ export class PropertyIndexer {
 
     /// A vocab lookup (for naming vocab properties)
     private readonly getVocab: VocabLookup
-  ) {}
+  ) {
+    // Helper function
+    const indexVocab = (uri: string, propName: string) => {
+      if (uri in this.propIdByVocabUri)
+        // Warn about clobbering one property with another, when they share vocabs.
+        throw new Error(
+          `indexed property ${propName} uses vocab ${uri}, but so does `+
+            `${this.propIdByVocabUri[uri]} - indexing properties with `+
+            `the same vocab not currently supported!`);
+      this.propIdByVocabUri[uri] = propName;
+    }
+
+    // Sanity checks:
+    propNames.forEach(name => {
+      // Ensure the propNames exist in propDefs
+      const def = propDefs.getDef(name);
+
+      // Populate propIdByVocabUri
+      switch(def.type) {
+        case 'vocab':
+          indexVocab(def.uri, name);
+          break;
+          
+        case 'multi':
+          // Go down one level - we assume no multis of multis!
+          if (def.of.type === 'vocab')
+            indexVocab(def.of.uri, name);
+          break;
+          
+        default:
+          break;
+      }
+    });
+
+    // We can't check that vocabs involved are in fact defined.
+    // We just have to wait and see if getVocab explodes.
+  }
 
   /// Stores this initiative and it the values of the selected properties
   /// in the indexes.
@@ -49,46 +85,31 @@ export class PropertyIndexer {
         return;
       }
 
-      // Insert the initiative in the byTitleThenValue index
-      const values = this.byTitleThenValue[title];
-      if (values) {
-        const initiatives2 = values[value]
-        if (initiatives2) {
-          sortedInsert(initiative, initiatives2);
-        } else {
-          values[value] = [initiative];
-        }
-      }
-      else {
-        // Create the object that holds the registered values for the current
-        // field if it hasn't already been created
-        const values: Dictionary<Initiative[]> = this.byTitleThenValue[title] = {};
-        values[value] = [initiative];
-      }
+      const propDef = this.propDefs.getDef(propName);
+      if (propDef.type === 'multi')
+        // Loop over the inferred array and insert
+        (value as any[]).forEach(v => this.insertVal(title, v, initiative));
+      else
+        // Just insert the one value
+        this.insertVal(title, value, initiative);
     });
-    
   }
-  
+
   /// Loop through the filteredFields and sort the data, then sort the
   /// keys in order. Sorts only the propName fields, not the
-  /// initiatives they hold.  Also populates propIdByVocabUri.
+  /// initiatives they hold.
   onComplete(): void {
     
     this.propNames.forEach(propName => {
-      // Populate propIdByVocabUri
-      const propDef = this.propDefs.getDef(propName);
-      
-      if (propDef.type === 'vocab')
-        this.propIdByVocabUri[propDef.uri] = propName;
-      
       const title = this.propDefs.getTitle(propName);
-
+      
       const titleValues = this.byTitleThenValue[title];
       if (!titleValues)
         return; // Nothing to do here... loop to next value
       
       let sorter = sortAsString; // Default for simple case
-      
+
+      const propDef = this.propDefs.getDef(propName);
       if (propDef.type === 'vocab') { // But when it's a vocab...
         const vocab = this.getVocab(propDef.uri);
         sorter = sortByVocabTitle(vocab);
@@ -119,6 +140,30 @@ export class PropertyIndexer {
         };
       }
     });
+  }
+
+  // Insert the initiative in the byTitleThenValue index
+  private insertVal(titleKey: string, value: unknown, initiative: Initiative) {
+    const values = this.byTitleThenValue[titleKey];
+
+    // Stringify the value.
+    const valueKey = value == null? "" : String(value); // defined matches null too
+    
+    if (values) {
+      const initiatives2 = values[valueKey]
+      if (initiatives2) {
+        if (!initiatives2.includes(initiative)) // prevent duplicates
+          sortedInsert(initiative, initiatives2);
+      } else {
+        values[valueKey] = [initiative];
+      }
+    }
+    else {
+      // Create the object that holds the registered values for the current
+      // field if it hasn't already been created
+      const values: Dictionary<Initiative[]> = this.byTitleThenValue[titleKey] = {};
+      values[valueKey] = [initiative];
+    }
   }
 }
 
