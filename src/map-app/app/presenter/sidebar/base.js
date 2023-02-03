@@ -1,65 +1,16 @@
 "use strict";
-const eventbus = require('../../eventbus');
-const presenter = require('../../presenter');
+import * as eventbus from '../../eventbus';
+import { base as BasePresenter }from '../../presenter';
+import { Stack } from '../../../stack';
 
-function init(registry) {
+export function init(registry) {
   const config = registry('config');
   
-  function Stack() {
-    this.index = 0;
-    this.storage = [];
-  }
-  Stack.prototype = {
-    append: function(obj) {
-      // This implementation behaves like a typical browser - you loose everything beyond the current
-      // when you add something new:
-      // if (this.index < this.storage.length - 1) {
-      //   // There are items beyond the current one, which we shall remove
-      //   const itemsToRemove = this.storage.length - this.index;
-      //   this.index++;
-      //   this.storage.splice(this.index, itemsToRemove, obj);
-      // } else {
-      //   // Just add the new item to the end
-      //   this.storage[this.storage.length] = obj;
-      //   this.index = this.storage.length - 1;
-      // }
-
-      // This implementation adds things to the very end, so the stack grows and grows:
-      this.storage.push(obj);
-      this.index = this.storage.length - 1;
-    },
-    current: function() {
-      // returns undefined if the stack is empty
-      return this.storage[this.index];
-    },
-    previous: function() {
-      if (this.index > 0) {
-        this.index--;
-      }
-      return this.current();
-    },
-    next: function() {
-      if (this.index < this.storage.length - 1) {
-        this.index++;
-      }
-      return this.current();
-    },
-    isAtStart: function() {
-      return this.storage.length === 0 || this.index === 0;
-    },
-    isAtEnd: function() {
-      return (
-        this.storage.length === 0 || this.index === this.storage.length - 1
-      );
-    },
-    gotoEnd: function() {this.index = this.storage.length-1;}
-  };
-
   // Set up the object from which all sidebar presenters are derived:
   function base() {}
 
   // All sidebar presenters are derived from the base presenter:
-  var proto = Object.create(presenter.base.prototype);
+  var proto = Object.create(BasePresenter.prototype);
 
   proto.sidebarWidth = 0;
 
@@ -217,4 +168,3 @@ function init(registry) {
   };
 }
 
-module.exports = init;

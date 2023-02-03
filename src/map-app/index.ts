@@ -93,7 +93,7 @@ export function initRegistry(config: Config): Registry {
   registry.def('presenter/searchbox', () => require('./app/presenter/searchbox')(registry));
   registry.def('view/searchbox', () => require('./app/view/searchbox')(registry));
   registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    
-  registry.def('presenter/sidebar/base', () => require('./app/presenter/sidebar/base')(registry));
+  registry.def('presenter/sidebar/base', () => require('./app/presenter/sidebar/base').init(registry));
   registry.def('presenter/sidebar/about', () => require('./app/presenter/sidebar/about')(registry));
   registry.def('presenter/sidebar/directory', () => require('./app/presenter/sidebar/directory')(registry));
   registry.def('presenter/sidebar/datasets', () => require('./app/presenter/sidebar/datasets')(registry));
