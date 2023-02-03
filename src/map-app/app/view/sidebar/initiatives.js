@@ -2,14 +2,14 @@
 "use strict";
 const { lab } = require('d3');
 const d3 = require('d3');
-const eventbus = require('../../eventbus')
+const eventbus = require('../../eventbus');
+const { InitiativesPresenter } = require('../../presenter/sidebar/initiatives');
 
 function init(registry) {
 	const config = registry('config');
 	const sidebarView = registry('view/sidebar/base');
-	const presenter = registry('presenter/sidebar/initiatives');
 	const dataServices = registry('model/dataservices');
-	const map = registry('presenter/map');
+	const mapPresenterFactory = registry('presenter/map');
 
 	//get labels for buttons and titles
 	const labels = dataServices.getFunctionalLabels();
@@ -259,7 +259,7 @@ function init(registry) {
 	};
 
 	proto.createAdvancedSearch = (container, values, presenter) => {
-		const currentFilters = map.getFilters();
+		const currentFilters = mapPresenterFactory.getFilters();
 		const item = presenter.currentItem();
 
 		//function used in the dropdown to change the filter
@@ -281,8 +281,8 @@ function init(registry) {
 					presenter.performSearch(item.searchedFor);
 		};
 
-		const possibleFilterValues = dataServices.getPossibleFilterValues(map.getFiltered());
-		const activeFilterCategories = map.getFiltersFull().map(filter =>
+		const possibleFilterValues = dataServices.getPossibleFilterValues(mapPresenterFactory.getFiltered());
+		const activeFilterCategories = mapPresenterFactory.getFiltersFull().map(filter =>
 			filter.verboseName.split(":")[0]);
 
 		for (const field in values) {
@@ -313,7 +313,7 @@ function init(registry) {
 			let alternatePossibleFilterValues;
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
 				alternatePossibleFilterValues = dataServices.getAlternatePossibleFilterValues(
-					map.getFiltersFull(), field);
+					mapPresenterFactory.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
@@ -426,7 +426,7 @@ function init(registry) {
 
 	function createSidebar() {
 		var view = new Sidebar();
-		view.setPresenter(presenter.createPresenter(view));
+		view.setPresenter(new InitiativesPresenter(view, labels, mapPresenterFactory));
 
 		return view;
 	}
