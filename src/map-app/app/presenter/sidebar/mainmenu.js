@@ -2,6 +2,8 @@
 const eventbus = require('../../eventbus');
 const { BaseSidebarPresenter } = require('./base');
 
+export class MainMenuPre
+
 function init(registry) {
   const config = registry('config');
   
