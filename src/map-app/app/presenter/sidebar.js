@@ -3,137 +3,133 @@ const eventbus = require('../eventbus');
 const presenter = require('../presenter');
 const { BaseSidebarPresenter } = require('./sidebar/base');
 
-function init(registry) {
-  const config = registry('config');
+export class SidebarPresenter extends BaseSidebarPresenter {
+  constructor(view, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {
+    super();
+    this.registerView(view);
+    this.showDirectoryPanel = showDirectoryPanel;
+    this.showSearchPanel = showSearchPanel;
+    this.showAboutPanel = showAboutPanel;
+    this.showDatasetsPanel = showDatasetsPanel;
+    this._eventbusRegister();
+  }
   
-  function Presenter() {}
-
-  var proto = Object.create(presenter.base.prototype);
-  proto.changeSidebar = function(name) {
+  changeSidebar(name) {
     this.view.changeSidebar(name);
   };
 
-  proto.showSidebar = function() {
+  showSidebar() {
     this.view.showSidebar();
   };
 
-  proto.showingDirectory = () => config.getShowDirectoryPanel();
-  proto.showingSearch = () => config.getShowSearchPanel();
-  proto.showingAbout = () => config.getShowAboutPanel();
-  proto.showingDatasets = () => config.getShowDatasetsPanel();
+  showingDirectory() { return this.showDirectoryPanel; }
+  showingSearch() { return this.showSearchPanel; }
+  showingAbout() { return this.showAboutPanel; }
+  showingDatasets() { return this.showDatasetsPanel; }
 
-  proto.hideSidebar = function(name) {
+  hideSidebar(name) {
     this.view.hideSidebar();
   };
 
-  proto.hideInitiativeSidebar = function(name) {
+  hideInitiativeSidebar(name) {
     this.view.hideInitiativeSidebar();
   };
 
-  proto.hideInitiativeList = function(name) {
+  hideInitiativeList(name) {
     this.view.hideInitiativeList();
   };
 
-  Presenter.prototype = proto;
-
-  function createPresenter(view) {
-    var p = new Presenter();
-    p.registerView(view);
-
+  _eventbusRegister() {
     eventbus.subscribe({
       topic: "Sidebar.showInitiatives",
-      callback: function() {
-        p.changeSidebar("initiatives");
-        p.showSidebar();
+      callback: () => {
+        this.changeSidebar("initiatives");
+        this.showSidebar();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.showAbout",
-      callback: function() {
-        p.changeSidebar("about");
-        p.showSidebar();
+      callback: () => {
+        this.changeSidebar("about");
+        this.showSidebar();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.showDirectory",
-      callback: function() {
-        p.changeSidebar("directory");
-        view.showInitiativeList();
+      callback: () => {
+        this.changeSidebar("directory");
+        this.viewshowInitiativeList();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.showDatasets",
-      callback: function() {
-        p.changeSidebar("datasets");
-        p.showSidebar();
+      callback: () => {
+        this.changeSidebar("datasets");
+        this.showSidebar();
       }
     });
 
 
     eventbus.subscribe({
       topic: "Sidebar.showSidebar",
-      callback: function() {
-        p.showSidebar();
+      callback: () => {
+        this.showSidebar();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.hideSidebar",
-      callback: function() {
-        p.hideSidebar();
+      callback: () => {
+        this.hideSidebar();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.hideInitiativeSidebar",
-      callback: function() {
-        p.hideInitiativeSidebar();
+      callback: () => {
+        this.hideInitiativeSidebar();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.hideInitiativeList",
-      callback: function() {
-        p.hideInitiativeList();
+      callback: () => {
+        this.hideInitiativeList();
       }
     });
 
     eventbus.subscribe({
       topic: "Sidebar.updateSidebarWidth",
-      callback: function(data) {
+      callback: (data) => {
         BaseSidebarPresenter.updateSidebarWidth(data);
       }
     });
 
     eventbus.subscribe({
       topic: "Initiative.reset",
-      callback: function(data) {
-        p.changeSidebar();
+      callback: (data) => {
+        this.changeSidebar();
       }
     });
     
     eventbus.subscribe({
       topic: "Initiative.complete",
-      callback: function(data) {
-        p.changeSidebar();
+      callback: (data) => {
+        this.changeSidebar();
       }
     });
 
     // eventbus.subscribe({
     //   topic: "Initiative.selected",
-    //   callback: function() {
-    //     view.hideSidebarIfItTakesWholeScreen();
+    //   callback: () => {
+    //     this.viewhideSidebarIfItTakesWholeScreen();
     //   }
     // });
-
-    return p;
   }
-  return {
-    createPresenter: createPresenter
-  };
+
 }
 
-module.exports = init;
+  

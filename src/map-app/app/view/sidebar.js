@@ -3,10 +3,10 @@
 const eventbus = require('../eventbus');
 const d3 = require('d3');
 const viewBase = require('./base');
+const { SidebarPresenter } = require('../presenter/sidebar');
 
 function _init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter/sidebar');
   const about = registry('view/sidebar/about');
   const directory = registry('view/sidebar/directory');
   const datasets = registry('view/sidebar/datasets');
@@ -394,7 +394,16 @@ function _init(registry) {
 
   function init() {
     view = new SidebarView();
-    view.setPresenter(presenter.createPresenter(view));
+
+    const presenter = new SidebarPresenter(
+      view,
+      config.getShowDirectoryPanel(),
+      config.getShowSearchPanel(),
+      config.getShowAboutPanel(),
+      config.getShowDatasetsPanel()
+    );
+
+    view.setPresenter(presenter);
     view.createOpenButton();
     view.createButtonRow();
     view.createSidebars();
