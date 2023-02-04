@@ -1,15 +1,16 @@
 "use strict";
-const eventbus = require('../eventbus');
-const presenter = require('../presenter');
+import * as eventbus from '../eventbus';
+import { base as BasePresenter } from '../presenter';
 
-function init(registry) {
-  const config = registry('config');
-  const dataServices = registry('model/dataservices');
+class SearchboxPresenter extends BasePresenter {
+
+  constructor(view, getAggregatedData) {
+    super();
+    this.registerView(view);
+    this.getAggregatedData = getAggregatedData;
+  }
   
-  function Presenter() {}
-
-  var proto = Object.create(presenter.base.prototype);
-  proto.performSearch = function(text) {
+  performSearch(text) {
     console.log("Search submitted: [" + text + "]");
     // We need to make sure that the search sidebar is loaded
     if (text.length > 0) {
@@ -22,7 +23,7 @@ function init(registry) {
           selected: []
         }
       });
-      var results = dataServices.getAggregatedData().search(text);
+      var results = this.getAggregatedData().search(text);
       eventbus.publish({
         topic: "Search.initiativeResults",
         data: { text: text, results: results }
@@ -34,24 +35,10 @@ function init(registry) {
       eventbus.publish({topic: "Map.removeSearchFilter"});
       eventbus.publish({topic: "Sidebar.showDirectory"});
     }
-  };
-
-
-  proto.changeSearchText = function(txt){
-    this.view.changeSearchText(txt);
-  };
-
-  Presenter.prototype = proto;
-
-  function createPresenter(view) {
-    var p = new Presenter();
-    p.registerView(view);
-
-    
-    return p;
   }
-  return {
-    createPresenter: createPresenter
-  };
+
+
+  changeSearchText(txt){
+    this.view.changeSearchText(txt);
+  }
 }
-module.exports = init;

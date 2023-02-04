@@ -1,11 +1,11 @@
 // The view aspects of the Main Menu sidebar
 "use strict";
 const d3 = require('d3');
+const { SearchboxPresenter } = require('../presenter/searchbox');
 
 function init(registry) {
   const config = registry('config');
   const viewBase = registry('view/base');
-  const presenter = registry('presenter/searchbox');
   const dataServices = registry('model/dataservices');
 
   //get labels for buttons and titles
@@ -70,7 +70,7 @@ function init(registry) {
 
   function init() {
     const view = new SearchBoxView();
-    view.setPresenter(presenter.createPresenter(view));
+    view.setPresenter(new SearchboxPresenter(view, () => dataServices.getAggregatedData()));
     view.createSearchBox();
     return view;
   }
