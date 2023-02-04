@@ -7,7 +7,7 @@ import { Stack } from '../../../stack';
 /// Weirdly, for historical reasons which are largely unknown
 /// at the point of writing this, it has only members on the *prototype*
 /// which all derivatives will share... See the static initializer.
-export class SidebarPresenter extends BasePresenter {
+export class BaseSidebarPresenter extends BasePresenter {
 
   static {
     // This static initialiser is a new ES feature.

@@ -1,6 +1,6 @@
 "use strict";
 const eventbus = require('../../eventbus');
-const { SidebarPresenter } = require('./base');
+const { BaseSidebarPresenter } = require('./base');
 
 function init(registry) {
   const config = registry('config');
@@ -25,7 +25,7 @@ function init(registry) {
 
   function Presenter() { }
 
-  var proto = Object.create(SidebarPresenter.prototype);
+  var proto = Object.create(BaseSidebarPresenter.prototype);
 
 
   proto.currentItem = function () {

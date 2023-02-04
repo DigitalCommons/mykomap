@@ -1,7 +1,7 @@
 "use strict";
 const eventbus = require('../eventbus');
 const presenter = require('../presenter');
-const { SidebarPresenter } = require('./sidebar/base');
+const { BaseSidebarPresenter } = require('./sidebar/base');
 
 function init(registry) {
   const config = registry('config');
@@ -104,7 +104,7 @@ function init(registry) {
     eventbus.subscribe({
       topic: "Sidebar.updateSidebarWidth",
       callback: function(data) {
-        SidebarPresenter.updateSidebarWidth(data);
+        BaseSidebarPresenter.updateSidebarWidth(data);
       }
     });
 

@@ -1,6 +1,6 @@
 "use strict";
 const eventbus = require('../../eventbus');
-const { SidebarPresenter } = require('./base');
+const { BaseSidebarPresenter } = require('./base');
 
 
 function arrayMax(array) {
@@ -37,7 +37,7 @@ class SearchResults extends StackItem {
   }
 }
 
-export class InitiativesPresenter extends SidebarPresenter {
+export class InitiativesPresenter extends BaseSidebarPresenter {
   
   static _eventbusRegister(view, p) {
 
