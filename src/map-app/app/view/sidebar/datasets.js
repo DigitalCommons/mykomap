@@ -2,10 +2,10 @@
 "use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
+const { DatasetsPresenter } = require('../../presenter/sidebar/datasets');
 
 function init(registry) {
   const config = registry('config');
-  const presenter = registry('presenter/sidebar/datasets');
   const view = registry('view/base');
   const sidebarView = registry('view/sidebar/base');
   const dataServices = registry('model/dataservices');
@@ -97,7 +97,7 @@ function init(registry) {
 
   function createSidebar() {
     var view = new Sidebar();
-    view.setPresenter(presenter.createPresenter(view));
+    view.setPresenter(new DatasetsPresenter(view, dataServices));
     return view;
   }
   return {

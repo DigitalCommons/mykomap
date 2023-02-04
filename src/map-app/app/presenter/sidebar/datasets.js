@@ -2,31 +2,27 @@
 const eventbus = require('../../eventbus');
 const { BaseSidebarPresenter } = require('./base');
 
-function init(registry) {
-  const config = registry('config');
-  const sidebarView = registry('view/sidebar/base');
-  const dataServices = registry('model/dataservices');
-  const markerView = registry('view/map/marker');
-  
-  function Presenter() {}
-  
-  var proto = Object.create(BaseSidebarPresenter.prototype);
-  
-  Presenter.prototype = proto;
+export class DatasetsPresenter extends BaseSidebarPresenter {
+  mixedId = "all";
 
-  let mixedId = "all";
-  //test
-  proto.getDatasets = () => {
-    return dataServices.getDatasets();
+  
+  constructor(view, dataServices) {
+    super();
+    this.registerView(view);
+    this.dataServices = dataServices;
   }
   
-  proto.getDefault = () => {
-    let val = dataServices.getCurrentDatasets();
-    return val===true? "all" : val;
+  getDatasets() {
+    return this.dataServices.getDatasets();
   }
-
-  proto.getMixedId = () => {
-    return mixedId;
+  
+  getDefault() {
+    let val = this.dataServices.getCurrentDatasets();
+    return val === true? "all" : val;
+  }
+  
+  getMixedId() {
+    return this.mixedId;
   }
 
   // Called when the user selects a dataset in the datasets sidebar panel
@@ -36,18 +32,7 @@ function init(registry) {
   //set default somewhere else where it loads the initiatives
   //remove initiatives from menu on the side
   //remove initiatives from map
-  proto.changeDatasets = (dataset) => {
-    dataServices.reset(dataset); // simply delegate
-  };
-  
-  function createPresenter(view) {
-    var p = new Presenter();
-    p.registerView(view);  
-    return p;
-  }
-  return {
-    createPresenter: createPresenter
+  changeDatasets(dataset) {
+    this.dataServices.reset(dataset); // simply delegate
   };
 }
-
-module.exports = init;
