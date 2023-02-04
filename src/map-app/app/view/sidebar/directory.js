@@ -3,13 +3,14 @@
 const { lab } = require('d3');
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
+const { DirectoryPresenter } = require('../../presenter/sidebar/directory');
 
 function init(registry) {
   const config = registry('config');
   const view = registry('view/base');
   const sidebarView = registry('view/sidebar/base');
-  const presenter = registry('presenter/sidebar/directory');
   const dataServices = registry('model/dataservices');
+  const markerView = registry('view/map/marker');
 
   //get labels for buttons and titles
   const labels = dataServices.getFunctionalLabels();
@@ -461,8 +462,7 @@ function init(registry) {
 
   function createSidebar() {
     var view = new Sidebar();
-
-    view.setPresenter(presenter.createPresenter(view));
+    view.setPresenter(new DirectoryPresenter(view, config, dataServices, markerView));
     return view;
   }
   return {

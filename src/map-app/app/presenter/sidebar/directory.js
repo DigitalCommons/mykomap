@@ -2,76 +2,61 @@
 const eventbus = require('../../eventbus');
 const { BaseSidebarPresenter } = require('./base');
 
-function init(registry) {
-  const config = registry('config');
-  const sidebarView = registry('view/sidebar/base');
-  const dataServices = registry('model/dataservices');
-  const markerView = registry('view/map/marker');
+function arrayMax(array) {
+  return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
+}
+function arrayMin(array) {
+  return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
+}
 
-  function StackItem(initiatives) {
-    this.initiatives = initiatives;
+export class DirectoryPresenter extends BaseSidebarPresenter {
+
+  constructor(view, config, dataServices, markerView) {
+    super();
+    this.config = config;
+    this.dataServices = dataServices;
+    this.markerView = markerView;
+    this.registerView(view);
   }
-  StackItem.prototype.isSearchResults = function () {
-    // TODO - surely there's a more direct way to decide if this is a SearchResults object?
-    return this.hasOwnProperty("searchString");
-  };
 
-  function SearchResults(initiatives, searchString) {
-    // isa StackItem
-    StackItem.call(this, initiatives);
-    this.searchString = searchString;
-  }
-  SearchResults.prototype = Object.create(StackItem.prototype);
-
-  function Presenter() { }
-
-  var proto = Object.create(BaseSidebarPresenter.prototype);
-
-
-  proto.currentItem = function () {
+  currentItem() {
     return this.contentStack.current();
-  };
-  proto.currentItemExists = function () {
+  }
+
+  currentItemExists() {
     // returns true only if the contentStack is empty
     return typeof this.contentStack.current() !== "undefined";
-  };
+  }
 
-  proto.getVerboseValuesForFields = function () {
-    return dataServices.getVerboseValuesForFields();
-  };
+  getVerboseValuesForFields() {
+    return this.dataServices.getVerboseValuesForFields();
+  }
 
-  proto.getRegisteredValues = function () {
-    return dataServices.getAggregatedData().registeredValues;
-  };
+  getRegisteredValues() {
+    return this.dataServices.getAggregatedData().registeredValues;
+  }
 
-  proto.notifyViewToBuildDirectory = function () {
+  notifyViewToBuildDirectory() {
     this.view.refresh();
-  };
+  }
 
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
-  proto.getInitiativesForFieldAndSelectionKey = function (field, key) {
+  getInitiativesForFieldAndSelectionKey(field, key) {
     if (key == null)
-      return dataServices.getAggregatedData().loadedInitiatives;
+      return this.dataServices.getAggregatedData().loadedInitiatives;
     else
-      return dataServices.getAggregatedData().registeredValues[field][key];
-  };
-
-  proto.getInitiativeByUniqueId = function (uid) {
-    return dataServices.getAggregatedData().initiativeByUniqueId[uid];
-  };
-
-  function arrayMax(array) {
-    return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
-  }
-  function arrayMin(array) {
-    return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
+      return this.dataServices.getAggregatedData().registeredValues[field][key];
   }
 
-  proto.doesDirectoryHaveColours = function () {
-    return config.doesDirectoryHaveColours();
-  };
+  getInitiativeByUniqueId(uid) {
+    return this.dataServices.getAggregatedData().initiativeByUniqueId[uid];
+  }
 
-  proto.notifyMapNeedsToNeedsToBeZoomedAndPanned = function (initiatives) {
+  doesDirectoryHaveColours() {
+    return this.config.doesDirectoryHaveColours();
+  }
+
+  notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives) {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -84,9 +69,9 @@ function init(registry) {
 
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options = { maxZoom: config.getMaxZoomOnGroup() };
+    let options = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
-      options = { maxZoom: config.getMaxZoomOnOne() };
+      options = { maxZoom: this.config.getMaxZoomOnOne() };
 
     if (options.maxZoom == 0)
       options = {};
@@ -106,10 +91,10 @@ function init(registry) {
 
       //rm for now as it isn't working well enough
     }
-  };
+  }
 
 
-  proto.notifyMapNeedsToNeedsToSelectInitiative = function (initiatives) {
+  notifyMapNeedsToNeedsToSelectInitiative(initiatives) {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -120,14 +105,14 @@ function init(registry) {
     //   }
     // }); //should be doing this
 
-    let options = { maxZoom: config.getMaxZoomOnGroup() };
+    let options = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
-      options = { maxZoom: config.getMaxZoomOnOne() };
+      options = { maxZoom: this.config.getMaxZoomOnOne() };
 
     if (options.maxZoom == 0)
       options = {};
 
-    const defaultPos = config.getDefaultLatLng();
+    const defaultPos = this.config.getDefaultLatLng();
     if (initiatives.length > 0) {
       const lats = initiatives.map(x => x.lat || defaultPos[0]);
       const lngs = initiatives.map(x => x.lng || defaultPos[1]);
@@ -143,22 +128,22 @@ function init(registry) {
         }
       });
     }
-  };
+  }
 
-  proto.onInitiativeMouseoverInSidebar = function (initiative) {
+  onInitiativeMouseoverInSidebar(initiative) {
     eventbus.publish({
       topic: "Map.needToShowInitiativeTooltip",
       data: initiative
     });
-  };
-  proto.onInitiativeMouseoutInSidebar = function (initiative) {
+  }
+  onInitiativeMouseoutInSidebar(initiative) {
     eventbus.publish({
       topic: "Map.needToHideInitiativeTooltip",
       data: initiative
     });
-  };
+  }
 
-  proto.clearLatestSelection = function () {
+  clearLatestSelection() {
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
@@ -167,7 +152,7 @@ function init(registry) {
     });
   }
 
-  proto.removeFilters = function (filterName = null) {
+  removeFilters(filterName = null) {
     //remove specific filter
     if (filterName) {
       eventbus.publish({
@@ -205,7 +190,7 @@ function init(registry) {
     // });
   }
 
-  proto.initiativeClicked = function (initiative) {
+  initiativeClicked(initiative) {
     if (initiative) {
       //this.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
@@ -214,7 +199,7 @@ function init(registry) {
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,
-        markerView.getInitiativeContent(initiative)
+        this.markerView.getInitiativeContent(initiative)
       );
 
     } else {
@@ -231,20 +216,16 @@ function init(registry) {
 
       //doesn't do much?
     }
-  };
-
-  function latLngBounds(initiatives) {
-    return dataServices.latLngBounds(initiatives);
   }
 
-  Presenter.prototype = proto;
+  latLngBounds(initiatives) {
+    return this.dataServices.latLngBounds(initiatives);
+  }
 
-  function createPresenter(view) {
-    var p = new Presenter();
-    p.registerView(view);
+  _eventbusRegiter() {
     eventbus.subscribe({
       topic: "Initiative.reset",
-      callback: function (data) {
+      callback: (data) => {
         // User has deselected
         // TODO: This probably shouldn\t be here
         eventbus.publish({
@@ -263,24 +244,16 @@ function init(registry) {
     // eventbus.subscribe({topic: "Marker.SelectionSet", callback: function(data) { p.onMarkerSelectionSet(data); } });
     eventbus.subscribe({
       topic: "Directory.InitiativeClicked",
-      callback: function (data) {
-        p.initiativeClicked(data);
+      callback: (data) => {
+        this.initiativeClicked(data);
       }
     });
     eventbus.subscribe({
       topic: "Directory.removeFilters",
-      callback: function (data) {
-        p.removeFilters(data);
+      callback: (data) => {
+        this.removeFilters(data);
       }
     });
-
-
-    return p;
   }
-  return {
-    createPresenter: createPresenter,
-    latLngBounds: latLngBounds
-  };
+  
 }
-
-module.exports = init;
