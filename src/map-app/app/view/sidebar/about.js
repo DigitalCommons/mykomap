@@ -2,12 +2,12 @@
 "use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus');
+const { AboutPresenter } = require('../../presenter/sidebar/about');
 
 function init(registry) {
   const config = registry('config');
   const sidebarView = registry('view/sidebar/base');
   const dataServices = registry('model/dataservices');
-  const presenter = registry('presenter/sidebar/about');
 
   const labels = dataServices.getFunctionalLabels();
 
@@ -125,7 +125,7 @@ function init(registry) {
 
   function createSidebar() {
     var view = new Sidebar();
-    view.setPresenter(presenter.createPresenter(view));
+    view.setPresenter(new AboutPresenter(view));
     return view;
   }
   return {
