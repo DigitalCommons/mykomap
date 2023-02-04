@@ -3,12 +3,16 @@ const leaflet = require('leaflet');
 const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
 const eventbus = require('../../eventbus');
+const { MapMarkerPresenter } = require('../../presenter/map/marker');
 
 function init(registry) {
   const config = registry('config');
   const viewBase = registry('view/base');
-  const presenter = registry('presenter/map/marker');
-
+  const dataServices = registry('model/dataservices');
+  const defaultPopup = registry('view/map/popup').getPopup;
+  const customPopup = config.getCustomPopup();
+  const popup = customPopup || defaultPopup;
+  
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
   let markerForInitiative = {};
@@ -320,7 +324,8 @@ function init(registry) {
 
   function createMarker(map, initiative) {
     const view = new MarkerView();
-    view.setPresenter(presenter.createPresenter(view));
+    const presenter = new MapMarkerPresenter(view, dataServices, popup);
+    view.setPresenter(presenter);
     view.create(map, initiative);
     return view;
   }

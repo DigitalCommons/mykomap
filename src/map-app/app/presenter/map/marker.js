@@ -1,60 +1,51 @@
 "use strict";
-const eventbus = require('../../eventbus');
-const presenter = require('../../presenter');
+import * as eventbus from '../../eventbus';
+import { base as BasePresenter } from '../../presenter';
+import { BaseSidebarPresenter } from '../sidebar/base';
 
-function init(registry) {
-  const config = registry('config');
-  const defaultPopup = registry('view/map/popup').getPopup;
-  const dataservices = registry('model/dataservices');
-
-  const labels = dataservices.getFunctionalLabels();
+export class MapMarkerPresenter extends BasePresenter {
   
-  function Presenter() { }
+  constructor(view, dataServices, popup) {
+    super();
+    this.registerView(view);
+    this.dataservices = dataServices;
+    this.labels = dataServices.getFunctionalLabels();
+    this.popup = popup;
+  }
 
-  const proto = Object.create(presenter.base.prototype);
-  const serviceToDisplaySimilarCompanies =
-    document.location.origin +
-    document.location.pathname +
-    config.getServicesPath() +
-    "display_similar_companies/main.php";
-
-  proto.notifySelectionToggled = function (initiative) {
+  notifySelectionToggled(initiative) {
     eventbus.publish({ topic: "Marker.SelectionToggled", data: initiative });
-  };
-  proto.notifySelectionSet = function (initiative) {
+  }
+
+  notifySelectionSet(initiative) {
     eventbus.publish({ topic: "Marker.SelectionSet", data: initiative });
-  };
+  }
 
-  proto.getLatLng = function (initiative) {
+  getLatLng(initiative) {
     return [initiative.lat, initiative.lng];
-  };
-  proto.getHoverText = function (initiative) {
+  }
+
+  getHoverText(initiative) {
     return initiative.name;
-  };
-  proto.prettyPhone = function (tel) {
+  }
+
+  prettyPhone(tel) {
     return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
-  };
-  // proto.getAllOrgStructures = function() {
-  //   return dataservices.getVerboseValuesForFields()["Organisational Structure"];
-  // };
-  proto.getInitiativeContent = function (initiative) {
-    const customPopup = config.getCustomPopup();
-    if (customPopup)
-      return customPopup(initiative, dataservices,labels);
-    else
-      // use this if there is no customPopup configured
-      return defaultPopup(initiative, dataservices,labels);
-  };
+  }
+  
+  getInitiativeContent(initiative) {
+    return this.popup(initiative, this.dataservices, this.labels);
+  }
 
-
-  proto.getMarkerColor = function (initiative) {
+  getMarkerColor(initiative) {
     const hasWww = initiative.www && initiative.www.length > 0;
     const hasReg = initiative.regorg && initiative.regorg.length > 0;
     const markerColor =
       hasWww && hasReg ? "purple" : hasWww ? "blue" : hasReg ? "red" : "green";
     return markerColor;
-  };
-  proto.getIconOptions = function (initiative) {
+  }
+
+  getIconOptions(initiative) {
     const icon = initiative.dataset == "dotcoop" ? "globe" : "certificate";
     return {
       icon: icon,
@@ -62,25 +53,10 @@ function init(registry) {
       hovertext: hovertext,
       cluster: true,
       markerColor: markerColor
-    };
-  };
-  proto.getIcon = function (initiative) {
-    return initiative.dataset == "dotcoop" ? "globe" : "certificate";
-  };
-
-  Presenter.prototype = proto;
-
-  function createPresenter(view) {
-
-    const p = new Presenter();
-    p.registerView(view);
-    return p;
+    }
   }
-
-  return  {
-    createPresenter: createPresenter
-  };
+  
+  getIcon(initiative) {
+    return initiative.dataset == "dotcoop" ? "globe" : "certificate";
+  }
 }
-
-
-module.exports = init;
