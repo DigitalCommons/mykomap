@@ -42,18 +42,17 @@ proto.loadHistoryNavigation = function() {
   var selection = this.d3selectAndClear(
     "#map-app-sidebar-history-navigation"
   );
-  var that = this;
   
-  function createButton(b, faClass, hovertext) {
+  const createButton = (b, faClass, hovertext) => {
     selection
       .append("button")
     // Minor issue: if we add the class w3-mobile to these buttons, then each takes up a whole line
     // on an iPhone, instad of being next to each other on the same line.
       .attr("class", buttonClasses + (b.disabled ? " w3-disabled" : ""))
       .attr("title", hovertext)
-      .on("click", function() {
+      .on("click", () => {
         b.onClick();
-        that.presenter.deselectInitiatives();
+        this.presenter.deselectInitiatives();
         //hide initiatives
       })
       .append("i")
