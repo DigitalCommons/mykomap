@@ -5,10 +5,10 @@ const leafletAwesomeMarkers = require('leaflet.awesome-markers');
 const eventbus = require('../../eventbus');
 const { MapMarkerPresenter } = require('../../presenter/map/marker');
 const { getPopup } = require('../../view/map/default_popup');
+const { BaseView } = require('../base');
 
 function init(registry) {
   const config = registry('config');
-  const viewBase = registry('view/base');
   const dataServices = registry('model/dataservices');
 
   const customPopup = config.getCustomPopup();
@@ -23,7 +23,7 @@ function init(registry) {
 
   function MarkerView() { }
   // inherit from the standard view base object:
-  var proto = Object.create(viewBase.base.prototype);
+  var proto = Object.create(BaseView.prototype);
 
   var mapObj;
 

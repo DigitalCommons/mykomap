@@ -93,7 +93,7 @@ export class BaseSidebarPresenter extends BasePresenter {
         data: {initiatives: newContent.initiatives}
       }); //historySEARCH
 
-      pres.historyButtonsUsed(lastContent);
+      this.historyButtonsUsed(lastContent);
     };
   }
   

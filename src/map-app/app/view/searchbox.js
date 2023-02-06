@@ -2,10 +2,10 @@
 "use strict";
 const d3 = require('d3');
 const { SearchboxPresenter } = require('../presenter/searchbox');
+const { BaseView } = require('./base');
 
 function init(registry) {
   const config = registry('config');
-  const viewBase = registry('view/base');
   const dataServices = registry('model/dataservices');
 
   //get labels for buttons and titles
@@ -13,7 +13,7 @@ function init(registry) {
 
   function SearchBoxView() {}
   // inherit from the standard view base object:
-  var proto = Object.create(viewBase.base.prototype);
+  var proto = Object.create(BaseView.prototype);
 
   proto.changeSearchText = function(txt) {
     d3.select("#search-box").property("value", txt);

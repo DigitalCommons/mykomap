@@ -3,7 +3,7 @@ const d3 = require('d3');
 const leaflet = require('leaflet');
 const activeArea = require('leaflet-active-area');
 const contextmenu = require('leaflet-contextmenu');
-
+const { BaseView } = require('./base');
 
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
@@ -21,7 +21,6 @@ function init(registry) {
   const _config = registry('config');
   const presenter = registry('presenter/map');
   const markerView = registry('view/map/marker');
-  const viewBase = registry('view/base');
   const dataServices = registry('model/dataservices');
 
   const labels = dataServices.getFunctionalLabels();
@@ -131,7 +130,7 @@ function init(registry) {
 
   function MapView() { }
   // inherit from the standard view base object:
-  var proto = Object.create(viewBase.base.prototype);
+  var proto = Object.create(BaseView.prototype);
   proto.createMap = function () {
     // setup map (could potentially add this to the map initialization instead)
     //world ends corners

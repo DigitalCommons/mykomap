@@ -2,8 +2,8 @@
 "use strict";
 const eventbus = require('../eventbus');
 const d3 = require('d3');
-const viewBase = require('./base');
 const { SidebarPresenter } = require('../presenter/sidebar');
+const { BaseView } = require('./base');
 
 function _init(registry) {
   const config = registry('config');
@@ -30,7 +30,7 @@ function _init(registry) {
 
   function SidebarView() { }
   // inherit from the standard view base object:
-  var proto = Object.create(viewBase.base.prototype);
+  var proto = Object.create(BaseView.prototype);
 
   proto.createOpenButton = function () {
     // d3 selection redefines this, so hang onto it here:

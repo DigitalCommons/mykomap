@@ -2,13 +2,13 @@
 "use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus')
-const view = require('../../view/base');
+const { BaseView } = require('../base');
 
 // base is the "base class" of all sidebars:
 function base() {}
 
 // sidebars inherit from view.base:
-var proto = Object.create(view.base.prototype);
+var proto = Object.create(BaseView.prototype);
 
 // add properties to sidebar:
 proto.title = "Untitled";
