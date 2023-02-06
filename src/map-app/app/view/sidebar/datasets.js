@@ -5,45 +5,40 @@ const eventbus = require('../../eventbus')
 const { BaseSidebarView } = require('./base');
 const { DatasetsPresenter } = require('../../presenter/sidebar/datasets');
 
-function init(registry) {
-  const config = registry('config');
-  const view = registry('view/base');
-  const dataServices = registry('model/dataservices');
+// TODO These same consts are here and in view/sidebar/initiative.
+//      Find a common place for them.
+const sectionHeadingClasses =
+  "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
+const hoverColour = " w3-hover-light-blue";
+const accordionClasses =
+  "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
+const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
-  //get labels for buttons and titles
-  const labels = dataServices.getFunctionalLabels();
 
-  // Our local Sidebar object:
-  function Sidebar() { }
-
-  // Our local Sidebar inherits from sidebar:
-  var proto = Object.create(BaseSidebarView.prototype);
+export class DatasetsSidebarView extends BaseSidebarView {
 
   // And adds some overrides and new properties of it's own:
-  proto.title = "datasets";
-  proto.hasHistoryNavigation = false; // No forward/back buttons for this sidebar
+  title = "datasets";
+  hasHistoryNavigation = false; // No forward/back buttons for this sidebar
+  
+  constructor(labels, dataServices) {
+    super();
+    this.labels = labels;
 
-  // TODO These same consts are here and in view/sidebar/initiative.
-  //      Find a common place for them.
-  const sectionHeadingClasses =
-    "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
-  const hoverColour = " w3-hover-light-blue";
-  const accordionClasses =
-    "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
-  const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
+    this.setPresenter(new DatasetsPresenter(this, dataServices));
+  }
 
-
-  proto.populateFixedSelection = function (selection) {
-    let textContent = labels.datasets;
+  populateFixedSelection(selection) {
+    let textContent = this.labels.datasets;
     selection
       .append("div")
       .attr("class", "w3-container")
       .append("h1")
       .text(textContent);
-  };
+  }
 
 
-  proto.populateScrollableSelection = function (selection) {
+  populateScrollableSelection(selection) {
     const datasets = this.presenter.getDatasets();
     const defaultActive = this.presenter.getDefault();
     const defaultIdMixed = this.presenter.getMixedId();
@@ -55,7 +50,7 @@ function init(registry) {
 
     const color_class = function (i) {
       return "sea-field-am" + Math.floor(((i + 1) % 12) * 10);
-    };
+    }
     Object.keys(datasets).forEach((dataset, i) => {
       let btn = datasetBtns
         .append("li")
@@ -76,7 +71,7 @@ function init(registry) {
         .attr("class", color_class(Object.keys(datasets).length))
         .attr("id", `${defaultIdMixed}-btn`)
         .attr("title", "load mixed dataset")
-        .text(labels.mixedSources);
+        .text(this.labels.mixedSources);
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
@@ -87,22 +82,5 @@ function init(registry) {
     //set the default active button (currently loaded dataset)
     selection.select(`#${defaultActive}-btn`)
       .classed("sea-field-active", true);
-  };
-
-
-
-  Sidebar.prototype = proto;
-
-  proto.hasHistoryNavigation = false;
-
-  function createSidebar() {
-    var view = new Sidebar();
-    view.setPresenter(new DatasetsPresenter(view, dataServices));
-    return view;
   }
-  return {
-    createSidebar: createSidebar
-  };
 }
-
-module.exports = init;

@@ -5,11 +5,11 @@ const d3 = require('d3');
 const { SidebarPresenter } = require('../presenter/sidebar');
 const { AboutSidebarView } = require('../view/sidebar/about');
 const { BaseView } = require('./base');
+const { DatasetsSidebarView } = require('./sidebar/datasets');
 
 function _init(registry) {
   const config = registry('config');
   const directory = registry('view/sidebar/directory');
-  const datasets = registry('view/sidebar/datasets');
   const initiatives = registry('view/sidebar/initiatives');
   const dataServices = registry('model/dataservices');
   
@@ -170,7 +170,7 @@ function _init(registry) {
       this.sidebar.about = new AboutSidebarView(labels, config);
     
     if(this.presenter.showingDatasets())
-      this.sidebar.datasets = datasets.createSidebar();
+      this.sidebar.datasets = new DatasetsSidebarView(labels, dataServices);
   };
 
   // Changes or refreshes the sidebar
