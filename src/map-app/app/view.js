@@ -6,7 +6,6 @@ function _init(registry) {
   const config = registry('config');
   const map = registry('view/map');
   const sidebar = registry('view/sidebar');
-  const searchbox = registry('view/searchbox');
   const lang = config.getLanguage();
   
   function init() {
@@ -60,7 +59,6 @@ function _init(registry) {
       });
 
     map.init();
-    //searchbox.init();
     sidebar.init();
   }
   
