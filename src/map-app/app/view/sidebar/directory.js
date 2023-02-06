@@ -6,36 +6,31 @@ const eventbus = require('../../eventbus')
 const { BaseSidebarView } = require('./base');
 const { DirectoryPresenter } = require('../../presenter/sidebar/directory');
 
-function init(registry) {
-  const config = registry('config');
-  const view = registry('view/base');
-  const dataServices = registry('model/dataservices');
-  const markerView = registry('view/map/marker');
+function uriToTag(uri) {
+  return uri.toLowerCase().replace(/^.*[:\/]/, "");
+}
+function labelToTag(uri) {
+  return uri.toLowerCase().replace(/ /g, "-");
+}
 
-  //get labels for buttons and titles
-  const labels = dataServices.getFunctionalLabels();
 
-  // Our local Sidebar object:
-  function Sidebar() { }
+export class DirectorySidebarView extends BaseSidebarView {
+  hasHistoryNavigation = false;
+  dissapear;
 
-  function uriToTag(uri) {
-    return uri.toLowerCase().replace(/^.*[:\/]/, "");
+  constructor(labels, config, dataServices, markerView) {
+    super();
+    this.labels = labels;
+    this.title = labels.directory;
+
+    this.setPresenter(new DirectoryPresenter(this, config, dataServices, markerView));
   }
-  function labelToTag(uri) {
-    return uri.toLowerCase().replace(/ /g, "-");
-  }
 
-  // Our local Sidebar inherits from sidebar:
-  var proto = Object.create(BaseSidebarView.prototype);
 
-  // And adds some overrides and new properties of it's own:
-  proto.title = labels.directory;
-  proto.hasHistoryNavigation = false;
-
-  proto.populateFixedSelection = function (selection) {
+  populateFixedSelection(selection) {
 
     const that = this;
-    let sidebarTitle = proto.title;
+    let sidebarTitle = this.title;
     const container = selection
       .append("div");
 
@@ -50,18 +45,17 @@ function init(registry) {
       .on("keyup", function () {
         that.handleFilter(this.value);
       });
-  };
+  }
 
-  var dissapear;
 
-  proto.resetFilterSearch = function () {
+  resetFilterSearch() {
     if (document.getElementById("dir-filter")) {
       document.getElementById("dir-filter").value = '';
       this.handleFilter('');
     }
-  };
+  }
 
-  proto.handleFilter = function (input) {
+  handleFilter(input) {
     if (this.dissapear) {
       clearTimeout(this.dissapear);
       this.dissapear = null;
@@ -95,7 +89,7 @@ function init(registry) {
 
   }
 
-  proto.populateScrollableSelection = function (selection) {
+  populateScrollableSelection(selection) {
     let that = this;
     let list = selection
       .append("ul")
@@ -112,7 +106,7 @@ function init(registry) {
 
       if (key == null) {
         tag = 'all-entries';
-        label = fieldIsCountries(field) ? labels.allCountries : labels.allEntries;
+        label = fieldIsCountries(field) ? that.labels.allCountries : that.labels.allEntries;
       }
       else {
         tag = uriToTag(key);
@@ -155,11 +149,11 @@ function init(registry) {
       addItems(field, registeredValues[field]);
       break;
     }
-  };
+  }
 
 
   // selectionKey may be null, for the special 'Every item' case
-  proto.listInitiativesForSelection = function (directoryField, selectionKey) {
+  listInitiativesForSelection(directoryField, selectionKey) {
     let that = this;
     let initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
       directoryField,
@@ -168,7 +162,7 @@ function init(registry) {
 
     const fieldIsCountries = field => field == "Countries" || field == "Des Pays" || field == "Países" || field == "국가"
 
-    const selectionLabel = selectionKey == null ? fieldIsCountries(directoryField) ? labels.allCountries : labels.allEntries : selectionKey;
+    const selectionLabel = selectionKey == null ? fieldIsCountries(directoryField) ? this.labels.allCountries : this.labels.allEntries : selectionKey;
 
     //deselect all
     that.presenter.clearLatestSelection();
@@ -183,7 +177,7 @@ function init(registry) {
 
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", labels.hideDirectory);
+    d3.select(".w3-btn").attr("title", this.labels.hideDirectory);
     let initiativeListSidebar = document.getElementById(
       "sea-initiatives-list-sidebar"
     );
@@ -231,7 +225,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
-      .attr("title", labels.showSearch)
+      .attr("title", this.labels.showSearch)
       .on("click", function () {
 
         eventbus.publish({
@@ -259,7 +253,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showInfo)
+      .attr("title", this.labels.showInfo)
       .on("click", function () {
         eventbus.publish({
           topic: "Sidebar.hideInitiativeList",
@@ -291,7 +285,7 @@ function init(registry) {
       sidebarBtnHolder
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", labels.showDatasets)
+        .attr("title", this.labels.showDatasets)
         .on("click", function () {
           eventbus.publish({
             topic: "Sidebar.hideInitiativeList",
@@ -319,7 +313,7 @@ function init(registry) {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", labels.close + title)
+      .attr("title", this.labels.close + title)
       .on("click", function () {
         that.presenter.removeFilters(directoryField + selectionKey);
       })
@@ -331,7 +325,7 @@ function init(registry) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
-      .attr("title", labels.close + title)
+      .attr("title", this.labels.close + title)
       .on("click", function () {
         that.presenter.removeFilters(directoryField + selectionKey);
       })
@@ -405,9 +399,9 @@ function init(registry) {
         false
       )
       .classed("sea-sidebar-list-initiatives", true);
-  };
+  }
 
-  proto.populateInitiativeSidebar = function (initiative, initiativeContent) {
+  populateInitiativeSidebar(initiative, initiativeContent) {
     // Highlight the correct initiative in the directory
     d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
     d3.select('[data-uid="' + initiative.uri + '"]').classed(
@@ -421,7 +415,7 @@ function init(registry) {
     initiativeContentElement
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", labels.close + initiative.name)
+      .attr("title", this.labels.close + initiative.name)
       .on("click", function () {
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
@@ -446,9 +440,9 @@ function init(registry) {
       eventbus.publish({
         topic: "Sidebar.showSidebar"
       });
-  };
+  }
 
-  proto.deselectInitiativeSidebar = function () {
+  deselectInitiativeSidebar() {
     d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
     let initiativeSidebar = d3.select("#sea-initiative-sidebar");
     // let initiativeContentElement = d3.select("#sea-initiative-sidebar-content");
@@ -456,19 +450,6 @@ function init(registry) {
     initiativeSidebar.classed("sea-initiative-sidebar-open", false);
     d3.select(".sea-search-initiative-active")
       .classed("sea-search-initiative-active", false);
-  };
-
-  Sidebar.prototype = proto;
-
-  function createSidebar() {
-    var view = new Sidebar();
-    view.setPresenter(new DirectoryPresenter(view, config, dataServices, markerView));
-    return view;
   }
-  return {
-    createSidebar: createSidebar
-  };
+  
 }
-
-
-module.exports = init;

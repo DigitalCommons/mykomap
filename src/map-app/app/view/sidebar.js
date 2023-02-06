@@ -6,13 +6,13 @@ const { SidebarPresenter } = require('../presenter/sidebar');
 const { AboutSidebarView } = require('../view/sidebar/about');
 const { BaseView } = require('./base');
 const { DatasetsSidebarView } = require('./sidebar/datasets');
+const { DirectorySidebarView } = require('./sidebar/directory');
 
 function _init(registry) {
   const config = registry('config');
-  const directory = registry('view/sidebar/directory');
   const initiatives = registry('view/sidebar/initiatives');
   const dataServices = registry('model/dataservices');
-  
+  const markerView = registry('view/map/marker');
 
   //get labels for buttons and titles
   const labels = dataServices.getFunctionalLabels();
@@ -161,7 +161,7 @@ function _init(registry) {
     this.sidebar = {};
 
     if(this.presenter.showingDirectory())
-      this.sidebar.directory = directory.createSidebar();
+      this.sidebar.directory = new DirectorySidebarView(labels, config, dataServices, markerView);
 
     if(this.presenter.showingSearch())
       this.sidebar.initiatives = initiatives.createSidebar();

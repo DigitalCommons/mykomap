@@ -16,11 +16,11 @@ export class SidebarPresenter extends BaseSidebarPresenter {
   
   changeSidebar(name) {
     this.view.changeSidebar(name);
-  };
+  }
 
   showSidebar() {
     this.view.showSidebar();
-  };
+  }
 
   showingDirectory() { return this.showDirectoryPanel; }
   showingSearch() { return this.showSearchPanel; }
@@ -29,15 +29,15 @@ export class SidebarPresenter extends BaseSidebarPresenter {
 
   hideSidebar(name) {
     this.view.hideSidebar();
-  };
+  }
 
   hideInitiativeSidebar(name) {
     this.view.hideInitiativeSidebar();
-  };
+  }
 
   hideInitiativeList(name) {
     this.view.hideInitiativeList();
-  };
+  }
 
   _eventbusRegister() {
     eventbus.subscribe({
