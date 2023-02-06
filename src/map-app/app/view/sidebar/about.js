@@ -2,11 +2,11 @@
 "use strict";
 const d3 = require('d3');
 const eventbus = require('../../eventbus');
+const { BaseSidebarView } = require('./base');
 const { AboutPresenter } = require('../../presenter/sidebar/about');
 
 function init(registry) {
   const config = registry('config');
-  const sidebarView = registry('view/sidebar/base');
   const dataServices = registry('model/dataservices');
 
   const labels = dataServices.getFunctionalLabels();
@@ -15,7 +15,7 @@ function init(registry) {
   function Sidebar() { }
 
   // Our local Sidebar inherits from sidebar:
-  var proto = Object.create(sidebarView.base.prototype);
+  var proto = Object.create(BaseSidebarView.prototype);
 
   // And adds some overrides and new properties of it's own:
   proto.title = "about";
