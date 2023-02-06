@@ -9,6 +9,8 @@ import { makeRegistry, Registry } from './app/registries';
 import { MapPresenterFactory } from "./app/presenter/map";
 import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
+import { AboutSidebarView } from "./app/view/sidebar/about";
+import { AboutPresenter } from "./app/presenter/sidebar/about";
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -96,7 +98,6 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/map/marker', () => markerViewFactory);
   registry.def('presenter/map', () => mapPresenter);
   registry.def('view/map', () => require('./app/view/map')(registry));
-  registry.def('view/sidebar/about', () => require('./app/view/sidebar/about')(registry));
   registry.def('view/sidebar/directory', () => require('./app/view/sidebar/directory')(registry));
   registry.def('view/sidebar/datasets', () => require('./app/view/sidebar/datasets')(registry));
   registry.def('view/sidebar/initiatives', () => require('./app/view/sidebar/initiatives')(registry));

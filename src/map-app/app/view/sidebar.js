@@ -3,11 +3,11 @@
 const eventbus = require('../eventbus');
 const d3 = require('d3');
 const { SidebarPresenter } = require('../presenter/sidebar');
+const { AboutSidebarView } = require('../view/sidebar/about');
 const { BaseView } = require('./base');
 
 function _init(registry) {
   const config = registry('config');
-  const about = registry('view/sidebar/about');
   const directory = registry('view/sidebar/directory');
   const datasets = registry('view/sidebar/datasets');
   const initiatives = registry('view/sidebar/initiatives');
@@ -167,30 +167,10 @@ function _init(registry) {
       this.sidebar.initiatives = initiatives.createSidebar();
 
     if(this.presenter.showingAbout())
-      this.sidebar.about = about.createSidebar();
-
+      this.sidebar.about = new AboutSidebarView(labels, config);
+    
     if(this.presenter.showingDatasets())
       this.sidebar.datasets = datasets.createSidebar();
-
-    /*
-
-    if (this.presenter.showingDatasets()) {
-      this.sidebar = {
-        about: about.createSidebar(),
-        initiatives: initiatives.createSidebar(),
-        // mainMenu: mainMenu.createSidebar(),
-        directory: directory.createSidebar(),
-        datasets: datasets.createSidebar()
-      };
-    } else {
-      this.sidebar = {
-        about: about.createSidebar(),
-        initiatives: initiatives.createSidebar(),
-        // mainMenu: mainMenu.createSidebar(),
-        directory: directory.createSidebar(),
-      };
-    }*/
-
   };
 
   // Changes or refreshes the sidebar
