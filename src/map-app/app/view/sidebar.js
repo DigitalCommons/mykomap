@@ -7,13 +7,14 @@ const { AboutSidebarView } = require('../view/sidebar/about');
 const { BaseView } = require('./base');
 const { DatasetsSidebarView } = require('./sidebar/datasets');
 const { DirectorySidebarView } = require('./sidebar/directory');
+const { InitiativesSidebarView } = require('./sidebar/initiatives');
 
 function _init(registry) {
   const config = registry('config');
-  const initiatives = registry('view/sidebar/initiatives');
   const dataServices = registry('model/dataservices');
   const markerView = registry('view/map/marker');
-
+  const mapPresenterFactory = registry('presenter/map');
+  
   //get labels for buttons and titles
   const labels = dataServices.getFunctionalLabels();
   const sidebarButtonColour = dataServices.getSidebarButtonColour();
@@ -164,7 +165,7 @@ function _init(registry) {
       this.sidebar.directory = new DirectorySidebarView(labels, config, dataServices, markerView);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = initiatives.createSidebar();
+      this.sidebar.initiatives = new InitiativesSidebarView(labels, dataServices, mapPresenterFactory);
 
     if(this.presenter.showingAbout())
       this.sidebar.about = new AboutSidebarView(labels, config);

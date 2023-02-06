@@ -98,7 +98,6 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/map/marker', () => markerViewFactory);
   registry.def('presenter/map', () => mapPresenter);
   registry.def('view/map', () => require('./app/view/map')(registry));
-  registry.def('view/sidebar/initiatives', () => require('./app/view/sidebar/initiatives')(registry));
   registry.def('view/sidebar', () => require('./app/view/sidebar')(registry));
   
   // The code for each view is loaded by src/app/view.js

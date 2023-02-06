@@ -6,37 +6,33 @@ const eventbus = require('../../eventbus');
 const { BaseSidebarView } = require('./base');
 const { InitiativesPresenter } = require('../../presenter/sidebar/initiatives');
 
-function init(registry) {
-	const config = registry('config');
-	const dataServices = registry('model/dataservices');
-	const mapPresenterFactory = registry('presenter/map');
+const sectionHeadingClasses =
+  "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
+const hoverColour = " w3-hover-light-blue";
+const accordionClasses =
+  "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
+const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
-	//get labels for buttons and titles
-	const labels = dataServices.getFunctionalLabels();
-
-	// Our local Sidebar object:
-	function Sidebar() { }
-
-	// Our local Sidebar inherits from sidebar:
-	var proto = Object.create(BaseSidebarView.prototype);
-
+export class InitiativesSidebarView extends BaseSidebarView {
 	// And adds some overrides and new properties of it's own:
-	proto.title = "Initiatives";
+	title = "Initiatives";
+  
+  constructor(labels, dataServices, mapPresenterFactory) {
+    super();
+    this.labels = labels;
+    this.dataServices = dataServices;
+    this.mapPresenterFactory = mapPresenterFactory;
 
-	const sectionHeadingClasses =
-		"w3-bar-item w3-tiny w3-light-grey w3-padding-small";
-	const hoverColour = " w3-hover-light-blue";
-	const accordionClasses =
-		"w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
-	const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
+		this.setPresenter(new InitiativesPresenter(this, labels, mapPresenterFactory));
+  }
 
-	proto.populateFixedSelection = function (selection) {
+	populateFixedSelection(selection) {
 		const container = selection
 			.append("div")
 			.attr("class", "w3-container");
 		container
 			.append("h1")
-			.text(labels.search);
+			.text(this.labels.search);
 
 		this.createSearchBox(container);
 
@@ -50,7 +46,7 @@ function init(registry) {
 			// } else if (item.isSearchResults()) {
 			//   textContent = "Search: " + item.searchString;
 			// }
-			textContent = labels.search + ": " + item.searchString;
+			textContent = this.labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
 			eventbus.publish({
@@ -71,15 +67,14 @@ function init(registry) {
 			.append("div")
 
 
-		const terms = dataServices.getTerms();
+		const terms = this.dataServices.getTerms();
 
 		this.createAdvancedSearch(advancedSearchContainer, terms, this.presenter);
 
-	};
+	}
 
 
-	proto.geekZoneContentAtD3Selection = function (selection, initiative) {
-		const that = this;
+	geekZoneContentAtD3Selection(selection, initiative) {
 		const s = selection.append("div").attr("class", "w3-bar-block");
 		if (initiative.lat) {
 			s.append("div")
@@ -96,8 +91,8 @@ function init(registry) {
 				.attr("class", sectionClasses + hoverColour)
 				.text("Detailed data for this initiative")
 				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.uri);
+				.on("click", (e) => {
+					this.openInNewTabOrWindow(initiative.uri);
 				});
 		}
 		if (initiative.within) {
@@ -105,8 +100,8 @@ function init(registry) {
 				.attr("class", sectionClasses + hoverColour)
 				.text("Ordnance Survey postcode information")
 				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.within);
+				.on("click", (e) => {
+					this.openInNewTabOrWindow(initiative.within);
 				});
 		}
 		if (initiative.regorg) {
@@ -124,14 +119,13 @@ function init(registry) {
 				.attr("title", "A tech demo of federated Linked Open Data queries!")
 				.text("Display similar companies nearby using Companies House data")
 				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
+				.on("click", (e) => {
+					this.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
 				});
 		}
-	};
-	proto.populateSelectionWithOneInitiative = function (selection, initiative) {
+	}
+	populateSelectionWithOneInitiative(selection, initiative) {
 		const s = selection.append("div").attr("class", "w3-bar-block");
-		const that = this;
 		if (initiative.www) {
 			s.append("div")
 				.attr("class", sectionHeadingClasses)
@@ -140,8 +134,8 @@ function init(registry) {
 				.attr("class", sectionClasses + hoverColour)
 				.text(initiative.www)
 				.style("cursor", "pointer")
-				.on("click", function (e) {
-					that.openInNewTabOrWindow(initiative.www);
+				.on("click", (e) => {
+					this.openInNewTabOrWindow(initiative.www);
 				});
 		}
 		s.append("div")
@@ -151,18 +145,18 @@ function init(registry) {
 			.attr("class", sectionClasses)
 			.text(initiative.desc || "No description available");
 		// Make an accordion for opening up the geek zone
-		that.makeAccordionAtD3Selection({
+		this.makeAccordionAtD3Selection({
 			selection: s,
 			heading: "Geek zone",
 			headingClasses: accordionClasses,
-			makeContentAtD3Selection: function (contentD3Selection) {
-				that.geekZoneContentAtD3Selection(contentD3Selection, initiative);
+			makeContentAtD3Selection: (contentD3Selection) => {
+				this.geekZoneContentAtD3Selection(contentD3Selection, initiative);
 			},
 			hideContent: true
 		});
-	};
+	}
 
-	proto.onInitiativeClicked = function (id) {
+	onInitiativeClicked(id) {
 		d3.select(".sea-search-initiative-active")
 			.classed("sea-search-initiative-active", false);
 
@@ -171,15 +165,14 @@ function init(registry) {
 				"sea-search-initiative-active",
 				true
 			);
-	};
+	}
 
-	proto.populateSelectionWithListOfInitiatives = function (
+	populateSelectionWithListOfInitiatives(
 		selection,
 		initiatives
 	) {
 		const pres = this.presenter;
-		const that = this;
-		initiatives.forEach(function (initiative) {
+		initiatives.forEach((initiative) => {
 			let initiativeClass = "w3-bar-item w3-button w3-mobile srch-initiative";
 
 			if (!initiative.hasLocation()) {
@@ -205,15 +198,15 @@ function init(registry) {
 				})
 				.text(initiative.name);
 		});
-	};
+	}
 
-	proto.changeSearchText = function (txt) {
+	changeSearchText(txt) {
 
 		d3.select("#search-box").property("value", txt);
 
-	};
+	}
 
-	proto.createSearchBox = function (selection) {
+	createSearchBox(selection) {
 		var view = this;
 
 		selection = selection
@@ -223,7 +216,7 @@ function init(registry) {
 				"class",
 				"w3-card-2 w3-round map-app-search-form"
 			)
-			.on("submit", function (event) {
+			.on("submit", (event) => {
 				// By default, submitting the form will cause a page reload!
 				event.preventDefault();
 				//event.stopPropagation();
@@ -251,15 +244,15 @@ function init(registry) {
 			.attr("id", "search-box")
 			.attr("class", "w3-input w3-border-0 w3-round w3-mobile")
 			.attr("type", "search")
-			.attr("placeholder", labels.searchInitiatives)
+			.attr("placeholder", this.labels.searchInitiatives)
 			.attr("autocomplete", "off");
 
 		document.getElementById("search-box").focus();
 
-	};
+	}
 
-	proto.createAdvancedSearch = (container, values, presenter) => {
-		const currentFilters = mapPresenterFactory.getFilters();
+	createAdvancedSearch(container, values, presenter) {
+		const currentFilters = this.mapPresenterFactory.getFilters();
 		const item = presenter.currentItem();
 
 		//function used in the dropdown to change the filter
@@ -279,10 +272,10 @@ function init(registry) {
 					presenter.performSearchNoText();
 				else
 					presenter.performSearch(item.searchedFor);
-		};
+		}
 
-		const possibleFilterValues = dataServices.getPossibleFilterValues(mapPresenterFactory.getFiltered());
-		const activeFilterCategories = mapPresenterFactory.getFiltersFull().map(filter =>
+		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
+		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull().map(filter =>
 			filter.verboseName.split(":")[0]);
 
 		for (const field in values) {
@@ -301,7 +294,7 @@ function init(registry) {
 
 			dropDown
 				.append("option")
-				.text(`- ${labels.any} -`)
+				.text(`- ${this.labels.any} -`)
 				.attr("value", "any")
 				.attr("class", "advanced-option")
 
@@ -312,8 +305,8 @@ function init(registry) {
 			//find alternative possible filters for an active filter
 			let alternatePossibleFilterValues;
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
-				alternatePossibleFilterValues = dataServices.getAlternatePossibleFilterValues(
-					mapPresenterFactory.getFiltersFull(), field);
+				alternatePossibleFilterValues = this.dataServices.getAlternatePossibleFilterValues(
+					this.mapPresenterFactory.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
@@ -341,9 +334,8 @@ function init(registry) {
 		}
 	}
 
-	proto.populateScrollableSelection = function (selection) {
-		var that = this;
-		var noFilterTxt = labels.whenSearch;
+	populateScrollableSelection(selection) {
+		var noFilterTxt = this.labels.whenSearch;
 		var freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
@@ -356,14 +348,14 @@ function init(registry) {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(labels.clearFilters)
-					.on("click", function () {
+					.text(this.labels.clearFilters)
+					.on("click", () => {
 						//redo search
-						that.presenter.removeFilters();
+						this.presenter.removeFilters();
 						if (item.searchedFor)
-							that.presenter.performSearch(item.searchedFor);
+							this.presenter.performSearch(item.searchedFor);
 						else
-							that.presenter.performSearchNoText();
+							this.presenter.performSearchNoText();
 					});
 			}
 
@@ -377,7 +369,7 @@ function init(registry) {
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
-							.text(labels.nothingMatched);
+							.text(this.labels.nothingMatched);
 					}
 					break;
 				case 1:
@@ -406,34 +398,19 @@ function init(registry) {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(labels.clearFilters)
-					.on("click", function () {
+					.text(this.labels.clearFilters)
+					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
-						that.presenter.removeFilters();
-						that.presenter.performSearchNoText();
+						this.presenter.removeFilters();
+						this.presenter.performSearchNoText();
 						selection.select("#searchTooltipId").text(noFilterTxt);
 						selection.select("#clearSearchFilterBtn").remove();
 					});
 			}
 		}
 
-	};
-	proto.getWindowHeight = function () {
-		return d3.select("window").node().innerHeight;
-	};
-
-	Sidebar.prototype = proto;
-
-	function createSidebar() {
-		var view = new Sidebar();
-		view.setPresenter(new InitiativesPresenter(view, labels, mapPresenterFactory));
-
-		return view;
 	}
-	return {
-		createSidebar: createSidebar
-	};
+	getWindowHeight() {
+		return d3.select("window").node().innerHeight;
+	}
 }
-
-
-module.exports = init;
