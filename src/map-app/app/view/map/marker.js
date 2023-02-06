@@ -12,7 +12,7 @@ function init(registry) {
   const dataServices = registry('model/dataservices');
 
   const customPopup = config.getCustomPopup();
-  const popup = customPopup || defaultPopup;
+  const popup = customPopup || getPopup;
   
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset

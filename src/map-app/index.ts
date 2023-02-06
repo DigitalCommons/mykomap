@@ -96,10 +96,6 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/map', () => require('./app/view/map')(registry));
   registry.def('view/searchbox', () => require('./app/view/searchbox')(registry));
   registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    
-  registry.def('presenter/sidebar/directory', () => require('./app/presenter/sidebar/directory')(registry));
-  registry.def('presenter/sidebar/datasets', () => require('./app/presenter/sidebar/datasets')(registry));
-  registry.def('presenter/sidebar/initiatives', () => require('./app/presenter/sidebar/initiatives')(registry));
-  registry.def('presenter/sidebar', () => require('./app/presenter/sidebar')(registry));
   registry.def('view/sidebar/about', () => require('./app/view/sidebar/about')(registry));
   registry.def('view/sidebar/directory', () => require('./app/view/sidebar/directory')(registry));
   registry.def('view/sidebar/datasets', () => require('./app/view/sidebar/datasets')(registry));
