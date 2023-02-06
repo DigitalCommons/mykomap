@@ -4,39 +4,26 @@ const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
 const eventbus = require('../../eventbus');
 const { MapMarkerPresenter } = require('../../presenter/map/marker');
-const { getPopup } = require('../../view/map/default_popup');
 const { BaseView } = require('../base');
 
-function init(registry) {
-  const config = registry('config');
-  const dataServices = registry('model/dataservices');
-
-  const customPopup = config.getCustomPopup();
-  const popup = customPopup || getPopup;
-  
-  // Keep a mapping between initiatives and their Markers:
-  // Note: contents currently contain only the active dataset
-  let markerForInitiative = {};
-  // CAUTION: this may be either a ClusterGroup, or the map itself
-  let hiddenClusterGroup = null;
-  let unselectedClusterGroup = null;
-
-  function MarkerView() { }
-  // inherit from the standard view base object:
-  var proto = Object.create(BaseView.prototype);
-
-  var mapObj;
-
+export class MapMarkerView extends BaseView {
   // Using font-awesome icons, the available choices can be seen here:
   // http://fortawesome.github.io/Font-Awesome/icons/
-  const dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
+  dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
 
-  proto.create = function (map, initiative) {
+  
+  constructor(defaultLatLng, mapMarkerViewFactory) {
+    super();
+    this.defaultLatLng = defaultLatLng;
+    this.factory = mapMarkerViewFactory;
+  }
+
+  create(map, initiative) {
     this.initiative = initiative;
-    mapObj = map;
+    this.mapObj = map;
 
     // options argument overrides our default options:
-    const opts = Object.assign(dfltOptions, {
+    const opts = Object.assign(this.dfltOptions, {
       // icon: this.presenter.getIcon(initiative),
       popuptext: this.presenter.getInitiativeContent(initiative)
       // hovertext: this.presenter.getHoverText(initiative),
@@ -58,7 +45,7 @@ function init(registry) {
         cluster: false
       });
 
-      this.marker = leaflet.marker(config.getDefaultLatLng(), {
+      this.marker = leaflet.marker(this.defaultLatLng, {
         icon: icon,
         initiative: this.initiative
       });
@@ -73,7 +60,7 @@ function init(registry) {
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
 
-      this.cluster = hiddenClusterGroup;
+      this.cluster = this.factory.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
     } else {
@@ -112,14 +99,13 @@ function init(registry) {
       this.marker.on("click", function (e) {
         that.onClick(e);
       });
-      this.cluster = unselectedClusterGroup;
+      this.cluster = this.factory.unselectedClusterGroup;
       this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = true;
     }
+  }
 
-    markerForInitiative[initiative.uri] = this;
-  };
-  proto.onClick = function (e) {
+  onClick(e) {
     // console.log("MarkerView.onclick");
     // Browser seems to consume the ctrl key: ctrl-click is like right-buttom-click (on Chrome)
     if (e.originalEvent.ctrlKey) {
@@ -144,19 +130,17 @@ function init(registry) {
         data: this.initiative
       });
     }
-  };
+  }
 
-
-
-  proto.setUnselected = function (initiative) {
+  setUnselected(initiative) {
     //close pop-up
-    mapObj.closePopup();
+    this.mapObj.closePopup();
     //close information on the left hand side (for smaller screens)
     eventbus.publish({
       topic: "Sidebar.hideInitiative"
     });
     //reset the map vars and stop the zoom event from triggering selectInitiative ({target}) method
-    mapObj.selectedInitiative = undefined;
+    this.mapObj.selectedInitiative = undefined;
 
     //change the color of an initiative with a location
     if (initiative.hasLocation()) {
@@ -173,12 +157,12 @@ function init(registry) {
         })
       );
     }
-  };
+  }
 
-  proto.setSelected = function (initiative) {
+  setSelected(initiative) {
     let that = this;
     //set initiative for selection
-    mapObj.selectedInitiative = initiative;
+    this.mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
       initiative.__internal.marker.setIcon(
@@ -199,11 +183,11 @@ function init(registry) {
       initiative.__internal.marker.openPopup();
     }
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
-    else if (unselectedClusterGroup._inZoomAnimation) {
-      unselectedClusterGroup.on("animationend", e => {
+    else if (this.factory.unselectedClusterGroup._inZoomAnimation) {
+      this.factory.unselectedClusterGroup.on("animationend", e => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
-          unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+          this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
             initiative.__internal.marker
         ) {
           if (initiative.__internal.marker.__parent) //if it has a parent
@@ -212,13 +196,13 @@ function init(registry) {
           }
         }
         initiative.__internal.marker.openPopup();
-        unselectedClusterGroup.off("animationend");
+        this.factory.unselectedClusterGroup.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
       if (
-        unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+        this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
           initiative.__internal.marker
       ) {
 
@@ -229,25 +213,21 @@ function init(registry) {
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = function () {
-      if (unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
+      if (this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
         initiative.__internal.marker) {
         that.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
-        unselectedClusterGroup.off("animationend", deselectInitiative);
+        this.factory.unselectedClusterGroup.off("animationend", deselectInitiative);
       }
-    };
+    }
     //check for clustering at each animation of the layer
-    unselectedClusterGroup.on("animationend", deselectInitiative);
+   this.factory.unselectedClusterGroup.on("animationend", deselectInitiative);
 
-  };
+  }
 
-
-
-
-
-  proto.showTooltip = function (initiative) {
+  showTooltip(initiative) {
     // This variation zooms the map, and makes sure the marker can
     // be seen, spiderifying if needed.
     // But this auto-zooming maybe more than the user bargained for!
@@ -256,134 +236,138 @@ function init(registry) {
 
     // This variation spiderfys the cluster to which the marker belongs.
     // This only works if selectedClusterGroup is actually a ClusterGroup!
-    // const cluster = unselectedClusterGroup.getVisibleParent(this.marker);
+    // const cluster = this.factory.unselectedClusterGroup.getVisibleParent(this.marker);
     // if (cluster && typeof cluster.spiderfy === 'function') {
     //   cluster.spiderfy();
     // }
     this.marker.openTooltip();
     this.marker.setZIndexOffset(1000);
-  };
-  proto.hideTooltip = function (initiative) {
+  }
+
+  hideTooltip(initiative) {
     this.marker.closeTooltip();
     this.marker.setZIndexOffset(0);
-  };
-  proto.getInitiativeContent = function (initiative) {
+  }
+  
+  getInitiativeContent(initiative) {
     return this.presenter.getInitiativeContent(initiative);
-  };
-
-  function setSelected(initiative) {
-    if (markerForInitiative[initiative.uri])
-      markerForInitiative[initiative.uri].setSelected(initiative);
-  }
-  function setUnselected(initiative) {
-    if (markerForInitiative[initiative.uri])
-      markerForInitiative[initiative.uri].setUnselected(initiative);
   }
 
-
-  proto.destroy = function () {
+  destroy() {
     //this.marker.hasPhysicalLocation = false;
     this.cluster.removeLayer(this.marker);
-  };
+  }
 
-  proto.show = function () {
+  show() {
     this.cluster.addLayer(this.marker);
   }
-  proto.isVisible = function () {
+  
+  isVisible() {
     return this.cluster.hasLayer(this.marker);
   }
+}
 
-  function destroyAll() {
-    let that = this;
-    let initiatives = Object.keys(markerForInitiative);
-    initiatives.forEach(initiative => {
-      if (markerForInitiative[initiative])
-        markerForInitiative[initiative].destroy();
-    });
-    markerForInitiative = {};
+export class MarkerViewFactory {
+
+  // Keep a mapping between initiatives and their Markers:
+  // Note: contents currently contain only the active dataset
+  markerForInitiative = {};
+
+  
+  // CAUTION: this may be either a ClusterGroup, or the map itself
+  hiddenClusterGroup = null;
+  unselectedClusterGroup = null;
+
+
+  constructor(defaultLatLng, popup, dataServices) {
+    this.defaultLatLng = defaultLatLng;
+    this.popup = popup;
+    this.dataServices = dataServices;
   }
-  MarkerView.prototype = proto;
 
+  setSelected(initiative) {
+    if (this.markerForInitiative[initiative.uri])
+      this.markerForInitiative[initiative.uri].setSelected(initiative);
+  }
+  setUnselected(initiative) {
+    if (this.markerForInitiative[initiative.uri])
+      this.markerForInitiative[initiative.uri].setUnselected(initiative);
+  }
 
+  destroyAll() {
+    let that = this;
+    let initiatives = Object.keys(this.markerForInitiative);
+    initiatives.forEach(initiative => {
+      if (this.markerForInitiative[initiative])
+        this.markerForInitiative[initiative].destroy();
+    });
+    this.markerForInitiative = {};
+  }
 
-  function showMarkers(initiatives) {
+  showMarkers(initiatives) {
     //show markers only if it is not currently vissible
     initiatives.forEach(initiative => {
-      const marker = markerForInitiative[initiative.uri];
+      const marker = this.markerForInitiative[initiative.uri];
       if (marker && !marker.isVisible())
         marker.show();
     });
 
   }
 
-  function hideMarkers(initiatives) {
+  hideMarkers(initiatives) {
     initiatives.forEach(initiative => {
-      if (markerForInitiative[initiative.uri])
-        markerForInitiative[initiative.uri].destroy();
+      if (this.markerForInitiative[initiative.uri])
+        this.markerForInitiative[initiative.uri].destroy();
     });
   }
 
-  function createMarker(map, initiative) {
-    const view = new MarkerView();
-    const presenter = new MapMarkerPresenter(view, dataServices, popup);
+  createMarker(map, initiative) {
+    const view = new MapMarkerView(this.defaultLatLng, this);
+    const presenter = new MapMarkerPresenter(view, dataServices, this.popup);
     view.setPresenter(presenter);
     view.create(map, initiative);
+    this.markerForInitiative[initiative.uri] = view;
     return view;
   }
 
-  function refreshMarker(initiative) {
-    if (!markerForInitiative[initiative.uri])
+  refreshMarker(initiative) {
+    if (!this.markerForInitiative[initiative.uri])
       return;
-    markerForInitiative[initiative.uri]
+    this.markerForInitiative[initiative.uri]
       .marker
-      .setPopupContent(markerForInitiative[initiative.uri].presenter.getInitiativeContent(initiative));
+      .setPopupContent(this.markerForInitiative[initiative.uri].presenter.getInitiativeContent(initiative));
   }
 
-  function setSelectedClusterGroup(clusterGroup) {
+  setSelectedClusterGroup(clusterGroup) {
     // CAUTION: this may be either a ClusterGroup, or the map itself
-    hiddenClusterGroup = clusterGroup;
-  }
-  function setUnselectedClusterGroup(clusterGroup) {
-    unselectedClusterGroup = clusterGroup;
-  }
-  function showTooltip(initiative) {
-    if (markerForInitiative[initiative.uri])
-      markerForInitiative[initiative.uri].showTooltip(initiative);
-  }
-  function hideTooltip(initiative) {
-    if (markerForInitiative[initiative.uri])
-      markerForInitiative[initiative.uri].hideTooltip(initiative);
+    this.hiddenClusterGroup = clusterGroup;
   }
 
-  function getInitiativeContent(initiative) {
+  setUnselectedClusterGroup(clusterGroup) {
+    this.unselectedClusterGroup = clusterGroup;
+  }
+
+  showTooltip(initiative) {
+    if (this.markerForInitiative[initiative.uri])
+      this.markerForInitiative[initiative.uri].showTooltip(initiative);
+  }
+  
+  hideTooltip(initiative) {
+    if (this.markerForInitiative[initiative.uri])
+      this.markerForInitiative[initiative.uri].hideTooltip(initiative);
+  }
+
+  getInitiativeContent(initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    if (markerForInitiative[initiative.uri])
-      return markerForInitiative[initiative.uri].getInitiativeContent(
+    if (this.markerForInitiative[initiative.uri])
+      return this.markerForInitiative[initiative.uri].getInitiativeContent(
         initiative
       );
     else return null;
   }
 
-  function getClusterGroup() {
+  getClusterGroup() {
     return this.unselectedClusterGroup;
   }
-
-
-  return {
-    createMarker: createMarker,
-    setSelectedClusterGroup: setSelectedClusterGroup,
-    setUnselectedClusterGroup: setUnselectedClusterGroup,
-    setSelected: setSelected,
-    setUnselected: setUnselected,
-    showTooltip: showTooltip,
-    hideTooltip: hideTooltip,
-    getInitiativeContent: getInitiativeContent,
-    getClusterGroup: getClusterGroup,
-    destroyAll: destroyAll,
-    hideMarkers: hideMarkers,
-    showMarkers: showMarkers,
-    refreshMarker: refreshMarker
-  };
+  
 }
-
-module.exports = init;

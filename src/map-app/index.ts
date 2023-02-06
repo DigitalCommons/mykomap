@@ -7,6 +7,8 @@ import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData, Config } from './app/model/config';
 import { makeRegistry, Registry } from './app/registries';
 import { MapPresenterFactory } from "./app/presenter/map";
+import { MarkerViewFactory } from "./app/view/map/marker";
+import { getPopup } from "./app/view/map/default_popup";
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -81,6 +83,9 @@ export function initRegistry(config: Config): Registry {
   const registry: Registry = makeRegistry();
 
   const dataServices =  new DataServicesImpl(config, functionalLabels);
+  const popup = config.getCustomPopup() || getPopup;
+  const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
+  const mapPresenter =  new MapPresenterFactory(config, dataServices, markerViewFactory, registry);
   
   registry.def('config', () => config);
   registry.def('model/dataservices',  () => dataServices);
@@ -88,10 +93,7 @@ export function initRegistry(config: Config): Registry {
   // Register the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependants.
   registry.def('view/base', () => require('./app/view/base'));
-
-  const mapMarkerView = require('./app/view/map/marker')(registry);  
-  const mapPresenter =  new MapPresenterFactory(config, dataServices, mapMarkerView, registry);
-  registry.def('view/map/marker', () => mapMarkerView);
+  registry.def('view/map/marker', () => markerViewFactory);
   registry.def('presenter/map', () => mapPresenter);
   registry.def('view/map', () => require('./app/view/map')(registry));
   registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    
