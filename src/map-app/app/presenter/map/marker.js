@@ -5,9 +5,8 @@ import { BaseSidebarPresenter } from '../sidebar/base';
 
 export class MapMarkerPresenter extends BasePresenter {
   
-  constructor(view, dataServices, popup) {
+  constructor(dataServices, popup) {
     super();
-    this.registerView(view);
     this.dataservices = dataServices;
     this.labels = dataServices.getFunctionalLabels();
     this.popup = popup;
