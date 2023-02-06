@@ -11,6 +11,7 @@ import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
 import { SidebarView } from './app/view/sidebar';
 import { MapView } from "./app/view/map";
+import { initView } from './app/view.js';
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -100,24 +101,14 @@ export function initRegistry(config: Config): Registry {
   registry.def('config', () => config);
   registry.def('model/dataservices',  () => dataServices);
 
-  // Register the view/presenter modules so they can find each other.
-  // The order matters insofar that dependencies must come before dependants.
-  registry.def('view/base', () => require('./app/view/base'));
-  registry.def('view/map/marker', () => markerViewFactory);
-  registry.def('presenter/map', () => mapPresenter);
-
   const mapView = new MapView(
     mapPresenter,
     dataServices.getFunctionalLabels(),
     dataServices.getDialogueSize(),
     markerViewFactory
   );
-  registry.def('view/map', () => mapView);
-  registry.def('view/sidebar', () => sidebarView);
-  
-  // The code for each view is loaded by src/app/view.js
-  // Initialize the views:
-  registry.def('view', () => require('./app/view.js')(registry));
+  registry.def('view/sidebar', () => sidebarView);  
+  registry.def('view', () => () => initView(config, mapView));
 
   return registry;
 };
@@ -234,7 +225,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
   // and is a hang-over from when we used requireJS.
   const registry = initRegistry(config);
   
-  const view = registry('view') as { init: () => void };
+  const initView = registry('view') as () => void;
   const dataServices = registry('model/dataservices') as DataServices;
 
   // Expose the data for debugging
@@ -242,7 +233,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
   window.dataServices = dataServices
   
   // Each view will ensure that the code for its presenter is loaded.
-  view.init();
+  initView();
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();
