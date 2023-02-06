@@ -5,7 +5,6 @@ const mapAppStyles = require('../map-app.css');
 function _init(registry) {
   const config = registry('config');
   const map = registry('view/map');
-  const sidebar = registry('view/sidebar');
   const lang = config.getLanguage();
   
   function init() {
@@ -59,7 +58,6 @@ function _init(registry) {
       });
 
     map.init();
-    sidebar.init();
   }
   
   return {

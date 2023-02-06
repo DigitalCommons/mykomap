@@ -9,47 +9,47 @@ const { DatasetsSidebarView } = require('./sidebar/datasets');
 const { DirectorySidebarView } = require('./sidebar/directory');
 const { InitiativesSidebarView } = require('./sidebar/initiatives');
 
-function _init(registry) {
-  const config = registry('config');
-  const dataServices = registry('model/dataservices');
-  const markerView = registry('view/map/marker');
-  const mapPresenterFactory = registry('presenter/map');
-  
-  //get labels for buttons and titles
-  const labels = dataServices.getFunctionalLabels();
-  const sidebarButtonColour = dataServices.getSidebarButtonColour();
+export class SidebarView extends BaseView {
+  constructor(labels, config, dataServices, markerView, mapPresenterFactory, sidebarButtonColour) {
+    super();
+    this.labels = labels;
+    this.config = config;
+    this.dataServices = dataServices;
+    this.markerView = markerView;
+    this.mapPresenterFactory = mapPresenterFactory;
+    this.sidebarButtonColour = sidebarButtonColour;
 
-  // This deals with the view object that controls the sidebar
-  // It is not itself a sidebar/view object, but contains objects of that type
+    const presenter = new SidebarPresenter(
+      this,
+      this.config.getShowDirectoryPanel(),
+      this.config.getShowSearchPanel(),
+      this.config.getShowAboutPanel(),
+      this.config.getShowDatasetsPanel()
+    );
+    
+    this.setPresenter(presenter);
+    this.createOpenButton();
+    this.createButtonRow();
+    this.createSidebars();
+    this.changeSidebar(); // Use the default
+  }
 
-  /*
-  const sidebarDefaultOpen = true;
-
-  if(sidebarDefaultOpen)
-    this.showSidebar();
-    */
-
-  function SidebarView() { }
-  // inherit from the standard view base object:
-  var proto = Object.create(BaseView.prototype);
-
-  proto.createOpenButton = function () {
+  createOpenButton() {
     // d3 selection redefines this, so hang onto it here:
     var that = this;
     var selection = this.d3selectAndClear("#map-app-sidebar-button")
                         .append("button")
                         .attr("class", "w3-btn")
-                        .attr("style","background-color: " + sidebarButtonColour)
-                        .attr("title", labels.showDirectory)
+                        .attr("style","background-color: " + this.sidebarButtonColour)
+                        .attr("title", this.labels.showDirectory)
                         .on("click", function () {
                           that.showSidebar();
                         })
                         .append("i")
                         .attr("class", "fa fa-angle-right");
+  }
 
-  };
-
-  proto.createButtonRow = function () {
+  createButtonRow() {
     // d3 selection redefines this, so hang onto it here:
     var that = this;
     var selection = this.d3selectAndClear("#map-app-sidebar-header");
@@ -66,7 +66,7 @@ function _init(registry) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
-      .attr("title", labels.showDirectory)
+      .attr("title", this.labels.showDirectory)
       .on("click", function () {
         eventbus.publish({
           topic: "Map.removeSearchFilter",
@@ -92,7 +92,7 @@ function _init(registry) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showSearch)
+      .attr("title", this.labels.showSearch)
       .on("click", function () {
         that.hideInitiativeList();
         //deselect
@@ -115,7 +115,7 @@ function _init(registry) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showInfo)
+      .attr("title", this.labels.showInfo)
       .on("click", function () {
         that.hideInitiativeList();
         // eventbus.publish({
@@ -136,7 +136,7 @@ function _init(registry) {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", labels.showDatasets)
+        .attr("title", this.labels.showDatasets)
         .on("click", function () {
           that.hideInitiativeList();
           // eventbus.publish({
@@ -155,30 +155,30 @@ function _init(registry) {
     }
 
 
-  };
+  }
 
-  proto.createSidebars = function () {
+  createSidebars() {
 
     this.sidebar = {};
 
     if(this.presenter.showingDirectory())
-      this.sidebar.directory = new DirectorySidebarView(labels, config, dataServices, markerView);
+      this.sidebar.directory = new DirectorySidebarView(this.labels, this.config, this.dataServices, this.markerView);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(labels, dataServices, mapPresenterFactory);
+      this.sidebar.initiatives = new InitiativesSidebarView(this.labels, this.dataServices, this.mapPresenterFactory);
 
     if(this.presenter.showingAbout())
-      this.sidebar.about = new AboutSidebarView(labels, config);
+      this.sidebar.about = new AboutSidebarView(this.labels, this.config);
     
     if(this.presenter.showingDatasets())
-      this.sidebar.datasets = new DatasetsSidebarView(labels, dataServices);
-  };
+      this.sidebar.datasets = new DatasetsSidebarView(this.labels, this.dataServices);
+  }
 
   // Changes or refreshes the sidebar
   //
   // @param name - the sidebar to change (needs to be one of the keys
   // of this.sidebar)
-  proto.changeSidebar = function (name) {
+  changeSidebar(name) {
     if (name !== undefined) {
       // Validate name
       if (!(name in this.sidebar)) {
@@ -200,18 +200,18 @@ function _init(registry) {
     // Change the current sidebar
     this.sidebarName = name;
     this.sidebar[this.sidebarName].refresh();
-  };
+  }
 
-  // proto.hideSidebarIfItTakesWholeScreen = function() {
+  // hideSidebarIfItTakesWholeScreen() {
   //   // @todo - improve this test -
   //   // it is not really testing the predicate suggested by the name iof the function.
   //   if (window.outerWidth <= 600) {
   //     d3.select("#map-app-sidebar").classed("sea-sidebar-open", false);
   //     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
   //   }
-  // };
+  // }
 
-  proto.showSidebar = function () {
+  showSidebar() {
     var that = this;
     let sidebar = d3.select("#map-app-sidebar");
     let initiativeListSidebar = document.getElementById(
@@ -244,7 +244,7 @@ function _init(registry) {
       )
       .classed("sea-sidebar-open", true);
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
-      d3.select(".w3-btn").attr("title", labels.hideDirectory);
+      d3.select(".w3-btn").attr("title", this.labels.hideDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     that.changeSidebar(); // Refresh the content of the sidebar
@@ -253,13 +253,13 @@ function _init(registry) {
 
 
 
-  };
+  }
 
   // This should be split into three functions:
   // 1. Close the sidebar regardless of current view
   // 2. Close the Initiatives list
   // 3. Close the Initiative sidebar
-  proto.hideSidebar = function () {
+  hideSidebar() {
     const that = this;
     //that.hideInitiativeList();
     let sidebar = d3.select("#map-app-sidebar");
@@ -287,20 +287,20 @@ function _init(registry) {
         false
       )
       .classed("sea-sidebar-open", false);
-    d3.select(".w3-btn").attr("title", labels.showDirectory);
+    d3.select(".w3-btn").attr("title", this.labels.showDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
 
-  };
+  }
 
-  proto.hideInitiativeSidebar = function () {
+  hideInitiativeSidebar() {
     let initiativeSidebar = d3.select("#sea-initiative-sidebar");
 
     if (initiativeSidebar.node().getBoundingClientRect().x === 0) {
       initiativeSidebar.classed("sea-initiative-sidebar-open", false);
     }
-  };
+  }
 
-  proto.showInitiativeList = function () {
+  showInitiativeList() {
     //if empty don't show
     const empty = d3.select("#sea-initiatives-list-sidebar-content").select("ul").empty();
     if (empty) {
@@ -309,7 +309,7 @@ function _init(registry) {
     //else show it
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", labels.hideDirectory);
+    d3.select(".w3-btn").attr("title", this.labels.hideDirectory);
 
     let initiativeListSidebar = document.getElementById(
       "sea-initiatives-list-sidebar"
@@ -338,8 +338,8 @@ function _init(registry) {
         false
       )
       .classed("sea-sidebar-list-initiatives", true);
-  };
-  proto.hideInitiativeList = function () {
+  }
+  hideInitiativeList() {
     let sidebar = d3.select("#map-app-sidebar");
     let sidebarButton = document.getElementById("map-app-sidebar-button");
     let initiativeListSidebar = document.getElementById(
@@ -368,37 +368,6 @@ function _init(registry) {
         false
       )
       .classed("sea-sidebar-list-initiatives", false);
-    d3.select(".w3-btn").attr("title", labels.hideDirectory);
-  };
-  SidebarView.prototype = proto;
-  var view;
-
-  function init() {
-    view = new SidebarView();
-
-    const presenter = new SidebarPresenter(
-      view,
-      config.getShowDirectoryPanel(),
-      config.getShowSearchPanel(),
-      config.getShowAboutPanel(),
-      config.getShowDatasetsPanel()
-    );
-
-    view.setPresenter(presenter);
-    view.createOpenButton();
-    view.createButtonRow();
-    view.createSidebars();
-    view.changeSidebar(); // Use the default
-  }
-
-  function showSidebar(){
-    view.showSidebar();
-  }
-
-  return {
-    init: init,
-    showSidebar
-  };
+    d3.select(".w3-btn").attr("title", this.labels.hideDirectory);
+  }  
 }
-
-module.exports = _init;

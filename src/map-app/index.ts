@@ -9,8 +9,7 @@ import { makeRegistry, Registry } from './app/registries';
 import { MapPresenterFactory } from "./app/presenter/map";
 import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
-import { AboutSidebarView } from "./app/view/sidebar/about";
-import { AboutPresenter } from "./app/presenter/sidebar/about";
+import { SidebarView } from './app/view/sidebar';
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -88,6 +87,14 @@ export function initRegistry(config: Config): Registry {
   const popup = config.getCustomPopup() || getPopup;
   const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
   const mapPresenter =  new MapPresenterFactory(config, dataServices, markerViewFactory, registry);
+  const sidebarView = new SidebarView(
+    dataServices.getFunctionalLabels(),
+    config,
+    dataServices,
+    markerViewFactory,
+    mapPresenter,
+    dataServices.getSidebarButtonColour()
+  );
   
   registry.def('config', () => config);
   registry.def('model/dataservices',  () => dataServices);
@@ -98,7 +105,7 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/map/marker', () => markerViewFactory);
   registry.def('presenter/map', () => mapPresenter);
   registry.def('view/map', () => require('./app/view/map')(registry));
-  registry.def('view/sidebar', () => require('./app/view/sidebar')(registry));
+  registry.def('view/sidebar', () => sidebarView);
   
   // The code for each view is loaded by src/app/view.js
   // Initialize the views:
