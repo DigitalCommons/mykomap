@@ -4,8 +4,9 @@ const mapAppStyles = require('../map-app.css');
 
 function _init(registry) {
   const config = registry('config');
-  const map = registry('view/map');
   const lang = config.getLanguage();
+
+  const mapView = registry('view/map');
   
   function init() {
     // We need to be careful to guard against weird characters, especially quotes,
@@ -57,7 +58,7 @@ function _init(registry) {
         );
       });
 
-    map.init();
+    mapView.createMap();
   }
   
   return {

@@ -4,7 +4,7 @@ const leaflet = require('leaflet');
 const activeArea = require('leaflet-active-area');
 const contextmenu = require('leaflet-contextmenu');
 const { BaseView } = require('./base');
-
+const { MapPresenterFactory } = require('../presenter/map');
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
 const leafletCss = require('leaflet/dist/leaflet.css');
@@ -17,121 +17,123 @@ leaflet.Icon.Default.mergeOptions({
 
 
 
-function init(registry) {
-  const _config = registry('config');
-  const presenter = registry('presenter/map');
-  const markerView = registry('view/map/marker');
-  const dataServices = registry('model/dataservices');
+export class MapView extends BaseView {
+  map;
+  flag = false;
 
-  const labels = dataServices.getFunctionalLabels();
-
-  const config = {
-    putSelectedMarkersInClusterGroup: false
-  };
-
-  const dialogueSize = dataServices.getDialogueSize();
-
-  const descriptionRatio = parseInt(dialogueSize.descriptionRatio);
-  const descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
-
-  const dialogueSizeStyles = document.createElement('style');
-  dialogueSizeStyles.innerHTML = `
+  /// Initialises the view, but does not create the map yet.
+  ///
+  /// To do that, call #createMap
+  constructor(mapPresenterFactory, labels, dialogueSize, markerViewFactory) {
+    super();
+    this.markerViewFactory = markerViewFactory;
+    this.labels = labels;
+    this._config = {
+      putSelectedMarkersInClusterGroup: false
+    };
+    
+    this.dialogueSize = dialogueSize;
+    
+    this.descriptionRatio = parseInt(dialogueSize.descriptionRatio);
+    this.descriptionPercentage = Math.round(100 / (this.descriptionRatio + 1) * this.descriptionRatio);
+    
+    this.dialogueSizeStyles = document.createElement('style');
+    this.dialogueSizeStyles.innerHTML = `
   div.leaflet-popup-content {
-      height: ${dialogueSize.height};
-      width: ${dialogueSize.width}!important;
+      height: ${this.dialogueSize.height};
+      width: ${this.dialogueSize.width}!important;
   }
   
   .sea-initiative-popup .sea-initiative-details {
-      width: ${descriptionPercentage}%;
+      width: ${this.descriptionPercentage}%;
   }
   
   .sea-initiative-popup .sea-initiative-contact {
-      width: ${100 - descriptionPercentage}%;
+      width: ${100 - this.descriptionPercentage}%;
   }
   
   .sea-initiative-popup{
-    left: ${-parseInt(dialogueSize.width.split("v")[0]) / 2}vw!important;
+    left: ${-parseInt(this.dialogueSize.width.split("v")[0]) / 2}vw!important;
   }`;
 
-  document.body.appendChild(dialogueSizeStyles);
+    
+    this.setPresenter(mapPresenterFactory.createPresenter(this));
+  }
 
-  function loader(config) {
-    return function () {
-      //example loading
-      //with css
-      //could look a lot better, with svgs
-      if (config.error) {
-        d3.select("#" + config.id).style('display', 'none');
-        d3.select("#" + config.id + "txt").text("Error loading: " + config.text);
-      }
-      else {
-        let loading = d3.select('#' + config.id);
-        if (!loading.node()) {
-          // Create the node if it is missing
-          loading = d3.select(config.container).append("div");
-          loading.attr("id", config.id);
-          loading.append("div").attr("id", config.id + "spin");
-          loading.append("p").attr("id", config.id + "txt");
+  createMap() {
+    document.body.appendChild(this.dialogueSizeStyles);
+    
+    const loader = (config) => {
+      return () => {
+        //example loading
+        //with css
+        //could look a lot better, with svgs
+        if (config.error) {
+          d3.select("#" + config.id).style('display', 'none');
+          d3.select("#" + config.id + "txt").text("Error loading: " + config.text);
         }
+        else {
+          let loading = d3.select('#' + config.id);
+          if (!loading.node()) {
+            // Create the node if it is missing
+            loading = d3.select(config.container).append("div");
+            loading.attr("id", config.id);
+            loading.append("div").attr("id", config.id + "spin");
+            loading.append("p").attr("id", config.id + "txt");
+          }
 
-        // Ensure node is displayed
-        loading.style('display', 'block');
+          // Ensure node is displayed
+          loading.style('display', 'block');
 
-        //edit text
-        d3.select("#" + config.id + "txt").text(config.text);
-      }
-    };
-  }
-
-  function stopLoader(config) {
-    return function () {
-      //example loading
-      //with css
-      //could look a lot better
-      d3.select('#' + config.id).style('display', 'none');
-    };
-  }
-
-  var SpinMapMixin = {
-    seaLoading: function (state, options) {
-      if (!!state) {
-        var myLoader = loader({
-          error: options.error,
-          text: `${labels.loading}...`,
-          container: "#map-app-leaflet-map", id: "loadingCircle",
-        });
-        myLoader();
-      }
-      else {
-        var myStopLoader = stopLoader({ id: "loadingCircle" });
-        myStopLoader();
-      }
+          //edit text
+          d3.select("#" + config.id + "txt").text(config.text);
+        }
+      };
     }
-  };
+
+    const stopLoader = (config) => {
+      return () => {
+        //example loading
+        //with css
+        //could look a lot better
+        d3.select('#' + config.id).style('display', 'none');
+      };
+    }
+
+    var SpinMapMixin = {
+      seaLoading: (state, options) => {
+        if (!!state) {
+          var myLoader = loader({
+            error: options.error,
+            text: `${this.labels.loading}...`,
+            container: "#map-app-leaflet-map", id: "loadingCircle",
+          });
+          myLoader();
+        }
+        else {
+          var myStopLoader = stopLoader({ id: "loadingCircle" });
+          myStopLoader();
+        }
+      }
+    };
 
 
-  //experiments
-  var SpinMapInitHook = function () {
-    this.on('layeradd', function (e) {
-      // If added layer is currently loading, spin !
-      if (typeof e.layer.on !== 'function') return;
-      e.layer.on('data:loading', function () {
+    //experiments
+    var SpinMapInitHook = function() {
+      this.on('layeradd', (e) => {
+        // If added layer is currently loading, spin !
+        if (typeof e.layer.on !== 'function') return;
+        e.layer.on('data:loading', () => {}, this);
+        e.layer.on('data:loaded', () => {}, this);
       }, this);
-      e.layer.on('data:loaded', function () {
+      this.on('layerremove', (e) => {
+        // Clean-up
+        if (typeof e.layer.on !== 'function') return;
+        e.layer.off('data:loaded');
+        e.layer.off('data:loading');
       }, this);
-    }, this);
-    this.on('layerremove', function (e) {
-      // Clean-up
-      if (typeof e.layer.on !== 'function') return;
-      e.layer.off('data:loaded');
-      e.layer.off('data:loading');
-    }, this);
-  };
+    };
 
-  function MapView() { }
-  // inherit from the standard view base object:
-  var proto = Object.create(BaseView.prototype);
-  proto.createMap = function () {
     // setup map (could potentially add this to the map initialization instead)
     //world ends corners
     var corner1 = leaflet.latLng(-90, -180),
@@ -145,10 +147,10 @@ function init(registry) {
     const tileMapURL = this.presenter.getTileUrl() ? this.presenter.getTileUrl() : osmURL;
 
     let mapAttribution = this.presenter.getMapAttribution();
-    mapAttribution = mapAttribution.replace('contributors', labels.contributers);
-    mapAttribution = mapAttribution.replace('Other data', labels.otherData);
-    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${labels.poweredBy}</a>`);
-    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', labels.mapDisclaimer);
+    mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
+    mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
+    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
 
     var i,
@@ -175,8 +177,6 @@ function init(registry) {
     }
 
 
-
-
     leaflet
       .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
       .addTo(this.map);
@@ -193,7 +193,7 @@ function init(registry) {
     );
     // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
     this.map.addLayer(this.unselectedClusterGroup);
-    if (config.putSelectedMarkersInClusterGroup) {
+    if (this._config.putSelectedMarkersInClusterGroup) {
       this.selectedClusterGroup = leaflet.markerClusterGroup();
       this.map.addLayer(this.selectedClusterGroup);
     } else {
@@ -216,43 +216,43 @@ function init(registry) {
         .classed("logo", true);
     }
 
-    markerView.setSelectedClusterGroup(this.selectedClusterGroup);
-    markerView.setUnselectedClusterGroup(this.unselectedClusterGroup);
+    this.markerViewFactory.setSelectedClusterGroup(this.selectedClusterGroup);
+    this.markerViewFactory.setUnselectedClusterGroup(this.unselectedClusterGroup);
+  }
 
-    // var that = this;
+  removeAllMarkers() {
+    this.markerViewFactory.destroyAll();
+  }
 
-    // this.map.on("zoomend", e => {
-    //   console.log(this.map.selectedInitiative);
-    //   if (this.map.selectedInitiative)
-    //     markerView.setSelected(this.map.selectedInitiative);
-    // });
-  };
-  proto.removeAllMarkers = function () {
+  addMarker(initiative) {
+    return this.markerViewFactory.createMarker(this.map, initiative);
+  }
 
-    markerView.destroyAll();
-  };
-  proto.addMarker = function (initiative) {
-    return markerView.createMarker(this.map, initiative);
-  };
-  proto.refreshMarker = function (initiative) {
-    markerView.refreshMarker(initiative);
-  };
-  proto.setSelected = function (initiative) {
-    markerView.setSelected(initiative);
-  };
-  proto.setUnselected = function (initiative) {
-    markerView.setUnselected(initiative);
-  };
-  proto.showTooltip = function (initiative) {
-    markerView.showTooltip(initiative);
-  };
-  proto.hideTooltip = function (initiative) {
-    markerView.hideTooltip(initiative);
-  };
-  proto.setZoom = function (zoom) {
+  refreshMarker(initiative) {
+    this.markerViewFactory.refreshMarker(initiative);
+  }
+
+  setSelected(initiative) {
+    this.markerViewFactory.setSelected(initiative);
+  }
+
+  setUnselected(initiative) {
+    this.markerViewFactory.setUnselected(initiative);
+  }
+
+  showTooltip(initiative) {
+    this.markerViewFactory.showTooltip(initiative);
+  }
+
+  hideTooltip(initiative) {
+    this.markerViewFactory.hideTooltip(initiative);
+  }
+
+  setZoom(zoom) {
     this.map.setZoom(zoom);
-  };
-  proto.fitBounds = function (data) {
+  }
+
+  fitBounds(data) {
     let bounds = data,
       options = {};
     if (!Array.isArray(data)) {
@@ -260,22 +260,25 @@ function init(registry) {
       options = data.options;
     }
     this.map.fitBounds(bounds, options);
-  };
-  proto.getClusterGroup = function () {
-    return markerView.getClusterGroup();
-  };
+  }
+
+  getClusterGroup() {
+    return this.markerViewFactory.getClusterGroup();
+  }
+
   //fix for firefox, this triggers tiles to re-render
-  proto.refresh = function (centre = this.map.getBounds().getCenter()) {
+  refresh(centre = this.map.getBounds().getCenter()) {
 
     this.map.invalidateSize();
     this.map.setView(centre, this.map.getZoom() - 1, { animate: false });
     this.map.setView(centre, this.map.getZoom() + 1, { animate: false });
   }
 
-  // proto.getZoom = function (){
+  // getZoom(){
   //   return this
   // }
-  proto.setView = function (data) {
+
+  setView(data) {
     let latlng = data,
       zoom = this.map.getZoom(),
       options = {
@@ -287,18 +290,18 @@ function init(registry) {
       options = Object.assign(options, data.options);
     }
     this.map.setView(latlng);
-  };
+  }
 
-
-  proto.isVisible = function (initiatives) {
+  isVisible(initiatives) {
     //check if whether the passed initiatives are currently visible or not
     //for each marker check if the marker is directly visible 
     //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
     //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
     return initiatives.every((initative) => this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker);
 
-  };
-  proto.boundsWithinCurrentBounds = function (bounds) {
+  }
+
+  boundsWithinCurrentBounds(bounds) {
     //checks if the bounds passed are smaller than the current bounds
     //(north-south) and (east-west)
     let mapBounds = this.map.getBounds();
@@ -314,9 +317,9 @@ function init(registry) {
       return true;
     else
       return false;
-  };
+  }
 
-  proto.flyTo = function (data) {
+  flyTo(data) {
     let latlng = data,
       options = {
         duration: 0.25
@@ -327,12 +330,9 @@ function init(registry) {
       options = Object.assign(options, data.options);
     }
     this.map.flyTo(latlng, this.map.getZoom(), options);
-  };
+  }
 
-
-
-  let flag = false;
-  proto.flyToBounds = function (data) {
+  flyToBounds(data) {
     let bounds = data,
       options = { duration: 0.25, maxZoom: this.map.getZoom() };
 
@@ -360,26 +360,24 @@ function init(registry) {
     }
 
     //should check for firefox only? TODO
-    let that = this;
-
     //refresh the screen to handle rendering bugs (missing tiles or markers)
     var refresh = () => {
-      if (!that.flag) {
-        that.flag = true;
-        that.map.off('moveend', refresh);
-        that.map.off('animationend', refresh)
-        that.refresh();
-        that.flag = false;
+      if (!this.flag) {
+        this.flag = true;
+        this.map.off('moveend', refresh);
+        this.map.off('animationend', refresh)
+        this.refresh();
+        this.flag = false;
       }
     }
 
     this.map.on('moveend', refresh);
     this.map.on('animationend', refresh)
 
-  };
+  }
 
   //pass array of 1 initiative in data.initiative
-  proto.selectAndZoomOnInitiative = function (data) {
+  selectAndZoomOnInitiative(data) {
     let bounds = data,
       options = { duration: 0.25, maxZoom: this.map.getZoom() };
     if (!Array.isArray(data)) {
@@ -392,7 +390,7 @@ function init(registry) {
     let lat = this.map.getCenter().lat;
 
     //this is from the config, so if you change the unit there you need to change it here
-    const dialogueHeight = parseInt(dialogueSize.height.split("px"));
+    const dialogueHeight = parseInt(this.dialogueSize.height.split("px"));
 
     //get a latitude that shows the whole dialogue on screen
     if (this.map.project(centre).y - this.map.getPixelBounds().min.y < dialogueHeight) {
@@ -464,31 +462,23 @@ function init(registry) {
     // this.map.invalidateSize();
 
 
-  };
+  }
 
-
-
-
-
-
-
-
-
-  proto.zoomAndPanTo = function (latLng) {
+  zoomAndPanTo(latLng) {
     console.log("zoomAndPanTo");
     this.map.setView(latLng, 16, { animate: true });
-  };
+  }
 
-  proto.startLoading = function (data) {
+  startLoading(data) {
     this.map.seaLoading(true, { error: data.error });
-  };
+  }
 
-  proto.stopLoading = function () {
+  stopLoading() {
     this.map.seaLoading(false);
 
   }
 
-  proto.setActiveArea = function (data) {
+  setActiveArea(data) {
     if (this._settingActiveArea) return;
     window.mykoMap.once("moveend", () => {
       this._settingActiveArea = undefined;
@@ -508,18 +498,8 @@ function init(registry) {
     const refocusMap = true,
       animateRefocus = true;
     this.map.setActiveArea(css, refocusMap, animateRefocus);
-  };
-
-  MapView.prototype = proto;
-  function init() {
-    const view = new MapView();
-    view.setPresenter(presenter.createPresenter(view));
-    view.createMap();
-    return view;
   }
-  return {
-    init: init
-  };
+
 }
 
-module.exports = init;
+

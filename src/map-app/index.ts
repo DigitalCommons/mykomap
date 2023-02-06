@@ -10,6 +10,7 @@ import { MapPresenterFactory } from "./app/presenter/map";
 import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
 import { SidebarView } from './app/view/sidebar';
+import { MapView } from "./app/view/map";
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -104,7 +105,14 @@ export function initRegistry(config: Config): Registry {
   registry.def('view/base', () => require('./app/view/base'));
   registry.def('view/map/marker', () => markerViewFactory);
   registry.def('presenter/map', () => mapPresenter);
-  registry.def('view/map', () => require('./app/view/map')(registry));
+
+  const mapView = new MapView(
+    mapPresenter,
+    dataServices.getFunctionalLabels(),
+    dataServices.getDialogueSize(),
+    markerViewFactory
+  );
+  registry.def('view/map', () => mapView);
   registry.def('view/sidebar', () => sidebarView);
   
   // The code for each view is loaded by src/app/view.js
