@@ -4,12 +4,13 @@ const leafletMarkerCluster = require('leaflet.markercluster');
 const leafletAwesomeMarkers = require('leaflet.awesome-markers');
 const eventbus = require('../../eventbus');
 const { MapMarkerPresenter } = require('../../presenter/map/marker');
+const { getPopup } = require('../../view/map/default_popup');
 
 function init(registry) {
   const config = registry('config');
   const viewBase = registry('view/base');
   const dataServices = registry('model/dataservices');
-  const defaultPopup = registry('view/map/popup').getPopup;
+
   const customPopup = config.getCustomPopup();
   const popup = customPopup || defaultPopup;
   
