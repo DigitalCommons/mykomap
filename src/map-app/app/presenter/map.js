@@ -1,7 +1,7 @@
 import { base as BasePresenter } from '../presenter';
 const eventbus = require('../eventbus');
 
-export class PresenterFactory {
+export class MapPresenterFactory {
   
   constructor(config, dataservices, markerView, registry) {
     this.config = config;
@@ -664,12 +664,4 @@ export class Presenter extends BasePresenter {
     });
   }
   //END SEARCH HIGHLIGHT
-}
-
-export function init(registry) {
-  const config = registry('config');
-  const markerView = registry('view/map/marker');
-  const dataservices = registry('model/dataservices');
-  
-  return new PresenterFactory(config, dataservices, markerView, registry);
 }

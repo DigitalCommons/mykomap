@@ -1,10 +1,12 @@
 "use strict";
 
 import type { Dictionary } from "./common_types";
-import type { DataServices } from "./app/model/dataservices";
+import { DataServices, DataServicesImpl } from "./app/model/dataservices";
 
+import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData, Config } from './app/model/config';
 import { makeRegistry, Registry } from './app/registries';
+import { MapPresenterFactory } from "./app/presenter/map";
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -77,18 +79,21 @@ export function parseUrlParameters(search: string): UrlParams {
 // `config` should be a config object created using `model/config.js`
 export function initRegistry(config: Config): Registry {
   const registry: Registry = makeRegistry();
+
+  const dataServices =  new DataServicesImpl(config, functionalLabels);
   
   registry.def('config', () => config);
-  registry.def('model/dataservices',
-               () => require('./app/model/dataservices').init(registry));
+  registry.def('model/dataservices',  () => dataServices);
 
   // Register the view/presenter modules so they can find each other.
   // The order matters insofar that dependencies must come before dependants.
   registry.def('view/base', () => require('./app/view/base'));
   registry.def('view/map/popup', () => require('./app/view/map/default_popup'));
-  registry.def('presenter/map/marker', () => require('./app/presenter/map/marker')(registry));
-  registry.def('view/map/marker', () => require('./app/view/map/marker')(registry));
-  registry.def('presenter/map', () => require('./app/presenter/map').init(registry));
+
+  const mapMarkerView = require('./app/view/map/marker')(registry);  
+  const mapPresenter =  new MapPresenterFactory(config, dataServices, mapMarkerView, registry);
+  registry.def('view/map/marker', () => mapMarkerView);
+  registry.def('presenter/map', () => mapPresenter);
   registry.def('view/map', () => require('./app/view/map')(registry));
   registry.def('view/searchbox', () => require('./app/view/searchbox')(registry));
   registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    

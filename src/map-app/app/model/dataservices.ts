@@ -45,7 +45,6 @@ const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
 
 const eventbus = require('../eventbus');
-import { functionalLabels } from '../../localisations';
 import { CsvDataLoader } from './csvdataloader';
 
 /// This class represents an initiative, AKA a pin on the map.
@@ -830,10 +829,4 @@ export class DataServicesImpl implements DataServices {
   }  
 }
 
-
-export function init(registry: Registry): DataServices {
-  const config = registry("config") as Config;
-
-  return new DataServicesImpl(config, functionalLabels);
-}
 
