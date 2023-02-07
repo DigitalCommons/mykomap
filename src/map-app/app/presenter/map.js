@@ -3,11 +3,12 @@ const eventbus = require('../eventbus');
 
 export class MapPresenterFactory {
   
-  constructor(config, dataservices, markerView, registry) {
+  constructor(config, dataservices, markerView, getSidebarView) {
     this.config = config;
     this.dataservices = dataservices;
     this.markerView = markerView;
-    this.registry = registry; // for deferred load of sidebarView - breaking a recursive dep
+    // for deferred load of sidebarView - breaking a recursive dep
+    this.getSidebarView = getSidebarView;
     this.initiativesOutsideOfFilterUIDMap = {};
     this.loadedInitiatives = [];
     this.filtered = {};
@@ -294,11 +295,13 @@ export class Presenter extends BasePresenter {
         console.log("Map loaded");
 
         let defaultOpenSidebar = this.factory.config.getDefaultOpenSidebar();
-        
-        if (defaultOpenSidebar) {
-          const sidebarView = this.factory.registry('view/sidebar');
-          sidebarView.showSidebar();
-        }
+
+        // Trigger loading of the sidebar, the deps should all be in place now.
+        this.factory.getSidebarView(this.factory).then(sidebar => {
+          if (defaultOpenSidebar)
+            sidebar.showSidebar()
+        });
+
       },
       resize: (e) => {
         window.mykoMap.invalidateSize();

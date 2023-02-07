@@ -5,7 +5,6 @@ import { DataServices, DataServicesImpl } from "./app/model/dataservices";
 
 import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData, Config } from './app/model/config';
-import { makeRegistry, Registry } from './app/registries';
 import { MapPresenterFactory } from "./app/presenter/map";
 import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
@@ -79,38 +78,49 @@ export function parseUrlParameters(search: string): UrlParams {
 }
 
 
-// Create an initialised module registry.
+// Create and initialise the map view
 //
-// `config` should be a config object created using `model/config.js`
-export function initRegistry(config: Config): Registry {
-  const registry: Registry = makeRegistry();
+// `config` should be a config object created using `model/config.ts`
+// `dataServices` should be a DataServices object created using `model/dataservices.ts`
+// returns a MapView object.
+export function mkMapView(config: Config, dataServices: DataServices): MapView {
 
-  const dataServices =  new DataServicesImpl(config, functionalLabels);
+  
   const popup = config.getCustomPopup() || getPopup;
   const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
-  const mapPresenter =  new MapPresenterFactory(config, dataServices, markerViewFactory, registry);
-  const sidebarView = new SidebarView(
-    dataServices.getFunctionalLabels(),
+
+  // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
+  // when it runs, but SidebarView needs a link to the MapPresenterFactory.
+  // Maybe later the code can be untangled further so there is no loop.
+  const mkSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
+    return new Promise<SidebarView>((resolve) => {
+      const sidebarView = new SidebarView(
+        dataServices.getFunctionalLabels(),
+        config,
+        dataServices,
+        markerViewFactory,
+        mapPresenterFactory,
+        dataServices.getSidebarButtonColour()
+      );
+      resolve(sidebarView);
+    });
+  };
+
+  const mapPresenterFactory =  new MapPresenterFactory(
     config,
     dataServices,
     markerViewFactory,
-    mapPresenter,
-    dataServices.getSidebarButtonColour()
+    mkSidebarView
   );
   
-  registry.def('config', () => config);
-  registry.def('model/dataservices',  () => dataServices);
-
   const mapView = new MapView(
-    mapPresenter,
+    mapPresenterFactory,
     dataServices.getFunctionalLabels(),
     dataServices.getDialogueSize(),
     markerViewFactory
   );
-  registry.def('view/sidebar', () => sidebarView);  
-  registry.def('view', () => () => initView(config, mapView));
 
-  return registry;
+  return mapView;
 };
 
 
@@ -221,19 +231,15 @@ export function webRun(window: Window, base_config: ConfigData): void {
   // Override any config values with the url/attribute params 
   config.add(combined);
 
-  // Get the registry of modules. This manages module dependencies,
-  // and is a hang-over from when we used requireJS.
-  const registry = initRegistry(config);
+  const dataServices =  new DataServicesImpl(config, functionalLabels);
   
-  const initView = registry('view') as () => void;
-  const dataServices = registry('model/dataservices') as DataServices;
-
   // Expose the data for debugging
   /// @ts-ignore
   window.dataServices = dataServices
   
   // Each view will ensure that the code for its presenter is loaded.
-  initView();
+  const mapView = mkMapView(config, dataServices);
+  initView(config, mapView);
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();
