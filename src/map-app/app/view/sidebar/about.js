@@ -20,10 +20,6 @@ export class AboutSidebarView extends BaseSidebarView {
   title = "about";
   hasHistoryNavigation = false; // No forward/back buttons for this sidebar
 
-  static {
-    this.prototype.hasHistoryNavigation = false; // Is this belt and braces, belt above?
-  }
-
   constructor(parent, labels, config) {
     super();
     this.parent = parent;

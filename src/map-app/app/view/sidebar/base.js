@@ -6,19 +6,11 @@ const { BaseView } = require('../base');
 
 /// Base class of all sidebar views
 export class BaseSidebarView extends BaseView {
-  static {
-    // Add these properties to the prototype - thus shared by all
-    // derived classes. This is somewhat unorthodox, but is a closest
-    // translation from what was implemented before this was converted
-    // into a ES class.
-    
-    this.prototype.title = "Untitled";
+  // true by default - change this in derived sidebar view objects if necessary.
+  hasHistoryNavigation = true; 
+  hasCloseButton = true;
 
-    // true by default - change this in derived sidebar view objects if necessary.
-    this.prototype.hasHistoryNavigation = true; 
-
-    this.prototype.hasCloseButton = true;
-  }
+  title = "Untitled"
 
   constructor() {
     super();
