@@ -165,7 +165,7 @@ export class SidebarView extends BaseView {
       this.sidebar.directory = new DirectorySidebarView(this, this.labels, this.config, this.dataServices, this.markerView);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(this, this.labels, this.dataServices, this.mapPresenterFactory);
+      this.sidebar.initiatives = new InitiativesSidebarView(this, this.config, this.labels, this.dataServices, this.mapPresenterFactory);
 
     if(this.presenter.showingAbout())
       this.sidebar.about = new AboutSidebarView(this, this.labels, this.config);

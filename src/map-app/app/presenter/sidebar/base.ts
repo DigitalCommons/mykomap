@@ -1,17 +1,19 @@
+import { StackItem } from '../../../stack';
 import * as eventbus from '../../eventbus';
 import { base as BasePresenter }from '../../presenter';
-import { Stack } from '../../../stack';
+import { BaseSidebarView } from '../../view/sidebar/base';
+import { SidebarPresenter } from '../sidebar';
+import { SearchResults } from './searchresults';
 
 /// This class is a base for sidebar presenters.
 ///
 /// Weirdly, for historical reasons which are largely unknown
 /// at the point of writing this, it has only members on the *prototype*
 /// which all derivatives will share... See the static initializer.
-export class BaseSidebarPresenter extends BasePresenter {
+export class BaseSidebarPresenter<V extends BaseSidebarView> extends BasePresenter<V> {
 
-  constructor(parent) {
+  constructor(readonly parent: SidebarPresenter) {
     super();
-    this.parent = parent;
   }
 
   backButtonClicked() {
@@ -20,8 +22,9 @@ export class BaseSidebarPresenter extends BasePresenter {
       //console.log(this);
       const lastContent = this.parent.contentStack.current();
       const newContent = this.parent.contentStack.previous();
-      if (newContent == lastContent)
+      if (!newContent || newContent == lastContent)
         return;
+      
       // TODO: Think: maybe better to call a method on this that indicates thay
       //       the contentStack has been changed.
       //       Then it is up to the this to perform other actions related to this
@@ -32,7 +35,7 @@ export class BaseSidebarPresenter extends BasePresenter {
         topic: "Map.removeFilters",
       });
 
-      if(newContent.filters[0]){    
+      if(newContent instanceof SearchResults && newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
           let filterData = {
             filterName: filter.filterName,
@@ -64,7 +67,7 @@ export class BaseSidebarPresenter extends BasePresenter {
       if (newContent == lastContent)
         return;
       //this.view.refresh();
-      if(newContent){
+      if(newContent && newContent instanceof SearchResults){
         eventbus.publish({
           topic: "Map.removeFilters",
         });
@@ -99,9 +102,8 @@ export class BaseSidebarPresenter extends BasePresenter {
 
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
-  historyButtonsUsed(lastContent) {
-    
-    this.view.refresh();
+  historyButtonsUsed(lastContent?: StackItem) {    
+    this.view?.refresh();
   }
 
   deselectInitiatives(){

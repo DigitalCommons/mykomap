@@ -26,7 +26,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
 
   currentItemExists() {
     // returns true only if the contentStack is empty
-    return typeof this.parent.contentStack.current() !== "undefined";
+    return this.parent.contentStack.current() !== undefined;
   }
 
   getVerboseValuesForFields() {

@@ -1,6 +1,11 @@
+import { Initiative } from "./app/model/dataservices";
+
+export class StackItem {
+  constructor(readonly initiatives: Initiative[]) {}
+}
 
 // A general purpose stack class
-export class Stack<T> {
+export class Stack<T extends StackItem> {
   private index: number = 0;
   private storage: T[] = [];
 

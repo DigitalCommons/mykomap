@@ -4,7 +4,7 @@ const { lab } = require('d3');
 const d3 = require('d3');
 const eventbus = require('../../eventbus');
 const { BaseSidebarView } = require('./base');
-const { InitiativesPresenter } = require('../../presenter/sidebar/initiatives');
+const { InitiativesSidebarPresenter } = require('../../presenter/sidebar/initiatives');
 
 const sectionHeadingClasses =
   "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
@@ -17,14 +17,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	// And adds some overrides and new properties of it's own:
 	title = "Initiatives";
   
-  constructor(parent, labels, dataServices, mapPresenterFactory) {
+  constructor(parent, config, labels, dataServices, mapPresenterFactory) {
     super();
     this.parent = parent;
+    this.config = config;
     this.labels = labels;
     this.dataServices = dataServices;
     this.mapPresenterFactory = mapPresenterFactory;
 
-		this.setPresenter(new InitiativesPresenter(this, labels, mapPresenterFactory));
+		this.setPresenter(new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory));
   }
 
 	populateFixedSelection(selection) {
