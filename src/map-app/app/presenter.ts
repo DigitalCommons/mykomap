@@ -1,9 +1,6 @@
-"use strict";
-
-import { BaseView } from "./view/base";
 
 // 'Base class' for all presenters:
-export class BasePresenter<V extends BaseView> {
+export class BasePresenter<V> {
 
   constructor(public view?: V) {}
   

@@ -1,23 +1,21 @@
-"use strict";
-const d3 = require('d3')
+import * as d3 from 'd3';
 
+type d3Selection = d3.Selection<d3.BaseType, any, HTMLElement, any>;
+type d3DivSelection = d3.Selection<HTMLDivElement, any, HTMLElement, any>;
 
 // 'Base class' for all views:
 //
 // Prior to the conversion to an ES/TypeScript class, a note on this
 // class ssuggsted in future to use his base for the older view
 // objects - as they were created originally before this base existed.
-export class BaseView {
-  presenter = null;
-
-  constructor() {
-  }
+export class BaseView<P> {
+  constructor(public presenter?: P) {}
   
-  setPresenter(p) {
+  setPresenter(p: P) {
     this.presenter = p;
   }
 
-  d3selectAndClear(selector) {
+  d3selectAndClear(selector: string): d3Selection {
     // adds a log for failed selectors
     // Clears the innerHtml, ready for re-populating using .append()
     var selection = d3.select(selector);
@@ -28,7 +26,8 @@ export class BaseView {
     }
     return selection;
   }
-  htmlToOpenLinkInNewTab(url, text, options) {
+  
+  htmlToOpenLinkInNewTab(url: string, text: string, options?: { title: string }): string {
     const title = (options && options.title) || "Click to open in a new tab";
     return (
       '<a title="' +
@@ -40,15 +39,17 @@ export class BaseView {
       "</a>"
     );
   }
-  openInNewTabOrWindow(url) {
-    // BTW - you can open links from vim with gx :-)
-    // There's a discussion about this at https://stackoverflow.com/a/11384018/685715
+  
+  openInNewTabOrWindow(url: string): void {
     // TODO - do we need to check for popup-blockers?
     //        See https://stackoverflow.com/questions/2914/how-can-i-detect-if-a-browser-is-blocking-a-popup
-    const win = window.open(url, "_blank");
-    win.focus();
+    window.open(url, "_blank")?.focus();
   }
-  makeAccordionAtD3Selection(opts) {
+
+  makeAccordionAtD3Selection(opts: {selection: d3DivSelection,
+                                    heading: string, headingClasses: string,
+                                    makeContentAtD3Selection: (s: d3DivSelection) => void,
+                                    hideContent: true}) {
     // See example: https://www.w3schools.com/w3css/tryit.asp?filename=tryw3css_accordion_sidebar
     const accordion = opts.selection
                           .append("div")
@@ -60,7 +61,7 @@ export class BaseView {
     const contentWrapper = opts.selection
                                .append("div")
                                .classed(opts.hideContent ? "w3-hide" : "w3-show", true);
-    function setAccordionTitle(wrapper) {
+    function setAccordionTitle(wrapper: d3DivSelection) {
       accordion.attr(
         "title",
         "Click to " +
@@ -75,7 +76,7 @@ export class BaseView {
     opts.makeContentAtD3Selection(contentWrapper);
     
     // Manipulate the visibility of the content via the contentWrapper, when the accorion is clicked:
-    accordion.on("click", function(e) {
+    accordion.on("click", (_) => {
       //console.log("accordion clicked");
       //console.log(contentWrapper.attr('class'));
       if (contentWrapper.classed("w3-hide")) {
