@@ -10,12 +10,12 @@ import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
 import { SidebarView } from './app/view/sidebar';
 import { MapView } from "./app/view/map";
-import { initView } from './app/view.js';
+import { initView } from './app/view';
 
 /** Convert names-like-this into namesLikeThis
  */
 export function snakeToCamelCase(str: string): string {
-  return str.replace(/-([^-])/g, (m, p1) => p1.toUpperCase());
+  return str.replace(/-([^-])/g, (_, p1) => p1.toUpperCase());
 }
 
 /** Parse attributes from an element, convert snake-case names to camelCase

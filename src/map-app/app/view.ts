@@ -1,8 +1,9 @@
-"use strict";
-const d3 = require('d3');
-const mapAppStyles = require('../map-app.css');
+import * as d3 from 'd3';
+import '../map-app.css'; // Required to embed styles 
+import { Config } from './model/config';
+import { MapView } from './view/map';
 
-export function initView(config, mapView) {
+export function initView(config: Config, mapView: MapView): void {
   const lang = config.getLanguage();
   
   // We need to be careful to guard against weird characters, especially quotes,
