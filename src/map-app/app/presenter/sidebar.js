@@ -1,8 +1,6 @@
-"use strict";
-const eventbus = require('../eventbus');
-const presenter = require('../presenter');
-const { BaseSidebarPresenter } = require('./sidebar/base');
-const { Stack } = require('../../stack');
+import * as eventbus from '../eventbus';
+import { BaseSidebarPresenter } from './sidebar/base';
+import { Stack } from '../../stack';
 
 export class SidebarPresenter extends BaseSidebarPresenter {
   constructor(view, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {

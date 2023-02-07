@@ -1,6 +1,6 @@
 import { StackItem } from '../../../stack';
 import * as eventbus from '../../eventbus';
-import { base as BasePresenter }from '../../presenter';
+import { BasePresenter }from '../../presenter';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { SearchResults } from './searchresults';

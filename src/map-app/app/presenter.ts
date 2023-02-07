@@ -3,7 +3,7 @@
 import { BaseView } from "./view/base";
 
 // 'Base class' for all presenters:
-export class base<V extends BaseView> {
+export class BasePresenter<V extends BaseView> {
 
   constructor(public view?: V) {}
   

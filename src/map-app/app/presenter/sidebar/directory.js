@@ -1,6 +1,6 @@
 "use strict";
-const eventbus = require('../../eventbus');
-const { BaseSidebarPresenter } = require('./base');
+import * as eventbus from '../../eventbus';
+import {  BaseSidebarPresenter  } from './base';
 
 function arrayMax(array) {
   return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));

@@ -1,6 +1,6 @@
 "use strict";
-const eventbus = require('../../eventbus');
-const { BaseSidebarPresenter } = require('./base');
+import * as eventbus from '../../eventbus';
+import {  BaseSidebarPresenter  } from './base';
 
 export class DatasetsPresenter extends BaseSidebarPresenter {
   mixedId = "all";

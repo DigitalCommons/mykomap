@@ -1,6 +1,6 @@
 "use strict";
 import * as eventbus from '../../eventbus';
-import { base as BasePresenter } from '../../presenter';
+import { BasePresenter } from '../../presenter';
 import { BaseSidebarPresenter } from '../sidebar/base';
 
 export class MapMarkerPresenter extends BasePresenter {

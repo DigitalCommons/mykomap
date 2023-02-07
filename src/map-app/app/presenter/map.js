@@ -1,5 +1,5 @@
-import { base as BasePresenter } from '../presenter';
-const eventbus = require('../eventbus');
+import { BasePresenter } from '../presenter';
+import * as eventbus from '../eventbus';
 
 export class MapPresenterFactory {
   

@@ -1,4 +1,4 @@
-const { BaseSidebarPresenter } = require('./base');
+import {  BaseSidebarPresenter  } from './base';
 
 export class AboutPresenter extends BaseSidebarPresenter {
   constructor(view) {
