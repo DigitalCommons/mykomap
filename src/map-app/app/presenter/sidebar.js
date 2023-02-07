@@ -2,11 +2,14 @@
 const eventbus = require('../eventbus');
 const presenter = require('../presenter');
 const { BaseSidebarPresenter } = require('./sidebar/base');
+const { Stack } = require('../../stack');
 
 export class SidebarPresenter extends BaseSidebarPresenter {
   constructor(view, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {
     super();
     this.registerView(view);
+    this.contentStack = new Stack();
+    this.sidebarWidth = 0;
     this.showDirectoryPanel = showDirectoryPanel;
     this.showSearchPanel = showSearchPanel;
     this.showAboutPanel = showAboutPanel;
@@ -104,7 +107,7 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     eventbus.subscribe({
       topic: "Sidebar.updateSidebarWidth",
       callback: (data) => {
-        BaseSidebarPresenter.updateSidebarWidth(data);
+        this.updateSidebarWidth(data);
       }
     });
 
@@ -130,6 +133,31 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     // });
   }
 
+  updateSidebarWidth(data) {
+    const directoryBounds = data.directoryBounds,
+          initiativeListBounds = data.initiativeListBounds;
+    this.sidebarWidth =
+      directoryBounds.x -
+      window.mykoMap.getContainer().getBoundingClientRect().x +
+      directoryBounds.width +
+        (initiativeListBounds.x -
+         window.mykoMap.getContainer().getBoundingClientRect().x >
+          0
+          ? initiativeListBounds.width
+          : 0);
+    
+    eventbus.publish({
+      topic: "Map.setActiveArea",
+      data: {
+        offset: this.sidebarWidth
+      }
+    });
+  }
+  
+  getSidebarWidth() {
+    return this.sidebarWidth;
+  }
+  
 }
 
-  
+

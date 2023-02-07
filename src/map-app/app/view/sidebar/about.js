@@ -24,8 +24,9 @@ export class AboutSidebarView extends BaseSidebarView {
     this.prototype.hasHistoryNavigation = false; // Is this belt and braces, belt above?
   }
 
-  constructor(labels, config) {
+  constructor(parent, labels, config) {
     super();
+    this.parent = parent;
     this.labels = labels;
     this.config = config;
     this.setPresenter(new AboutPresenter(this));

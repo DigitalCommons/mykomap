@@ -10,6 +10,7 @@ export class DatasetsPresenter extends BaseSidebarPresenter {
     super();
     this.registerView(view);
     this.dataServices = dataServices;
+    this.parent = view.parent.presenter;
   }
   
   getDatasets() {

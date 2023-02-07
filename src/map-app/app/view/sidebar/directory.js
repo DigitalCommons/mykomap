@@ -18,8 +18,9 @@ export class DirectorySidebarView extends BaseSidebarView {
   hasHistoryNavigation = false;
   dissapear;
 
-  constructor(labels, config, dataServices, markerView) {
+  constructor(parent, labels, config, dataServices, markerView) {
     super();
+    this.parent = parent;
     this.labels = labels;
     this.title = labels.directory;
 
@@ -349,8 +350,8 @@ export class DirectorySidebarView extends BaseSidebarView {
       let activeClass = "";
       let nongeoClass = "";
       if (
-        this.presenter.contentStack.current() &&
-        this.presenter.contentStack.current().initiatives[0] === initiative
+        this.presenter.parent.contentStack.current() &&
+        this.presenter.parent.contentStack.current().initiatives[0] === initiative
       ) {
         activeClass = "sea-initiative-active";
       }

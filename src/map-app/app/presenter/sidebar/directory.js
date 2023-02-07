@@ -13,6 +13,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
 
   constructor(view, config, dataServices, markerView) {
     super();
+    this.parent = view.parent.presenter;
     this.config = config;
     this.dataServices = dataServices;
     this.markerView = markerView;
@@ -20,12 +21,12 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
   }
 
   currentItem() {
-    return this.contentStack.current();
+    return this.parent.contentStack.current();
   }
 
   currentItemExists() {
     // returns true only if the contentStack is empty
-    return typeof this.contentStack.current() !== "undefined";
+    return typeof this.parent.contentStack.current() !== "undefined";
   }
 
   getVerboseValuesForFields() {
@@ -192,7 +193,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
 
   initiativeClicked(initiative) {
     if (initiative) {
-      //this.contentStack.append(new StackItem([initiative]));
+      //this.parent.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
       this.notifyMapNeedsToNeedsToSelectInitiative([initiative]);
 

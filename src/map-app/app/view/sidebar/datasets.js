@@ -21,10 +21,10 @@ export class DatasetsSidebarView extends BaseSidebarView {
   title = "datasets";
   hasHistoryNavigation = false; // No forward/back buttons for this sidebar
   
-  constructor(labels, dataServices) {
+  constructor(parent, labels, dataServices) {
     super();
     this.labels = labels;
-
+    this.parent = parent;
     this.setPresenter(new DatasetsPresenter(this, dataServices));
   }
 

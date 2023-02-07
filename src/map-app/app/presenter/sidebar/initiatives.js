@@ -103,6 +103,7 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
   
   constructor(view, labels, map) {
     super();
+    this.parent = view.parent.presenter;
     // a lookup for labels of buttons and titles
     this.labels = labels;
     // a MapPresenterFactory
@@ -111,17 +112,17 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
   }
 
   currentItem () {
-    return this.contentStack.current();
+    return this.parent.contentStack.current();
   }
 
   currentItemExists() {
     // returns true only if the contentStack is empty
-    return typeof (this.contentStack.current() !== "undefined" || this.contentStack.current() != null);
+    return typeof (this.parent.contentStack.current() !== "undefined" || this.parent.contentStack.current() != null);
   }
   
   notifyMarkersNeedToShowNewSelection(lastContent, newContent = null) {
     if (!newContent) {
-      newContent = this.contentStack.current().initiatives
+      newContent = this.parent.contentStack.current().initiatives
     }
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
@@ -132,7 +133,7 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned(sidebarWidth) {
-    const initiatives = this.contentStack.current().initiatives;
+    const initiatives = this.parent.contentStack.current().initiatives;
     sidebarWidth = sidebarWidth || 0;
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
@@ -294,7 +295,7 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
     }
 
     //filter
-    this.contentStack.append(new SearchResults(data.results, data.text, this.map.getFiltersVerbose(), this.map.getFilters(), this.labels));
+    this.parent.contentStack.append(new SearchResults(data.results, data.text, this.map.getFiltersVerbose(), this.map.getFilters(), this.labels));
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them 
@@ -341,8 +342,8 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
     console.log(data)
 
     const initiative = data.initiative;
-    //this.contentStack.append(new StackItem([initiative]));
-    //console.log(this.contentStack.current());
+    //this.parent.contentStack.append(new StackItem([initiative]));
+    //console.log(this.parent.contentStack.current());
 
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
     this.view.refresh();
@@ -363,8 +364,8 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
   onMarkerSelectionSet(data) {
     const initiative = data;
     //console.log(initiative);
-    const lastContent = this.contentStack.current();
-    //this.contentStack.append(new StackItem([initiative]));
+    const lastContent = this.parent.contentStack.current();
+    //this.parent.contentStack.append(new StackItem([initiative]));
     this.notifyMarkersNeedToShowNewSelection(lastContent);
     // this.notifySidebarNeedsToShowInitiatives();
     this.view.refresh();
@@ -372,7 +373,7 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
 
   onMarkerSelectionToggled(data) {
     const initiative = data;
-    const lastContent = this.contentStack.current();
+    const lastContent = this.parent.contentStack.current();
     // Make a clone of the current initiatives:
     const initiatives =
       typeof lastContent != "undefined" ? lastContent.initiatives.slice(0) : [];
@@ -390,7 +391,7 @@ export class InitiativesPresenter extends BaseSidebarPresenter {
 
   onSearchHistory() {
     const that = this;
-    this.contentStack.gotoEnd();
+    this.parent.contentStack.gotoEnd();
     eventbus.publish({
       topic: "Map.removeSearchFilter",
       data: {}

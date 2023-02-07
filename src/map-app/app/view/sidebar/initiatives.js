@@ -17,8 +17,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	// And adds some overrides and new properties of it's own:
 	title = "Initiatives";
   
-  constructor(labels, dataServices, mapPresenterFactory) {
+  constructor(parent, labels, dataServices, mapPresenterFactory) {
     super();
+    this.parent = parent;
     this.labels = labels;
     this.dataServices = dataServices;
     this.mapPresenterFactory = mapPresenterFactory;

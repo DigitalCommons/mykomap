@@ -162,16 +162,16 @@ export class SidebarView extends BaseView {
     this.sidebar = {};
 
     if(this.presenter.showingDirectory())
-      this.sidebar.directory = new DirectorySidebarView(this.labels, this.config, this.dataServices, this.markerView);
+      this.sidebar.directory = new DirectorySidebarView(this, this.labels, this.config, this.dataServices, this.markerView);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(this.labels, this.dataServices, this.mapPresenterFactory);
+      this.sidebar.initiatives = new InitiativesSidebarView(this, this.labels, this.dataServices, this.mapPresenterFactory);
 
     if(this.presenter.showingAbout())
-      this.sidebar.about = new AboutSidebarView(this.labels, this.config);
+      this.sidebar.about = new AboutSidebarView(this, this.labels, this.config);
     
     if(this.presenter.showingDatasets())
-      this.sidebar.datasets = new DatasetsSidebarView(this.labels, this.dataServices);
+      this.sidebar.datasets = new DatasetsSidebarView(this, this.labels, this.dataServices);
   }
 
   // Changes or refreshes the sidebar
