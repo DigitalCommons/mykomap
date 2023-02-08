@@ -640,19 +640,30 @@ export class DataServicesImpl implements DataServices {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
-    const vocabFilteredFields = this.aggregatedData.vocabFilteredFields;
+    // Need to call this method to ensure the result is computed
+    const vocabFilteredFields = this.getVocabPropDefs(); 
+    
+    // Check that all the filterable fields are also vocab fields -
+    // Something is wrong if not.
+    const badFields = this.config.getFilterableFields()
+      .filter(name => !vocabFilteredFields[name]);
+    if (badFields.length > 0) {
+      throw new Error(
+        `Filterable fields config must not include `+
+          `the non-vocab fields: ${badFields.join(", ")}`
+      );
+    }
 
     filteredInitiatives.forEach(initiative => {
-      for (const vocabID in vocabFilteredFields) {
-        const vff = vocabFilteredFields[vocabID]
-        if (!vff)
-          continue;
-        let termIdentifier = initiative[vff];
-
-        if (!possibleFilterValues.includes(termIdentifier))
-          possibleFilterValues.push(termIdentifier);
+      for(const name in this.config.getFilterableFields()) {    
+        
+        let id = initiative[name];
+          
+        // Add the value if it isn't there
+        if (!possibleFilterValues.includes(id))
+          possibleFilterValues.push(id);
       }
-    })
+    });
 
     return possibleFilterValues;
   }
