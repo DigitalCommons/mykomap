@@ -10,21 +10,12 @@ import { PropDefIndex } from "./propdefindex";
 // they may not be unique!)
 export class PropertyIndexer {
  
-  
   constructor(
     /// An index of property titles to property values to lists of
     /// initiatives with that property value. Expected to begin empty,
     /// will be constructed.
     readonly byTitleThenValue: Dictionary<Dictionary<Initiative[]>>,
     
-    /// An index of vocab URIs (of those propNames which are
-    /// vocabs) to the referencing property ID (from the
-    /// propNames). Expected to begin empty, will be constructed.
-    ///
-    /// FIXME is this not going to be losing information when
-    /// propNames have two items with the same vocab?
-    readonly propIdByVocabUri: Dictionary,
-
     /// Identifiers of the properties to index
     private readonly propNames: string[],
 
@@ -34,39 +25,7 @@ export class PropertyIndexer {
     /// A vocab lookup (for naming vocab properties)
     private readonly getVocab: VocabLookup
   ) {
-    // Helper function
-    const indexVocab = (uri: string, propName: string) => {
-      if (uri in this.propIdByVocabUri)
-        // Warn about clobbering one property with another, when they share vocabs.
-        throw new Error(
-          `indexed property ${propName} uses vocab ${uri}, but so does `+
-            `${this.propIdByVocabUri[uri]} - indexing properties with `+
-            `the same vocab not currently supported!`);
-      this.propIdByVocabUri[uri] = propName;
-    }
-
-    // Sanity checks:
-    propNames.forEach(name => {
-      // Ensure the propNames exist in propDefs
-      const def = propDefs.getDef(name);
-
-      // Populate propIdByVocabUri
-      switch(def.type) {
-        case 'vocab':
-          indexVocab(def.uri, name);
-          break;
-          
-        case 'multi':
-          // Go down one level - we assume no multis of multis!
-          if (def.of.type === 'vocab')
-            indexVocab(def.of.uri, name);
-          break;
-          
-        default:
-          break;
-      }
-    });
-
+    // Sanity checks here ... ?
     // We can't check that vocabs involved are in fact defined.
     // We just have to wait and see if getVocab explodes.
   }

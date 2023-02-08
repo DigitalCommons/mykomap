@@ -37,10 +37,6 @@ export class AggregatedData {
   /// An list of all initiatives
   readonly loadedInitiatives: Initiative[] = [];
 
-  // An index of vocab URIs (of those filterableFields which are vocabs) to the referencing property ID (from the filterableFields)
-  // FIXME is this not going to be losing information when filterableFields have two items with the same vocab?
-  readonly vocabFilteredFields: Dictionary = {};
-  
   // Searches loadedInitiatives for objects whose searchstr fields include the search text
   //
   // @return a list sorted by the name field.

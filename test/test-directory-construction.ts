@@ -120,7 +120,6 @@ describe('Directory generation', () => {
   
   const propIndexer = new PropertyIndexer(
     titleValInitiative,
-    idVocab,
     propNames,
     propDefIndex,
     getVocab
@@ -174,12 +173,6 @@ describe('Directory generation', () => {
     expect(propIndexer.byTitleThenValue['Letters']?.['l:b'])
       .to.have.all.members([items.bar, items.baz, items.bob]);
 
-    // Second - propIdByVocabUri. This should be a dictionary mapping
-    // vocab URIs to properties which use it. FIXME This mechanism can't handle dupe vocabs!
-    expect(propIndexer.propIdByVocabUri).to.deep.equal({
-      'http://vocab.com/vowels/': 'vowels',
-      'http://vocab.com/letters/': 'initial',
-    })
   });
 });
 
@@ -188,10 +181,9 @@ describe('Directory generation', () => {
    - allow alternative vocab titles ((so if the vocab is http://vocab.com/letters/, 
      we could display the vocab as "Initial" instead of "Letters")
 
-   - allow two properties to use the same vocab (without mutual clobbering in propIdByVocabUri)
-
-   - ditto, but use different titles (so if the vocab is http://vocab.com/letters/, one
-     is, say "First Letter" and the other is "Letters")
+   - allow two properties to use the same vocab, using different
+     titles (so if the vocab is http://vocab.com/letters/, one is, say
+     "First Letter" and the other is "Letters")
 */
 
 

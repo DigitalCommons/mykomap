@@ -646,12 +646,12 @@ export class DataServicesImpl implements DataServices {
     let possibleFilterValues: string[] = [];
 
     // Need to call this method to ensure the result is computed
-    const vocabFilteredFields = this.getVocabPropDefs(); 
+    const vocabProps = this.getVocabPropDefs(); 
     
     // Check that all the filterable fields are also vocab fields -
     // Something is wrong if not.
     const badFields = this.config.getFilterableFields()
-      .filter(name => !vocabFilteredFields[name]);
+      .filter(name => !vocabProps[name]);
     if (badFields.length > 0) {
       throw new Error(
         `Filterable fields config must not include `+
