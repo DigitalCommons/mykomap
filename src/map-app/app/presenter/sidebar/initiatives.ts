@@ -84,6 +84,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter<Initiative
   }
 
   constructor(view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapPresenterFactory) {
+    if (!view.parent?.presenter)
+      throw new Error(`Can't construct an instance with a parent view which has no presenter`);
     super(view.parent.presenter);
     this.config = config;
     this.dataServices = dataServices;
