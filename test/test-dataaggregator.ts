@@ -4,14 +4,15 @@ import { expect } from 'chai';
 import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
 import { Config } from '../src/map-app/app/model/config';
 import {
-  PropDefs,
   Initiative,
   InitiativeObj,
-  DataServices,
-  basePropertySchema
 } from '../src/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl, SparqlVocabResponse } from '../src/map-app/app/model/vocabs';
+import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 import { Dictionary } from '../src/map-app/common_types';
+import {
+  sparqlVocabResponse1 as vocabIndex,
+  propertySchema1 as propertySchema
+} from './data';
 
 // Makes a dummy InitiativeObj
 function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string[]): InitiativeObj {
@@ -40,124 +41,8 @@ const config = new Config({
   filterableFields: ['orgStructure', 'primaryActivity'],
 });
 
-// The Vocabs (just has a couple of kinds)
-const vocabIndex: SparqlVocabResponse = {
-  "prefixes": {
-    "https://example.com/organisational-structure/": "os",
-    "https://example.com/economic-activity/": "ea"
-  },
-  "meta": {
-    "vocab_srcs": [
-      {
-        "endpoint": "http://example.com:8890/sparql",
-        "defaultGraphUri": "https://dev.lod.coop/coops-uk",
-        "uris": {
-          "https://example.com/economic-activity/": "ea",
-          "https://example.com/organisational-structure/": "os"
-        }
-      }
-    ],
-    "languages": [
-      "EN"
-    ],
-    "queries": [
-      "dummy query",
-    ]
-  },
-  "vocabs": {
-    "os:": {
-      "EN": {
-        "title": "OrgStruct",
-        "terms": {
-          "os:OS10": "Community group (formal or informal)",
-          "os:OS100": "Multi-stakeholder cooperative",
-          "os:OS110": "Secondary cooperative",
-          "os:OS115": "Cooperative",
-          "os:OS120": "Community Interest Company (CIC)",
-          "os:OS130": "Community Benefit Society / Industrial and Provident Society (IPS)",
-          "os:OS140": "Employee trust",
-          "os:OS150": "Self-employed",
-          "os:OS160": "Unincorporated",
-          "os:OS170": "Mutual",
-          "os:OS180": "National apex",
-          "os:OS190": "National sectoral federation or union",
-          "os:OS20": "Not-for-profit organisation",
-          "os:OS200": "Regional, state or provincial level federation or union",
-          "os:OS210": "Cooperative group",
-          "os:OS220": "Government agency/body",
-          "os:OS230": "Supranational",
-          "os:OS240": "Cooperative of cooperatives / mutuals",
-          "os:OS30": "Social enterprise",
-          "os:OS40": "Charity",
-          "os:OS50": "Company (Other)",
-          "os:OS60": "Workers cooperative",
-          "os:OS70": "Housing cooperative",
-          "os:OS80": "Consumer/User coops",
-          "os:OS90": "Producer cooperative"
-        }
-      },
-    },
-    "ea:": {
-      "EN": {
-        "title": "EcAc",
-        "terms": {
-          "ec:EC10": "Agriculture",
-          "ec:EC100": "Mining",
-          "ec:EC110": "Professional",
-          "ec:EC120": "Service",
-          "ec:EC130": "Tourism",
-          "ec:EC140": "Financial Services",
-          "ec:EC150": "Insurance",
-          "ec:EC160": "Education",
-          "ec:EC170": "Health",
-          "ec:EC180": "Community",
-          "ec:EC190": "Social",
-          "ec:EC20": "Dairy",
-          "ec:EC200": "Social Service",
-          "ec:EC210": "Housing",
-          "ec:EC220": "Transport",
-          "ec:EC230": "Utilities",
-          "ec:EC240": "Retail",
-          "ec:EC250": "Production",
-          "ec:EC260": "Wholesale and retail trade",
-          "ec:EC270": "Education / health / social work",
-          "ec:EC280": "Other Services",
-          "ec:EC290": "All (Services)",
-          "ec:EC30": "Forestry",
-          "ec:EC40": "Irrigation",
-          "ec:EC50": "Fishing",
-          "ec:EC60": "Artisans",
-          "ec:EC70": "Construction",
-          "ec:EC80": "Industry",
-          "ec:EC90": "Manufacturing"
-         }
-      },
-    },
-  }
-};
 // A vocab service
 const vocabs = new VocabServiceImpl(vocabIndex, 'EN');
-
-// The property schema for the data
-const propertySchema: PropDefs = {
-  ... basePropertySchema, // common fields
-  primaryActivity: {
-    type: 'vocab',
-    uri: 'ea:',
-  },
-  secondaryActivities: {
-    type: 'multi',
-    of: {
-      type: 'vocab',
-      uri: 'ea:',
-    },
-  },
-  orgStructure: {
-    type: 'vocab',
-    uri: 'os:',
-    from: 'regorg',
-  },
-};
 
 // A set of dummy localisation labels to keep the aggregator happy
 const labels = {};
