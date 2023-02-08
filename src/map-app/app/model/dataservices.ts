@@ -294,7 +294,8 @@ export interface DataServices {
 
   //// non-proxies
 
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[];
+  /// Returns a list of property values matching the given filter
+  getAlternatePossibleFilterValues(filters: Filter[], field: string): unknown[];
 
   // Get the current dataset, or true
   //
@@ -542,7 +543,7 @@ export class DataServicesImpl implements DataServices {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[] {
+  getAlternatePossibleFilterValues(filters: Filter[], field: string): unknown[] {
     //construct an array of the filters that aren't the one matching the field
     let otherFilters: Filter[] = [];
     filters.forEach(filter => {
@@ -563,7 +564,7 @@ export class DataServicesImpl implements DataServices {
     });
 
     //find the initiative variable associated with the field
-    const alternatePossibleFilterValues: Initiative[] = [];
+    const alternatePossibleFilterValues: unknown[] = [];
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
     if (vocabID) {
       const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
