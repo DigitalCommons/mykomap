@@ -1,10 +1,14 @@
 // The view aspects of the Main Menu sidebar
-"use strict";
-const { lab } = require('d3');
-const d3 = require('d3');
-const eventbus = require('../../eventbus');
-const { BaseSidebarView } = require('./base');
-const { InitiativesSidebarPresenter } = require('../../presenter/sidebar/initiatives');
+import * as d3 from 'd3';
+import * as eventbus from '../../eventbus';
+import {  BaseSidebarView  } from './base';
+import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
+import { MapPresenterFactory } from '../../presenter/map';
+import { DataServices, Initiative } from '../../model/dataservices';
+import { Dictionary } from '../../../common_types';
+import { Config } from '../../model/config';
+import { SidebarView } from '../sidebar';
+import type { d3Selection, d3DivSelection } from '../d3-utils';
 
 const sectionHeadingClasses =
   "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
@@ -17,37 +21,29 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	// And adds some overrides and new properties of it's own:
 	title = "Initiatives";
   
-  constructor(parent, config, labels, dataServices, mapPresenterFactory) {
+  constructor(readonly parent: SidebarView,
+              readonly config: Config,
+              readonly labels: Dictionary,
+              readonly dataServices: DataServices,
+              readonly mapPresenterFactory: MapPresenterFactory) {
     super();
-    this.parent = parent;
-    this.config = config;
-    this.labels = labels;
-    this.dataServices = dataServices;
-    this.mapPresenterFactory = mapPresenterFactory;
 
 		this.setPresenter(new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory));
   }
 
-	populateFixedSelection(selection) {
+	populateFixedSelection(selection: d3Selection) {
 		const container = selection
 			.append("div")
 			.attr("class", "w3-container");
 		container
 			.append("h1")
-			.text(this.labels.search);
+			.text(this.labels?.search ?? '');
 
 		this.createSearchBox(container);
 
 		let textContent = ""; // default content, if no initiatives to show
 		if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
 			const item = this.presenter.currentItem();
-			const initiatives = item.initiatives;
-			// if (initiatives.length === 1) {
-			//   //textContent = initiatives[0].name;
-			//   textContent = "Search: " + item.searchString;
-			// } else if (item.isSearchResults()) {
-			//   textContent = "Search: " + item.searchString;
-			// }
 			textContent = this.labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
@@ -71,12 +67,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 		const terms = this.dataServices.getTerms();
 
-		this.createAdvancedSearch(advancedSearchContainer, terms, this.presenter);
-
+		this.createAdvancedSearch(advancedSearchContainer, terms);
 	}
 
-
-	geekZoneContentAtD3Selection(selection, initiative) {
+	geekZoneContentAtD3Selection(selection: d3DivSelection, initiative: Initiative) {
 		const s = selection.append("div").attr("class", "w3-bar-block");
 		if (initiative.lat) {
 			s.append("div")
@@ -93,7 +87,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("class", sectionClasses + hoverColour)
 				.text("Detailed data for this initiative")
 				.style("cursor", "pointer")
-				.on("click", (e) => {
+				.on("click", () => {
 					this.openInNewTabOrWindow(initiative.uri);
 				});
 		}
@@ -102,7 +96,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("class", sectionClasses + hoverColour)
 				.text("Ordnance Survey postcode information")
 				.style("cursor", "pointer")
-				.on("click", (e) => {
+				.on("click", () => {
 					this.openInNewTabOrWindow(initiative.within);
 				});
 		}
@@ -110,7 +104,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			const serviceToDisplaySimilarCompanies =
 				document.location.origin +
 				document.location.pathname +
-				config.getServicesPath() +
+				this.config.getServicesPath() +
 				"display_similar_companies/main.php";
 			const serviceToDisplaySimilarCompaniesURL =
 				serviceToDisplaySimilarCompanies +
@@ -121,12 +115,13 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("title", "A tech demo of federated Linked Open Data queries!")
 				.text("Display similar companies nearby using Companies House data")
 				.style("cursor", "pointer")
-				.on("click", (e) => {
+				.on("click", () => {
 					this.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
 				});
 		}
 	}
-	populateSelectionWithOneInitiative(selection, initiative) {
+  
+	populateSelectionWithOneInitiative(selection: d3Selection, initiative: Initiative) {
 		const s = selection.append("div").attr("class", "w3-bar-block");
 		if (initiative.www) {
 			s.append("div")
@@ -136,7 +131,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("class", sectionClasses + hoverColour)
 				.text(initiative.www)
 				.style("cursor", "pointer")
-				.on("click", (e) => {
+				.on("click", () => {
 					this.openInNewTabOrWindow(initiative.www);
 				});
 		}
@@ -146,19 +141,20 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		s.append("div")
 			.attr("class", sectionClasses)
 			.text(initiative.desc || "No description available");
+    
 		// Make an accordion for opening up the geek zone
 		this.makeAccordionAtD3Selection({
 			selection: s,
 			heading: "Geek zone",
 			headingClasses: accordionClasses,
-			makeContentAtD3Selection: (contentD3Selection) => {
+			makeContentAtD3Selection: (contentD3Selection: d3DivSelection) => {
 				this.geekZoneContentAtD3Selection(contentD3Selection, initiative);
 			},
 			hideContent: true
 		});
 	}
 
-	onInitiativeClicked(id) {
+	onInitiativeClicked(id: string) {
 		d3.select(".sea-search-initiative-active")
 			.classed("sea-search-initiative-active", false);
 
@@ -170,10 +166,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	populateSelectionWithListOfInitiatives(
-		selection,
-		initiatives
+		selection: d3Selection,
+		initiatives: Initiative[]
 	) {
-		const pres = this.presenter;
 		initiatives.forEach((initiative) => {
 			let initiativeClass = "w3-bar-item w3-button w3-mobile srch-initiative";
 
@@ -188,30 +183,19 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("title", "Click to see details here and on map")
 				// TODO - shift-click should remove initiative from selection,
 				//        just like shift-clicking a marker.
-				.on("click", function (e) {
-
-					pres.initClicked(initiative);
-				})
-				.on("mouseover", function (e) {
-					pres.onInitiativeMouseoverInSidebar(initiative);
-				})
-				.on("mouseout", function (e) {
-					pres.onInitiativeMouseoutInSidebar(initiative);
-				})
+				.on("click", () => this.presenter.initClicked(initiative))
+				.on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative) )
+				.on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative) )
 				.text(initiative.name);
 		});
 	}
 
-	changeSearchText(txt) {
-
+	changeSearchText(txt: string) {
 		d3.select("#search-box").property("value", txt);
-
 	}
 
-	createSearchBox(selection) {
-		var view = this;
-
-		selection = selection
+	createSearchBox(selection: d3DivSelection) {
+		const selection2 = selection
 			.append("form")
 			.attr("id", "map-app-search-form")
 			.attr(
@@ -224,12 +208,11 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				//event.stopPropagation();
 
 				var searchText = d3.select("#search-box").property("value");
-
-				view.presenter.performSearch(searchText);
+				this.presenter.performSearch(searchText);
 			})
 			.append("div")
 			.attr("class", "w3-border-0");
-		selection
+		selection2
 			.append("div")
 			.attr("class", "w3-col")
 			.attr("title", "Click to search")
@@ -239,48 +222,53 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.attr("class", "w3-btn w3-border-0")
 			.append("i")
 			.attr("class", "w3-xlarge fa fa-search");
-		selection
+		selection2
 			.append("div")
 			.attr("class", "w3-rest")
 			.append("input")
 			.attr("id", "search-box")
 			.attr("class", "w3-input w3-border-0 w3-round w3-mobile")
 			.attr("type", "search")
-			.attr("placeholder", this.labels.searchInitiatives)
+			.attr("placeholder", this.labels?.searchInitiatives ?? '')
 			.attr("autocomplete", "off");
 
-		document.getElementById("search-box").focus();
-
+		document.getElementById("search-box")?.focus();
 	}
 
-	createAdvancedSearch(container, values, presenter) {
+	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
 		const currentFilters = this.mapPresenterFactory.getFilters();
-		const item = presenter.currentItem();
+		const item = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
-		const changeFilter = (event) => {
+		const changeFilter = (event: Event) => {
+      if (!event.target)
+        return;
+      const target = event.target; // Need some guarding here
+      if (!(target instanceof HTMLSelectElement))
+        return;
 			//create the filter from the event of selecting the option
-			const filterCategoryName = event.target.id.split("-dropdown")[0];
-			const filterValue = event.target.value;
-			const filterValueText = event.target.selectedOptions[0].text;
-			presenter.changeFilters(filterCategoryName, filterValue, filterValueText);
+			const filterCategoryName = target.id.split("-dropdown")[0];
+			const filterValue = target.value;
+			const filterValueText = target.selectedOptions[0].text;
+
+			this.presenter.changeFilters(filterCategoryName, filterValue, filterValueText);
 
 			//repeat the last search after changing the filter
 			//if there is no last search, or the last search is empty, do a special search
 			if (!item)
-				presenter.performSearchNoText();
+				this.presenter.performSearchNoText();
 			else
 				if (item.searchedFor == "")
-					presenter.performSearchNoText();
+					this.presenter.performSearchNoText();
 				else
-					presenter.performSearch(item.searchedFor);
+					this.presenter.performSearch(item.searchedFor);
 		}
 
 		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
 		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull().map(filter =>
 			filter.verboseName.split(":")[0]);
 
-		for (const field in values) {
+		for (const field in vocabDict) {
 			container
 				.append("p")
 				.attr("id", field + "dropdown-label")
@@ -300,12 +288,16 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("value", "any")
 				.attr("class", "advanced-option")
 
-			const entryArray = Object.entries(values[field]);
+      const vocabTerms = vocabDict[field]
+      if (!vocabTerms)
+        continue;
+      
+			const entryArray = Object.entries(vocabTerms);
 			// Sort entries alphabetically by value (the human-readable labels)
 			entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 
 			//find alternative possible filters for an active filter
-			let alternatePossibleFilterValues;
+			let alternatePossibleFilterValues: unknown[] = [];
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
 				alternatePossibleFilterValues = this.dataServices.getAlternatePossibleFilterValues(
 					this.mapPresenterFactory.getFiltersFull(), field);
@@ -314,7 +306,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				const [id, label] = entry;
 				const option = dropDown
 					.append("option")
-					.text(label)
+					.text(label ?? '')
 					.attr("value", id)
 					.attr("class", "advanced-option")
 
@@ -336,8 +328,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 	}
 
-	populateScrollableSelection(selection) {
-		var noFilterTxt = this.labels.whenSearch;
+	populateScrollableSelection(selection: d3Selection) {
+		var noFilterTxt = this.labels?.whenSearch ?? '';
 		var freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
@@ -350,7 +342,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(this.labels.clearFilters)
+					.text(this.labels?.clearFilters ?? '')
 					.on("click", () => {
 						//redo search
 						this.presenter.removeFilters();
@@ -371,11 +363,11 @@ export class InitiativesSidebarView extends BaseSidebarView {
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
-							.text(this.labels.nothingMatched);
+							.text(this.labels?.nothingMatched ?? '');
 					}
 					break;
 				case 1:
-					//this.populateSelectionWithOneInitiative(selection, initiatives[0]);
+					//this.populateSelectionWithO neInitiative(selection, initiatives[0]);
 					this.populateSelectionWithListOfInitiatives(selection, initiatives);
 					break;
 				default:
@@ -400,7 +392,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(this.labels.clearFilters)
+					.text(this.labels?.clearFilters ?? '')
 					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
 						this.presenter.removeFilters();
@@ -411,8 +403,5 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			}
 		}
 
-	}
-	getWindowHeight() {
-		return d3.select("window").node().innerHeight;
 	}
 }
