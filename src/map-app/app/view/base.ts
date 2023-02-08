@@ -1,7 +1,5 @@
 import * as d3 from 'd3';
-
-type d3Selection = d3.Selection<d3.BaseType, any, HTMLElement, any>;
-type d3DivSelection = d3.Selection<HTMLDivElement, any, HTMLElement, any>;
+import { d3Selection, d3DivSelection } from './d3-utils';
 
 // 'Base class' for all views:
 //
