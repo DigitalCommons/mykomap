@@ -439,8 +439,8 @@ export class DataServicesImpl implements DataServices {
   // The per-instance propert schema, which can be extended by configuration.
   readonly propertySchema: PropDefs = { ...basePropertySchema };
 
-  // The VocabPropDefs index, if computed (which is done lazily by #getVocabPropDefs)
-  private vocabPropDefs?: VocabPropDefs;
+  // The VocabPropDefs index
+  private vocabPropDefs: VocabPropDefs;
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs?: VocabServices = undefined;
@@ -560,6 +560,24 @@ export class DataServicesImpl implements DataServices {
       const language = this.config.getLanguage();
       console.info("using language", language);
     }
+    
+    this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
+
+    {
+      // Check that all the filterable fields are also vocab fields -
+      // Something is wrong if not.
+      const badFields = this.config.getFilterableFields()
+        .filter(name => !this.vocabPropDefs[name]);
+      
+      if (badFields.length > 0) {
+        throw new Error(
+          `Filterable fields config must not include `+
+            `the non-vocab fields: ${badFields.join(", ")}`
+        );
+      }
+    }
+    
+
   }
 
   getAggregatedData(): AggregatedData {
@@ -589,13 +607,12 @@ export class DataServicesImpl implements DataServices {
     //find the initiative variable associated with the field
     const alternatePossibleFilterValues: unknown[] = [];
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    const vocabProps = this.getVocabPropDefs();
     if (vocabID) {
       // Find the first propdef which uses this vocabID. This may not
       // be the only one!  However, this is how it was implemented
       // before, and we're only taking the first step to fixing that
       // here.
-      const propEnt = Object.entries(vocabProps)
+      const propEnt = Object.entries(this.vocabPropDefs)
         .find((ent): ent is [string, AnyVocabPropDef] => ent[1]?.uri === vocabID);
       if (propEnt) {
         //loop through the initiatives and get the possible values for the initiative variable
@@ -640,25 +657,12 @@ export class DataServicesImpl implements DataServices {
       return this.vocabs.getLocalisedVocabs(this.getLanguage());
     return {};
   }
-  
+
   //get an array of possible filters from  a list of initiatives
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
     // Need to call this method to ensure the result is computed
-    const vocabProps = this.getVocabPropDefs(); 
-    
-    // Check that all the filterable fields are also vocab fields -
-    // Something is wrong if not.
-    const badFields = this.config.getFilterableFields()
-      .filter(name => !vocabProps[name]);
-    if (badFields.length > 0) {
-      throw new Error(
-        `Filterable fields config must not include `+
-          `the non-vocab fields: ${badFields.join(", ")}`
-      );
-    }
-
     filteredInitiatives.forEach(initiative => {
       for(const name in this.config.getFilterableFields()) {    
         
@@ -718,9 +722,7 @@ export class DataServicesImpl implements DataServices {
   }
 
   getVocabPropDefs(): VocabPropDefs {
-    if (this.vocabPropDefs)
-      return this.vocabPropDefs;
-    return this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
+    return this.vocabPropDefs;
   }
   
   getSidebarButtonColour(): string {
