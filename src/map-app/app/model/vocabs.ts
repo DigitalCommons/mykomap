@@ -158,8 +158,20 @@ export class VocabServiceImpl implements VocabServices {
     return Object.fromEntries(entries);
   }
   
-  //construct the object of terms for advanced search
-  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
+  /// Construct the object of terms for advanced search
+  ///
+  /// For each initiative in initiativesByUid, this iterates over the
+  /// properties in propertySchema, finds those properties which are
+  /// vocabs, and constructs an index of:
+  ///
+  /// - vocab titles (in the specified language, if present in the
+  ///   vocab), to
+  /// - vocab term IDs seen in the initiatives, to
+  /// - the corresponding vocab term names (again, in the specified
+  ///   language, if present in the vocab)
+  ///
+  /// (See test-vocab-services.ts for test case examples of this)
+  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs): Dictionary<Dictionary> {
 
     let usedTerms: Dictionary<Dictionary> = {};
 
