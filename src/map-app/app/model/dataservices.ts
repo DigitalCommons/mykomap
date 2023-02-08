@@ -164,6 +164,15 @@ export type PropDefs = Dictionary<PropDef>;
 // A convenience variation of PropDefs used in ConfigData
 export type FieldDefs = Dictionary<PropDef | PropDef['type']>;
 
+// A convenient composite PropDef variation which combines vocab and
+// multi property definitions. It is essentially either a VocabPropDef
+// or a MultiPropDef with an added uri field - so the uri field is
+// always present at the top level.
+export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
+
+// A dictory of AnyVocabPropDefs
+export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
+
 export function sortInitiatives(a: Initiative, b: Initiative) {
   return a.name.localeCompare(b.name);
 }
@@ -328,7 +337,18 @@ export interface DataServices {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
 
   getPropertySchema(propName: string): PropDef | undefined;
-  
+
+  /// Returns a VocabPropDefs index of the property schema definitions
+  /// which use vocabs, keyed by their names.
+  ///
+  /// The values include both the propDef, and a guaranteed URI field
+  /// (for convenience, since the definition can come in more than one
+  /// form)
+  ///
+  /// If the vocabId parameter is set, these are also filtered to
+  /// those using just this vocab.
+  getVocabPropDefs(vocabId?: string): VocabPropDefs;
+    
   getSidebarButtonColour(): string;
 
   // requires dataAggregator
@@ -418,6 +438,9 @@ export class DataServicesImpl implements DataServices {
   
   // The per-instance propert schema, which can be extended by configuration.
   readonly propertySchema: PropDefs = { ...basePropertySchema };
+
+  // The VocabPropDefs index, if computed (which is done lazily by #getVocabPropDefs)
+  private vocabPropDefs?: VocabPropDefs;
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs?: VocabServices = undefined;
@@ -636,6 +659,52 @@ export class DataServicesImpl implements DataServices {
 
   getPropertySchema(propName: string): PropDef | undefined {
     return this.propertySchema[propName];
+  }
+
+  /// Returns a vocab URI, given a PropDef which has one, or undefined
+  static propDefToVocabUri(propDef?: PropDef): string|undefined {
+    if (propDef === undefined) return undefined;
+    if (propDef.type === 'vocab') return propDef.uri;
+    if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
+    return undefined;
+  }
+
+  /// Predicate for testing if a PropDef has a vocab URI
+  static isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
+    return !!this.propDefToVocabUri(propDef);
+  }
+  
+  /// Returns a VocabPropDefs index of propdefs using vocabs, keyed by their names.
+  ///
+  /// The values include both the propDef, and a guaranteed URI field
+  /// (for convenience, since the definition can come in more than one
+  /// form)
+  ///
+  /// If the vocabId parameter is set, these are also filtered to
+  /// those using just this vocab.
+  static vocabPropDefs(propDefs: PropDefs, vocabId?: string): VocabPropDefs {
+    const results: VocabPropDefs = {};
+    for(const name in propDefs) {
+      const def = propDefs[name];
+      if (!def)
+        continue;
+
+      if (def.type === 'vocab') {
+        if (vocabId === undefined || def.uri === vocabId)
+          results[name] = def;
+      }
+      if (def.type === 'multi' && def.of.type === 'vocab') {
+        if (vocabId === undefined || def.of.uri === vocabId)
+          results[name] = { type: 'multi', uri: def.of.uri, of: def.of };
+      }
+    }
+    return results;
+  }
+
+  getVocabPropDefs(): VocabPropDefs {
+    if (this.vocabPropDefs)
+      return this.vocabPropDefs;
+    return this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
   }
   
   getSidebarButtonColour(): string {
