@@ -1,5 +1,9 @@
 import { use, expect, assert } from 'chai';
-
+import {
+  vocabIndex1 as vocabIndex,
+  initiativeIndexFooBarBazBob as items,
+  lettersPropDefs as propDefs,
+} from './data';
 import {
   Dictionary
 } from '../src/map-app/common_types';
@@ -12,44 +16,7 @@ import { Initiative, InitiativeObj, PropDef, PropDefs } from '../src/map-app/app
 import { Vocab } from '../src/map-app/app/model/vocabs';
 import { PropDefIndex } from '../src/map-app/app/model/propdefindex';
 
-const vocabMap: Dictionary<Vocab> = {
-  'http://vocab.com/vowels/': {
-    title: 'Vowels',
-    terms: {
-      'v:a': 'A',
-      'v:e': 'E',
-      'v:i': 'I',
-      'v:o': 'O',
-      'v:u': 'U',
-    },
-  },
-  'http://vocab.com/letters/': {
-    title: 'Letters',
-    terms: {
-      'l:f': 'F',
-      'l:o': 'O',
-      'l:b': 'B',
-      'l:a': 'A',
-      'l:r': 'R',
-      'l:z': 'Z',
-    },
-  },/*
-  // Basically could be Letters, but we can't currently
-  // share vocabs between the properties letters and initial
-  'http://vocab.com/initials/': {
-    title: 'Initials',
-    terms: {
-      'i:f': 'F',
-      'i:b': 'B',
-    },
-  },*/
-}
-
-// Vocab abbreviations
-const abbrevs: Dictionary = {
-  v: 'http://vocab.com/vowels/',
-  l: 'http://vocab.com/letters/',
-}
+const vocabMap = vocabIndex.vocabs;
 
 // Mappings for non-vocab property titles. The keys need to be
 // 'property_' suffixed with the property ID.  Can remain empty if
@@ -61,61 +28,25 @@ const labels: Dictionary = {
 
 // This function maps vocab IDs to the displayable term
 function getVocab(id: string): Vocab {
-  const uri = abbrevs[id] ?? id; // expand the id if it is a known URI
-  const vocab = vocabMap[uri]
+  const ent = Object.entries(vocabIndex.prefixes).find(e => e[1] === id);
+  const uri = ent? ent[0] : id;
+  const vocab = vocabMap[uri].EN;
   if (!vocab) throw new Error(`no vocab for URI ${uri}`);
   return vocab;
 }
 
-
-// About the simplest paramBuilder possible - just looks up the parameter.
-function paramBuilder(id: string, defs: PropDef, params: InitiativeObj): any {
-  return params[id];
-}
 
 // Finally, the tests
 describe('Directory generation', () => {
 
   // These are the indexes to build
   const titleValInitiative: Dictionary<Dictionary<Initiative[]>> = {};
-  const idVocab: Dictionary = {};
 
   // These are the names of the properties we want to index
   const propNames: string[] = ['name', 'initial', 'letters', 'vowels'];
 
-  // These are the definitions of the properties
-  const propDefs: PropDefs = {
-    name: { type: 'value' },
-    initial: { type: 'vocab', uri: 'http://vocab.com/letters/' },
-    letters: { type: 'multi', of: { type: 'value' } },
-    vowels: { type: 'multi', of: { type: 'vocab', uri: 'http://vocab.com/vowels/' } },
-  };
   const propDefIndex: PropDefIndex = new PropDefIndex(propDefs, getVocab, labels);
 
-  // This is an initiative constructor, which uses the above propDefs
-  // and paramBuilder
-  const mkInitiative = Initiative.mkFactory(propDefs, paramBuilder, []);
-
-  // Construct some initiatives. Use some simple rules to set a
-  // representative collection of fields types from a string
-  // identifier - the first letter of the name
-  const items = Object.fromEntries(
-    [
-      'foo', 'bar', 'baz', 'bob' // The names
-    ]
-      .map(name => [name, mkInitiative({
-        uri: 'init:'+name, // The abbreviated URI for this initiative
-        name: name,        // The name, unchanged - a simple value
-        initial: 'l:'+name[0].toLocaleLowerCase(), // The initial - an abbreviated vocab URI.
-        letters: name.split('') // The letters in the name, an array of simple values
-          .map(c => c.toLocaleLowerCase()), 
-        vowels: name.split('') // The vowels in the name - an array of
-                               // unabbreviated vocab URIs. May contain duplicates!
-          .map(c => c.toLocaleLowerCase())
-          .filter(c => c.match(/[aeiou]/))
-          .map(v =>'http://vocab.com/vowels/'+v),
-      })])
-  );
   console.log(items);
   
   const propIndexer = new PropertyIndexer(
@@ -126,7 +57,7 @@ describe('Directory generation', () => {
   );
 
   it('transforms this object', () => { // Somewhat random test case
-    Object.values(items).forEach(initiative => propIndexer.onData(initiative));
+    Object.values(items).forEach(initiative => initiative && propIndexer.onData(initiative));
     propIndexer.onComplete();
     console.log(JSON.stringify(propIndexer, null, 2));
 
