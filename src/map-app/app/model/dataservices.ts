@@ -589,13 +589,18 @@ export class DataServicesImpl implements DataServices {
     //find the initiative variable associated with the field
     const alternatePossibleFilterValues: unknown[] = [];
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
+    const vocabProps = this.getVocabPropDefs();
     if (vocabID) {
-      const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
-
-      if (initiativeVariable) {
+      // Find the first propdef which uses this vocabID. This may not
+      // be the only one!  However, this is how it was implemented
+      // before, and we're only taking the first step to fixing that
+      // here.
+      const propEnt = Object.entries(vocabProps)
+        .find((ent): ent is [string, AnyVocabPropDef] => ent[1]?.uri === vocabID);
+      if (propEnt) {
         //loop through the initiatives and get the possible values for the initiative variable
         sharedInitiatives.forEach(initiative => {
-          const prop = initiative[initiativeVariable]
+          const prop = initiative[propEnt[0]]
           if (prop !== undefined)
             alternatePossibleFilterValues.push(prop);
         })
