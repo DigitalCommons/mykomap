@@ -14,7 +14,8 @@ import { Dictionary } from '../../common_types';
 import { Config } from '../model/config';
 import { BaseSidebarView } from './sidebar/base';
 
-export class SidebarView extends BaseView<SidebarPresenter> {
+export class SidebarView extends BaseView {
+  readonly presenter: SidebarPresenter;
   sidebarName?: string;
   sidebar: Dictionary<BaseSidebarView> = {};
   
@@ -32,7 +33,7 @@ export class SidebarView extends BaseView<SidebarPresenter> {
     this.mapPresenterFactory = mapPresenterFactory;
     this.sidebarButtonColour = sidebarButtonColour;
 
-    const presenter = new SidebarPresenter(
+    this.presenter = new SidebarPresenter(
       this,
       this.config.getShowDirectoryPanel(),
       this.config.getShowSearchPanel(),
@@ -40,7 +41,6 @@ export class SidebarView extends BaseView<SidebarPresenter> {
       this.config.getShowDatasetsPanel()
     );
     
-    this.setPresenter(presenter);
     this.createOpenButton();
     this.createButtonRow();
     this.createSidebars();
@@ -69,7 +69,7 @@ export class SidebarView extends BaseView<SidebarPresenter> {
     
     // The sidebar has a button that causes the main menu to be dispayed
 
-    if (this.presenter?.showingDirectory()) {
+    if (this.presenter.showingDirectory()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
@@ -95,7 +95,7 @@ export class SidebarView extends BaseView<SidebarPresenter> {
       .attr("class", "fa fa-bars");
     }
     
-    if (this.presenter?.showingSearch()) {
+    if (this.presenter.showingSearch()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
@@ -118,7 +118,7 @@ export class SidebarView extends BaseView<SidebarPresenter> {
       .attr("class", "fa fa-search");
     }
 
-    if (this.presenter?.showingAbout()) {
+    if (this.presenter.showingAbout()) {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
@@ -139,7 +139,7 @@ export class SidebarView extends BaseView<SidebarPresenter> {
       .attr("class", "fa fa-info-circle");
     }
 
-    if (this.presenter?.showingDatasets()) {
+    if (this.presenter.showingDatasets()) {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
@@ -168,16 +168,16 @@ export class SidebarView extends BaseView<SidebarPresenter> {
 
     this.sidebar = {};
 
-    if(this.presenter?.showingDirectory())
+    if(this.presenter.showingDirectory())
       this.sidebar.directory = new DirectorySidebarView(this, this.labels, this.config, this.dataServices, this.markerView);
 
-    if(this.presenter?.showingSearch())
+    if(this.presenter.showingSearch())
       this.sidebar.initiatives = new InitiativesSidebarView(this, this.config, this.labels, this.dataServices, this.mapPresenterFactory);
 
-    if(this.presenter?.showingAbout())
+    if(this.presenter.showingAbout())
       this.sidebar.about = new AboutSidebarView(this, this.labels, this.config);
     
-    if(this.presenter?.showingDatasets())
+    if(this.presenter.showingDatasets())
       this.sidebar.datasets = new DatasetsSidebarView(this, this.labels, this.dataServices);
   }
 

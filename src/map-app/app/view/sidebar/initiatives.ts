@@ -18,8 +18,9 @@ const accordionClasses =
 const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
 export class InitiativesSidebarView extends BaseSidebarView {
+  private readonly presenter: InitiativesSidebarPresenter;
 	// And adds some overrides and new properties of it's own:
-	title = "Initiatives";
+	readonly title = "Initiatives";
   
   constructor(readonly parent: SidebarView,
               readonly config: Config,
@@ -27,8 +28,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
               readonly dataServices: DataServices,
               readonly mapPresenterFactory: MapPresenterFactory) {
     super();
-
-		this.setPresenter(new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory));
+    this.presenter = new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory);
   }
 
 	populateFixedSelection(selection: d3Selection) {

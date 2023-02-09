@@ -25,7 +25,7 @@ export class AboutSidebarView extends BaseSidebarView {
     this.parent = parent;
     this.labels = labels;
     this.config = config;
-    this.setPresenter(new AboutPresenter(this));
+    this.presenter = new AboutPresenter(this);
   }
 
   populateFixedSelection(selection) {

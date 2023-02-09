@@ -17,16 +17,14 @@ function arrayMin(array: number[]) {
 }
 
 
-export class InitiativesSidebarPresenter extends BaseSidebarPresenter<InitiativesSidebarView> {
+export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;
   readonly dataServices: DataServices;
   readonly labels: Partial<Record<string, string>>;
   readonly map: MapPresenterFactory;
   
-  _eventbusRegister(view: InitiativesSidebarView): void {
+  _eventbusRegister(): void {
 
-    this.registerView(view);
-    
     eventbus.subscribe({
       topic: "Search.initiativeResults",
       callback: (data: { text: string, results: Initiative[] }) => {
@@ -83,8 +81,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter<Initiative
     });
   }
 
-  constructor(view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapPresenterFactory) {
-    if (!view.parent?.presenter)
+  constructor(public view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapPresenterFactory) {
+    if (!view.parent.presenter)
       throw new Error(`Can't construct an instance with a parent view which has no presenter`);
     super(view.parent.presenter);
     this.config = config;
@@ -93,7 +91,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter<Initiative
     this.labels = labels;
     // a MapPresenterFactory
     this.map = map;
-    this._eventbusRegister(view);
+    this._eventbusRegister();
   }
 
   currentItem () {

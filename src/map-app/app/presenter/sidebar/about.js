@@ -4,6 +4,6 @@ export class AboutPresenter extends BaseSidebarPresenter {
   constructor(view) {
     super();
     this.parent = view.parent.presenter;
-    this.registerView(view);
+    this.view = view;
   }
 }

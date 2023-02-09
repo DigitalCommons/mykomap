@@ -6,13 +6,9 @@ import { d3Selection, d3DivSelection } from './d3-utils';
 // Prior to the conversion to an ES/TypeScript class, a note on this
 // class ssuggsted in future to use his base for the older view
 // objects - as they were created originally before this base existed.
-export class BaseView<P> {
-  constructor(public presenter?: P) {}
+export abstract class BaseView {
+  constructor() {}
   
-  setPresenter(p: P) {
-    this.presenter = p;
-  }
-
   d3selectAndClear(selector: string): d3Selection {
     // adds a log for failed selectors
     // Clears the innerHtml, ready for re-populating using .append()

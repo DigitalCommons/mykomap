@@ -8,7 +8,7 @@ export class DatasetsPresenter extends BaseSidebarPresenter {
   
   constructor(view, dataServices) {
     super();
-    this.registerView(view);
+    this.view = view;
     this.dataServices = dataServices;
     this.parent = view.parent.presenter;
   }

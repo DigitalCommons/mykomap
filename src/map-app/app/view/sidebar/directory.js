@@ -24,7 +24,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     this.labels = labels;
     this.title = labels.directory;
 
-    this.setPresenter(new DirectoryPresenter(this, config, dataServices, markerView));
+    this.presenter = new DirectoryPresenter(this, config, dataServices, markerView);
   }
 
 

@@ -25,7 +25,7 @@ export class DatasetsSidebarView extends BaseSidebarView {
     super();
     this.labels = labels;
     this.parent = parent;
-    this.setPresenter(new DatasetsPresenter(this, dataServices));
+    this.presenter = new DatasetsPresenter(this, dataServices);
   }
 
   populateFixedSelection(selection) {

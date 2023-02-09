@@ -10,7 +10,8 @@ import { SearchResults } from './searchresults';
 /// Weirdly, for historical reasons which are largely unknown
 /// at the point of writing this, it has only members on the *prototype*
 /// which all derivatives will share... See the static initializer.
-export class BaseSidebarPresenter<V extends BaseSidebarView> extends BasePresenter<V> {
+export abstract class BaseSidebarPresenter extends BasePresenter {
+  abstract readonly view: BaseSidebarView;
 
   constructor(readonly parent: SidebarPresenter) {
     super();
@@ -103,7 +104,7 @@ export class BaseSidebarPresenter<V extends BaseSidebarView> extends BasePresent
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
   historyButtonsUsed(lastContent?: StackItem) {    
-    this.view?.refresh();
+    this.view.refresh();
   }
 
   deselectInitiatives(){

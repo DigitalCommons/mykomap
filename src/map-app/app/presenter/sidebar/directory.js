@@ -17,7 +17,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     this.config = config;
     this.dataServices = dataServices;
     this.markerView = markerView;
-    this.registerView(view);
+    this.view = view;
   }
 
   currentItem() {
