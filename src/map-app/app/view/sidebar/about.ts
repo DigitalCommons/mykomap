@@ -1,25 +1,25 @@
 // The view aspects of the About sidebar
-"use strict";
-const d3 = require('d3');
-const eventbus = require('../../eventbus');
-const { BaseSidebarView } = require('./base');
-const { AboutPresenter } = require('../../presenter/sidebar/about');
+import { BaseSidebarView  } from './base';
+import { Dictionary } from '../../../common_types';
+import { Config } from '../../model/config';
+import { d3Selection } from '../d3-utils';
+import { SidebarView } from '../sidebar';
+import { AboutSidebarPresenter } from '../../presenter/sidebar/about';
 
 export class AboutSidebarView extends BaseSidebarView {
+  readonly presenter: AboutSidebarPresenter;
+  
   // And adds some overrides and new properties of it's own:
-  title = "about";
+  readonly title = "about";
   hasHistoryNavigation = false; // No forward/back buttons for this sidebar
 
-  constructor(parent, labels, config) {
+  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly config: Config) {
     super();
-    this.parent = parent;
-    this.labels = labels;
-    this.config = config;
-    this.presenter = new AboutPresenter(this);
+    this.presenter = new AboutSidebarPresenter(this);
   }
 
-  populateFixedSelection(selection) {
-    let textContent = this.labels.aboutTitle;
+  populateFixedSelection(selection: d3Selection) {
+    const textContent = this.labels?.aboutTitle ?? '';
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -27,9 +27,7 @@ export class AboutSidebarView extends BaseSidebarView {
       .text(textContent);
   }
 
-  populateScrollableSelection(selection) {
-    const that = this;
-
+  populateScrollableSelection(selection: d3Selection) {
     const lang = this.config.getLanguage();
     
     // We need to be careful to guard against weird characters, especially quotes,
@@ -45,8 +43,8 @@ export class AboutSidebarView extends BaseSidebarView {
       .selectAll(`[lang]:not([lang='${lang}'])`)
       .remove();
     
-    const dataSection = selection.append('div')
-                                 .attr("class", "w3-container about-data");
+    selection.append('div')
+      .attr("class", "w3-container about-data");
 
     
     /*********************************************************************************
