@@ -5,16 +5,6 @@ const eventbus = require('../../eventbus')
 const { BaseSidebarView } = require('./base');
 const { DatasetsPresenter } = require('../../presenter/sidebar/datasets');
 
-// TODO These same consts are here and in view/sidebar/initiative.
-//      Find a common place for them.
-const sectionHeadingClasses =
-  "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
-const hoverColour = " w3-hover-light-blue";
-const accordionClasses =
-  "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
-const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
-
-
 export class DatasetsSidebarView extends BaseSidebarView {
 
   // And adds some overrides and new properties of it's own:

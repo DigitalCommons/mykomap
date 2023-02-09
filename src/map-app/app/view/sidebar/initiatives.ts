@@ -11,17 +11,12 @@ import { SidebarView } from '../sidebar';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../presenter/sidebar/searchresults';
 
-const sectionHeadingClasses =
-  "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
-const hoverColour = " w3-hover-light-blue";
-const accordionClasses =
-  "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
-const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
+
 
 export class InitiativesSidebarView extends BaseSidebarView {
-  private readonly presenter: InitiativesSidebarPresenter;
-	// And adds some overrides and new properties of it's own:
-	readonly title = "Initiatives";
+  readonly presenter: InitiativesSidebarPresenter;
+  
+	readonly title: string = 'Initiatives';
   
   constructor(readonly parent: SidebarView,
               readonly config: Config,
@@ -75,17 +70,17 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		const s = selection.append("div").attr("class", "w3-bar-block");
 		if (initiative.lat) {
 			s.append("div")
-				.attr("class", sectionClasses)
+				.attr("class", BaseSidebarView.sectionClasses)
 				.text("Latitude: " + initiative.lat);
 		}
 		if (initiative.lng) {
 			s.append("div")
-				.attr("class", sectionClasses)
+				.attr("class", BaseSidebarView.sectionClasses)
 				.text("Longitude: " + initiative.lng);
 		}
 		if (initiative.uri) {
 			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
+				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.text("Detailed data for this initiative")
 				.style("cursor", "pointer")
 				.on("click", () => {
@@ -94,7 +89,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 		if (initiative.within) {
 			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
+				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.text("Ordnance Survey postcode information")
 				.style("cursor", "pointer")
 				.on("click", () => {
@@ -112,7 +107,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				"?company=" +
 				encodeURIComponent(initiative.regorg);
 			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
+				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.attr("title", "A tech demo of federated Linked Open Data queries!")
 				.text("Display similar companies nearby using Companies House data")
 				.style("cursor", "pointer")
@@ -126,10 +121,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		const s = selection.append("div").attr("class", "w3-bar-block");
 		if (initiative.www) {
 			s.append("div")
-				.attr("class", sectionHeadingClasses)
+				.attr("class", BaseSidebarView.sectionHeadingClasses)
 				.text("website");
 			s.append("div")
-				.attr("class", sectionClasses + hoverColour)
+				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.text(initiative.www)
 				.style("cursor", "pointer")
 				.on("click", () => {
@@ -137,17 +132,17 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				});
 		}
 		s.append("div")
-			.attr("class", sectionHeadingClasses)
+			.attr("class", BaseSidebarView.sectionHeadingClasses)
 			.text("description");
 		s.append("div")
-			.attr("class", sectionClasses)
+			.attr("class", BaseSidebarView.sectionClasses)
 			.text(initiative.desc || "No description available");
     
 		// Make an accordion for opening up the geek zone
 		this.makeAccordionAtD3Selection({
 			selection: s,
 			heading: "Geek zone",
-			headingClasses: accordionClasses,
+			headingClasses: BaseSidebarView.accordionClasses,
 			makeContentAtD3Selection: (contentD3Selection: d3DivSelection) => {
 				this.geekZoneContentAtD3Selection(contentD3Selection, initiative);
 			},

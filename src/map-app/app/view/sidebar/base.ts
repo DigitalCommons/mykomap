@@ -1,44 +1,50 @@
 // Set up the various sidebars
-"use strict";
-const d3 = require('d3');
-const eventbus = require('../../eventbus')
-const { BaseView } = require('../base');
+import { BaseSidebarPresenter, NavigationCallback } from '../../presenter/sidebar/base';
+import {  BaseView  } from '../base';
+import { d3Selection } from '../d3-utils';
 
 /// Base class of all sidebar views
-export class BaseSidebarView extends BaseView {
-  // true by default - change this in derived sidebar view objects if necessary.
-  hasHistoryNavigation = true; 
-  hasCloseButton = true;
+export abstract class BaseSidebarView extends BaseView {
+  static readonly sectionHeadingClasses =
+    "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
+  static readonly hoverColour = " w3-hover-light-blue";
+  static readonly accordionClasses =
+    "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + BaseSidebarView.hoverColour;
+  static readonly sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
 
-  title = "Untitled"
+
+  
+  abstract readonly presenter: BaseSidebarPresenter;
+  
+  // true by default - change this in derived sidebar view objects if necessary.
+  hasHistoryNavigation: boolean = true; 
+  hasCloseButton: boolean = true;
+
+  readonly title: string = 'Untitled'
 
   constructor() {
     super();
   }
   
-  populateScrollableSelection(selection) {
-    // override this default in derived view objects:
-  }
+  abstract populateScrollableSelection(selection: d3Selection): void;
 
-  populateFixedSelection(selection) {
-    // override this default in derived view objects:
-  }
+  abstract populateFixedSelection(selection: d3Selection): void;
 
-  loadFixedSection() {
+  loadFixedSection(): void {
     this.populateFixedSelection(
       this.d3selectAndClear("#map-app-sidebar-fixed-section")
     );
   }
 
-  loadScrollableSection() {
+  loadScrollableSection(): void {
     this.populateScrollableSelection(
       this.d3selectAndClear("#map-app-sidebar-scrollable-section")
     );
   }
 
-  loadCloseButton() {}
+  loadCloseButton(): void {}
 
-  loadHistoryNavigation() {
+  loadHistoryNavigation(): void {
     // Fwd/back navigation for moving around the contentStack of a particular sidebar
     // (e.g. moving between different search results)
     var buttons = this.presenter.historyNavigation();
@@ -48,7 +54,7 @@ export class BaseSidebarView extends BaseView {
       "#map-app-sidebar-history-navigation"
     );
     
-    const createButton = (b, faClass, hovertext) => {
+    const createButton = (b: NavigationCallback, faClass: string, hovertext: string) => {
       selection
         .append("button")
       // Minor issue: if we add the class w3-mobile to these buttons, then each takes up a whole line

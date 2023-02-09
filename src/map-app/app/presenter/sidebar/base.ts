@@ -5,6 +5,16 @@ import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { SearchResults } from './searchresults';
 
+export interface NavigationCallback {
+  disabled: boolean;
+  onClick: () => void;
+}
+
+export interface NavigationButtons {
+  back: NavigationCallback;
+  forward: NavigationCallback;
+}
+
 /// This class is a base for sidebar presenters.
 ///
 /// Weirdly, for historical reasons which are largely unknown
@@ -17,7 +27,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     super();
   }
 
-  backButtonClicked() {
+  backButtonClicked(): () => void {
     return () => {
       //console.log("backButtonClicked");
       //console.log(this);
@@ -59,7 +69,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     };
   }
   
-  forwardButtonClicked() {
+  forwardButtonClicked(): () => void {
     return () => {
       //console.log("forwardButtonClicked");
       //console.log(this);
@@ -103,11 +113,11 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
-  historyButtonsUsed(lastContent?: StackItem) {    
+  historyButtonsUsed(lastContent?: StackItem): void {    
     this.view.refresh();
   }
 
-  deselectInitiatives(){
+  deselectInitiatives(): void {
     eventbus.publish({
       topic: "Markers.needToShowLatestSelection",
       data: {
@@ -116,7 +126,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     });
   }
 
-  historyNavigation() {
+  historyNavigation(): NavigationButtons {
     return {
       back: {
         disabled: this.parent.contentStack.isAtStart(),

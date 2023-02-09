@@ -103,7 +103,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       let label = key;
       let tag = key;
 
-      const fieldIsCountries = field => field == "Countries" || field == "Des Pays" || field == "Países" || field == "국가"
+      const fieldIsCountries = field => field == "Countries" || field == "Des Pays" || field == "Países" || field == "국가" // FIXME this should not be hardwired!
 
       if (key == null) {
         tag = 'all-entries';
