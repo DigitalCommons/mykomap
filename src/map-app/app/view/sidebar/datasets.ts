@@ -1,25 +1,25 @@
-// The view aspects of the datasets sidebar
-"use strict";
-const d3 = require('d3');
-const eventbus = require('../../eventbus')
-const { BaseSidebarView } = require('./base');
-const { DatasetsPresenter } = require('../../presenter/sidebar/datasets');
+import * as d3 from "d3";
+import { Dictionary } from "../../../common_types";
+import { DataServices } from "../../model/dataservices";
+import { DatasetsSidebarPresenter } from "../../presenter/sidebar/datasets";
+import { d3Selection } from "../d3-utils";
+import { SidebarView } from "../sidebar";
+import { BaseSidebarView } from "./base";
 
 export class DatasetsSidebarView extends BaseSidebarView {
+  readonly presenter: DatasetsSidebarPresenter;
 
   // And adds some overrides and new properties of it's own:
-  title = "datasets";
-  hasHistoryNavigation = false; // No forward/back buttons for this sidebar
+  readonly title: string = "datasets";
+  hasHistoryNavigation: boolean = false; // No forward/back buttons for this sidebar
   
-  constructor(parent, labels, dataServices) {
+  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly dataServices: DataServices) {
     super();
-    this.labels = labels;
-    this.parent = parent;
-    this.presenter = new DatasetsPresenter(this, dataServices);
+    this.presenter = new DatasetsSidebarPresenter(this, dataServices);
   }
 
-  populateFixedSelection(selection) {
-    let textContent = this.labels.datasets;
+  populateFixedSelection(selection: d3Selection): void {
+    let textContent = this.labels.datasets ?? '';
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -28,30 +28,30 @@ export class DatasetsSidebarView extends BaseSidebarView {
   }
 
 
-  populateScrollableSelection(selection) {
+  populateScrollableSelection(selection: d3Selection) {
     const datasets = this.presenter.getDatasets();
     const defaultActive = this.presenter.getDefault();
     const defaultIdMixed = this.presenter.getMixedId();
-    const that = this;
 
     //create new div for buttons
     const datasetBtns = selection.append("ul")
       .attr("class", "sea-directory-list colours capitalized");
 
-    const color_class = function (i) {
+    const color_class = (i: number) => {
       return "sea-field-am" + Math.floor(((i + 1) % 12) * 10);
     }
-    Object.keys(datasets).forEach((dataset, i) => {
+    Object.entries(datasets).forEach(([name, dataset], i) => {
+      if (!dataset) return;
       let btn = datasetBtns
         .append("li")
         .attr("class", color_class(i))
         .attr("id", dataset + "-btn")
-        .attr("title", "load " + datasets[dataset].label + " dataset")
-        .text(datasets[dataset].label);
+        .attr("title", "load " + dataset.label + " dataset")
+        .text(dataset.label);
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
-        that.presenter.changeDatasets(dataset);
+        this.presenter.changeDatasets(name);
       });
     });
     //add mixed btn
@@ -61,11 +61,11 @@ export class DatasetsSidebarView extends BaseSidebarView {
         .attr("class", color_class(Object.keys(datasets).length))
         .attr("id", `${defaultIdMixed}-btn`)
         .attr("title", "load mixed dataset")
-        .text(this.labels.mixedSources);
+        .text(this.labels.mixedSources ?? '');
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);
-        that.presenter.changeDatasets(true);
+        this.presenter.changeDatasets(true);
       });
     }
 

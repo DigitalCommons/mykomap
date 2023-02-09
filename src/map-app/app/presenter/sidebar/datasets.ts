@@ -1,28 +1,25 @@
-"use strict";
-import * as eventbus from '../../eventbus';
-import {  BaseSidebarPresenter  } from './base';
+import { DataLoaderMap, DataServices, InitiativeObj } from '../../model/dataservices';
+import { DatasetsSidebarView } from '../../view/sidebar/datasets';
+import { BaseSidebarPresenter } from './base';
 
-export class DatasetsPresenter extends BaseSidebarPresenter {
+export class DatasetsSidebarPresenter extends BaseSidebarPresenter {
   mixedId = "all";
 
   
-  constructor(view, dataServices) {
-    super();
-    this.view = view;
-    this.dataServices = dataServices;
-    this.parent = view.parent.presenter;
+  constructor(readonly view: DatasetsSidebarView, readonly dataServices: DataServices) {
+    super(view.parent.presenter);
   }
   
-  getDatasets() {
+  getDatasets(): DataLoaderMap<InitiativeObj> {
     return this.dataServices.getDatasets();
   }
   
-  getDefault() {
+  getDefault(): string {
     let val = this.dataServices.getCurrentDatasets();
     return val === true? "all" : val;
   }
   
-  getMixedId() {
+  getMixedId(): string {
     return this.mixedId;
   }
 
@@ -33,7 +30,7 @@ export class DatasetsPresenter extends BaseSidebarPresenter {
   //set default somewhere else where it loads the initiatives
   //remove initiatives from menu on the side
   //remove initiatives from map
-  changeDatasets(dataset) {
+  changeDatasets(dataset: string | true) {
     this.dataServices.reset(dataset); // simply delegate
   };
 }

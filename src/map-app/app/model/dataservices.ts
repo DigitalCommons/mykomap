@@ -125,7 +125,7 @@ export interface DataLoaderMeta<T> {
   label: string;
   loader: DataLoader<T>; // Subtypes of loaders can expose metadata under .meta
 };
-type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
+export type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
 
 export interface InitiativeObj {
   uri: string;
@@ -371,7 +371,7 @@ export interface DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  reset(dataset: string): Promise<void>;
+  reset(dataset: string | true): Promise<void>;
 }
 
 // Loads zero or more datasets incrementally using the supplied dataLoaders.
@@ -898,7 +898,7 @@ export class DataServicesImpl implements DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  async reset(dataset: string) {
+  async reset(dataset: string | true) {
     // If the dataset is the same as that currently selected, nothing to do
     if (dataset === this.currentDatasets)
       return;
