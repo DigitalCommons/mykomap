@@ -94,15 +94,10 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this._eventbusRegister();
   }
 
-  currentItem () {
+  currentItem (): StackItem | undefined {
     return this.parent.contentStack.current();
   }
 
-  currentItemExists() {
-    // returns true only if the contentStack is empty
-    return typeof (this.parent.contentStack.current() !== undefined || this.parent.contentStack.current() != null);
-  }
-  
   notifyMarkersNeedToShowNewSelection(lastContent: StackItem, newContent?: Initiative[]) {
     if (!newContent)
       newContent = this.parent.contentStack.current()?.initiatives

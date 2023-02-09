@@ -24,11 +24,6 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     return this.parent.contentStack.current();
   }
 
-  currentItemExists() {
-    // returns true only if the contentStack is empty
-    return this.parent.contentStack.current() !== undefined;
-  }
-
   getVerboseValuesForFields() {
     return this.dataServices.getVerboseValuesForFields();
   }

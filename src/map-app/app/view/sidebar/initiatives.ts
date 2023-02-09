@@ -9,6 +9,7 @@ import { Dictionary } from '../../../common_types';
 import { Config } from '../../model/config';
 import { SidebarView } from '../sidebar';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
+import { SearchResults } from '../../presenter/sidebar/searchresults';
 
 const sectionHeadingClasses =
   "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
@@ -42,8 +43,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		this.createSearchBox(container);
 
 		let textContent = ""; // default content, if no initiatives to show
-		if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
-			const item = this.presenter.currentItem();
+    const item = this.presenter.currentItem();
+		if (item instanceof SearchResults) {
 			textContent = this.labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
@@ -255,13 +256,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 			//repeat the last search after changing the filter
 			//if there is no last search, or the last search is empty, do a special search
-			if (!item)
-				this.presenter.performSearchNoText();
-			else
+			if (item instanceof SearchResults) {
 				if (item.searchedFor == "")
 					this.presenter.performSearchNoText();
 				else
 					this.presenter.performSearch(item.searchedFor);
+      }
+			else
+      	this.presenter.performSearchNoText();
 		}
 
 		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
@@ -333,7 +335,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		var freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
-		if (this.presenter.currentItemExists() && this.presenter.currentItem()) {
+    const item = this.presenter.currentItem();
+		if (item instanceof SearchResults) {
 			// add clear button
 			if (this.presenter.getFilterNames().length > 0) {
 				selection
@@ -353,18 +356,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					});
 			}
 
-			const item = this.presenter.currentItem();
-
 			const initiatives = item == null ? [] : item.initiatives;
 			switch (initiatives.length) {
 				case 0:
-					if (item.isSearchResults()) {
-						selection
+					selection
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
 							.text(this.labels?.nothingMatched ?? '');
-					}
+
 					break;
 				case 1:
 					//this.populateSelectionWithO neInitiative(selection, initiatives[0]);
