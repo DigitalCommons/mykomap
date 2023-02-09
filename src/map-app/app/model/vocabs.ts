@@ -1,5 +1,5 @@
 import type { Dictionary } from '../../common_types';
-import type { Initiative, PropDefs, PropDef } from './dataservices';
+import { Initiative, PropDefs, PropDef, DataServicesImpl } from './dataservices';
 import type { DataConsumer } from './dataloader';
 
 export interface Vocab {
@@ -174,7 +174,8 @@ export class VocabServiceImpl implements VocabServices {
   getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs): Dictionary<Dictionary> {
 
     let usedTerms: Dictionary<Dictionary> = {};
-
+    const vocabProps = DataServicesImpl.vocabPropDefs(propertySchema);
+    
     for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
       if (!initiative)
@@ -182,23 +183,27 @@ export class VocabServiceImpl implements VocabServices {
 
       for(const propName in propertySchema) {
         const propDef = propertySchema[propName];
-        let vocabID;
-        if (propDef?.type === 'vocab') {
-          vocabID = propDef.uri;
-        }
-        else if (propDef?.type === 'multi' && propDef?.of.type === 'vocab') {
-          vocabID = propDef.of.uri;
-        }
+        const vocabPropDef = vocabProps[propName];
+        if (!vocabPropDef)
+          continue;
+        
+        let vocabID = vocabPropDef.uri;
 
-        const id = initiative[propName]
-        if (vocabID && id) {
+        const uris: unknown[] = vocabPropDef.type === 'vocab'?
+          [initiative[propName]] : initiative[propName];
+        
+        if (uris != null) {
           const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
           const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
 
-          // Currently still keeping the output data structure the same, so use id not term
+          // Currently still keeping the output data structure the same, so use uri not term
           const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-          if (!temp[id])
-            temp[id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+          uris.forEach(uri => {
+            if (uri == null) return;
+            const key = this.abbrevUri(String(uri));
+            if (key in temp) return;
+            temp[key] = this.vocabs.vocabs[vocabID][vocabLang].terms[key];
+          });
         }
       }
     }
