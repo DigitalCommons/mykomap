@@ -1,58 +1,62 @@
-"use strict";
+import { Box2d, Dictionary } from '../../../common_types';
+import { StackItem } from '../../../stack';
 import * as eventbus from '../../eventbus';
-import {  BaseSidebarPresenter  } from './base';
+import { Config } from '../../model/config';
+import { DataServices, Initiative } from '../../model/dataservices';
+import { MarkerViewFactory } from '../../view/map/marker';
+import { DirectorySidebarView } from '../../view/sidebar/directory';
+import { BaseSidebarPresenter } from './base';
 
-function arrayMax(array) {
+function arrayMax(array: number[]) {
   return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
 }
-function arrayMin(array) {
+function arrayMin(array: number[]) {
   return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
 }
 
-export class DirectoryPresenter extends BaseSidebarPresenter {
+interface ZoomOption {
+  maxZoom?: number;
+}
 
-  constructor(view, config, dataServices, markerView) {
-    super();
-    this.parent = view.parent.presenter;
-    this.config = config;
-    this.dataServices = dataServices;
-    this.markerView = markerView;
-    this.view = view;
+export class DirectorySidebarPresenter extends BaseSidebarPresenter {
+
+  constructor(readonly view: DirectorySidebarView, readonly config: Config, readonly dataServices: DataServices, readonly markerView: MarkerViewFactory) {
+    super(view.parent.presenter);
   }
 
-  currentItem() {
+  currentItem(): StackItem | undefined {
     return this.parent.contentStack.current();
   }
 
-  getVerboseValuesForFields() {
+  getVerboseValuesForFields(): Dictionary<Dictionary> {
     return this.dataServices.getVerboseValuesForFields();
   }
 
-  getRegisteredValues() {
+  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
     return this.dataServices.getAggregatedData().registeredValues;
   }
 
-  notifyViewToBuildDirectory() {
+  notifyViewToBuildDirectory(): void {
     this.view.refresh();
   }
 
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
-  getInitiativesForFieldAndSelectionKey(field, key) {
+  getInitiativesForFieldAndSelectionKey(field: string, key?: string): Initiative[] {
     if (key == null)
       return this.dataServices.getAggregatedData().loadedInitiatives;
     else
-      return this.dataServices.getAggregatedData().registeredValues[field][key];
+      return this.dataServices.getAggregatedData().registeredValues[field]?.[key] ?? [];
   }
 
-  getInitiativeByUniqueId(uid) {
-    return this.dataServices.getAggregatedData().initiativeByUniqueId[uid];
+  getInitiativeByUniqueId(uid: string): Initiative | undefined {
+    return this.dataServices.getAggregatedData().initiativesByUid[uid];
   }
 
   doesDirectoryHaveColours() {
     return this.config.doesDirectoryHaveColours();
   }
 
-  notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives) {
+  notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]): void {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -65,7 +69,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
 
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options = { maxZoom: this.config.getMaxZoomOnGroup() };
+    let options: ZoomOption = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
       options = { maxZoom: this.config.getMaxZoomOnOne() };
 
@@ -90,7 +94,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
   }
 
 
-  notifyMapNeedsToNeedsToSelectInitiative(initiatives) {
+  notifyMapNeedsToNeedsToSelectInitiative(initiatives: Initiative[]): void {
     // eventbus.publish({
     //   topic: "Map.fitBounds",
     //   data: {
@@ -101,7 +105,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     //   }
     // }); //should be doing this
 
-    let options = { maxZoom: this.config.getMaxZoomOnGroup() };
+    let options: ZoomOption = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
       options = { maxZoom: this.config.getMaxZoomOnOne() };
 
@@ -126,13 +130,13 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     }
   }
 
-  onInitiativeMouseoverInSidebar(initiative) {
+  onInitiativeMouseoverInSidebar(initiative: Initiative): void {
     eventbus.publish({
       topic: "Map.needToShowInitiativeTooltip",
       data: initiative
     });
   }
-  onInitiativeMouseoutInSidebar(initiative) {
+  onInitiativeMouseoutInSidebar(initiative: Initiative): void {
     eventbus.publish({
       topic: "Map.needToHideInitiativeTooltip",
       data: initiative
@@ -148,7 +152,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     });
   }
 
-  removeFilters(filterName = null) {
+  removeFilters(filterName?: string) {
     //remove specific filter
     if (filterName) {
       eventbus.publish({
@@ -186,7 +190,7 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     // });
   }
 
-  initiativeClicked(initiative) {
+  initiativeClicked(initiative: Initiative): void {
     if (initiative) {
       //this.parent.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
@@ -214,14 +218,14 @@ export class DirectoryPresenter extends BaseSidebarPresenter {
     }
   }
 
-  latLngBounds(initiatives) {
+  latLngBounds(initiatives: Initiative[]): Box2d  {
     return this.dataServices.latLngBounds(initiatives);
   }
 
   _eventbusRegiter() {
     eventbus.subscribe({
       topic: "Initiative.reset",
-      callback: (data) => {
+      callback: (_) => {
         // User has deselected
         // TODO: This probably shouldn\t be here
         eventbus.publish({
