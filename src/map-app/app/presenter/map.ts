@@ -1,16 +1,22 @@
 import { BasePresenter } from '../presenter';
+import * as d3 from 'd3';
 import * as eventbus from '../eventbus';
+import { Config } from '../model/config_schema';
+import { DataServices, Initiative } from '../model/dataservices';
+import { MarkerViewFactory } from '../view/map/marker';
+import { SidebarView } from '../view/sidebar';
+import { Dictionary } from '../../common_types';
+import { MapView } from '../view/map';
 
 export class MapPresenterFactory {
+  private initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
+  private loadedInitiatives: Initiative[] = [];
   
-  constructor(config, dataservices, markerView, getSidebarView) {
-    this.config = config;
-    this.dataservices = dataservices;
-    this.markerView = markerView;
+  constructor(readonly config: Config,
+              readonly dataservices: DataServices,
+              readonly markerView: MarkerViewFactory,
+              readonly getSidebarView: Promise<SidebarView> ) {
     // for deferred load of sidebarView - breaking a recursive dep
-    this.getSidebarView = getSidebarView;
-    this.initiativesOutsideOfFilterUIDMap = {};
-    this.loadedInitiatives = [];
     this.filtered = {};
     this.filteredInitiativesUIDMap = {};
     this.verboseNamesMap = {};
@@ -22,12 +28,14 @@ export class MapPresenterFactory {
   }
 
   onNewInitiatives() {
-    this.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.dataservices.getAggregatedData().initiativesByUid);
+    this.initiativesOutsideOfFilterUIDMap = Object.assign(
+      {}, this.dataservices.getAggregatedData().initiativesByUid
+    );
     this.loadedInitiatives = this.dataservices.getAggregatedData().loadedInitiatives;
   }
   
-  createPresenter(view) {
-    const p = new Presenter(this);
+  createPresenter(view: MapView): MapPresenter {
+    const p = new MapPresenter(this);
     p.registerView(view);
     eventbus.subscribe({
       topic: "Initiative.datasetLoaded",
@@ -67,13 +75,18 @@ export class MapPresenterFactory {
 
     eventbus.subscribe({
       topic: "Initiative.loadStarted",
-      callback: (data) => {
+      callback: (data: { message: string, error?: string }) => {
         p.onInitiativeLoadMessage(data);
       }
     });
 
 
-    eventbus.subscribe({ topic: "Initiative.loadFailed", callback: (data) => { p.onInitiativeLoadMessage(data); } });
+    eventbus.subscribe({
+      topic: "Initiative.loadFailed",
+      callback: (data) => {
+        p.onInitiativeLoadMessage(data);
+      }
+    });
     // TODO - strip out this mechanism from everywhere it appears:
     //eventbus.subscribe({topic: "Initiative.selected", callback: (data) => { p.onInitiativeSelected(data); } });
     eventbus.subscribe({
@@ -206,16 +219,32 @@ export class MapPresenterFactory {
   }
 }
 
-export class Presenter extends BasePresenter {
-
-  constructor(factory, view) {
-    super(view);
-    this.factory = factory;
-    this.previouslySelected = [];
+export class MapPresenter extends BasePresenter {
+  readonly previouslySelected = [];
+  
+  constructor(readonly factory: MapPresenterFactory, readonly view: MapView) {
+    super();
   }
     
-  static copyTextToClipboard(text) {
-    var textArea = document.createElement("textarea");
+  static copyTextToClipboard(text: string) {
+    const body = d3.select(document.body)
+    const textArea = body.append("textarea")
+      .attr(
+        "style",
+        // Place in top-left corner of screen regardless of scroll position.
+        "position: fixed; top: 0; left: 0; "+
+          // Ensure it has a small width and height. Setting to 1px / 1em
+          // doesn't work as this gives a negative w/h on some browsers.
+          "width: 2em; height: 2em; "+
+          // We don't need padding, reducing the size if it does flash render.
+          "padding: 0; "+
+          // Clean up any borders.          
+          "border: none; outline: none; box-shadow: none; "+
+          // Avoid flash of white box if rendered for any reason.
+          "background: transparent"
+           )
+      .attr("value", text)
+    
     // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
     //
     // *** This styling is an extra step which is likely not required. ***
@@ -233,41 +262,16 @@ export class Presenter extends BasePresenter {
     // copy to the clipboard.
     //
 
-    // Place in top-left corner of screen regardless of scroll position.
-    textArea.style.position = 'fixed';
-    textArea.style.top = 0;
-    textArea.style.left = 0;
-
-    // Ensure it has a small width and height. Setting to 1px / 1em
-    // doesn't work as this gives a negative w/h on some browsers.
-    textArea.style.width = '2em';
-    textArea.style.height = '2em';
-
-    // We don't need padding, reducing the size if it does flash render.
-    textArea.style.padding = 0;
-
-    // Clean up any borders.
-    textArea.style.border = 'none';
-    textArea.style.outline = 'none';
-    textArea.style.boxShadow = 'none';
-
-    // Avoid flash of white box if rendered for any reason.
-    textArea.style.background = 'transparent';
-
-
-    textArea.value = text;
-
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
+    textArea.node()?.focus();
+    textArea.node()?.select();
 
     try {
-      var successful = document.execCommand('copy');
+      document.execCommand('copy'); // FIXME this method has been deprecated!
     } catch (err) {
       console.log('Oops, unable to copy', err);
     }
 
-    document.body.removeChild(textArea);
+    textArea.remove()
   }
 
   getTileUrl() {
@@ -283,7 +287,7 @@ export class Presenter extends BasePresenter {
       click: (e) => {
         // Deselect any selected markers
         if (e.originalEvent.ctrlKey) {
-          Presenter.copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
+          MapPresenter.copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
         }
 
         eventbus.publish({
@@ -363,7 +367,7 @@ export class Presenter extends BasePresenter {
 
   }
   
-  onInitiativeLoadMessage(data) {
+  onInitiativeLoadMessage(data: { message: string, error?: string }) {
     /* The protecting veil is now obsolete. */
     //view.showProtectingVeil(data.message);
     // TODO - hook this up to a log?
@@ -416,7 +420,7 @@ export class Presenter extends BasePresenter {
 
   getInitialZoom() { }
 
-  setActiveArea(data) {
+  setActiveArea(data: { offset: number }) {
     this.view.setActiveArea(data);
   }
 

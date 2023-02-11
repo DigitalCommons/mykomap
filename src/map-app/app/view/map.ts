@@ -1,13 +1,19 @@
 "use strict";
-const d3 = require('d3');
-const leaflet = require('leaflet');
-const activeArea = require('leaflet-active-area');
-const contextmenu = require('leaflet-contextmenu');
-const { BaseView } = require('./base');
-const { MapPresenterFactory } = require('../presenter/map');
+
+import { Dictionary } from "../../common_types";
+import { DialogueSize } from "../model/config_schema";
+import { MapPresenter, MapPresenterFactory } from "../presenter/map";
+import { MarkerViewFactory } from "./map/marker";
+import {  BaseView  } from './base';
+
+import * as d3 from 'd3';
+import * as leaflet from 'leaflet';
+import * as activeArea from 'leaflet-active-area';
+import * as contextmenu from 'leaflet-contextmenu';
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
-const leafletCss = require('leaflet/dist/leaflet.css');
+import * as leafletCss from 'leaflet/dist/leaflet.css';
+
 delete leaflet.Icon.Default.prototype._getIconUrl;
 leaflet.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -15,33 +21,42 @@ leaflet.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-
+interface LoaderConfig {
+  error: string;
+  text: string;
+  container: string;
+  id: string;
+}
 
 export class MapView extends BaseView {
+  readonly presenter: MapPresenter;
+  
   map;
-  flag = false;
+  private flag: boolean = false;
+  private _settingActiveArea: boolean = false;
+  private readonly descriptionPercentage: number;
+  private readonly dialogueSizeStyles: HTMLStyleElement;
+  private readonly _config: { putSelectedMarkersInClusterGroup: boolean } = {
+    putSelectedMarkersInClusterGroup: false
+  };
 
   /// Initialises the view, but does not create the map yet.
   ///
   /// To do that, call #createMap
-  constructor(mapPresenterFactory, labels, dialogueSize, markerViewFactory) {
+  constructor(mapPresenterFactory: MapPresenterFactory,
+              readonly labels: Dictionary,
+              readonly dialogueHeight: string = '225px',
+              readonly dialogueWidth: string = '35vw',
+              readonly descriptionRatio: number = 2.5,
+              readonly markerViewFactory: MarkerViewFactory) {
     super();
-    this.markerViewFactory = markerViewFactory;
-    this.labels = labels;
-    this._config = {
-      putSelectedMarkersInClusterGroup: false
-    };
-    
-    this.dialogueSize = dialogueSize;
-    
-    this.descriptionRatio = parseInt(dialogueSize.descriptionRatio);
-    this.descriptionPercentage = Math.round(100 / (this.descriptionRatio + 1) * this.descriptionRatio);
-    
+    this.presenter = mapPresenterFactory.createPresenter(this);
+    this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
   div.leaflet-popup-content {
-      height: ${this.dialogueSize.height};
-      width: ${this.dialogueSize.width}!important;
+      height: ${this.dialogueHeight};
+      width: ${this.dialogueWidth}!important;
   }
   
   .sea-initiative-popup .sea-initiative-details {
@@ -53,17 +68,15 @@ export class MapView extends BaseView {
   }
   
   .sea-initiative-popup{
-    left: ${-parseInt(this.dialogueSize.width.split("v")[0]) / 2}vw!important;
+    left: calc(-${this.dialogueWidth} / 2)!important;
   }`;
 
-    
-    this.setPresenter(mapPresenterFactory.createPresenter(this));
   }
 
   createMap() {
     document.body.appendChild(this.dialogueSizeStyles);
     
-    const loader = (config) => {
+    const loader = (config: LoaderConfig) => {
       return () => {
         //example loading
         //with css
@@ -74,16 +87,17 @@ export class MapView extends BaseView {
         }
         else {
           let loading = d3.select('#' + config.id);
-          if (!loading.node()) {
+          if (loading.empty()) {
             // Create the node if it is missing
-            loading = d3.select(config.container).append("div");
-            loading.attr("id", config.id);
-            loading.append("div").attr("id", config.id + "spin");
-            loading.append("p").attr("id", config.id + "txt");
+            const loading2 = d3.select(config.container).append("div");
+            loading2.attr("id", config.id);
+            loading2.append("div").attr("id", config.id + "spin");
+            loading2.append("p").attr("id", config.id + "txt");
+            loading2.style('display', 'block');
           }
-
-          // Ensure node is displayed
-          loading.style('display', 'block');
+          else
+            // Ensure node is displayed
+            loading.style('display', 'block');
 
           //edit text
           d3.select("#" + config.id + "txt").text(config.text);
@@ -91,7 +105,7 @@ export class MapView extends BaseView {
       };
     }
 
-    const stopLoader = (config) => {
+    const stopLoader = (config: { id: string }) => {
       return () => {
         //example loading
         //with css
@@ -100,8 +114,8 @@ export class MapView extends BaseView {
       };
     }
 
-    var SpinMapMixin = {
-      seaLoading: (state, options) => {
+    const SpinMapMixin = {
+      seaLoading: (state: boolean, options: { error: string }) => {
         if (!!state) {
           var myLoader = loader({
             error: options.error,
@@ -119,7 +133,7 @@ export class MapView extends BaseView {
 
 
     //experiments
-    var SpinMapInitHook = function() {
+    const SpinMapInitHook = function() {
       this.on('layeradd', (e) => {
         // If added layer is currently loading, spin !
         if (typeof e.layer.on !== 'function') return;
@@ -390,7 +404,7 @@ export class MapView extends BaseView {
     let lat = this.map.getCenter().lat;
 
     //this is from the config, so if you change the unit there you need to change it here
-    const dialogueHeight = parseInt(this.dialogueSize.height.split("px"));
+    const dialogueHeight = parseInt(this.dialogueHeight.split("px"));
 
     //get a latitude that shows the whole dialogue on screen
     if (this.map.project(centre).y - this.map.getPixelBounds().min.y < dialogueHeight) {
@@ -469,8 +483,8 @@ export class MapView extends BaseView {
     this.map.setView(latLng, 16, { animate: true });
   }
 
-  startLoading(data) {
-    this.map.seaLoading(true, { error: data.error });
+  startLoading(data: { message: string, error?: string }) {
+    this.map.seaLoading(true, data.error && { error: data.error });
   }
 
   stopLoading() {
@@ -478,10 +492,10 @@ export class MapView extends BaseView {
 
   }
 
-  setActiveArea(data) {
+  setActiveArea(data: { offset: number }) {
     if (this._settingActiveArea) return;
     window.mykoMap.once("moveend", () => {
-      this._settingActiveArea = undefined;
+      this._settingActiveArea = false;
     });
     this._settingActiveArea = true;
     let css = {
