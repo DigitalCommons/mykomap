@@ -3,6 +3,7 @@ import { StackItem } from '../../../stack';
 import * as eventbus from '../../eventbus';
 import { Config } from '../../model/config';
 import { DataServices, Initiative } from '../../model/dataservices';
+import { SelectAndZoomData, ZoomOption } from '../../view/map';
 import { MarkerViewFactory } from '../../view/map/marker';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
@@ -12,10 +13,6 @@ function arrayMax(array: number[]) {
 }
 function arrayMin(array: number[]) {
   return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
-}
-
-interface ZoomOption {
-  maxZoom?: number;
 }
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
@@ -116,16 +113,17 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     if (initiatives.length > 0) {
       const lats = initiatives.map(x => x.lat || defaultPos[0]);
       const lngs = initiatives.map(x => x.lng || defaultPos[1]);
+      const data: SelectAndZoomData = {
+        initiatives: initiatives,
+        bounds: [
+          [arrayMin(lats), arrayMin(lngs)],
+          [arrayMax(lats), arrayMax(lngs)]
+        ]
+        , options
+      };
       eventbus.publish({
         topic: "Map.selectAndZoomOnInitiative",
-        data: {
-          initiatives: initiatives,
-          bounds: [
-            [arrayMin(lats), arrayMin(lngs)],
-            [arrayMax(lats), arrayMax(lngs)]
-          ]
-          , options
-        }
+        data: data
       });
     }
   }

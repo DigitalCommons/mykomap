@@ -12,13 +12,13 @@ export class MapMarkerView extends BaseView {
   dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
 
   
-  constructor(presenter, map, initiative, defaultLatLng, mapMarkerViewFactory) {
+  constructor(dataServices, popup, map, initiative, defaultLatLng, mapMarkerViewFactory) {
     super();
+    this.presenter = new MapMarkerPresenter(this, dataServices, popup);
     this.defaultLatLng = defaultLatLng;
     this.factory = mapMarkerViewFactory;
     this.initiative = initiative;
     this.mapObj = map;
-    this.setPresenter(presenter); // required before the following code is executed.
 
     // options argument overrides our default options:
     const opts = Object.assign(this.dfltOptions, {
@@ -320,9 +320,7 @@ export class MarkerViewFactory {
   }
 
   createMarker(map, initiative) {
-    const presenter = new MapMarkerPresenter(dataServices, this.popup);
-    const view = new MapMarkerView(presenter, map, initiative, this.defaultLatLng, this);
-    presenter.registerView(view);
+    const view = new MapMarkerView(this.dataServices, this.popup, map, initiative, this.defaultLatLng, this);
     this.markerForInitiative[initiative.uri] = view;
     return view;
   }

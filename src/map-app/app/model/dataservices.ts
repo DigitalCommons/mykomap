@@ -114,9 +114,9 @@ export class Initiative {
   }  
 }
 
-interface Filter {
-  filterName: string;
-  verboseName: string;
+export interface Filter {
+  filterName?: string;
+  verboseName?: string;
   initiatives: Initiative[];
 }
 
@@ -352,7 +352,7 @@ export interface DataServices {
   getSidebarButtonColour(): string;
 
   // requires dataAggregator
-  latLngBounds(initiatives: Initiative[]): Box2d;
+  latLngBounds(initiatives?: Initiative[]): Box2d;
 
   // Loads the currently active dataset(s) and configured vocabs
   //
@@ -754,7 +754,7 @@ export class DataServicesImpl implements DataServices {
     return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
   }
   
-  latLngBounds(initiatives: Initiative[]): Box2d {
+  latLngBounds(initiatives?: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east
     //

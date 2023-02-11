@@ -1,9 +1,8 @@
 import * as d3 from 'd3';
 import '../map-app.css'; // Required to embed styles 
 import { Config } from './model/config';
-import { MapView } from './view/map';
 
-export function initView(config: Config, mapView: MapView): void {
+export function initView(config: Config): void {
   const lang = config.getLanguage();
   
   // We need to be careful to guard against weird characters, especially quotes,
@@ -54,8 +53,6 @@ export function initView(config: Config, mapView: MapView): void {
         "_blank"
       );
     });
-
-  mapView.createMap();
 }
 
 

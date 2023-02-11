@@ -1,5 +1,6 @@
 import { StackItem } from '../../../stack';
 import * as eventbus from '../../eventbus';
+import { Filter } from '../../model/dataservices';
 import { BasePresenter }from '../../presenter';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
@@ -14,6 +15,7 @@ export interface NavigationButtons {
   back: NavigationCallback;
   forward: NavigationCallback;
 }
+
 
 /// This class is a base for sidebar presenters.
 ///
@@ -48,7 +50,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
       if(newContent instanceof SearchResults && newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
-          let filterData = {
+          let filterData: Filter = {
             filterName: filter.filterName,
             initiatives: newContent.initiatives,
             verboseName: filter.verboseName
@@ -60,9 +62,10 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
         });
       }
 
+      const data: Filter = {initiatives: newContent.initiatives};
       eventbus.publish({
         topic: "Map.addSearchFilter",
-        data: {initiatives: newContent.initiatives}
+        data: data,
       }); //historySEARCH
 
       this.historyButtonsUsed(lastContent);
@@ -85,7 +88,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
         if(newContent.filters[0]){     
           newContent.filters.forEach(filter=>{
-            let filterData = {
+            let filterData: Filter = {
               filterName: filter.filterName,
               initiatives: newContent.initiatives,
               verboseName: filter.verboseName
@@ -97,9 +100,10 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
           });
         }
 
+        const data: Filter = {initiatives: newContent.initiatives};
         eventbus.publish({
           topic: "Map.addSearchFilter",
-          data: {initiatives: newContent.initiatives}
+          data: data,
         }); //historySEARCH
       }else{
         eventbus.publish({

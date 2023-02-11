@@ -3,9 +3,9 @@ import { BaseSidebarPresenter } from './sidebar/base';
 import { Stack } from '../../stack';
 
 export class SidebarPresenter extends BaseSidebarPresenter {
-  constructor(view, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {
+  constructor(view, map, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {
     super();
-    this.registerView(view);
+    this.view = view;
     this.contentStack = new Stack();
     this.sidebarWidth = 0;
     this.showDirectoryPanel = showDirectoryPanel;
@@ -13,6 +13,7 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     this.showAboutPanel = showAboutPanel;
     this.showDatasetsPanel = showDatasetsPanel;
     this._eventbusRegister();
+    this.map = map;
   }
   
   changeSidebar(name) {
@@ -131,25 +132,8 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     // });
   }
 
-  updateSidebarWidth(data) {
-    const directoryBounds = data.directoryBounds,
-          initiativeListBounds = data.initiativeListBounds;
-    this.sidebarWidth =
-      directoryBounds.x -
-      window.mykoMap.getContainer().getBoundingClientRect().x +
-      directoryBounds.width +
-        (initiativeListBounds.x -
-         window.mykoMap.getContainer().getBoundingClientRect().x >
-          0
-          ? initiativeListBounds.width
-          : 0);
-    
-    eventbus.publish({
-      topic: "Map.setActiveArea",
-      data: {
-        offset: this.sidebarWidth
-      }
-    });
+  updateSidebarWidth(width) {
+    this.sidebarWidth = width;
   }
   
   getSidebarWidth() {

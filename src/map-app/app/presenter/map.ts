@@ -1,30 +1,37 @@
 import { BasePresenter } from '../presenter';
 import * as d3 from 'd3';
 import * as eventbus from '../eventbus';
+import * as leaflet from 'leaflet';
 import { Config } from '../model/config_schema';
-import { DataServices, Initiative } from '../model/dataservices';
+import { DataServices, Initiative, Filter } from '../model/dataservices';
 import { MarkerViewFactory } from '../view/map/marker';
 import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
-import { MapView } from '../view/map';
+import { MapView, SelectAndZoomData, Map, BoundsData, ZoomOption } from '../view/map';
+import { Marker } from 'leaflet';
+
+
+// Cater for the earlier JS hack in which a boolean is stored in
+// marker objects...
+interface ExtendedMarker extends Marker {
+  hasPhysicalLocation: boolean;
+}
 
 export class MapPresenterFactory {
-  private initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
-  private loadedInitiatives: Initiative[] = [];
+  initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
+  public loadedInitiatives: Initiative[] = [];
+  filtered: Dictionary<Initiative[]> = {};
+  filteredInitiativesUIDMap: Dictionary<Initiative> = {};
+  verboseNamesMap: Dictionary = {};
+  hidden: Initiative[] = [];
+  allMarkers: Marker[] = [];
+  public map?: Map;
   
   constructor(readonly config: Config,
               readonly dataservices: DataServices,
               readonly markerView: MarkerViewFactory,
-              readonly getSidebarView: Promise<SidebarView> ) {
-    // for deferred load of sidebarView - breaking a recursive dep
-    this.filtered = {};
-    this.filteredInitiativesUIDMap = {};
-    this.verboseNamesMap = {};
-    this.initiativesOutsideOfFilterUIDMap;
-    this.loadedInitiatives;
-    this.hidden = [];
-    this.lastRequest = [];
-    this.allMarkers = [];
+              // for deferred load of sidebarView - breaking a recursive dep
+              readonly getSidebarView: (f: MapPresenterFactory) => Promise<SidebarView> ) {
   }
 
   onNewInitiatives() {
@@ -35,13 +42,12 @@ export class MapPresenterFactory {
   }
   
   createPresenter(view: MapView): MapPresenter {
-    const p = new MapPresenter(this);
-    p.registerView(view);
+    const p = new MapPresenter(this, view);
     eventbus.subscribe({
       topic: "Initiative.datasetLoaded",
-      callback: (data) => {
+      callback: () => {
         this.onNewInitiatives();
-        p.onInitiativeDatasetLoaded(data);
+        p.onInitiativeDatasetLoaded();
       }
     });
     eventbus.subscribe({
@@ -91,7 +97,7 @@ export class MapPresenterFactory {
     //eventbus.subscribe({topic: "Initiative.selected", callback: (data) => { p.onInitiativeSelected(data); } });
     eventbus.subscribe({
       topic: "Markers.needToShowLatestSelection",
-      callback: (data) => {
+      callback: (data: { selected: Initiative[] }) => {
         p.onMarkersNeedToShowLatestSelection(data);
       }
     });
@@ -103,7 +109,7 @@ export class MapPresenterFactory {
     });
     eventbus.subscribe({
       topic: "Map.needToShowInitiativeTooltip",
-      callback: (data) => {
+        callback: (data: Initiative) => {
         p.onNeedToShowInitiativeTooltip(data);
       }
     });
@@ -129,7 +135,7 @@ export class MapPresenterFactory {
 
     eventbus.subscribe({
       topic: "Map.fitBounds",
-      callback: (data) => {
+      callback: (data: BoundsData) => {
         p.onBoundsRequested(data);
       }
     });
@@ -145,7 +151,7 @@ export class MapPresenterFactory {
 
     eventbus.subscribe({
       topic: "Map.addFilter", //change this
-      callback: (data) => {
+      callback: (data: Filter) => {
         p.addFilter(data);
       }
     });
@@ -158,7 +164,7 @@ export class MapPresenterFactory {
 
     eventbus.subscribe({
       topic: "Map.removeFilter",
-      callback: (data) => {
+      callback: (data: Filter) => {
         p.removeFilter(data);
       }
     });
@@ -200,27 +206,28 @@ export class MapPresenterFactory {
     return Object.keys(this.filtered);
   }
 
-  getFiltersFull(){
-    let filterArray = []
+  getFiltersFull(): Filter[] {
+    const filterArray: Filter[] = []
     
     for(let filterName in this.verboseNamesMap){
       filterArray.push({
-        "filterName": filterName,
-        "verboseName": this.verboseNamesMap[filterName],
-        "initiatives": this.filtered[filterName]
+        filterName: filterName,
+        verboseName: this.verboseNamesMap[filterName] ?? '',
+        initiatives: this.filtered[filterName] ?? []
       })
     }
 
     return filterArray;
   }
 
-  getFiltersVerbose() {
-    return Object.values(this.verboseNamesMap);
+  getFiltersVerbose(): string[] {
+    return Object.values(this.verboseNamesMap)
+      .filter((i): i is string => i !== undefined);
   }
 }
 
 export class MapPresenter extends BasePresenter {
-  readonly previouslySelected = [];
+  previouslySelected: Initiative[] = [];
   
   constructor(readonly factory: MapPresenterFactory, readonly view: MapView) {
     super();
@@ -282,20 +289,21 @@ export class MapPresenter extends BasePresenter {
     return this.factory.config.getMapAttribution();
   }
   
-  getMapEventHandlers() {
+  getMapEventHandlers(): Dictionary<leaflet.LeafletEventHandlerFn> {
     return {
-      click: (e) => {
-        // Deselect any selected markers
-        if (e.originalEvent.ctrlKey) {
-          MapPresenter.copyTextToClipboard(e.latlng.lat + "," + e.latlng.lng);
+      click: (e: leaflet.LeafletEvent) => {
+        const me = e as leaflet.LeafletMouseEvent; // Coersion seems to be unavoidable?
+        // Deselect any selected markers        
+        if (me?.originalEvent?.ctrlKey && me?.latlng) {
+          MapPresenter.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
         }
-
+        
         eventbus.publish({
           topic: "Directory.InitiativeClicked",
           data: ""
         });
       },
-      load: (e) => {
+      load: (_: leaflet.LeafletEvent) => {
         console.log("Map loaded");
 
         let defaultOpenSidebar = this.factory.config.getDefaultOpenSidebar();
@@ -307,27 +315,25 @@ export class MapPresenter extends BasePresenter {
         });
 
       },
-      resize: (e) => {
-        window.mykoMap.invalidateSize();
+      resize: (_: leaflet.LeafletEvent) => {
+        this.view.map?.invalidateSize();
         console.log("Map resize", window.outerWidth);
       }
     };
   }
 
-  onInitiativeNew(data) {
-    const initiative = data,
-          marker = this.view.addMarker(initiative).marker;
+  onInitiativeNew(initiative: Initiative) {
+    const marker = this.view.addMarker(initiative).marker as ExtendedMarker; // Coercion!
 
     if (marker.hasPhysicalLocation) this.factory.allMarkers.push(marker);
   }
   
-  refreshInitiative(data) {
-    const initiative = data;
+  refreshInitiative(initiative: Initiative) {
     this.view.refreshMarker(initiative);
   }
 
 
-  onInitiativeReset(data) {
+  onInitiativeReset(initiative: Initiative) {
 
     this.view.removeAllMarkers();
     this.factory.allMarkers = [];
@@ -338,8 +344,10 @@ export class MapPresenter extends BasePresenter {
 
   onInitiativeComplete() {
     // Load the markers into the clustergroup
-    this.view.fitBounds(this.getInitialBounds());
-    this.view.unselectedClusterGroup.addLayers(this.factory.allMarkers);
+    const bounds = this.getInitialBounds();
+    if (bounds)
+      this.view.fitBounds({bounds: bounds});
+    this.view.unselectedClusterGroup?.addLayers(this.factory.allMarkers);
     console.log("onInitiativeComplete");
     // eventbus.publish({
     //   topic: "Markers.completed",
@@ -352,7 +360,7 @@ export class MapPresenter extends BasePresenter {
   }
 
 
-  onInitiativeDatasetLoaded(data) {
+  onInitiativeDatasetLoaded() {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
     //console.log(data.latLngBounds());
@@ -374,7 +382,7 @@ export class MapPresenter extends BasePresenter {
     this.view.startLoading(data);
   }
 
-  onMarkersNeedToShowLatestSelection(data) {
+  onMarkersNeedToShowLatestSelection(data: { selected: Initiative[] }) {
     this.previouslySelected.forEach((e) => {
       this.view.setUnselected(e);
     });
@@ -387,35 +395,33 @@ export class MapPresenter extends BasePresenter {
     });
   }
 
-  onNeedToShowInitiativeTooltip(data) {
+  onNeedToShowInitiativeTooltip(data: Initiative) {
     this.view.showTooltip(data);
   }
   
-  onNeedToHideInitiativeTooltip(data) {
+  onNeedToHideInitiativeTooltip(data: Initiative) {
     this.view.hideTooltip(data);
   }
   
-  onMapNeedsToBeZoomedAndPanned(data) {
-    console.log("onMapNeedsToBeZoomedAndPanned ", data);
-    const latLngBounds = data;
+  onMapNeedsToBeZoomedAndPanned(latLngBounds: SelectAndZoomData) {
+    console.log("onMapNeedsToBeZoomedAndPanned ", latLngBounds);
     this.view.flyToBounds(latLngBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
   }
 
-  onBoundsRequested(data) {
+  onBoundsRequested(data: BoundsData) {
     this.view.fitBounds(data);
   }
 
-  setZoom(data) {
-    console.log("Zooming to ", data);
-    const zoom = data;
+  setZoom(zoom: number) {
+    console.log("Zooming to ", zoom);
     this.view.setZoom(zoom);
   }
 
   getInitialBounds() {
     return this.factory.config.getInitialBounds() == undefined ?
-           this.factory.dataservices.latLngBounds(null) : this.factory.config.getInitialBounds();
+           this.factory.dataservices.latLngBounds() : this.factory.config.getInitialBounds();
   }
 
   getInitialZoom() { }
@@ -441,7 +447,7 @@ export class MapPresenter extends BasePresenter {
       this.removeFilters();
   }
 
-  addFilter(data) {
+  addFilter(data: Filter) {
     let initiatives = data.initiatives;
     let filterName = data.filterName;
     let verboseName = data.verboseName;
@@ -494,7 +500,7 @@ export class MapPresenter extends BasePresenter {
     this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
   }
 
-  removeFilter(data) {
+  removeFilter(data: Filter) {
     const filterName = data.filterName;
     //if filter doesn't exist don't do anything
     if (!Object.keys(this.factory.filtered).includes(filterName))
@@ -511,14 +517,14 @@ export class MapPresenter extends BasePresenter {
     }
 
     //add in the values that you are removing 
-    oldFilterVals.forEach(i => {
+    oldFilterVals?.forEach(i => {
       this.factory.initiativesOutsideOfFilterUIDMap[i.uri] = i;
     });
 
     //remove filter initatitives 
     //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
     Object.keys(this.factory.filtered).forEach(k => {
-      this.factory.filtered[k].forEach(i => {
+      this.factory.filtered[k]?.forEach(i => {
         //add in unique ones
         this.factory.filteredInitiativesUIDMap[i.uri] = i;
         //remove the ones you added
@@ -547,7 +553,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //highlights markers, hides markers not in the current selection
-  addSearchFilter(data) {
+  addSearchFilter(data: Filter) {
     
     //if no results remove the filter, currently commented out
     if (data.initiatives != null && data.initiatives.length == 0) {
@@ -588,7 +594,7 @@ export class MapPresenter extends BasePresenter {
     //zoom and pan
 
     if (data.initiatives.length > 0) {
-      var options = {
+      var options: ZoomOption = {
         maxZoom: this.factory.config.getMaxZoomOnSearch()
       }
       if (options.maxZoom == 0)
@@ -617,7 +623,7 @@ export class MapPresenter extends BasePresenter {
     });
   }
 
-  selectAndZoomOnInitiative(data) {
+  selectAndZoomOnInitiative(data: SelectAndZoomData) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
@@ -645,7 +651,7 @@ export class MapPresenter extends BasePresenter {
       this.factory.markerView.showMarkers(this.factory.hidden);
 
     //clear last request so you can search the same data again
-    this.factory.lastRequest = [];
+//    this.factory.lastRequest = [];
 
     //reset the hidden array
     this.factory.hidden = [];

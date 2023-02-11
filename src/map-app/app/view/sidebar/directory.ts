@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import { Dictionary } from "../../../common_types";
 import * as eventbus from "../../eventbus";
 import { Config } from "../../model/config";
-import { DataServices, Initiative } from "../../model/dataservices";
+import { DataServices, Initiative, Filter } from "../../model/dataservices";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
 import { MarkerViewFactory } from "../map/marker";
@@ -221,13 +221,14 @@ export class DirectorySidebarView extends BaseSidebarView {
       title = selectionLabel;
     }
 
+    const data: Filter = {
+      initiatives: initiatives,
+      filterName: selectionKey ?? '',
+      verboseName: (directoryField + ": " + title)
+    };
     eventbus.publish({
       topic: "Map.addFilter",
-      data: {
-        initiatives: initiatives,
-        filterName: selectionKey,
-        verboseName: (directoryField + ": " + title)
-      }
+      data: data
     });
 
 
@@ -398,19 +399,12 @@ export class DirectorySidebarView extends BaseSidebarView {
       .on(
         "transitionend",
         (event: TransitionEvent) => {
-          const target = event.target as HTMLElement | undefined; // Need some coercion here
+          const target = event.target as HTMLElement | null | undefined; // Need some coercion here
           const element = initiativeListSidebar.node() as HTMLElement | undefined | null; // ditto
           if (!element || initiativeListSidebar.empty() || !target || target?.className === "w3-btn")
             return;
-          if (event.propertyName === "transform") {
-            eventbus.publish({
-              topic: "Sidebar.updateSidebarWidth",
-              data: {
-                target: event.target,
-                directoryBounds: target.getBoundingClientRect(),
-                initiativeListBounds: element.getBoundingClientRect()
-              }
-            });
+          if (event.propertyName === "transform" && target) {
+            this.parent.updateSidebarWidth(target.getBoundingClientRect(), element.getBoundingClientRect());
           }
         },
         false

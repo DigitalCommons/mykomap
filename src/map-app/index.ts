@@ -78,87 +78,40 @@ export function parseUrlParameters(search: string): UrlParams {
 }
 
 
-// Create and initialise the map view
-//
-// `config` should be a config object created using `model/config.ts`
-// `dataServices` should be a DataServices object created using `model/dataservices.ts`
-// returns a MapView object.
-export function mkMapView(config: Config, dataServices: DataServices): MapView {
-
-  
-  const popup = config.getCustomPopup() || getPopup;
-  const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
-
-  // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
-  // when it runs, but SidebarView needs a link to the MapPresenterFactory.
-  // Maybe later the code can be untangled further so there is no loop.
-  const mkSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
-    return new Promise<SidebarView>((resolve) => {
-      const sidebarView = new SidebarView(
-        dataServices.getFunctionalLabels(),
-        config,
-        dataServices,
-        markerViewFactory,
-        mapPresenterFactory,
-        dataServices.getSidebarButtonColour()
-      );
-      resolve(sidebarView);
-    });
-  };
-
-  const mapPresenterFactory =  new MapPresenterFactory(
-    config,
-    dataServices,
-    markerViewFactory,
-    mkSidebarView
-  );
-  
-  const mapView = new MapView(
-    mapPresenterFactory,
-    dataServices.getFunctionalLabels(),
-    dataServices.getDialogueSize(),
-    markerViewFactory
-  );
-
-  return mapView;
-};
-
-
 export async function fetchConfigs(params?: {
-    configJson?: string,
-    versionJson?: string,
-    aboutHtml?: string,
+  configJson?: string,
+  versionJson?: string,
+  aboutHtml?: string,
 }): Promise<ConfigData> {
-    const {
-	configJson = "configuration/config.json",
-	versionJson = "configuration/version.json",
-	aboutHtml =  "configuration/about.html",
-    } = params || {};
-    const config = fetch(configJson);
-    const versions = fetch(versionJson);
-    const about = fetch(aboutHtml);
-    const detectErrors = (r: any) => {
-	// We don't throw an error as I can't seem to catch individual exceptions in the
-	// promise chain below correctly, without a 'Pause on exceptions'
-	// breakpoint firing and fouling the page load, or the load
-	// fouling anyway (for another reason?)
-	return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
-    };
-    const getJson = (r: any) => detectErrors(r) || r.json();
-    const getText = (r: any) => detectErrors(r) || r.text();
-
-    return Promise
-	.all([config.then(getJson), versions.then(getJson), about.then(getText)])
-	.then(([config, versions, about]) => {
+  const {
+	  configJson = "configuration/config.json",
+	  versionJson = "configuration/version.json",
+	  aboutHtml =  "configuration/about.html",
+  } = params || {};
+  const config = fetch(configJson);
+  const versions = fetch(versionJson);
+  const about = fetch(aboutHtml);
+  const detectErrors = (r: any) => {
+	  // We don't throw an error as I can't seem to catch individual exceptions in the
+	  // promise chain below correctly, without a 'Pause on exceptions'
+	  // breakpoint firing and fouling the page load, or the load
+	  // fouling anyway (for another reason?)
+	  return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
+  };
+  const getJson = (r: any) => detectErrors(r) || r.json();
+  const getText = (r: any) => detectErrors(r) || r.text();
+  
+  return Promise
+	  .all([config.then(getJson), versions.then(getJson), about.then(getText)])
+	  .then(([config, versions, about]) => {
 	    if (about instanceof Error) {
-		console.info("Using blank 'about' text as about.html inaccessible.", about.message);
-		console.debug("Ignored fetch error", about);
-		about = '';
+		    console.info("Using blank 'about' text as about.html inaccessible.", about.message);
+		    console.debug("Ignored fetch error", about);
+		    about = '';
 	    }
 	    const combinedConfig = { ...config, ...versions, aboutHtml: about };
 	    return combinedConfig;
-	});
-
+	  }); 
 }
 
 // Start the application in the context fo a web page
@@ -238,8 +191,48 @@ export function webRun(window: Window, base_config: ConfigData): void {
   window.dataServices = dataServices
   
   // Each view will ensure that the code for its presenter is loaded.
-  const mapView = mkMapView(config, dataServices);
-  initView(config, mapView);
+  {
+    const popup = config.getCustomPopup() || getPopup;
+    const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
+    
+    // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
+    // when it runs, but SidebarView needs a link to the MapPresenterFactory.
+    // Maybe later the code can be untangled further so there is no loop.
+    const mkSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
+      return new Promise<SidebarView>((resolve) => {
+        const sidebarView = new SidebarView(
+          dataServices.getFunctionalLabels(),
+          config,
+          dataServices,
+          markerViewFactory,
+          mapPresenterFactory,
+          dataServices.getSidebarButtonColour()
+        );
+        resolve(sidebarView);
+      });
+    };
+
+    const mapPresenterFactory =  new MapPresenterFactory(
+      config,
+      dataServices,
+      markerViewFactory,
+      mkSidebarView
+    );
+
+    const dialogueSize = dataServices.getDialogueSize();
+    const mapView = new MapView(
+      mapPresenterFactory,
+      dataServices.getFunctionalLabels(),
+      dialogueSize.height,
+      dialogueSize.width,
+      dialogueSize.descriptionRatio,
+      markerViewFactory
+    );
+
+    initView(config);
+    mapView.createMap();
+    mapPresenterFactory.map = mapView.map; // Link this back for views to access
+  }
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();

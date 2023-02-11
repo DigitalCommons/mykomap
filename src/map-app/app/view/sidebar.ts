@@ -229,23 +229,14 @@ export class SidebarView extends BaseView {
         "transitionend",
         (event: TransitionEvent) => {
           const target = event.target as HTMLElement|undefined; // Seems to need coercion
-          if (target?.className === "w3-btn") return;
+          if (!target || target?.className === "w3-btn") return;
           if (event.propertyName === "transform") {
             d3.select("#map-app-sidebar-button").on("click", () => this.hideSidebar());
           }
           //select input textbox if possible 
           if (document.getElementById("search-box") != null)
             document.getElementById("search-box")?.focus();
-          
-          eventbus.publish({
-            topic: "Sidebar.updateSidebarWidth",
-            data: {
-              target: event.target,
-              // sidebarWidth: this.clientWidth
-              directoryBounds: target?.getBoundingClientRect(),
-              initiativeListBounds: bounds,
-            }
-          });
+          this.updateSidebarWidth(target.getBoundingClientRect(), bounds);
         },
         false
       )
@@ -260,6 +251,33 @@ export class SidebarView extends BaseView {
       document.getElementById("dir-filter")?.focus();
   }
 
+  updateSidebarWidth(directoryBounds: DOMRect, initiativeListBounds: DOMRect) {
+    const map = this.mapPresenterFactory.map;
+    if (!map)
+      throw new Error("No map created yet"); // Can't sensibly do this if the map isnt set yet
+    const mapBox = map.getContainer().getBoundingClientRect();
+    
+    const sidebarWidth =
+      directoryBounds.x - mapBox.width +
+      directoryBounds.width +
+        (initiativeListBounds.x - mapBox.width >
+          0
+          ? initiativeListBounds.width
+          : 0);
+    
+    eventbus.publish({
+      topic: "Sidebar.updateSidebarWidth",
+      data: sidebarWidth,
+    });
+    eventbus.publish({
+      topic: "Map.setActiveArea",
+      data: {
+        offset: sidebarWidth
+      }
+    });
+
+  }
+  
   // This should be split into three functions:
   // 1. Close the sidebar regardless of current view
   // 2. Close the Initiatives list
@@ -274,16 +292,10 @@ export class SidebarView extends BaseView {
         (event: TransitionEvent) => {
           const target = event.target as HTMLElement|undefined; // Seems to need coercion
           if (target?.className === "w3-btn") return;
-          if (event.propertyName === "transform") {
+          if (event.propertyName === "transform" && target) {
             d3.select("#map-app-sidebar-button").on("click", () => this.showSidebar());
-            eventbus.publish({
-              topic: "Sidebar.updateSidebarWidth",
-              data: {
-                target: event.target,
-                directoryBounds: target?.getBoundingClientRect(),
-                initiativeListBounds: target?.getBoundingClientRect()
-              }
-            });
+            const bounds = target.getBoundingClientRect();
+            this.updateSidebarWidth(bounds, bounds);
             // More coercion seems to be required here
             (window as unknown as {_seaSidebarClosing: boolean})._seaSidebarClosing = true;
           }
@@ -329,15 +341,9 @@ export class SidebarView extends BaseView {
           (event: TransitionEvent) => {
             const target = event.target as HTMLElement|undefined; // Seems to need coercion
             if (target?.className === "w3-btn") return;
-            if (event.propertyName === "transform") {
-              eventbus.publish({
-                topic: "Sidebar.updateSidebarWidth",
-                data: {
-                  target: event.target,
-                  directoryBounds: target?.getBoundingClientRect(),
-                  initiativeListBounds: node.getBoundingClientRect()
-                }
-              });
+            if (event.propertyName === "transform" && target) {
+              const bounds = target.getBoundingClientRect();
+              this.updateSidebarWidth(bounds, bounds);
             }
           },
           false
@@ -359,18 +365,10 @@ export class SidebarView extends BaseView {
         (event: TransitionEvent) => {
           const target = event.target as HTMLElement|undefined; // Seems to need coercion
           if (target?.className === "w3-btn") return;
-          if (event.propertyName === "transform") {
+          if (event.propertyName === "transform" && target) {
             // const initiativeListBounds = initiativeListSidebar.getBoundingClientRect();
-            eventbus.publish({
-              topic: "Sidebar.updateSidebarWidth",
-              data: {
-                target: event.target,
-                // sidebarWidth:
-                //   initiativeListBounds.width + this.getBoundingClientRect().width
-                directoryBounds: target?.getBoundingClientRect(),
-                initiativeListBounds: initiativeListSidebar?.getBoundingClientRect()
-              }
-            });
+            const bounds = target.getBoundingClientRect();
+            this.updateSidebarWidth(bounds, initiativeListSidebar?.getBoundingClientRect());
           }
         },
         false

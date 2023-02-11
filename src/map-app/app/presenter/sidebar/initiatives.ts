@@ -1,6 +1,6 @@
 import { Dictionary } from '../../../common_types';
 import * as eventbus from '../../eventbus';
-import { DataServices, Initiative, MultiPropDef, VocabPropDef } from '../../model/dataservices';
+import { DataServices, Filter, Initiative, MultiPropDef, VocabPropDef } from '../../model/dataservices';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { MapPresenterFactory } from '../map';
 import { BaseSidebarPresenter } from './base';
@@ -180,8 +180,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     const currentFilters = this.map.getFiltersFull();
 
     if (currentFilters.length > 0) {
-      let oldFilter = currentFilters.find(filter => {
-        filter.verboseName.split(":")[0] === filterCategoryName
+      let oldFilter: Filter = currentFilters.find(filter => {
+        filter && filter.verboseName?.split(":")[0] === filterCategoryName
       })
       
       if (oldFilter) {
@@ -198,12 +198,12 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     // Get initiatives for new filter
     const allInitiatives = Object.values(this.dataServices.getAggregatedData().initiativesByUid);
-    const filteredInitiatives = allInitiatives.filter(initiative =>
-      initiative && initiative[propName] == filterValue
+    const filteredInitiatives = allInitiatives.filter((i): i is Initiative =>
+      !!i && i[propName] == filterValue
     )
 
     //create new filter
-    let filterData = {
+    let filterData: Filter = {
       filterName: filterValue,
       initiatives: filteredInitiatives,
       verboseName: filterCategoryName + ": " + filterValueText
@@ -295,13 +295,19 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     }
 
     //filter
-    this.parent.contentStack.append(new SearchResults(data.results, data.text, this.map.getFiltersVerbose(), this.map.getFilters(), this.labels));
+    this.parent.contentStack.append(
+      new SearchResults(data.results, data.text,
+                        this.map.getFiltersVerbose(), this.map.getFilters(), this.labels)
+    );
 
     //highlight markers on search results 
-    //reveal all potentially hidden markers before zooming in on them 
+    //reveal all potentially hidden markers before zooming in on them
+    const data2: Filter = {
+      initiatives: data.results
+    };
     eventbus.publish({
       topic: "Map.addSearchFilter",
-      data: { initiatives: data.results }
+      data: data2,
     });
 
     if (data.results.length == 1) {
