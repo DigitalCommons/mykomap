@@ -58,12 +58,12 @@ export class MapMarkerView extends BaseView {
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-non-geo-marker",
-        cluster: false
+//         cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
       });
 
       this.marker = leaflet.marker(this.defaultLatLng, {
         icon: icon,
-        initiative: this.initiative
+//        initiative: this.initiative // FIXME this *seems* to be unused, and creates type checking errors
       }) as ExtendedMarker;
 
       initiative.__internal.marker = this.marker;
@@ -89,12 +89,12 @@ export class MapMarkerView extends BaseView {
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-marker",
-        cluster: false,
+//        cluster: false, // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
       });
 
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
-        initiative: this.initiative
+//        initiative: this.initiative // FIXME this *seems* to be unused, and creates type checking errors
       });
 
       initiative.__internal.marker = this.marker;
@@ -165,7 +165,7 @@ export class MapMarkerView extends BaseView {
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker",
-          cluster: false
+//          cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
         })
       );
     }
@@ -184,7 +184,7 @@ export class MapMarkerView extends BaseView {
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker sea-selected",
-          cluster: false
+//          cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
         })
       );
     }
