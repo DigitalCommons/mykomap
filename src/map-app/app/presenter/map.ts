@@ -4,18 +4,12 @@ import * as eventbus from '../eventbus';
 import * as leaflet from 'leaflet';
 import { Config } from '../model/config_schema';
 import { DataServices, Initiative, Filter } from '../model/dataservices';
-import { MarkerViewFactory } from '../view/map/marker';
+import { ExtendedMarker, MarkerViewFactory } from '../view/map/marker';
 import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
 import { MapView, SelectAndZoomData, Map, BoundsData, ZoomOption } from '../view/map';
 import { Marker } from 'leaflet';
 
-
-// Cater for the earlier JS hack in which a boolean is stored in
-// marker objects...
-interface ExtendedMarker extends Marker {
-  hasPhysicalLocation: boolean;
-}
 
 export class MapPresenterFactory {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};

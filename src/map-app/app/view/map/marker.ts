@@ -1,24 +1,42 @@
-"use strict";
-const leaflet = require('leaflet');
-const leafletMarkerCluster = require('leaflet.markercluster');
-const leafletAwesomeMarkers = require('leaflet.awesome-markers');
-const eventbus = require('../../eventbus');
-const { MapMarkerPresenter } = require('../../presenter/map/marker');
-const { BaseView } = require('../base');
+import * as leaflet from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.awesome-markers';
+import * as eventbus from '../../eventbus';
+import { MapMarkerPresenter } from '../../presenter/map/marker';
+import { BaseView } from '../base';
+import { DataServices, Initiative } from '../../model/dataservices';
+import { InitiativeRenderFunction } from '../../model/config_schema';
+import { Map } from '../map';
+import { Dictionary, Point2d } from '../../../common_types';
+
+// Cater for the earlier JS hack in which a boolean is stored in
+// marker objects...
+//interface ExtendedMarkerOptions extends leaflet.MarkerOptions {
+//  initiative: Initiative;
+//}
+export interface ExtendedMarker extends leaflet.Marker {
+  hasPhysicalLocation?: boolean;
+//  options: ExtendedMarkerOptions;
+}
 
 export class MapMarkerView extends BaseView {
+  readonly presenter: MapMarkerPresenter;
+  readonly marker: ExtendedMarker;
+  
   // Using font-awesome icons, the available choices can be seen here:
   // http://fortawesome.github.io/Font-Awesome/icons/
   dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
+  cluster: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
   
-  constructor(dataServices, popup, map, initiative, defaultLatLng, mapMarkerViewFactory) {
+  constructor(readonly dataServices: DataServices,
+              readonly popup: InitiativeRenderFunction,
+              readonly mapObj: Map,
+              readonly initiative: Initiative,
+              readonly defaultLatLng: Point2d,
+              readonly factory: MarkerViewFactory) {
     super();
     this.presenter = new MapMarkerPresenter(this, dataServices, popup);
-    this.defaultLatLng = defaultLatLng;
-    this.factory = mapMarkerViewFactory;
-    this.initiative = initiative;
-    this.mapObj = map;
 
     // options argument overrides our default options:
     const opts = Object.assign(this.dfltOptions, {
@@ -46,14 +64,14 @@ export class MapMarkerView extends BaseView {
       this.marker = leaflet.marker(this.defaultLatLng, {
         icon: icon,
         initiative: this.initiative
-      });
+      }) as ExtendedMarker;
 
       initiative.__internal.marker = this.marker;
 
       this.marker.bindPopup(opts.popuptext, {
         autoPan: false,
-        minWidth: "472",
-        maxWidth: "472",
+        minWidth: 472,
+        maxWidth: 472,
         closeButton: false,
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
@@ -62,7 +80,6 @@ export class MapMarkerView extends BaseView {
       //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
     } else {
-      const hovertext = this.presenter.getHoverText(initiative);
 
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
@@ -75,7 +92,6 @@ export class MapMarkerView extends BaseView {
         cluster: false,
       });
 
-      //this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {icon: icon, title: hovertext});
       this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
         icon: icon,
         initiative: this.initiative
@@ -93,9 +109,8 @@ export class MapMarkerView extends BaseView {
         className: "sea-initiative-popup"
       });
       this.marker.bindTooltip(this.presenter.getHoverText(initiative));
-      const that = this;
-      this.marker.on("click", function (e) {
-        that.onClick(e);
+      this.marker.on("click", (e) => {
+        this.onClick(e);
       });
       this.cluster = this.factory.unselectedClusterGroup;
       this.cluster.addLayer(this.marker);
@@ -103,7 +118,7 @@ export class MapMarkerView extends BaseView {
     }
   }
 
-  onClick(e) {
+  onClick(e: leaflet.LeafletMouseEvent) {
     // console.log("MarkerView.onclick");
     // Browser seems to consume the ctrl key: ctrl-click is like right-buttom-click (on Chrome)
     if (e.originalEvent.ctrlKey) {
@@ -130,7 +145,7 @@ export class MapMarkerView extends BaseView {
     }
   }
 
-  setUnselected(initiative) {
+  setUnselected(initiative: Initiative) {
     //close pop-up
     this.mapObj.closePopup();
     //close information on the left hand side (for smaller screens)
@@ -138,7 +153,6 @@ export class MapMarkerView extends BaseView {
       topic: "Sidebar.hideInitiative"
     });
     //reset the map vars and stop the zoom event from triggering selectInitiative ({target}) method
-    this.mapObj.selectedInitiative = undefined;
 
     //change the color of an initiative with a location
     if (initiative.hasLocation()) {
@@ -147,7 +161,7 @@ export class MapMarkerView extends BaseView {
           prefix: "fa",
           markerColor: this.initiative.primaryActivity
                      ? this.initiative.primaryActivity.toLowerCase()
-                     : "AM00",
+                     : "AM00", // FIXME this should not be hardwired!
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker",
@@ -157,10 +171,8 @@ export class MapMarkerView extends BaseView {
     }
   }
 
-  setSelected(initiative) {
-    let that = this;
+  setSelected(initiative: Initiative) {
     //set initiative for selection
-    this.mapObj.selectedInitiative = initiative;
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
       initiative.__internal.marker.setIcon(
@@ -181,8 +193,9 @@ export class MapMarkerView extends BaseView {
       initiative.__internal.marker.openPopup();
     }
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
+    // @ts-ignore the sneaky access of a private member
     else if (this.factory.unselectedClusterGroup._inZoomAnimation) {
-      this.factory.unselectedClusterGroup.on("animationend", e => {
+      this.factory.unselectedClusterGroup.on("animationend", _ => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
         if (
           this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
@@ -210,10 +223,10 @@ export class MapMarkerView extends BaseView {
     }
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
-    let deselectInitiative = function () {
+    let deselectInitiative = (e: leaflet.LeafletEvent) => {
       if (this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
         initiative.__internal.marker) {
-        that.setUnselected(initiative);
+        this.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"
         });
@@ -225,7 +238,7 @@ export class MapMarkerView extends BaseView {
 
   }
 
-  showTooltip(initiative) {
+  showTooltip(initiative: Initiative) {
     // This variation zooms the map, and makes sure the marker can
     // be seen, spiderifying if needed.
     // But this auto-zooming maybe more than the user bargained for!
@@ -242,12 +255,12 @@ export class MapMarkerView extends BaseView {
     this.marker.setZIndexOffset(1000);
   }
 
-  hideTooltip(initiative) {
+  hideTooltip(initiative: Initiative) {
     this.marker.closeTooltip();
     this.marker.setZIndexOffset(0);
   }
   
-  getInitiativeContent(initiative) {
+  getInitiativeContent(initiative: Initiative) {
     return this.presenter.getInitiativeContent(initiative);
   }
 
@@ -269,40 +282,34 @@ export class MarkerViewFactory {
 
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
-  markerForInitiative = {};
-
+  markerForInitiative: Dictionary<MapMarkerView> = {};
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
-  hiddenClusterGroup = null;
-  unselectedClusterGroup = null;
+  hiddenClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  unselectedClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
 
-  constructor(defaultLatLng, popup, dataServices) {
-    this.defaultLatLng = defaultLatLng;
-    this.popup = popup;
-    this.dataServices = dataServices;
+  constructor(readonly defaultLatLng: Point2d,
+              readonly popup: InitiativeRenderFunction,
+              readonly dataServices: DataServices) {
   }
 
-  setSelected(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].setSelected(initiative);
+  setSelected(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.setSelected(initiative);
   }
-  setUnselected(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].setUnselected(initiative);
+  setUnselected(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.setUnselected(initiative);
   }
 
   destroyAll() {
-    let that = this;
     let initiatives = Object.keys(this.markerForInitiative);
     initiatives.forEach(initiative => {
-      if (this.markerForInitiative[initiative])
-        this.markerForInitiative[initiative].destroy();
+      this.markerForInitiative[initiative]?.destroy();
     });
     this.markerForInitiative = {};
   }
 
-  showMarkers(initiatives) {
+  showMarkers(initiatives: Initiative[]) {
     //show markers only if it is not currently vissible
     initiatives.forEach(initiative => {
       const marker = this.markerForInitiative[initiative.uri];
@@ -312,50 +319,53 @@ export class MarkerViewFactory {
 
   }
 
-  hideMarkers(initiatives) {
+  hideMarkers(initiatives: Initiative[]) {
     initiatives.forEach(initiative => {
       if (this.markerForInitiative[initiative.uri])
-        this.markerForInitiative[initiative.uri].destroy();
+        this.markerForInitiative[initiative.uri]?.destroy();
     });
   }
 
-  createMarker(map, initiative) {
+  createMarker(map: Map, initiative: Initiative) {
     const view = new MapMarkerView(this.dataServices, this.popup, map, initiative, this.defaultLatLng, this);
     this.markerForInitiative[initiative.uri] = view;
     return view;
   }
 
-  refreshMarker(initiative) {
+  refreshMarker(initiative: Initiative) {
     if (!this.markerForInitiative[initiative.uri])
       return;
-    this.markerForInitiative[initiative.uri]
-      .marker
-      .setPopupContent(this.markerForInitiative[initiative.uri].presenter.getInitiativeContent(initiative));
+
+    const marker = this.markerForInitiative[initiative.uri];
+    if (!marker) {
+      console.error("no marker for initiative", initiative);
+      return;
+    }
+    
+    marker.marker.setPopupContent(marker.presenter.getInitiativeContent(initiative));
   }
 
-  setSelectedClusterGroup(clusterGroup) {
+  setSelectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
     // CAUTION: this may be either a ClusterGroup, or the map itself
     this.hiddenClusterGroup = clusterGroup;
   }
 
-  setUnselectedClusterGroup(clusterGroup) {
+  setUnselectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
     this.unselectedClusterGroup = clusterGroup;
   }
 
-  showTooltip(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].showTooltip(initiative);
+  showTooltip(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.showTooltip(initiative);
   }
   
-  hideTooltip(initiative) {
-    if (this.markerForInitiative[initiative.uri])
-      this.markerForInitiative[initiative.uri].hideTooltip(initiative);
+  hideTooltip(initiative: Initiative) {
+    this.markerForInitiative[initiative.uri]?.hideTooltip(initiative);
   }
 
-  getInitiativeContent(initiative) {
+  getInitiativeContent(initiative: Initiative) {
     // console.log(this.getInitiativeContent(initiative));
     if (this.markerForInitiative[initiative.uri])
-      return this.markerForInitiative[initiative.uri].getInitiativeContent(
+      return this.markerForInitiative[initiative.uri]?.getInitiativeContent(
         initiative
       );
     else return null;

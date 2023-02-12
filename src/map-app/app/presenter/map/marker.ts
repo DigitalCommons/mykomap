@@ -1,62 +1,50 @@
 "use strict";
+import { Dictionary, Point2d } from '../../../common_types';
 import * as eventbus from '../../eventbus';
+import { InitiativeRenderFunction } from '../../model/config_schema';
+import { DataServices, Initiative } from '../../model/dataservices';
 import { BasePresenter } from '../../presenter';
-import { BaseSidebarPresenter } from '../sidebar/base';
+import { MapMarkerView } from '../../view/map/marker';
 
 export class MapMarkerPresenter extends BasePresenter {
-  
-  constructor(view, dataServices, popup) {
+  readonly labels: Dictionary;
+  constructor(readonly view: MapMarkerView,
+              readonly dataServices: DataServices,
+              readonly popup: InitiativeRenderFunction) {
     super();
-    this.view = view;
-    this.dataservices = dataServices;
     this.labels = dataServices.getFunctionalLabels();
     this.popup = popup;
   }
 
-  notifySelectionToggled(initiative) {
+  notifySelectionToggled(initiative: Initiative): void {
     eventbus.publish({ topic: "Marker.SelectionToggled", data: initiative });
   }
 
-  notifySelectionSet(initiative) {
+  notifySelectionSet(initiative: Initiative): void {
     eventbus.publish({ topic: "Marker.SelectionSet", data: initiative });
   }
 
-  getLatLng(initiative) {
+  getLatLng(initiative: Initiative): Point2d {
     return [initiative.lat, initiative.lng];
   }
 
-  getHoverText(initiative) {
+  getHoverText(initiative: Initiative): string {
     return initiative.name;
   }
 
-  prettyPhone(tel) {
+  prettyPhone(tel: string): string {
     return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
   }
   
-  getInitiativeContent(initiative) {
-    return this.popup(initiative, this.dataservices, this.labels);
+  getInitiativeContent(initiative: Initiative): string {
+    return this.popup(initiative, this.dataServices);
   }
 
-  getMarkerColor(initiative) {
+  getMarkerColor(initiative: Initiative): string {
     const hasWww = initiative.www && initiative.www.length > 0;
     const hasReg = initiative.regorg && initiative.regorg.length > 0;
     const markerColor =
       hasWww && hasReg ? "purple" : hasWww ? "blue" : hasReg ? "red" : "green";
     return markerColor;
-  }
-
-  getIconOptions(initiative) {
-    const icon = initiative.dataset == "dotcoop" ? "globe" : "certificate";
-    return {
-      icon: icon,
-      popuptext: popuptext,
-      hovertext: hovertext,
-      cluster: true,
-      markerColor: markerColor
-    }
-  }
-  
-  getIcon(initiative) {
-    return initiative.dataset == "dotcoop" ? "globe" : "certificate";
   }
 }

@@ -214,7 +214,10 @@ export class MapView extends BaseView {
   }
 
   addMarker(initiative: Initiative) {
-    return this.markerViewFactory.createMarker(this.map, initiative);
+    const map = this.map;
+    if (!map)
+      throw new Error("Map field not yet initialised");
+    return this.markerViewFactory.createMarker(map, initiative);
   }
 
   refreshMarker(initiative: Initiative) {
