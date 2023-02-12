@@ -1,22 +1,22 @@
 import * as eventbus from '../eventbus';
-import { BaseSidebarPresenter } from './sidebar/base';
 import { Stack } from '../../stack';
+import { SidebarView } from '../view/sidebar';
+import { BasePresenter } from '../presenter';
 
-export class SidebarPresenter extends BaseSidebarPresenter {
-  constructor(view, map, showDirectoryPanel, showSearchPanel, showAboutPanel, showDatasetsPanel) {
+export class SidebarPresenter extends BasePresenter {
+  readonly contentStack = new Stack();
+  sidebarWidth: number = 0;
+
+  constructor(readonly view: SidebarView,
+              readonly showDirectoryPanel: boolean,
+              readonly showSearchPanel: boolean,
+              readonly showAboutPanel: boolean,
+              readonly showDatasetsPanel: boolean) {
     super();
-    this.view = view;
-    this.contentStack = new Stack();
-    this.sidebarWidth = 0;
-    this.showDirectoryPanel = showDirectoryPanel;
-    this.showSearchPanel = showSearchPanel;
-    this.showAboutPanel = showAboutPanel;
-    this.showDatasetsPanel = showDatasetsPanel;
     this._eventbusRegister();
-    this.map = map;
   }
   
-  changeSidebar(name) {
+  changeSidebar(name?: string) {
     this.view.changeSidebar(name);
   }
 
@@ -24,20 +24,20 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     this.view.showSidebar();
   }
 
-  showingDirectory() { return this.showDirectoryPanel; }
-  showingSearch() { return this.showSearchPanel; }
-  showingAbout() { return this.showAboutPanel; }
-  showingDatasets() { return this.showDatasetsPanel; }
+  showingDirectory(): boolean { return this.showDirectoryPanel; }
+  showingSearch(): boolean { return this.showSearchPanel; }
+  showingAbout(): boolean { return this.showAboutPanel; }
+  showingDatasets(): boolean { return this.showDatasetsPanel; }
 
-  hideSidebar(name) {
+  hideSidebar() {
     this.view.hideSidebar();
   }
 
-  hideInitiativeSidebar(name) {
+  hideInitiativeSidebar() {
     this.view.hideInitiativeSidebar();
   }
 
-  hideInitiativeList(name) {
+  hideInitiativeList() {
     this.view.hideInitiativeList();
   }
 
@@ -62,7 +62,7 @@ export class SidebarPresenter extends BaseSidebarPresenter {
       topic: "Sidebar.showDirectory",
       callback: () => {
         this.changeSidebar("directory");
-        this.viewshowInitiativeList();
+        this.view.showInitiativeList();
       }
     });
 
@@ -127,12 +127,12 @@ export class SidebarPresenter extends BaseSidebarPresenter {
     // eventbus.subscribe({
     //   topic: "Initiative.selected",
     //   callback: () => {
-    //     this.viewhideSidebarIfItTakesWholeScreen();
+    //     this.view.hideSidebarIfItTakesWholeScreen();
     //   }
     // });
   }
 
-  updateSidebarWidth(width) {
+  updateSidebarWidth(width: number) {
     this.sidebarWidth = width;
   }
   
