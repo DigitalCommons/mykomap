@@ -5,7 +5,6 @@ import { BasePresenter } from '../presenter';
 
 export class SidebarPresenter extends BasePresenter {
   readonly contentStack = new Stack();
-  sidebarWidth: number = 0;
 
   constructor(readonly view: SidebarView,
               readonly showDirectoryPanel: boolean,
@@ -104,13 +103,6 @@ export class SidebarPresenter extends BasePresenter {
     });
 
     eventbus.subscribe({
-      topic: "Sidebar.updateSidebarWidth",
-      callback: (data) => {
-        this.updateSidebarWidth(data);
-      }
-    });
-
-    eventbus.subscribe({
       topic: "Initiative.reset",
       callback: (data) => {
         this.changeSidebar();
@@ -132,14 +124,6 @@ export class SidebarPresenter extends BasePresenter {
     // });
   }
 
-  updateSidebarWidth(width: number) {
-    this.sidebarWidth = width;
-  }
-  
-  getSidebarWidth() {
-    return this.sidebarWidth;
-  }
-  
 }
 
 

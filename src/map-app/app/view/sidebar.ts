@@ -264,11 +264,6 @@ export class SidebarView extends BaseView {
           0
           ? initiativeListBounds.width
           : 0);
-    
-    eventbus.publish({
-      topic: "Sidebar.updateSidebarWidth",
-      data: sidebarWidth,
-    });
     eventbus.publish({
       topic: "Map.setActiveArea",
       data: {
