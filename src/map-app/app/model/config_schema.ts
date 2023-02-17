@@ -14,7 +14,6 @@
  * REMEMBER TO REGENERATE CONFIG.md IF YOU ALTER THIS SCHEMA.
  */
 
-//"use strict";
 
 import type {
   Dictionary,

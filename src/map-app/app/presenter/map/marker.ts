@@ -1,4 +1,3 @@
-"use strict";
 import { Dictionary, Point2d } from '../../../common_types';
 import * as eventbus from '../../eventbus';
 import { InitiativeRenderFunction } from '../../model/config_schema';

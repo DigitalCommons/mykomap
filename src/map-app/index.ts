@@ -1,5 +1,3 @@
-"use strict";
-
 import type { Dictionary } from "./common_types";
 import { DataServices, DataServicesImpl } from "./app/model/dataservices";
 
