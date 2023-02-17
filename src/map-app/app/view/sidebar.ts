@@ -252,22 +252,17 @@ export class SidebarView extends BaseView {
   }
 
   updateSidebarWidth(directoryBounds: DOMRect, initiativeListBounds: DOMRect) {
-    const map = this.mapPresenterFactory.map;
-    if (!map)
-      throw new Error("No map created yet"); // Can't sensibly do this if the map isnt set yet
-    const mapBox = map.getContainer().getBoundingClientRect();
-    
-    const sidebarWidth =
-      directoryBounds.x - mapBox.width +
-      directoryBounds.width +
-        (initiativeListBounds.x - mapBox.width >
-          0
-          ? initiativeListBounds.width
-          : 0);
+    // Assumptions
+    // - initiativeListBounds and directoryBounds can exchange positions
+    // - the right-most of either is the left edge of the active area of the map
+    // - this position is therefore the offset to send in the event
+    const initRight = initiativeListBounds.x + initiativeListBounds.width;
+    const dirRight = directoryBounds.x + directoryBounds.width;
+    const offset = Math.max(initRight, dirRight);
     eventbus.publish({
       topic: "Map.setActiveArea",
       data: {
-        offset: sidebarWidth
+        offset: offset
       }
     });
 
