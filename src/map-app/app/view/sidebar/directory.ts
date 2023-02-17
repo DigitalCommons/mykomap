@@ -400,12 +400,10 @@ export class DirectorySidebarView extends BaseSidebarView {
         "transitionend",
         (event: TransitionEvent) => {
           const target = event.target as HTMLElement | null | undefined; // Need some coercion here
-          const element = initiativeListSidebar.node() as HTMLElement | undefined | null; // ditto
-          if (!element || initiativeListSidebar.empty() || !target || target?.className === "w3-btn")
+          if (target?.className === "w3-btn")
             return;
-          if (event.propertyName === "transform" && target) {
-            this.parent.updateSidebarWidth(target.getBoundingClientRect(), element.getBoundingClientRect());
-          }
+          if (event.propertyName === "transform")
+            this.parent.updateSidebarWidth();
         },
         false
       )
