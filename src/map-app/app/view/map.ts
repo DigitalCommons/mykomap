@@ -289,7 +289,13 @@ export class MapView extends BaseView {
     //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
     const group = this.unselectedClusterGroup;
     if (group)
-      return initiatives.every((initative) => group.getVisibleParent(initative.__internal.marker) == initative.__internal.marker);
+      return initiatives.every(initiative => {
+        const marker = initiative.__internal?.marker;
+        if (marker instanceof leaflet.Marker)
+          return group.getVisibleParent(marker) == marker;
+        console.error("initiative is missing a marker reference", initiative);
+        return false;
+      });
     else
       return true;
   }
@@ -398,18 +404,22 @@ export class MapView extends BaseView {
     map.panTo(lngCentre, { animate: true });
 
     //trigger refresh if the marker is outside of the screen or if it's clustered
-    if (!map.getBounds().contains(data.initiatives[0].__internal.marker.getLatLng()) || !this.isVisible(data.initiatives))
+    const marker = data.initiatives[0].__internal?.marker;
+    if (!(marker instanceof leaflet.Marker)) {
+      console.error("initiative is missing a marker reference", data.initiatives[0]);
+      return;
+    }
+    if (!map.getBounds().contains(marker.getLatLng()) || !this.isVisible(data.initiatives))
       this.refresh(centre);
 
 
 
     //zoom to layer if needed and unspiderify
     this.unselectedClusterGroup?.zoomToShowLayer(
-      data.initiatives[0].__internal.marker,
-      () =>
-        this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives })
+      marker,
+      () => this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives })
     );
-    this.unselectedClusterGroup?.refreshClusters(data.initiatives[0].__internal.marker);
+    this.unselectedClusterGroup?.refreshClusters(marker);
 
 
     //code for not destroying pop-up when zooming out

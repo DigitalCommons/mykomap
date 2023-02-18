@@ -172,60 +172,61 @@ export class MapMarkerView extends BaseView {
   }
 
   setSelected(initiative: Initiative) {
+    const marker = initiative.__internal.marker;
+    if (!(marker instanceof leaflet.Marker)) {
+      console.error("initiative has no marker reference", initiative);
+      return;
+    }
+    
     //set initiative for selection
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
-      initiative.__internal.marker.setIcon(
+      marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
           markerColor: initiative.primaryActivity
-                     ? initiative.primaryActivity.toLowerCase()
-                     : "ALL",
+            ? initiative.primaryActivity.toLowerCase()
+            : "ALL",
           iconColor: "white",
-          icon: "certificate",
+            icon: "certificate",
           className: "awesome-marker sea-marker sea-selected",
-//          cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
+          //          cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
         })
       );
+      
+      if (!initiative.hasLocation()) {
+        marker.openPopup();
+        }
     }
-
-    if (!initiative.hasLocation()) {
-      initiative.__internal.marker.openPopup();
-    }
+    
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     // @ts-ignore the sneaky access of a private member
     else if (this.factory.unselectedClusterGroup._inZoomAnimation) {
       this.factory.unselectedClusterGroup.on("animationend", _ => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
-        if (
-          this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
-            initiative.__internal.marker
+        if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker
         ) {
-          if (initiative.__internal.marker.__parent) //if it has a parent
-          {
-            initiative.__internal.marker.__parent.spiderfy();
+          if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
+            marker.__parent.spiderfy();
           }
         }
-        initiative.__internal.marker.openPopup();
+        marker.openPopup();
         this.factory.unselectedClusterGroup.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
-      if (
-        this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
-          initiative.__internal.marker
-      ) {
-
-        initiative.__internal.marker.__parent.spiderfy();
+      if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
+        if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
+          marker.__parent.spiderfy();
+        }
       }
-      initiative.__internal.marker.openPopup();
+      marker.openPopup();
     }
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = (e: leaflet.LeafletEvent) => {
-      if (this.factory.unselectedClusterGroup.getVisibleParent(initiative.__internal.marker) !==
-        initiative.__internal.marker) {
+      if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
         this.setUnselected(initiative);
         eventbus.publish({
           topic: "Directory.InitiativeClicked"

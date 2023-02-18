@@ -103,7 +103,7 @@ export class Initiative {
   }
   
   //  This is used for associating internal data, like map markers
-  __internal: Dictionary<any> = {};
+  __internal: Dictionary<unknown> = {};
 
   /// Property index operator
   [id: string]: any | undefined;
