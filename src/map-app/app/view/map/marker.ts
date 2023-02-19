@@ -189,9 +189,7 @@ export class MapMarkerView extends BaseView {
         })
       );
       
-      if (!initiative.hasLocation()) {
-        marker.openPopup();
-        }
+      marker.openPopup();
     }
     
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
