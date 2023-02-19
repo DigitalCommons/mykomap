@@ -8,15 +8,6 @@ import { StackItem } from '../../../stack';
 import { Config } from '../../model/config';
 import { SearchResults } from './searchresults';
 
-function arrayMax(array: number[]) {
-  return array.reduce((a, b) => Math.max(a ?? Number.NEGATIVE_INFINITY, b ?? Number.NEGATIVE_INFINITY));
-}
-
-function arrayMin(array: number[]) {
-  return array.reduce((a, b) => Math.min(a ?? Number.POSITIVE_INFINITY, b ?? Number.POSITIVE_INFINITY));
-}
-
-
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;
   readonly dataServices: DataServices;
@@ -333,4 +324,12 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   changeSearchText(txt: string) {
     this.view?.changeSearchText(txt);
   }
+}
+
+function arrayMin(lats: any[]): number {
+    throw new Error('Function not implemented.');
+}
+
+function arrayMax(lats: any[]): number {
+    throw new Error('Function not implemented.');
 }
