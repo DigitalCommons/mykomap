@@ -5,7 +5,7 @@ import {
 
 import {
   InitiativeObj,
-} from './dataservices';
+} from './initiative';
 
 import {
   ObjTransformFunc,

@@ -1,5 +1,6 @@
 // FIXME prevent malicious content in replacements (like description)
-import type { DataServices, Initiative } from "../../model/dataservices";
+import type { DataServices } from "../../model/dataservices";
+import type { Initiative } from "../../model/initiative";
 
 export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality

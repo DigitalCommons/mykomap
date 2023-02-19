@@ -9,8 +9,6 @@ import {
 } from './dataloader';
 
 import {
-  Initiative,
-  InitiativeObj,
   PropDefs,
   PropDef,
   CustomPropDef,
@@ -35,6 +33,11 @@ import {
 import {
   VocabServices,
 } from './vocabs';
+
+import {
+  Initiative,
+  InitiativeObj
+} from './initiative';
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 

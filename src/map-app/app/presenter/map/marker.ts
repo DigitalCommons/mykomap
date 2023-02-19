@@ -1,7 +1,8 @@
 import { Dictionary, Point2d } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
 import { InitiativeRenderFunction } from '../../model/config_schema';
-import { DataServices, Initiative } from '../../model/dataservices';
+import { DataServices } from '../../model/dataservices';
+import { Initiative } from '../../model/initiative';
 import { BasePresenter } from '../../presenter';
 import { MapMarkerView } from '../../view/map/marker';
 

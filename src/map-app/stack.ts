@@ -1,4 +1,4 @@
-import { Initiative } from "./app/model/dataservices";
+import { Initiative } from "./app/model/initiative";
 
 export class StackItem {
   constructor(readonly initiatives: Initiative[]) {}

@@ -4,12 +4,13 @@ import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
 import { MapPresenterFactory } from '../../presenter/map';
-import { DataServices, Initiative } from '../../model/dataservices';
+import { DataServices } from '../../model/dataservices';
 import { Dictionary } from '../../../common_types';
 import { Config } from '../../model/config';
 import { SidebarView } from '../sidebar';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../presenter/sidebar/searchresults';
+import { Initiative } from '../../model/initiative';
 
 
 
@@ -257,8 +258,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 
 		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
-		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull().map(filter =>
-			filter.verboseName.split(":")[0]);
+		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull()
+      .map(filter => filter.verboseName)
+      .filter((name): name is string => name != undefined)
+      .map(name => name.split(":")[0]);
 
 		for (const field in vocabDict) {
 			container

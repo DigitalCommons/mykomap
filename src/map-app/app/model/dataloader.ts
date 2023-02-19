@@ -4,7 +4,7 @@ import type {
 
 import type {
   Initiative,
-} from './dataservices';
+} from './initiative';
 
 import {
   sortInitiatives,

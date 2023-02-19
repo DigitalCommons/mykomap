@@ -4,10 +4,11 @@ import 'leaflet.awesome-markers';
 import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
-import { DataServices, Initiative } from '../../model/dataservices';
+import { DataServices } from '../../model/dataservices';
 import { InitiativeRenderFunction } from '../../model/config_schema';
 import { Map } from '../map';
 import { Dictionary, Point2d } from '../../../common_types';
+import { Initiative } from '../../model/initiative';
 
 // Cater for the earlier JS hack in which a boolean is stored in
 // marker objects...

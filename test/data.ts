@@ -1,4 +1,5 @@
-import { basePropertySchema, Initiative, InitiativeObj, PropDef, PropDefs } from "../src/map-app/app/model/dataservices";
+import { basePropertySchema, PropDef, PropDefs } from "../src/map-app/app/model/dataservices";
+import { Initiative, InitiativeObj } from "../src/map-app/app/model/initiative";
 import { SparqlVocabResponse, VocabIndex } from "../src/map-app/app/model/vocabs";
 import { Dictionary } from "../src/map-app/common_types";
 

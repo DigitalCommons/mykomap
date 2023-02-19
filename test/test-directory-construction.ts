@@ -1,4 +1,4 @@
-import { use, expect, assert } from 'chai';
+import { expect } from 'chai';
 import {
   vocabIndex1 as vocabIndex,
   initiativeIndexFooBarBazBob as items,
@@ -12,7 +12,7 @@ import {
   PropertyIndexer
 } from '../src/map-app/app/model/propertyindexer';
 
-import { Initiative, InitiativeObj, PropDef, PropDefs } from '../src/map-app/app/model/dataservices';
+import { Initiative } from '../src/map-app/app/model/initiative';
 import { Vocab } from '../src/map-app/app/model/vocabs';
 import { PropDefIndex } from '../src/map-app/app/model/propdefindex';
 

@@ -1,6 +1,6 @@
 import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
-import { Initiative } from './app/model/dataservices';
+import { Initiative } from './app/model/initiative';
 import { Box2d } from './common_types';
 
 /// This defines a typed wrapper to a Postal topic

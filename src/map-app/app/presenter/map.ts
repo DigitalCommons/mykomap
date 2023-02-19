@@ -3,12 +3,13 @@ import * as d3 from 'd3';
 import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
 import { Config } from '../model/config_schema';
-import { DataServices, Initiative } from '../model/dataservices';
+import { DataServices } from '../model/dataservices';
 import { ExtendedMarker, MarkerViewFactory } from '../view/map/marker';
 import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
 import { MapView, Map } from '../view/map';
 import { Marker } from 'leaflet';
+import { Initiative } from '../model/initiative';
 
 
 export class MapPresenterFactory {

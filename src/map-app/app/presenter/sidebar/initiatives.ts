@@ -1,12 +1,13 @@
 import { Dictionary } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
-import { DataServices, Initiative, MultiPropDef, VocabPropDef } from '../../model/dataservices';
+import { DataServices, MultiPropDef, VocabPropDef } from '../../model/dataservices';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { MapPresenterFactory } from '../map';
 import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
 import { Config } from '../../model/config';
 import { SearchResults } from './searchresults';
+import { Initiative } from '../../model/initiative';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;

@@ -6,7 +6,7 @@ import { Config } from '../src/map-app/app/model/config';
 import {
   Initiative,
   InitiativeObj,
-} from '../src/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/initiative';
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 import { Dictionary } from '../src/map-app/common_types';
 import {

@@ -10,7 +10,7 @@ import 'leaflet-active-area';
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
 import 'leaflet/dist/leaflet.css';
-import { Initiative } from "../model/dataservices";
+import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
 
 // This is a hack added to allow leaflet icons be the right size

@@ -2,10 +2,11 @@ import { Box2d, Dictionary } from '../../../common_types';
 import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
 import { Config } from '../../model/config';
-import { DataServices, Initiative } from '../../model/dataservices';
+import { DataServices } from '../../model/dataservices';
 import { MarkerViewFactory } from '../../view/map/marker';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
+import { Initiative } from '../../model/initiative';
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
 

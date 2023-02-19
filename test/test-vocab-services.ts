@@ -1,13 +1,9 @@
-import { use, expect, assert } from 'chai';
+import { expect } from 'chai';
 
-import {
-  Dictionary
-} from '../src/map-app/common_types';
 import {
   VocabServiceImpl,
   VocabServices
 } from '../src/map-app/app/model/vocabs';
-import { Initiative } from '../src/map-app/app/model/dataservices';
 
 import {
   vocabIndex1 as vocabIndex,

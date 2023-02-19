@@ -1,5 +1,6 @@
 import type { Dictionary } from '../../common_types';
-import { Initiative, PropDefs, PropDef, DataServicesImpl } from './dataservices';
+import { PropDefs, PropDef, DataServicesImpl } from './dataservices';
+import { Initiative } from './initiative';
 import type { DataConsumer } from './dataloader';
 
 export interface Vocab {

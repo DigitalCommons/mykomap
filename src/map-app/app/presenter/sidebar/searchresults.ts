@@ -1,6 +1,6 @@
 import { Dictionary } from "../../../common_types";
 import { StackItem } from "../../../stack";
-import { Initiative } from "../../model/dataservices";
+import { Initiative } from "../../model/initiative";
 
 /// Represents a search result on the sidebar contentStack
 export class SearchResults extends StackItem { 
