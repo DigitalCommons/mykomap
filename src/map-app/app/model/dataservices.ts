@@ -109,8 +109,8 @@ export class Initiative {
   [id: string]: any | undefined;
 
   /// Checks if the initiative has truthy lat and lng properties.
-  hasLocation() {
-    return this.lat && this.lng;
+  hasLocation(): boolean {
+    return !!(this.lat && this.lng);
   }  
 }
 
