@@ -1,6 +1,5 @@
 import { StackItem } from '../../../stack';
-import * as eventbus from '../../eventbus';
-import { Filter } from '../../model/dataservices';
+import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../../presenter';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
@@ -44,29 +43,22 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
       //       (e.g. where it affects which initiatives are selected)
       //this.view.refresh();
 
-      eventbus.publish({
-        topic: "Map.removeFilters",
-      });
+      EventBus.Map.removeFilters.pub();
 
       if(newContent instanceof SearchResults && newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
-          let filterData: Filter = {
+          let filterData: EventBus.Map.Filter = {
             filterName: filter.filterName,
             initiatives: newContent.initiatives,
             verboseName: filter.verboseName
           };
-          eventbus.publish({
-            topic: "Map.addFilter",
-            data: filterData
-          });
+          EventBus.Map.addFilter.pub(filterData);
+
         });
       }
 
-      const data: Filter = {initiatives: newContent.initiatives};
-      eventbus.publish({
-        topic: "Map.addSearchFilter",
-        data: data,
-      }); //historySEARCH
+      const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+      EventBus.Map.addSearchFilter.pub(data);
 
       this.historyButtonsUsed(lastContent);
     };
@@ -82,34 +74,24 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
         return;
       //this.view.refresh();
       if(newContent && newContent instanceof SearchResults){
-        eventbus.publish({
-          topic: "Map.removeFilters",
-        });
+        EventBus.Map.removeFilters.pub();
 
         if(newContent.filters[0]){     
           newContent.filters.forEach(filter=>{
-            let filterData: Filter = {
+            let filterData: EventBus.Map.Filter = {
               filterName: filter.filterName,
               initiatives: newContent.initiatives,
               verboseName: filter.verboseName
             };
-            eventbus.publish({
-              topic: "Map.addFilter",
-              data: filterData
-            });
+            EventBus.Map.addFilter.pub(filterData);
           });
         }
 
-        const data: Filter = {initiatives: newContent.initiatives};
-        eventbus.publish({
-          topic: "Map.addSearchFilter",
-          data: data,
-        }); //historySEARCH
-      }else{
-        eventbus.publish({
-          topic: "Map.removeSearchFilter",
-          data: {}
-        });
+        const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+        EventBus.Map.addSearchFilter.pub(data);
+      }
+      else{
+        EventBus.Map.removeSearchFilter.pub();
       }
       this.historyButtonsUsed(lastContent);
     };
@@ -122,12 +104,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
   }
 
   deselectInitiatives(): void {
-    eventbus.publish({
-      topic: "Markers.needToShowLatestSelection",
-      data: {
-        selected: []
-      }
-    });
+    EventBus.Markers.needToShowLatestSelection.pub([]);
   }
 
   historyNavigation(): NavigationButtons {

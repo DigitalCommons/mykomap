@@ -1,4 +1,4 @@
-import * as eventbus from '../eventbus';
+import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from '../presenter';
@@ -41,87 +41,28 @@ export class SidebarPresenter extends BasePresenter {
   }
 
   _eventbusRegister() {
-    eventbus.subscribe({
-      topic: "Sidebar.showInitiatives",
-      callback: () => {
-        this.changeSidebar("initiatives");
-        this.showSidebar();
-      }
+    EventBus.Sidebar.showInitiatives.sub(() => {
+      this.changeSidebar("initiatives");
+      this.showSidebar();
     });
-
-    eventbus.subscribe({
-      topic: "Sidebar.showAbout",
-      callback: () => {
-        this.changeSidebar("about");
-        this.showSidebar();
-      }
+    EventBus.Sidebar.showAbout.sub(() => {
+      this.changeSidebar("about");
+      this.showSidebar();
     });
-
-    eventbus.subscribe({
-      topic: "Sidebar.showDirectory",
-      callback: () => {
-        this.changeSidebar("directory");
-        this.view.showInitiativeList();
-      }
+    EventBus.Sidebar.showDirectory.sub(() => {
+      this.changeSidebar("directory");
+      this.view.showInitiativeList();
     });
-
-    eventbus.subscribe({
-      topic: "Sidebar.showDatasets",
-      callback: () => {
-        this.changeSidebar("datasets");
-        this.showSidebar();
-      }
+    EventBus.Sidebar.showDatasets.sub(() => {
+      this.changeSidebar("datasets");
+      this.showSidebar();
     });
-
-
-    eventbus.subscribe({
-      topic: "Sidebar.showSidebar",
-      callback: () => {
-        this.showSidebar();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Sidebar.hideSidebar",
-      callback: () => {
-        this.hideSidebar();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Sidebar.hideInitiativeSidebar",
-      callback: () => {
-        this.hideInitiativeSidebar();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Sidebar.hideInitiativeList",
-      callback: () => {
-        this.hideInitiativeList();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Initiative.reset",
-      callback: (data) => {
-        this.changeSidebar();
-      }
-    });
-    
-    eventbus.subscribe({
-      topic: "Initiative.complete",
-      callback: (data) => {
-        this.changeSidebar();
-      }
-    });
-
-    // eventbus.subscribe({
-    //   topic: "Initiative.selected",
-    //   callback: () => {
-    //     this.view.hideSidebarIfItTakesWholeScreen();
-    //   }
-    // });
+    EventBus.Sidebar.showSidebar.sub(() => this.showSidebar());
+    EventBus.Sidebar.hideSidebar.sub(() => this.hideSidebar());
+    EventBus.Sidebar.hideInitiativeSidebar.sub(() => this.hideInitiativeSidebar());
+    EventBus.Sidebar.hideInitiativeList.sub(() => this.hideInitiativeList());
+    EventBus.Initiatives.reset.sub(() => this.changeSidebar());
+    EventBus.Initiatives.loadComplete.sub(() => this.changeSidebar());
   }
 
 }

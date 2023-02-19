@@ -11,6 +11,7 @@ import 'leaflet-active-area';
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
 import 'leaflet/dist/leaflet.css';
 import { Initiative } from "../model/dataservices";
+import { EventBus } from "../../eventbus";
 
 // This is a hack added to allow leaflet icons be the right size
 // @ts-ignore 
@@ -26,32 +27,6 @@ interface LoaderConfig {
   text: string;
   container: string;
   id: string;
-}
-
-export interface BoundsData {
-  bounds: leaflet.LatLngBoundsExpression;
-  options?: {
-    maxZoom: number;
-  }
-}
-
-export interface ZoomOption {
-  maxZoom?: number;
-}
-
-export interface SelectAndZoomData {
-  initiatives: Initiative[];
-  bounds: Box2d;/*[
-    leaflet.LatLngTuple,
-    leaflet.LatLngTuple,
-  ];*/
-  options: ZoomOption;
-}
-
-export interface ZoomData {
-  latlng: leaflet.LatLngExpression;
-  options: leaflet.ZoomPanOptions;
-  zoom?: number;
 }
 
 // Methods for leaflet-contextmenu
@@ -244,7 +219,7 @@ export class MapView extends BaseView {
     this.map?.setZoom(zoom);
   }
 
-  fitBounds(data: BoundsData) {
+  fitBounds(data: EventBus.Map.BoundsData) {
     this.map?.fitBounds(data.bounds, data.options);
   }
 
@@ -268,7 +243,7 @@ export class MapView extends BaseView {
   //   return this
   // }
 
-  setView(data: ZoomData) {
+  setView(data: EventBus.Map.ZoomData) {
     const map = this.map;
     if (!map)
       return;
@@ -321,7 +296,7 @@ export class MapView extends BaseView {
       return false;
   }
 
-  flyTo(data: ZoomData) {
+  flyTo(data: EventBus.Map.ZoomData) {
     const map = this.map;
     if (!map)
       return;
@@ -332,7 +307,7 @@ export class MapView extends BaseView {
     map.flyTo(data.latlng, map.getZoom(), Object.assign(options, data.options));
   }
 
-  flyToBounds(data: SelectAndZoomData) {
+  flyToBounds(data: EventBus.Map.SelectAndZoomData) {
     const map = this.map;
     if (!map)
       return;
@@ -376,7 +351,7 @@ export class MapView extends BaseView {
   }
 
   //pass array of 1 initiative in data.initiative
-  selectAndZoomOnInitiative(data: SelectAndZoomData) {
+  selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
     const map = this.map;
     if (!map)
       return;
@@ -417,7 +392,7 @@ export class MapView extends BaseView {
     //zoom to layer if needed and unspiderify
     this.unselectedClusterGroup?.zoomToShowLayer(
       marker,
-      () => this.presenter.onMarkersNeedToShowLatestSelection({ selected: data.initiatives })
+      () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
     );
     this.unselectedClusterGroup?.refreshClusters(marker);
 
@@ -474,28 +449,27 @@ export class MapView extends BaseView {
     this.map?.setView(latLng, 16, { animate: true });
   }
 
-  startLoading(data: { message: string, error?: string }) {
-    const config = {
-      error: data.error,
-      text: `${this.labels.loading}...`,
-      container: "#map-app-leaflet-map", id: "loadingCircle",
-    };
+  startLoading(error?: EventBus.Initiatives.DatasetError) {
+    const text = `${this.labels.loading}...`;
+    const container = "#map-app-leaflet-map";
+    const id = "loadingCircle";
 
     //example loading
     //with css
     //could look a lot better, with svgs
-    if (config.error) {
-      d3.select("#" + config.id).style('display', 'none');
-      d3.select("#" + config.id + "txt").text("Error loading: " + config.text);
+    if (error) {
+      console.error(error);
+      d3.select("#" + id).style('display', 'none');
+      d3.select("#" + id + "txt").text(`${this.labels.errorLoading ?? ''} - id: ${error.dataset ?? '<?>'}`);
     }
     else {
-      let loading = d3.select('#' + config.id);
+      let loading = d3.select('#' + id);
       if (loading.empty()) {
         // Create the node if it is missing
-        const loading2 = d3.select(config.container).append("div");
-        loading2.attr("id", config.id);
-        loading2.append("div").attr("id", config.id + "spin");
-        loading2.append("p").attr("id", config.id + "txt");
+        const loading2 = d3.select(container).append("div");
+        loading2.attr("id", id);
+        loading2.append("div").attr("id", id + "spin");
+        loading2.append("p").attr("id", id + "txt");
         loading2.style('display', 'block');
       }
       else
@@ -503,7 +477,7 @@ export class MapView extends BaseView {
         loading.style('display', 'block');
       
       //edit text
-      d3.select("#" + config.id + "txt").text(config.text);
+      d3.select("#" + id + "txt").text(text);
     }
   }
 
@@ -514,7 +488,7 @@ export class MapView extends BaseView {
 
 
   
-  setActiveArea(data: { offset: number }) {
+  setActiveArea(offset: number) {
     if (this._settingActiveArea) return;
     this.map?.once("moveend", () => {
       this._settingActiveArea = false;
@@ -523,7 +497,7 @@ export class MapView extends BaseView {
     let css = {
       position: "absolute",
       top: "20px",
-      left: data.offset + "px",
+      left: offset + "px",
       right: '0',
       bottom: '0'
     };

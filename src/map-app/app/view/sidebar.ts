@@ -1,5 +1,5 @@
 // Set up the various sidebars
-import * as eventbus from '../eventbus';
+import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
 import { AboutSidebarView } from '../view/sidebar/about';
@@ -75,21 +75,13 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", this.labels?.showDirectory ?? '')
       .on("click", () => {
-        eventbus.publish({
-          topic: "Map.removeSearchFilter",
-          data: {}
-        });
+        EventBus.Map.removeSearchFilter.pub();
         //notify zoom
         this.changeSidebar("directory");
         this.showInitiativeList();
 
-        //deselect 
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
+        //deselect
+        EventBus.Markers.needToShowLatestSelection.pub([]);
       })
       .append("i")
       .attr("class", "fa fa-bars");
@@ -103,15 +95,8 @@ export class SidebarView extends BaseView {
       .on("click", () => {
         this.hideInitiativeList();
         //deselect
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
-        eventbus.publish({
-          topic: "Initiatives.showSearchHistory",
-        });
+        EventBus.Markers.needToShowLatestSelection.pub([]);
+        EventBus.Initiatives.showSearchHistory.pub();
         this.changeSidebar("initiatives");
       })
       .append("i")
@@ -125,14 +110,7 @@ export class SidebarView extends BaseView {
       .attr("title", this.labels?.showInfo ?? '')
       .on("click", () => {
         this.hideInitiativeList();
-        // eventbus.publish({
-        // topic: "Map.removeSearchFilter"});
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
+        EventBus.Markers.needToShowLatestSelection.pub([]);
         this.changeSidebar("about");
       })
       .append("i")
@@ -146,15 +124,7 @@ export class SidebarView extends BaseView {
         .attr("title", this.labels?.showDatasets ?? '')
         .on("click", () => {
           this.hideInitiativeList();
-          // eventbus.publish({
-          //   topic: "Map.removeSearchFilter",
-          //   });
-          eventbus.publish({
-            topic: "Markers.needToShowLatestSelection",
-            data: {
-              selected: []
-            }
-          });
+          EventBus.Markers.needToShowLatestSelection.pub([]);
           this.changeSidebar("datasets");
         })
         .append("i")
@@ -209,15 +179,6 @@ export class SidebarView extends BaseView {
     this.sidebar[this.sidebarName]?.refresh();
   }
 
-  // hideSidebarIfItTakesWholeScreen() {
-  //   // @todo - improve this test -
-  //   // it is not really testing the predicate suggested by the name iof the function.
-  //   if (window.outerWidth <= 600) {
-  //     d3.select("#map-app-sidebar").classed("sea-sidebar-open", false);
-  //     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
-  //   }
-  // }
-
   showSidebar() {
     const sidebar = d3.select("#map-app-sidebar");
     sidebar.on(
@@ -262,13 +223,7 @@ export class SidebarView extends BaseView {
     const initRight = initiativeListBounds.x + initiativeListBounds.width;
     const sidebarRight = sidebarBounds.x + sidebarBounds.width;
     const offset = Math.max(initRight, sidebarRight);
-    eventbus.publish({
-      topic: "Map.setActiveArea",
-      data: {
-        offset: offset
-      }
-    });
-
+    EventBus.Map.setActiveArea.pub({ offset });
   }
   
   // This should be split into three functions:

@@ -1,9 +1,9 @@
 // The view aspects of the Main Menu sidebar
 import * as d3 from "d3";
 import { Dictionary } from "../../../common_types";
-import * as eventbus from "../../eventbus";
+import { EventBus } from "../../../eventbus";
 import { Config } from "../../model/config";
-import { DataServices, Initiative, Filter } from "../../model/dataservices";
+import { DataServices, Initiative } from "../../model/dataservices";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
 import { MarkerViewFactory } from "../map/marker";
@@ -129,10 +129,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed("sea-field-" + tag, true)
         .classed("sea-directory-field", true)
         .on("click", (event) => {
-          eventbus.publish({
-            topic: "Map.removeFilters",
-            data: {}
-          });
+          EventBus.Map.removeFilters.pub();
           this.listInitiativesForSelection(field, key); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
@@ -187,12 +184,6 @@ export class DirectorySidebarView extends BaseSidebarView {
     //deselect all
     that.presenter.clearLatestSelection();
 
-    // if (window.outerWidth <= 800) {
-    //   eventbus.publish({
-    //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
-    //   });
-    // }
-
     that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
 
     const sidebar = d3.select("#map-app-sidebar");
@@ -221,18 +212,11 @@ export class DirectorySidebarView extends BaseSidebarView {
       title = selectionLabel;
     }
 
-    const data: Filter = {
+    EventBus.Map.addFilter.pub({
       initiatives: initiatives,
       filterName: selectionKey ?? '',
       verboseName: (directoryField + ": " + title)
-    };
-    eventbus.publish({
-      topic: "Map.addFilter",
-      data: data
     });
-
-
-
 
     //setup sidebar buttons in initiative list
     const sidebarBtnHolder = selection.append("div").attr("class", "initiative-list-sidebar-btn-wrapper");
@@ -244,22 +228,10 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("title", this.labels?.showSearch ?? '')
       .on("click", function () {
 
-        eventbus.publish({
-          topic: "Sidebar.hideInitiativeList",
-        });
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
-        eventbus.publish({
-          topic: "Initiatives.showSearchHistory",
-        });
-        eventbus.publish({
-          topic: "Sidebar.showInitiatives",
-        });
-
+        EventBus.Sidebar.hideInitiativeList.pub();
+        EventBus.Markers.needToShowLatestSelection.pub([]);
+        EventBus.Initiatives.showSearchHistory.pub();
+        EventBus.Sidebar.showInitiatives.pub();
       })
       .append("i")
       .attr("class", "fa fa-search");
@@ -271,26 +243,9 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0")
       .attr("title", this.labels?.showInfo ?? '')
       .on("click", function () {
-        eventbus.publish({
-          topic: "Sidebar.hideInitiativeList",
-        });
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
-        // eventbus.publish({
-        // topic: "Map.removeSearchFilter"});
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
-        eventbus.publish({
-          topic: "Sidebar.showAbout",
-        });
+        EventBus.Sidebar.hideInitiativeList.pub();
+        EventBus.Markers.needToShowLatestSelection.pub([]);
+        EventBus.Sidebar.showAbout.pub();
       })
       .append("i")
       .attr("class", "fa fa-info-circle");
@@ -303,22 +258,9 @@ export class DirectorySidebarView extends BaseSidebarView {
         .attr("class", "w3-button w3-border-0")
         .attr("title", this.labels?.showDatasets ?? '')
         .on("click", function () {
-          eventbus.publish({
-            topic: "Sidebar.hideInitiativeList",
-          });
-          eventbus.publish({
-            topic: "Markers.needToShowLatestSelection",
-            data: {
-              selected: []
-            }
-          });
-          eventbus.publish({
-            topic: "Sidebar.showDatasets",
-          });
-          // // eventbus.publish({
-          // //   topic: "Map.removeSearchFilter",
-          // //   });
-
+          EventBus.Sidebar.hideInitiativeList.pub();
+          EventBus.Markers.needToShowLatestSelection.pub([]);
+          EventBus.Sidebar.showDatasets.pub();
         })
         .append("i")
         .attr("class", "fa fa-database");
@@ -353,11 +295,6 @@ export class DirectorySidebarView extends BaseSidebarView {
       .classed("sea-field", true)
       .text(title)
       .on("click", function () {
-        // if (window.outerWidth <= 800) {
-        //   eventbus.publish({
-        //     topic: "Directory.InitiativeClickedSidebar.hideSidebar"
-        //   });
-        // }
         that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
       });
     const list = selection.append("ul").classed("sea-initiative-list", true);
@@ -381,10 +318,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed(activeClass, true)
         .classed(nongeoClass, true)
         .on("click", function () {
-          eventbus.publish({
-            topic: "Directory.InitiativeClicked",
-            data: initiative
-          });
+          EventBus.Directory.initiativeClicked.pub(initiative);
         })
         .on("mouseover", function (_) {
           that.presenter.onInitiativeMouseoverInSidebar(initiative);
@@ -426,9 +360,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", this.labels.close + initiative.name)
       .on("click", function () {
-        eventbus.publish({
-          topic: "Directory.InitiativeClicked"
-        });
+        EventBus.Directory.initiativeClicked.pub(undefined);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
@@ -438,9 +370,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     initiativeSidebar.classed("sea-initiative-sidebar-open", true);
     // if (document.getElementById("map-app-leaflet-map").clientWidth < 800)
     if (window.outerWidth < 800)
-      eventbus.publish({
-        topic: "Sidebar.showSidebar"
-      });
+      EventBus.Sidebar.showSidebar.pub();
   }
 
   deselectInitiativeSidebar() {

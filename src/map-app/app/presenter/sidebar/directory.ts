@@ -1,9 +1,8 @@
 import { Box2d, Dictionary } from '../../../common_types';
 import { StackItem } from '../../../stack';
-import * as eventbus from '../../eventbus';
+import { EventBus } from '../../../eventbus';
 import { Config } from '../../model/config';
 import { DataServices, Initiative } from '../../model/dataservices';
-import { SelectAndZoomData, ZoomOption } from '../../view/map';
 import { MarkerViewFactory } from '../../view/map/marker';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
@@ -54,19 +53,9 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]): void {
-    // eventbus.publish({
-    //   topic: "Map.fitBounds",
-    //   data: {
-    //     bounds: boundsс,
-    //     options: {
-    //       maxZoom: 9
-    //     }
-    //   }
-    // }); //should be doing this
-
     const lats = initiatives.map(x => x.lat);
     const lngs = initiatives.map(x => x.lng);
-    let options: ZoomOption = { maxZoom: this.config.getMaxZoomOnGroup() };
+    let options: EventBus.Map.ZoomOptions = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
       options = { maxZoom: this.config.getMaxZoomOnOne() };
 
@@ -74,35 +63,22 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       options = {};
 
     if (initiatives.length > 0) {
-      eventbus.publish({
-        topic: "Map.needsToBeZoomedAndPanned",
-        data: {
-          initiatives: initiatives,
-          bounds: [
-            [arrayMin(lats), arrayMin(lngs)],
-            [arrayMax(lats), arrayMax(lngs)]
-          ]
-          , options
-        }
+      EventBus.Map.needsToBeZoomedAndPanned.pub({
+        initiatives: initiatives,
+        bounds: [
+          [arrayMin(lats), arrayMin(lngs)],
+          [arrayMax(lats), arrayMax(lngs)]
+        ]
+        , options
       });
-
+      
       //rm for now as it isn't working well enough
     }
   }
 
 
   notifyMapNeedsToNeedsToSelectInitiative(initiatives: Initiative[]): void {
-    // eventbus.publish({
-    //   topic: "Map.fitBounds",
-    //   data: {
-    //     bounds: boundsс,
-    //     options: {
-    //       maxZoom: 9
-    //     }
-    //   }
-    // }); //should be doing this
-
-    let options: ZoomOption = { maxZoom: this.config.getMaxZoomOnGroup() };
+    let options: EventBus.Map.ZoomOptions = { maxZoom: this.config.getMaxZoomOnGroup() };
     if (initiatives.length == 1)
       options = { maxZoom: this.config.getMaxZoomOnOne() };
 
@@ -113,7 +89,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     if (initiatives.length > 0) {
       const lats = initiatives.map(x => x.lat || defaultPos[0]);
       const lngs = initiatives.map(x => x.lng || defaultPos[1]);
-      const data: SelectAndZoomData = {
+      const data: EventBus.Map.SelectAndZoomData = {
         initiatives: initiatives,
         bounds: [
           [arrayMin(lats), arrayMin(lngs)],
@@ -121,74 +97,39 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
         ]
         , options
       };
-      eventbus.publish({
-        topic: "Map.selectAndZoomOnInitiative",
-        data: data
-      });
+      EventBus.Map.selectAndZoomOnInitiative.pub(data);
     }
   }
 
   onInitiativeMouseoverInSidebar(initiative: Initiative): void {
-    eventbus.publish({
-      topic: "Map.needToShowInitiativeTooltip",
-      data: initiative
-    });
+    EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
   }
   onInitiativeMouseoutInSidebar(initiative: Initiative): void {
-    eventbus.publish({
-      topic: "Map.needToHideInitiativeTooltip",
-      data: initiative
-    });
+    EventBus.Map.needToHideInitiativeTooltip.pub(initiative);
   }
 
   clearLatestSelection() {
-    eventbus.publish({
-      topic: "Markers.needToShowLatestSelection",
-      data: {
-        selected: []
-      }
-    });
+    EventBus.Markers.needToShowLatestSelection.pub([]);
   }
 
   removeFilters(filterName?: string) {
     //remove specific filter
     if (filterName) {
-      eventbus.publish({
-        topic: "Map.removeFilter",
-        data: {
-          filterName: filterName,
-          noZoom: true
-        }
-      });
-    } else {
+      EventBus.Map.removeFilter.pub(filterName);
+    }
+    else {
       //remove all filters
-      eventbus.publish({
-        topic: "Map.removeFilters",
-        data: {}
-      });
+      EventBus.Map.removeFilters.pub();
     }
     this.view.d3selectAndClear(
       "#sea-initiatives-list-sidebar-content"
     );
     //clear the window
-    eventbus.publish({
-      topic: "Sidebar.hideInitiativeList"
-    });
+    EventBus.Sidebar.hideInitiativeList.pub();
     this.clearLatestSelection();
-    // const latlng = latLngBounds(null);
-    // eventbus.publish({
-    //   topic: "Map.needsToBeZoomedAndPanned",
-    //   data: {
-    //    initiatives: initiatives?,
-    //     bounds: latlng,
-    //     options: {
-    //       maxZoom: 5
-    //     }
-    //   }
-    // });
   }
 
-  initiativeClicked(initiative: Initiative): void {
+  initiativeClicked(initiative?: Initiative): void {
     if (initiative) {
       //this.parent.contentStack.append(new StackItem([initiative]));
       // Move the window to the right position first
@@ -197,18 +138,14 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,
-        this.markerView.getInitiativeContent(initiative)
+        this.markerView.getInitiativeContent(initiative) ?? ''
       );
 
-    } else {
+    }
+    else {
       // User has deselected
       // TODO: This probably shouldn\t be here
-      eventbus.publish({
-        topic: "Markers.needToShowLatestSelection",
-        data: {
-          selected: []
-        }
-      });
+      EventBus.Markers.needToShowLatestSelection.pub([]);
       // Deselect the sidebar and hoghlight the iitiative in the directory
       this.view.deselectInitiativeSidebar();
 
@@ -221,37 +158,15 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   }
 
   _eventbusRegiter() {
-    eventbus.subscribe({
-      topic: "Initiative.reset",
-      callback: (_) => {
-        // User has deselected
-        // TODO: This probably shouldn\t be here
-        eventbus.publish({
-          topic: "Markers.needToShowLatestSelection",
-          data: {
-            selected: []
-          }
-        });
-        //todo reload new ones inside instead (without closing)
-        eventbus.publish({
-          topic: "Sidebar.hideInitiativeList"
-        });
-      }
+    EventBus.Initiatives.reset.sub(() => {
+      // User has deselected
+      // TODO: This probably shouldn\t be here
+      EventBus.Markers.needToShowLatestSelection.pub([]);
+      //todo reload new ones inside instead (without closing)
+      EventBus.Sidebar.hideInitiativeList.pub();
     });
-    // eventbus.subscribe({topic: "Marker.SelectionToggled", callback: function(data) { p.onMarkerSelectionToggled(data); } });
-    // eventbus.subscribe({topic: "Marker.SelectionSet", callback: function(data) { p.onMarkerSelectionSet(data); } });
-    eventbus.subscribe({
-      topic: "Directory.InitiativeClicked",
-      callback: (data) => {
-        this.initiativeClicked(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Directory.removeFilters",
-      callback: (data) => {
-        this.removeFilters(data);
-      }
-    });
+    EventBus.Directory.initiativeClicked.sub(initiative => this.initiativeClicked(initiative));
+    EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
   
 }

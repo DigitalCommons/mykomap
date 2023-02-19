@@ -1,7 +1,8 @@
 // Model for SSE Initiatives.
-
+import { toError } from '../../toerror';
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Config } from './config';
+import { EventBus } from '../../eventbus';
 import type {
   DialogueSize,
 } from './config_schema';
@@ -43,7 +44,6 @@ import {
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
 
-const eventbus = require('../eventbus');
 import { CsvDataLoader } from './csvdataloader';
 
 /// This class represents an initiative, AKA a pin on the map.
@@ -112,12 +112,6 @@ export class Initiative {
   hasLocation() {
     return this.lat && this.lng;
   }  
-}
-
-export interface Filter {
-  filterName?: string;
-  verboseName?: string;
-  initiatives: Initiative[];
 }
 
 export interface DataLoaderMeta<T> {
@@ -304,7 +298,7 @@ export interface DataServices {
   //// non-proxies
 
   /// Returns a list of property values matching the given filter
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): unknown[];
+  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[];
 
   // Get the current dataset, or true
   //
@@ -584,11 +578,11 @@ export class DataServicesImpl implements DataServices {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): unknown[] {
+  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[] {
     //construct an array of the filters that aren't the one matching the field
-    let otherFilters: Filter[] = [];
+    let otherFilters: EventBus.Map.Filter[] = [];
     filters.forEach(filter => {
-      if (filter.verboseName.split(":")[0] !== field)
+      if (filter.verboseName?.split(":")[0] !== field)
         otherFilters.push(filter);
     });
 
@@ -812,17 +806,13 @@ export class DataServicesImpl implements DataServices {
     try {
       await this.loadVocabs();
         
-      eventbus.publish({ topic: "Vocabularies.loaded" });
+      EventBus.Vocabularies.loaded.pub();
     }
     catch(error) {
       this.vocabs = undefined;
       
       console.error("vocabs load failed", error);
-
-      eventbus.publish({
-        topic: "Vocabularies.loadFailed",
-        data: { error: error }
-      });
+      EventBus.Vocabularies.loadFailed.pub(toError(error));
     }
 
     try {
@@ -830,50 +820,31 @@ export class DataServicesImpl implements DataServices {
         .map(id => this.datasets[id]?.loader)
         .filter((ds): ds is DataLoader<InitiativeObj> => ds !== undefined)
 
-      const onItemComplete = (initiative: Initiative) => {
-        // Broadcast the creation of the initiative
-        eventbus.publish({ topic: "Initiative.new", data: initiative });
-      };
-      const onSetComplete = (id: string) => {
-        // Publish completion event
-        eventbus.publish({ topic: "Initiative.datasetLoaded" });
-      };
-      const onSetFail = (id: string, error: Error) => {
-        eventbus.publish({
-          topic: "Initiative.loadFailed",
-          data: { error: error, dataset: id }
-        });
-      };
-      
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new DataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
-        onItemComplete, onSetComplete, onSetFail
+        initiative => EventBus.Initiative.created.pub(initiative),
+        dataset => EventBus.Initiatives.datasetLoaded.pub(dataset),
+        (dataset, error) => EventBus.Initiatives.loadFailed.pub({dataset, error})
       );
 
-      eventbus.publish({
-        topic: "Initiative.loadStarted",
-        data: { message: "Started loading data" }
-      });
+      EventBus.Initiatives.loadStarted.pub();
 
       await loadDatasets(dataLoaders, aggregator);
       aggregator.allComplete(); // finish the aggregation
       
       this.aggregatedData = aggregator;
-      
-      eventbus.publish({ topic: "Initiative.complete" });
+
+      EventBus.Initiatives.loadComplete.pub();
     }
     catch(error) {
       this.aggregatedData = new AggregatedData();
       
       console.error("data load failed", error);
 
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: error }
-      });
+      EventBus.Initiatives.loadFailed.pub({error: toError(error)});
     }
   }
 
@@ -906,10 +877,7 @@ export class DataServicesImpl implements DataServices {
     this.aggregatedData = new AggregatedData();
 
     //publish reset to map markers
-    eventbus.publish({
-      topic: "Initiative.reset",
-      data: { dataset: "all" }
-    });
+    EventBus.Initiatives.reset.pub();
 
     this.currentDatasets = dataset;
     await this.loadData();

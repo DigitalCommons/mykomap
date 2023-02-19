@@ -1,13 +1,13 @@
 import { BasePresenter } from '../presenter';
 import * as d3 from 'd3';
-import * as eventbus from '../eventbus';
+import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
 import { Config } from '../model/config_schema';
-import { DataServices, Initiative, Filter } from '../model/dataservices';
+import { DataServices, Initiative } from '../model/dataservices';
 import { ExtendedMarker, MarkerViewFactory } from '../view/map/marker';
 import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
-import { MapView, SelectAndZoomData, Map, BoundsData, ZoomOption } from '../view/map';
+import { MapView, Map } from '../view/map';
 import { Marker } from 'leaflet';
 
 
@@ -37,159 +37,49 @@ export class MapPresenterFactory {
   
   createPresenter(view: MapView): MapPresenter {
     const p = new MapPresenter(this, view);
-    eventbus.subscribe({
-      topic: "Initiative.datasetLoaded",
-      callback: () => {
+    EventBus.Initiatives.datasetLoaded.sub(() => {
+      this.onNewInitiatives();
+      p.onInitiativeDatasetLoaded();
+    });
+    EventBus.Initiative.created.sub(initiative => p.onInitiativeNew(initiative));
+    EventBus.Initiative.refreshed.sub(initiative => {
+      this.onNewInitiatives();
+      p.refreshInitiative(initiative);
+    });
+    EventBus.Initiatives.reset.sub(() => {
         this.onNewInitiatives();
-        p.onInitiativeDatasetLoaded();
-      }
+        p.onInitiativeReset();
     });
-    eventbus.subscribe({
-      topic: "Initiative.new",
-      callback: (data) => {
-        p.onInitiativeNew(data);
-      }
+    EventBus.Initiatives.loadComplete.sub(() => {
+      this.onNewInitiatives();
+      p.onInitiativeLoadComplete();
+      p.onInitiativeComplete();
     });
-    eventbus.subscribe({
-      topic: "Initiative.refresh",
-      callback: (data) => {
-        this.onNewInitiatives();
-        p.refreshInitiative(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.reset",
-      callback: (data) => {
-        this.onNewInitiatives();
-        p.onInitiativeReset(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Initiative.complete",
-      callback: () => {
-        this.onNewInitiatives();
-        p.onInitiativeLoadComplete();
-        p.onInitiativeComplete();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Initiative.loadStarted",
-      callback: (data: { message: string, error?: string }) => {
-        p.onInitiativeLoadMessage(data);
-      }
-    });
-
-
-    eventbus.subscribe({
-      topic: "Initiative.loadFailed",
-      callback: (data) => {
-        p.onInitiativeLoadMessage(data);
-      }
-    });
-    // TODO - strip out this mechanism from everywhere it appears:
-    //eventbus.subscribe({topic: "Initiative.selected", callback: (data) => { p.onInitiativeSelected(data); } });
-    eventbus.subscribe({
-      topic: "Markers.needToShowLatestSelection",
-      callback: (data: { selected: Initiative[] }) => {
-        p.onMarkersNeedToShowLatestSelection(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needsToBeZoomedAndPanned",
-      callback: (data) => {
-        p.onMapNeedsToBeZoomedAndPanned(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needToShowInitiativeTooltip",
-        callback: (data: Initiative) => {
-        p.onNeedToShowInitiativeTooltip(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.needToHideInitiativeTooltip",
-      callback: (data) => {
-        p.onNeedToHideInitiativeTooltip(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.setZoom",
-      callback: (data) => {
-        p.setZoom(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.setActiveArea",
-      callback: (data) => {
-        p.setActiveArea(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.fitBounds",
-      callback: (data: BoundsData) => {
-        p.onBoundsRequested(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.selectAndZoomOnInitiative",
-      callback: (data) => {
-        p.selectAndZoomOnInitiative(data);
-      }
-    });
-
-
-
-    eventbus.subscribe({
-      topic: "Map.addFilter", //change this
-      callback: (data: Filter) => {
-        p.addFilter(data);
-      }
-    });
-    eventbus.subscribe({
-      topic: "Map.refresh", //change this
-      callback: (data) => {
-        p.view.refresh();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.removeFilter",
-      callback: (data: Filter) => {
-        p.removeFilter(data);
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.removeFilters",
-      callback: (data) => {
-        p.removeFilters();
-      }
-    });
-
-    eventbus.subscribe({
-      topic: "Map.addSearchFilter",
-      callback: (data) => {
-        p.addSearchFilter(data);
-      }
-    });//change this to search
-
-    eventbus.subscribe({
-      topic: "Map.removeSearchFilter",
-      callback: (data) => {
-        p.removeSearchFilter();
-      }
-    });
+    EventBus.Initiatives.loadStarted.sub(() => p.onInitiativeLoadMessage());
+    EventBus.Initiatives.loadFailed.sub(error => p.onInitiativeLoadMessage(error));
+    
+    EventBus.Markers.needToShowLatestSelection.sub(initiative => p.onMarkersNeedToShowLatestSelection(initiative));
+    EventBus.Map.needsToBeZoomedAndPanned.sub(data => p.onMapNeedsToBeZoomedAndPanned(data));
+    EventBus.Map.needToShowInitiativeTooltip.sub(initiative => p.onNeedToShowInitiativeTooltip(initiative));
+    EventBus.Map.needToHideInitiativeTooltip.sub(initiative => p.onNeedToHideInitiativeTooltip(initiative));
+    EventBus.Map.setZoom.sub(zoom => p.setZoom(zoom));
+    EventBus.Map.setActiveArea.sub(area => p.setActiveArea(area.offset));
+    EventBus.Map.fitBounds.sub(bounds => p.onBoundsRequested(bounds));
+    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => p.selectAndZoomOnInitiative(zoom));
+    EventBus.Map.addFilter.sub(filter => p.addFilter(filter));
+    EventBus.Map.refresh.sub(() => p.view.refresh());
+    EventBus.Map.removeFilter.sub(filter => p.removeFilter(filter));
+    EventBus.Map.removeFilters.sub(() => p.removeFilters());
+    EventBus.Map.addSearchFilter.sub(filter => p.addSearchFilter(filter));
+    EventBus.Map.removeSearchFilter.sub(() => p.removeSearchFilter());
 
     return p;
   }
   
   //should return an array of unique initiatives in filters
-  getFiltered() {
-    return Object.values(this.filteredInitiativesUIDMap);
+  getFiltered(): Initiative[] {
+    return Object.values(this.filteredInitiativesUIDMap)
+      .filter((i): i is Initiative => i !== undefined);
   }
 
   getFilteredMap() {
@@ -200,8 +90,8 @@ export class MapPresenterFactory {
     return Object.keys(this.filtered);
   }
 
-  getFiltersFull(): Filter[] {
-    const filterArray: Filter[] = []
+  getFiltersFull(): EventBus.Map.Filter[] {
+    const filterArray: EventBus.Map.Filter[] = []
     
     for(let filterName in this.verboseNamesMap){
       filterArray.push({
@@ -291,11 +181,8 @@ export class MapPresenter extends BasePresenter {
         if (me?.originalEvent?.ctrlKey && me?.latlng) {
           MapPresenter.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
         }
-        
-        eventbus.publish({
-          topic: "Directory.InitiativeClicked",
-          data: ""
-        });
+
+        EventBus.Directory.initiativeClicked.pub(undefined);
       },
       load: (_: leaflet.LeafletEvent) => {
         console.log("Map loaded");
@@ -327,7 +214,7 @@ export class MapPresenter extends BasePresenter {
   }
 
 
-  onInitiativeReset(initiative: Initiative) {
+  onInitiativeReset() {
 
     this.view.removeAllMarkers();
     this.factory.allMarkers = [];
@@ -343,14 +230,6 @@ export class MapPresenter extends BasePresenter {
       this.view.fitBounds({bounds: bounds});
     this.view.unselectedClusterGroup?.addLayers(this.factory.allMarkers);
     console.log("onInitiativeComplete");
-    // eventbus.publish({
-    //   topic: "Markers.completed",
-    //   data: { markers: this.factory.allMarkers }
-    // });
-    // eventbus.publish({
-    //   topic: "Markers.",
-    //   data: ""
-    // });
   }
 
 
@@ -369,22 +248,19 @@ export class MapPresenter extends BasePresenter {
 
   }
   
-  onInitiativeLoadMessage(data: { message: string, error?: string }) {
-    /* The protecting veil is now obsolete. */
-    //view.showProtectingVeil(data.message);
-    // TODO - hook this up to a log?
-    this.view.startLoading(data);
+  onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {
+    this.view.startLoading(error);
   }
 
-  onMarkersNeedToShowLatestSelection(data: { selected: Initiative[] }) {
+  onMarkersNeedToShowLatestSelection(selected: Initiative[]) {
     this.previouslySelected.forEach((e) => {
       this.view.setUnselected(e);
     });
 
-    this.previouslySelected = data.selected;
+    this.previouslySelected = selected;
     
     //zoom in and then select 
-    data.selected.forEach((e) => {
+    selected.forEach((e) => {
       this.view.setSelected(e);
     });
   }
@@ -397,14 +273,14 @@ export class MapPresenter extends BasePresenter {
     this.view.hideTooltip(data);
   }
   
-  onMapNeedsToBeZoomedAndPanned(latLngBounds: SelectAndZoomData) {
+  onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
     console.log("onMapNeedsToBeZoomedAndPanned ", latLngBounds);
     this.view.flyToBounds(latLngBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
   }
 
-  onBoundsRequested(data: BoundsData) {
+  onBoundsRequested(data: EventBus.Map.BoundsData) {
     this.view.fitBounds(data);
   }
 
@@ -420,8 +296,8 @@ export class MapPresenter extends BasePresenter {
 
   getInitialZoom() { }
 
-  setActiveArea(data: { offset: number }) {
-    this.view.setActiveArea(data);
+  setActiveArea(offset: number) {
+    this.view.setActiveArea(offset);
   }
 
   getDisableClusteringAtZoomFromConfig() {
@@ -441,11 +317,14 @@ export class MapPresenter extends BasePresenter {
       this.removeFilters();
   }
 
-  addFilter(data: Filter) {
+  addFilter(data: EventBus.Map.Filter) {
     let initiatives = data.initiatives;
     let filterName = data.filterName;
     let verboseName = data.verboseName;
 
+    if (filterName === undefined)
+      return;
+    
     //if filter already exists don't do anything
     if (Object.keys(this.factory.filtered).includes(filterName))
       return;
@@ -471,7 +350,8 @@ export class MapPresenter extends BasePresenter {
      */
     else {      
       for(const initiativeUniqueId in this.factory.filteredInitiativesUIDMap){
-        if(!initiatives.includes(this.factory.filteredInitiativesUIDMap[initiativeUniqueId])){
+        const initiative = this.factory.filteredInitiativesUIDMap[initiativeUniqueId];
+        if(initiative && !initiatives.includes(initiative)){
           this.factory.initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},this.factory.filteredInitiativesUIDMap[initiativeUniqueId]);
           delete this.factory.filteredInitiativesUIDMap[initiativeUniqueId];
         }
@@ -494,8 +374,7 @@ export class MapPresenter extends BasePresenter {
     this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
   }
 
-  removeFilter(data: Filter) {
-    const filterName = data.filterName;
+  removeFilter(filterName: string) {
     //if filter doesn't exist don't do anything
     if (!Object.keys(this.factory.filtered).includes(filterName))
       return;
@@ -537,8 +416,9 @@ export class MapPresenter extends BasePresenter {
 
 
   //should return an array of unique initiatives outside of filters
-  getInitiativesOutsideOfFilter() {
-    return Object.values(this.factory.initiativesOutsideOfFilterUIDMap);
+  getInitiativesOutsideOfFilter(): Initiative[] {
+    return Object.values(this.factory.initiativesOutsideOfFilterUIDMap)
+      .filter((i): i is Initiative => i !== undefined);
   }
   //FILTERS END
 
@@ -547,7 +427,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //highlights markers, hides markers not in the current selection
-  addSearchFilter(data: Filter) {
+  addSearchFilter(data: EventBus.Map.Filter) {
     
     //if no results remove the filter, currently commented out
     if (data.initiatives != null && data.initiatives.length == 0) {
@@ -588,20 +468,17 @@ export class MapPresenter extends BasePresenter {
     //zoom and pan
 
     if (data.initiatives.length > 0) {
-      var options: ZoomOption = {
+      var options: EventBus.Map.ZoomOptions = {
         maxZoom: this.factory.config.getMaxZoomOnSearch()
       }
       if (options.maxZoom == 0)
         options = {};
 
       const latlng = this.factory.dataservices.latLngBounds(data.initiatives)
-      eventbus.publish({
-        topic: "Map.needsToBeZoomedAndPanned",
-        data: {
+      EventBus.Map.needsToBeZoomedAndPanned.pub({
           initiatives: data.initiatives,
           bounds: latlng,
           options: options
-        }
       });
     }
   }
@@ -611,13 +488,10 @@ export class MapPresenter extends BasePresenter {
   }
 
   refresh() {
-    eventbus.publish({
-      topic: "Map.refresh",
-      data: ""
-    });
+    EventBus.Map.refresh.pub();
   }
 
-  selectAndZoomOnInitiative(data: SelectAndZoomData) {
+  selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
@@ -644,31 +518,10 @@ export class MapPresenter extends BasePresenter {
     } else //if no filters available then the search was under global (only hidden ones need to be shown)
       this.factory.markerView.showMarkers(this.factory.hidden);
 
-    //clear last request so you can search the same data again
-//    this.factory.lastRequest = [];
-
     //reset the hidden array
     this.factory.hidden = [];
 
-    //zoom and pan
-    //const latlng = dataservices.latLngBounds(getFiltered().length > 0? getFiltered() : null)
-    // eventbus.publish({
-    //   topic: "Map.needsToBeZoomedAndPanned",
-    //   data: {
-    //   initiatives: hidden,
-    //     bounds: latlng,
-    //     options: {
-    //       maxZoom: config.getMaxZoomOnGroup()
-    //     }
-    //   }
-    // });
-
-    eventbus.publish({
-      topic: "Markers.needToShowLatestSelection",
-      data: {
-        selected: []
-      }
-    });
+    EventBus.Markers.needToShowLatestSelection.pub([]);
   }
   //END SEARCH HIGHLIGHT
 }

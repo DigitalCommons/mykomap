@@ -1,5 +1,5 @@
 import { Dictionary, Point2d } from '../../../common_types';
-import * as eventbus from '../../eventbus';
+import { EventBus } from '../../../eventbus';
 import { InitiativeRenderFunction } from '../../model/config_schema';
 import { DataServices, Initiative } from '../../model/dataservices';
 import { BasePresenter } from '../../presenter';
@@ -16,11 +16,11 @@ export class MapMarkerPresenter extends BasePresenter {
   }
 
   notifySelectionToggled(initiative: Initiative): void {
-    eventbus.publish({ topic: "Marker.SelectionToggled", data: initiative });
+    EventBus.Marker.selectionToggled.pub(initiative);
   }
 
   notifySelectionSet(initiative: Initiative): void {
-    eventbus.publish({ topic: "Marker.SelectionSet", data: initiative });
+    EventBus.Marker.selectionSet.pub(initiative);
   }
 
   getLatLng(initiative: Initiative): Point2d {

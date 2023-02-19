@@ -1,6 +1,6 @@
 // The view aspects of the Main Menu sidebar
 import * as d3 from 'd3';
-import * as eventbus from '../../eventbus';
+import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
 import { MapPresenterFactory } from '../../presenter/map';
@@ -43,12 +43,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			textContent = this.labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
-			eventbus.publish({
-				topic: "Search.changeSearchText",
-				data: {
-					txt: item.searchedFor
-				}
-			});
+      EventBus.Search.changeSearchText.pub(item.searchedFor);
 		}
 
 		container

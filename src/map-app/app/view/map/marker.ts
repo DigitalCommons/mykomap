@@ -1,7 +1,7 @@
 import * as leaflet from 'leaflet';
 import 'leaflet.markercluster';
 import 'leaflet.awesome-markers';
-import * as eventbus from '../../eventbus';
+import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
 import { DataServices, Initiative } from '../../model/dataservices';
@@ -138,10 +138,7 @@ export class MapMarkerView extends BaseView {
     } else {
       console.log(this.initiative);
       // this.presenter.notifySelectionSet(this.initiative);
-      eventbus.publish({
-        topic: "Directory.InitiativeClicked",
-        data: this.initiative
-      });
+      EventBus.Directory.initiativeClicked.pub(this.initiative);
     }
   }
 
@@ -149,9 +146,7 @@ export class MapMarkerView extends BaseView {
     //close pop-up
     this.mapObj.closePopup();
     //close information on the left hand side (for smaller screens)
-    eventbus.publish({
-      topic: "Sidebar.hideInitiative"
-    });
+    EventBus.Sidebar.hideInitiative.pub();
     //reset the map vars and stop the zoom event from triggering selectInitiative ({target}) method
 
     //change the color of an initiative with a location
@@ -228,9 +223,7 @@ export class MapMarkerView extends BaseView {
     let deselectInitiative = (e: leaflet.LeafletEvent) => {
       if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
         this.setUnselected(initiative);
-        eventbus.publish({
-          topic: "Directory.InitiativeClicked"
-        });
+        EventBus.Directory.initiativeClicked.pub(undefined); // deselects
         this.factory.unselectedClusterGroup.off("animationend", deselectInitiative);
       }
     }
@@ -369,7 +362,7 @@ export class MarkerViewFactory {
       return this.markerForInitiative[initiative.uri]?.getInitiativeContent(
         initiative
       );
-    else return null;
+    else return undefined;
   }
 
   getClusterGroup() {
