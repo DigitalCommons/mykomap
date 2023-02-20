@@ -5,7 +5,7 @@ import { Dictionary } from '../../common_types';
 /// This represents an initiative represented as bare JSON
 export interface InitiativeObj {
   uri: string;
-  [name: string]: any;
+  [name: string]: unknown;
 }
 
 /// This class represents an initiative, AKA a pin on the map.
@@ -68,7 +68,7 @@ export class Initiative {
   __internal: Dictionary<unknown> = {};
 
   /// Property index operator
-  [id: string]: any | undefined;
+  [id: string]: unknown | undefined;
 
   /// Checks if the initiative has truthy lat and lng properties.
   hasLocation(): boolean {

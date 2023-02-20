@@ -38,6 +38,7 @@ import {
   Initiative,
   InitiativeObj
 } from './initiative';
+import { promoteToArray } from '../../utils';
 
 export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => any;
 
@@ -157,13 +158,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       // because the dataloader cannot currently infer a
       // multivalue into an array when there is only one record, not
       // multiple. But the plan is to address this later.
-      let ary: any[] = params[paramName];
-      if (ary == null) { // or undefined
-        ary = [];
-      }
-      else if (!(typeof ary === 'object' && ary instanceof Array)) {
-        ary = [params[paramName]];
-      }
+      const ary = promoteToArray(params[paramName]);
       return ary.map(param => {
         paramsCopy[paramName] = param;
         return buildAny(id, def.of, paramsCopy);
@@ -209,7 +204,13 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     sortedInsert(initiative, this.loadedInitiatives);
 
     // Insert the initiative into initiativesByUid
-    this.initiativesByUid[initiative.uri] = initiative;
+    const uri = initiative.uri;
+    if (typeof uri !== 'string') {
+      console.warn("initiative has not the mandatory uri property, ignoring", initiative);
+      return;
+    }
+
+    this.initiativesByUid[uri] = initiative;
 
     // Report the completion
     this.onItemComplete?.(initiative);
@@ -240,7 +241,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     else {
       const up = dbSource.toUpperCase();
       return this.loadedInitiatives.filter(
-        (i: Initiative) => i.dataset.toUpperCase() === up
+        (i: Initiative) => typeof i.dataset === 'string' && i.dataset.toUpperCase() === up
       );
     }
   }  

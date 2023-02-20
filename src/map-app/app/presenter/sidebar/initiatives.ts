@@ -8,6 +8,7 @@ import { StackItem } from '../../../stack';
 import { Config } from '../../model/config';
 import { SearchResults } from './searchresults';
 import { Initiative } from '../../model/initiative';
+import { arrayMax, arrayMin, arrays2Box2d, toString as _toString, yesANumber } from '../../../utils';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;
@@ -21,7 +22,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Marker.selectionSet.sub(initiative => this.onMarkerSelectionSet(initiative));
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
     EventBus.Initiatives.showSearchHistory.sub(() => this.onSearchHistory())
-    EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(initiative.uri));
+    EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(_toString(initiative.uri, undefined)));
     EventBus.Search.changeSearchText.sub(text => this.changeSearchText(text));
   }
 
@@ -47,25 +48,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       newContent = this.parent.contentStack.current()?.initiatives
     if (newContent)
       EventBus.Markers.needToShowLatestSelection.pub(newContent);
-  }
-
-  notifyMapNeedsToNeedsToBeZoomedAndPanned(sidebarWidth: number = 0) {
-    const initiatives = this.parent.contentStack.current()?.initiatives;
-    if (!initiatives) return;
-
-    const lats = initiatives.map(x => x.lat);
-    const lngs = initiatives.map(x => x.lng);
-
-    if (initiatives.length > 0) {
-      EventBus.Map.needsToBeZoomedAndPanned.pub({
-        initiatives: initiatives,
-        bounds: [
-          [arrayMin(lats), arrayMin(lngs)],
-          [arrayMax(lats), arrayMax(lngs)]
-        ],
-        options: {}
-      });
-    }
   }
 
   /// - filterCategoryName is the title of the filter option's vocab FIXME should be ID
@@ -146,21 +128,29 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.pub(undefined);
   }
 
-  notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative, sidebarWidth: number = 0) {
-    const initiatives = [initiative];
-    const lats = initiatives.map(x => x.lat);
-    const lngs = initiatives.map(x => x.lng);
-
+  _notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]) {
+    const lats = initiatives.map(x => x.lat).filter(yesANumber);
+    const lngs = initiatives.map(x => x.lng).filter(yesANumber);
+    const bounds = arrays2Box2d(lats, lngs);
+    
     if (initiatives.length > 0) {
-      EventBus.Map.selectAndZoomOnInitiative.pub({
+      EventBus.Map.needsToBeZoomedAndPanned.pub({
         initiatives: initiatives,
-        bounds: [
-          [arrayMin(lats), arrayMin(lngs)],
-          [arrayMax(lats), arrayMax(lngs)]
-        ],
-        options: {},
+        bounds: bounds,
+        options: {}
       });
     }
+  }
+
+  notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
+    this._notifyMapNeedsToNeedsToBeZoomedAndPanned([initiative]);    
+  }
+
+  notifyMapNeedsToNeedsToBeZoomedAndPanned() {
+    const initiatives = this.parent.contentStack.current()?.initiatives;
+    if (!initiatives) return;
+
+    this._notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
   }
 
   notifyShowInitiativeTooltip(initiative: Initiative) {
@@ -195,7 +185,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       //search results should be a subset of filtered
 
       data.results = data.results.filter(initiative =>
-        filterKeys.includes(initiative.uri)
+        filterKeys.includes(_toString(initiative.uri))
       );
     }
 
@@ -290,8 +280,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Map.removeSearchFilter.pub();
   }
 
-  searchedInitiativeClicked(uri: string) {
-    this.view?.onInitiativeClicked(uri);
+  searchedInitiativeClicked(uri?: string) {
+    if (uri) this.view?.onInitiativeClicked(uri);
   }
 
   performSearch(text: string) {
@@ -327,10 +317,3 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 }
 
-function arrayMin(lats: any[]): number {
-    throw new Error('Function not implemented.');
-}
-
-function arrayMax(lats: any[]): number {
-    throw new Error('Function not implemented.');
-}

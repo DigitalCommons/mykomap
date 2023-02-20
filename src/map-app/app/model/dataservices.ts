@@ -3,6 +3,7 @@ import { toError } from '../../toerror';
 import type { Dictionary, Box2d } from '../../common_types';
 import type { Config } from './config';
 import { EventBus } from '../../eventbus';
+import { toNumber, toString } from '../../utils';
 import type {
   DialogueSize,
 } from './config_schema';
@@ -101,7 +102,7 @@ export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
 export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
 
 export function sortInitiatives(a: Initiative, b: Initiative) {
-  return a.name.localeCompare(b.name);
+  return toString(a.name).localeCompare(toString(b.name));
 }
 
 // Inserts an element into a sorted array
@@ -152,20 +153,14 @@ function mkLocFromParamBuilder(from: string, overrideParam: string) {
     // Overwrite with manually added lat lng if present For
     // historical reasons, "0" counts as undefined (meaning, use
     // lat/lng), cos it used to mean this in the old wonky data.
-    if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
-      'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
+    if ('manLat' in params && params.manLat !== "0" && toNumber(params.manLat, null) !== null ||
+      'manLng' in params && params.manLng !== "0" && toNumber(params.manLng, null) !== null) {
       param = params[overrideParam];
     }
 
     // Ensure param is a number
-    if (isNaN(Number.parseFloat(param)))
-      return undefined;
-
-    // Preserve undefs/nulls/empty strings as undefined 
-    if (param === undefined || param === null || param === "")
-      return undefined;
-
-    return Number(param);
+    param = toNumber(param, null);
+    return param === null? undefined : param;
   };
 }
 
@@ -596,7 +591,7 @@ export class DataServicesImpl implements DataServices {
         let id = initiative[name];
           
         // Add the value if it isn't there
-        if (!possibleFilterValues.includes(id))
+        if (typeof id === 'string' && !possibleFilterValues.includes(id))
           possibleFilterValues.push(id);
       }
     });
@@ -691,11 +686,11 @@ export class DataServicesImpl implements DataServices {
     }
 
     const lats = (initiatives || this.aggregatedData.loadedInitiatives)
-                   .filter((obj: Initiative) => obj.lat !== null && !isNaN(obj.lat))
-                   .map((obj: Initiative) => obj.lat);
+                   .map(obj => toNumber(obj.lat, null))
+                   .filter((val): val is number => val !== null)
     const lngs = (initiatives || this.aggregatedData.loadedInitiatives)
-                   .filter((obj: Initiative) => obj.lng !== null && !isNaN(obj.lng))
-                   .map((obj: Initiative) => obj.lng);
+                   .map(obj => toNumber(obj.lng, null))
+                   .filter((val): val is number => val !== null)
     const west = Math.min.apply(Math, lngs);
     const east = Math.max.apply(Math, lngs);
     const south = Math.min.apply(Math, lats);

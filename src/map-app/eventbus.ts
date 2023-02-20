@@ -47,7 +47,7 @@ export namespace EventBus {
     }
     export interface SelectAndZoomData {
       initiatives: Initiative[];
-      bounds: Box2d;
+      bounds?: Box2d;
       options: ZoomOptions;
     }
     export interface Filter {
@@ -115,4 +115,4 @@ const addTap = (tapFn: typeof defaultTap = defaultTap) => {
 };
 // @ts-ignore
 if (typeof window === 'object') window['addTap'] = addTap;
-g
+

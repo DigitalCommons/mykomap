@@ -275,10 +275,11 @@ export class MapView extends BaseView {
       return true;
   }
 
-  boundsWithinCurrentBounds(bounds: Box2d) {
+  boundsWithinCurrentBounds(bounds: Box2d): boolean {
     const map = this.map;
     if (!map)
-      return;
+      return false;
+    
     //checks if the bounds passed are smaller than the current bounds
     //(north-south) and (east-west)
     let mapBounds = map.getBounds();
@@ -319,18 +320,20 @@ export class MapView extends BaseView {
     //1. One marker - Marker is visible (no cluster) - pan on the marker
     //2. Multiple markers - Markers are visisible (no clusters) - pan to markers if you can without zoom, else just do the usual and zoom
     //3. Clusters within clusters
-    if (data.initiatives && this.isVisible(data.initiatives)
-      && this.boundsWithinCurrentBounds(data.bounds)) {// all are visible
-      //case 1 and 2
-      //if you can contain the markers within the screen, then just pan
-      // map.panTo(map.getBounds().getCenter())  ; // get center 
-      //map.panTo(bounds.getBounds().getCenter())  ;
-      let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
-      map.panTo(centre, { animate: true });
-      //pan does not trigger the open popup event though because there is no zoom event
-    }
-    else { //case 3
-      map.flyToBounds(data.bounds, Object.assign(options, data.options)); // normal zoom/pan
+    if (data.bounds) {
+      if (data.initiatives && this.isVisible(data.initiatives)
+        && this.boundsWithinCurrentBounds(data.bounds)) {// all are visible
+        //case 1 and 2
+        //if you can contain the markers within the screen, then just pan
+        // map.panTo(map.getBounds().getCenter())  ; // get center 
+        //map.panTo(bounds.getBounds().getCenter())  ;
+        let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
+        map.panTo(centre, { animate: true });
+        //pan does not trigger the open popup event though because there is no zoom event
+      }
+      else { //case 3
+        map.flyToBounds(data.bounds, Object.assign(options, data.options)); // normal zoom/pan
+      }
     }
 
     //should check for firefox only? TODO
@@ -347,13 +350,14 @@ export class MapView extends BaseView {
 
     map.on('moveend', refresh);
     map.on('animationend', refresh)
-
   }
 
   //pass array of 1 initiative in data.initiative
   selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
     const map = this.map;
     if (!map)
+      return;
+    if (!data.bounds)
       return;
     
     //const options = Object.assign({ duration: 0.25, maxZoom: this.map?.getZoom() }, data.options);

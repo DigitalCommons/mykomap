@@ -2,6 +2,7 @@ import type { Dictionary } from '../../common_types';
 import { PropDefs, PropDef, DataServicesImpl } from './dataservices';
 import { Initiative } from './initiative';
 import type { DataConsumer } from './dataloader';
+import { promoteToArray } from '../../utils';
 
 export interface Vocab {
   title: string;
@@ -183,29 +184,53 @@ export class VocabServiceImpl implements VocabServices {
         continue;
 
       for(const propName in propertySchema) {
-        const propDef = propertySchema[propName];
         const vocabPropDef = vocabProps[propName];
         if (!vocabPropDef)
           continue;
         
         let vocabID = vocabPropDef.uri;
 
-        const uris: unknown[] = vocabPropDef.type === 'vocab'?
-          [initiative[propName]] : initiative[propName];
-        
-        if (uris != null) {
-          const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-          const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-
-          // Currently still keeping the output data structure the same, so use uri not term
-          const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-          uris.forEach(uri => {
-            if (uri == null) return;
-            const key = this.abbrevUri(String(uri));
-            if (key in temp) return;
-            temp[key] = this.vocabs.vocabs[vocabID][vocabLang].terms[key];
-          });
+        // If a MultiPropDef, initiative[propName] should be an array already, but could be null/undefined. Convert to an array.
+        // If a VocabPropDef, it should *not* be an array, but equally could be null/undefined. Convert to an array of zero/one value.
+        let uris: unknown[] | undefined;
+        const val = initiative[propName];
+        if (vocabPropDef.type === 'multi') {
+          if (val instanceof Array)
+            uris = val;
+          else if (val == null) // or undef
+            uris = [];
+          else {
+            console.warn(`initiative has non-array value in MultiPropDef property ${propName} -  ignoring property`, initiative);
+            continue;
+          }
         }
+        else if (vocabPropDef.type === 'vocab') {
+          if (typeof val === 'string')
+            uris = [val]
+          else if (val == null) // or undef
+            uris = [];
+          else { 
+            console.warn(`initiative has non-string value in VocabPropDef property ${propName} -  ignoring property`, initiative);
+            continue;
+          }
+        }
+        else {
+          // Shouldn't ever get here, but it keeps the compiler happy
+          console.warn(`initiative has unknown VocabPropDef type for property ${propName} -  ignoring property`, initiative);
+          continue;
+        }
+            
+        const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
+        const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
+        
+        // Currently still keeping the output data structure the same, so use uri not term
+        const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
+        uris.forEach(uri => {
+          if (uri == null) return;
+          const key = this.abbrevUri(String(uri));
+            if (key in temp) return;
+          temp[key] = this.vocabs.vocabs[vocabID][vocabLang].terms[key];
+        });
       }
     }
 

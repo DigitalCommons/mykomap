@@ -10,7 +10,7 @@ import { Dictionary } from '../../common_types';
 import { MapView, Map } from '../view/map';
 import { Marker } from 'leaflet';
 import { Initiative } from '../model/initiative';
-
+import { toString as _toString } from '../../utils';
 
 export class MapPresenterFactory {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
@@ -342,8 +342,14 @@ export class MapPresenter extends BasePresenter {
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
-        delete this.factory.initiativesOutsideOfFilterUIDMap[initiative.uri];
-        this.factory.filteredInitiativesUIDMap[initiative.uri] = initiative;
+        const uri = _toString(initiative.uri, null);
+        if (uri === null) {
+          console.warn("initiative has non-string uri property, ignoring", initiative);
+        }
+        else {
+          delete this.factory.initiativesOutsideOfFilterUIDMap[uri];
+          this.factory.filteredInitiativesUIDMap[uri] = initiative;
+        }
       });
     }
     /* if this is the second or more filter, remove items from the 
@@ -392,17 +398,26 @@ export class MapPresenter extends BasePresenter {
 
     //add in the values that you are removing 
     oldFilterVals?.forEach(i => {
-      this.factory.initiativesOutsideOfFilterUIDMap[i.uri] = i;
+      const uri = _toString(i.uri, null);
+      if (uri !== null)
+        this.factory.initiativesOutsideOfFilterUIDMap[uri] = i;
+      else
+        console.warn("inititive has non-string uri property, ignoring", i);
     });
 
     //remove filter initatitives 
     //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
     Object.keys(this.factory.filtered).forEach(k => {
       this.factory.filtered[k]?.forEach(i => {
-        //add in unique ones
-        this.factory.filteredInitiativesUIDMap[i.uri] = i;
-        //remove the ones you added
-        delete this.factory.initiativesOutsideOfFilterUIDMap[i.uri];
+        const uri = _toString(i.uri, null);
+        if (uri !== null) {
+          //add in unique ones
+          this.factory.filteredInitiativesUIDMap[uri] = i;
+          //remove the ones you added
+          delete this.factory.initiativesOutsideOfFilterUIDMap[uri];
+        }
+        else
+          console.warn("inititive has non-string uri property, ignoring", i);
       })
     });
 

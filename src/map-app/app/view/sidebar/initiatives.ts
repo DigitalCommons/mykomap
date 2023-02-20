@@ -11,6 +11,7 @@ import { SidebarView } from '../sidebar';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../presenter/sidebar/searchresults';
 import { Initiative } from '../../model/initiative';
+import { promoteToArray, toString as _toString } from '../../../utils';
 
 
 
@@ -74,65 +75,51 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("class", BaseSidebarView.sectionClasses)
 				.text("Longitude: " + initiative.lng);
 		}
-		if (initiative.uri) {
+    const uri = initiative.uri;
+		if (typeof uri === 'string') {
 			s.append("div")
 				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.text("Detailed data for this initiative")
 				.style("cursor", "pointer")
 				.on("click", () => {
-					this.openInNewTabOrWindow(initiative.uri);
+				 	this.openInNewTabOrWindow(uri);
 				});
 		}
-		if (initiative.within) {
+    const within = initiative.within;
+		if (typeof within === 'string') { // FIXME don't assume this property exists!
 			s.append("div")
 				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
 				.text("Ordnance Survey postcode information")
 				.style("cursor", "pointer")
 				.on("click", () => {
-					this.openInNewTabOrWindow(initiative.within);
-				});
-		}
-		if (initiative.regorg) {
-			const serviceToDisplaySimilarCompanies =
-				document.location.origin +
-				document.location.pathname +
-				this.config.getServicesPath() +
-				"display_similar_companies/main.php";
-			const serviceToDisplaySimilarCompaniesURL =
-				serviceToDisplaySimilarCompanies +
-				"?company=" +
-				encodeURIComponent(initiative.regorg);
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
-				.attr("title", "A tech demo of federated Linked Open Data queries!")
-				.text("Display similar companies nearby using Companies House data")
-				.style("cursor", "pointer")
-				.on("click", () => {
-					this.openInNewTabOrWindow(serviceToDisplaySimilarCompaniesURL);
+					this.openInNewTabOrWindow(within);
 				});
 		}
 	}
   
 	populateSelectionWithOneInitiative(selection: d3Selection, initiative: Initiative) {
 		const s = selection.append("div").attr("class", "w3-bar-block");
-		if (initiative.www) {
+    const www = promoteToArray(initiative.www);
+    // FIXME don't assume this property exists! Also, may be multi-valued
+		if (www.length) {
 			s.append("div")
 				.attr("class", BaseSidebarView.sectionHeadingClasses)
 				.text("website");
 			s.append("div")
 				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
-				.text(initiative.www)
+				.text(_toString(www[0]))
 				.style("cursor", "pointer")
 				.on("click", () => {
-					this.openInNewTabOrWindow(initiative.www);
+					this.openInNewTabOrWindow(_toString(www[0]));
 				});
 		}
+    const desc = _toString(initiative.desc, null);
 		s.append("div")
 			.attr("class", BaseSidebarView.sectionHeadingClasses)
 			.text("description");
 		s.append("div")
 			.attr("class", BaseSidebarView.sectionClasses)
-			.text(initiative.desc || "No description available");
+			.text(desc || "No description available");
     
 		// Make an accordion for opening up the geek zone
 		this.makeAccordionAtD3Selection({
@@ -168,17 +155,19 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				initiativeClass += " sea-initiative-non-geo";
 			}
 
-			selection
-				.append("button")
-				.attr("class", initiativeClass)
-				.attr("data-uid", initiative.uri)
-				.attr("title", "Click to see details here and on map")
-				// TODO - shift-click should remove initiative from selection,
-				//        just like shift-clicking a marker.
-				.on("click", () => this.presenter.initClicked(initiative))
-				.on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative) )
-				.on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative) )
-				.text(initiative.name);
+      const uri = _toString(initiative.uri, null);
+      if (uri)
+			  selection
+				  .append("button")
+				  .attr("class", initiativeClass)
+				  .attr("data-uid", uri)
+				  .attr("title", "Click to see details here and on map")
+			// TODO - shift-click should remove initiative from selection,
+			//        just like shift-clicking a marker.
+				  .on("click", () => this.presenter.initClicked(initiative))
+				  .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative) )
+				  .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative) )
+				  .text(_toString(initiative.name));
 		});
 	}
 

@@ -1,5 +1,6 @@
 import { Dictionary, Point2d } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
+import { toPoint2d, toString as _toString } from '../../../utils';
 import { InitiativeRenderFunction } from '../../model/config_schema';
 import { DataServices } from '../../model/dataservices';
 import { Initiative } from '../../model/initiative';
@@ -24,27 +25,15 @@ export class MapMarkerPresenter extends BasePresenter {
     EventBus.Marker.selectionSet.pub(initiative);
   }
 
-  getLatLng(initiative: Initiative): Point2d {
-    return [initiative.lat, initiative.lng];
+  getLatLng(initiative: Initiative): Point2d|undefined {
+    return toPoint2d([initiative.lat, initiative.lng]);
   }
 
   getHoverText(initiative: Initiative): string {
-    return initiative.name;
+    return _toString(initiative.name);
   }
 
-  prettyPhone(tel: string): string {
-    return tel.replace(/^(\d)(\d{4})\s*(\d{6})/, "$1$2 $3");
-  }
-  
   getInitiativeContent(initiative: Initiative): string {
     return this.popup(initiative, this.dataServices);
-  }
-
-  getMarkerColor(initiative: Initiative): string {
-    const hasWww = initiative.www && initiative.www.length > 0;
-    const hasReg = initiative.regorg && initiative.regorg.length > 0;
-    const markerColor =
-      hasWww && hasReg ? "purple" : hasWww ? "blue" : hasReg ? "red" : "green";
-    return markerColor;
   }
 }

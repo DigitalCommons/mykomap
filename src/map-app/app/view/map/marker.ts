@@ -9,6 +9,7 @@ import { InitiativeRenderFunction } from '../../model/config_schema';
 import { Map } from '../map';
 import { Dictionary, Point2d } from '../../../common_types';
 import { Initiative } from '../../model/initiative';
+import { toString as _toString } from '../../../utils';
 
 // Cater for the earlier JS hack in which a boolean is stored in
 // marker objects...
@@ -43,15 +44,13 @@ export class MapMarkerView extends BaseView {
     const opts = Object.assign(this.dfltOptions, {
       // icon: this.presenter.getIcon(initiative),
       popuptext: this.presenter.getInitiativeContent(initiative)
-      // hovertext: this.presenter.getHoverText(initiative),
-      // cluster: true,
-      // markerColor: this.presenter.getMarkerColor(initiative)
     });
 
     // For non-geo initiatives we don't need a marker but still want to get the initiativeContent
     // TODO: Content generation should live somewhere else.
     // const ukPostcode = /([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9][A-Za-z]?))))\s?[0-9][A-Za-z]{2})/;
-    if (!initiative.hasLocation()) {
+    const latLng = this.presenter.getLatLng(initiative);
+    if (!latLng) {
 
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
@@ -80,12 +79,15 @@ export class MapMarkerView extends BaseView {
       this.cluster = this.factory.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
-    } else {
-
+    }
+    else {
+      // FIXME this should not be hardwiring primaryActivity!
+      // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
+      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
-        markerColor: this.initiative.primaryActivity
-                   ? this.initiative.primaryActivity.toLowerCase().replace(/\W/g, '_')
+        markerColor: primaryActivity !== null
+                   ? primaryActivity.toLowerCase().replace(/\W/g, '_')
                    : "ALL",
         iconColor: "white",
         icon: "certificate",
@@ -93,7 +95,7 @@ export class MapMarkerView extends BaseView {
 //        cluster: false, // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
       });
 
-      this.marker = leaflet.marker(this.presenter.getLatLng(initiative), {
+      this.marker = leaflet.marker(latLng, {
         icon: icon,
 //        initiative: this.initiative // FIXME this *seems* to be unused, and creates type checking errors
       });
@@ -152,11 +154,14 @@ export class MapMarkerView extends BaseView {
 
     //change the color of an initiative with a location
     if (initiative.hasLocation()) {
+      // FIXME this should not be hardwiring primaryActivity!
+      // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
+      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
       this.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
-          markerColor: this.initiative.primaryActivity
-                     ? this.initiative.primaryActivity.toLowerCase()
+          markerColor: primaryActivity !== null
+                     ? primaryActivity.toLowerCase()
                      : "AM00", // FIXME this should not be hardwired!
           iconColor: "white",
           icon: "certificate",
@@ -177,11 +182,14 @@ export class MapMarkerView extends BaseView {
     //set initiative for selection
     //change the color of the marker to a slightly darker shade
     if (initiative.hasLocation()) {
+      // FIXME this should not be hardwiring primaryActivity!
+      // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
+      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
       marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
-          markerColor: initiative.primaryActivity
-            ? initiative.primaryActivity.toLowerCase()
+          markerColor: primaryActivity !== null
+            ? primaryActivity.toLowerCase()
             : "ALL",
           iconColor: "white",
             icon: "certificate",
@@ -288,10 +296,12 @@ export class MarkerViewFactory {
   }
 
   setSelected(initiative: Initiative) {
-    this.markerForInitiative[initiative.uri]?.setSelected(initiative);
+    const uri = _toString(initiative.uri);
+    this.markerForInitiative[uri]?.setSelected(initiative);
   }
   setUnselected(initiative: Initiative) {
-    this.markerForInitiative[initiative.uri]?.setUnselected(initiative);
+    const uri = _toString(initiative.uri);
+    this.markerForInitiative[uri]?.setUnselected(initiative);
   }
 
   destroyAll() {
@@ -305,7 +315,8 @@ export class MarkerViewFactory {
   showMarkers(initiatives: Initiative[]) {
     //show markers only if it is not currently vissible
     initiatives.forEach(initiative => {
-      const marker = this.markerForInitiative[initiative.uri];
+      const uri = _toString(initiative.uri);      
+      const marker = this.markerForInitiative[uri];
       if (marker && !marker.isVisible())
         marker.show();
     });
@@ -314,22 +325,27 @@ export class MarkerViewFactory {
 
   hideMarkers(initiatives: Initiative[]) {
     initiatives.forEach(initiative => {
-      if (this.markerForInitiative[initiative.uri])
-        this.markerForInitiative[initiative.uri]?.destroy();
+      const uri = _toString(initiative.uri);      
+      if (this.markerForInitiative[uri])
+        this.markerForInitiative[uri]?.destroy();
     });
   }
 
   createMarker(map: Map, initiative: Initiative) {
+    const uri = _toString(initiative.uri, null);
+    if (uri === null)
+      throw new Error(`initiative is missing the mandatory uri property: ${initiative}`);
     const view = new MapMarkerView(this.dataServices, this.popup, map, initiative, this.defaultLatLng, this);
-    this.markerForInitiative[initiative.uri] = view;
+    this.markerForInitiative[uri] = view;
     return view;
   }
 
   refreshMarker(initiative: Initiative) {
-    if (!this.markerForInitiative[initiative.uri])
+    const uri = _toString(initiative.uri);
+    if (!this.markerForInitiative[uri])
       return;
 
-    const marker = this.markerForInitiative[initiative.uri];
+    const marker = this.markerForInitiative[uri];
     if (!marker) {
       console.error("no marker for initiative", initiative);
       return;
@@ -348,17 +364,20 @@ export class MarkerViewFactory {
   }
 
   showTooltip(initiative: Initiative) {
-    this.markerForInitiative[initiative.uri]?.showTooltip(initiative);
+    const uri = _toString(initiative.uri);
+    this.markerForInitiative[uri]?.showTooltip(initiative);
   }
   
   hideTooltip(initiative: Initiative) {
-    this.markerForInitiative[initiative.uri]?.hideTooltip(initiative);
+    const uri = _toString(initiative.uri);
+    this.markerForInitiative[uri]?.hideTooltip(initiative);
   }
 
   getInitiativeContent(initiative: Initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    if (this.markerForInitiative[initiative.uri])
-      return this.markerForInitiative[initiative.uri]?.getInitiativeContent(
+    const uri = _toString(initiative.uri);
+    if (this.markerForInitiative[uri])
+      return this.markerForInitiative[uri]?.getInitiativeContent(
         initiative
       );
     else return undefined;

@@ -10,6 +10,7 @@ import { d3Selection } from "../d3-utils";
 import { MarkerViewFactory } from "../map/marker";
 import { SidebarView } from "../sidebar";
 import { BaseSidebarView } from "./base";
+import { toString as _toString } from "../../../utils";
 
 function uriToTag(uri: string) {
   return uri.toLowerCase().replace(/^.*[:\/]/, "");
@@ -314,8 +315,8 @@ export class DirectorySidebarView extends BaseSidebarView {
 
       list
         .append("li")
-        .text(initiative.name)
-        .attr("data-uid", initiative.uri)
+        .text(_toString(initiative.name))
+        .attr("data-uid", _toString(initiative.uri))
         .classed(activeClass, true)
         .classed(nongeoClass, true)
         .on("click", function () {
@@ -359,7 +360,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     initiativeContentElement
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", this.labels.close + initiative.name)
+      .attr("title", `${this.labels?.close ?? ''} ${initiative.name}`)
       .on("click", function () {
         EventBus.Directory.initiativeClicked.pub(undefined);
       })

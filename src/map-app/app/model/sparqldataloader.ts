@@ -162,18 +162,19 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
         .forEach(entry => {
           const [key, val] = entry;
 
-          if (val === first[key]) 
+          const firstVal = first[key];
+          if (val === firstVal) 
             return; // Infer this is not a multi-value property, do nothing.
 
           // Add this new value to the multi-valued property. Also ensures the above check will
           // continue for all subsequent values.
-          if (typeof first[key] === 'object' && first[key] instanceof Array) {
+          if (firstVal instanceof Array) {
              // Add the value to an existing array
-            first[key].push(val);
+            firstVal.push(val);
           }
           else {
             // This is the first value, create the array, retaining this and the previous value
-            first[key] = [first[key], val];
+            first[key] = [firstVal, val];
           }
         });
     }

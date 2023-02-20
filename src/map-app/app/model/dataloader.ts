@@ -44,7 +44,7 @@ export class AggregatedData {
     // returns an array of sse objects whose name contains the search text
     var up = text.toUpperCase();
     return this.loadedInitiatives.filter(
-      (i: Initiative) => i.searchstr.includes(up)
+      (i: Initiative) => typeof i.searchstr === 'string' && i.searchstr.includes(up)
     ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
   }  
 }

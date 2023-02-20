@@ -1,6 +1,7 @@
 // FIXME prevent malicious content in replacements (like description)
 import type { DataServices } from "../../model/dataservices";
 import type { Initiative } from "../../model/initiative";
+import { toString as _toString } from "../../../utils";
 
 export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality
@@ -18,7 +19,7 @@ export function getAddress(initiative: Initiative) {
   let address = [] as string[];
   if (initiative.street)
     address = address.concat(
-      String(initiative.street)
+      _toString(initiative.street)
         .split(';')
         .map(elem => elem.trim())
         .filter(elem => elem !== initiative.name)
@@ -27,7 +28,7 @@ export function getAddress(initiative: Initiative) {
   address = address.concat(
     [initiative.locality,
      initiative.region,
-     initiative.postcode].map(htmlEscape)
+     initiative.postcode].map(x => _toString(x)).map(htmlEscape)
   )
   if (!initiative.hasLocation())
     address.push('<i>NO LOCATION AVAILABLE</i>');
