@@ -22,13 +22,6 @@ leaflet.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-interface LoaderConfig {
-  error?: string;
-  text: string;
-  container: string;
-  id: string;
-}
-
 // Methods for leaflet-contextmenu
 interface ContextMap {
   
