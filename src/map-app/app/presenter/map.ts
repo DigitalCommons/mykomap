@@ -68,7 +68,6 @@ export class MapPresenterFactory {
     EventBus.Map.fitBounds.sub(bounds => p.onBoundsRequested(bounds));
     EventBus.Map.selectAndZoomOnInitiative.sub(zoom => p.selectAndZoomOnInitiative(zoom));
     EventBus.Map.addFilter.sub(filter => p.addFilter(filter));
-    EventBus.Map.refresh.sub(() => p.view.refresh());
     EventBus.Map.removeFilter.sub(filter => p.removeFilter(filter));
     EventBus.Map.removeFilters.sub(() => p.removeFilters());
     EventBus.Map.addSearchFilter.sub(filter => p.addSearchFilter(filter));
@@ -501,10 +500,6 @@ export class MapPresenter extends BasePresenter {
 
   getLogo() {
     return this.factory.config.logo();
-  }
-
-  refresh() {
-    EventBus.Map.refresh.pub();
   }
 
   selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {

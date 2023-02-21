@@ -220,22 +220,6 @@ export class MapView extends BaseView {
     return this.markerViewFactory.getClusterGroup();
   }
 
-  //fix for firefox, this triggers tiles to re-render
-  refresh(centre?: leaflet.LatLng) {
-    const map = this.map;
-    if (!map)
-      return;
-
-    const defaultCentre = map.getBounds().getCenter();
-    map.invalidateSize();
-    map.setView(centre ?? defaultCentre, map.getZoom() - 1, { animate: false });
-    map.setView(centre ?? defaultCentre, map.getZoom() + 1, { animate: false });
-  }
-
-  // getZoom(){
-  //   return this
-  // }
-
   setView(data: EventBus.Map.ZoomData) {
     const map = this.map;
     if (!map)
@@ -328,21 +312,6 @@ export class MapView extends BaseView {
         map.flyToBounds(data.bounds, Object.assign(options, data.options)); // normal zoom/pan
       }
     }
-
-    //should check for firefox only? TODO
-    //refresh the screen to handle rendering bugs (missing tiles or markers)
-    var refresh = () => {
-      if (!this.flag) {
-        this.flag = true;
-        map.off('moveend', refresh);
-        map.off('animationend', refresh)
-        this.refresh();
-        this.flag = false;
-      }
-    }
-
-    map.on('moveend', refresh);
-    map.on('animationend', refresh)
   }
 
   //pass array of 1 initiative in data.initiative
@@ -381,8 +350,6 @@ export class MapView extends BaseView {
       console.error("initiative is missing a marker reference", data.initiatives[0]);
       return;
     }
-    if (!map.getBounds().contains(marker.getLatLng()) || !this.isVisible(data.initiatives))
-      this.refresh(centre);
 
 
 
