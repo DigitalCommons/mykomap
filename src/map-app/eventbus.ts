@@ -1,7 +1,8 @@
 import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
 import { Initiative } from './app/model/initiative';
-import { Box2d } from './common_types';
+import { Box2d, Point2d } from './common_types';
+import { arrays2Box2d, yesANumber } from './utils';
 
 /// This defines a typed wrapper to a Postal topic
 export class PostalTopic<T = void> {
@@ -62,6 +63,22 @@ export namespace EventBus {
     export interface ActiveArea {
       offset: number;
     }
+    export function mkSelectAndZoomData(initiatives: Initiative[], opts: { maxZoom?: number; defaultPos?: Point2d; } = {}): SelectAndZoomData {
+      
+      const options: ZoomOptions = {};
+      if (opts.maxZoom != 0)
+        options.maxZoom = opts.maxZoom;
+      
+      const lats = initiatives.map(x => x.lat ?? opts.defaultPos?.[0]).filter(yesANumber);
+      const lngs = initiatives.map(x => x.lng ?? opts.defaultPos?.[1]).filter(yesANumber);
+      const bounds = arrays2Box2d(lats, lngs);
+      return {
+        initiatives: initiatives,
+        bounds: bounds,
+        options: options,
+      };
+    }
+
 	  export const addFilter = new PostalTopic<Filter>("Map.addFilter");
 	  export const addSearchFilter = new PostalTopic<Filter>("Map.addSearchFilter");
 	  export const fitBounds = new PostalTopic<BoundsData>("Map.fitBounds");

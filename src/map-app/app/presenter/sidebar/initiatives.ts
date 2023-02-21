@@ -8,7 +8,7 @@ import { StackItem } from '../../../stack';
 import { Config } from '../../model/config';
 import { SearchResults } from './searchresults';
 import { Initiative } from '../../model/initiative';
-import { arrayMax, arrayMin, arrays2Box2d, toString as _toString, yesANumber } from '../../../utils';
+import { arrays2Box2d, toString as _toString, yesANumber } from '../../../utils';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;
@@ -128,29 +128,17 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.pub(undefined);
   }
 
-  _notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]) {
-    const lats = initiatives.map(x => x.lat).filter(yesANumber);
-    const lngs = initiatives.map(x => x.lng).filter(yesANumber);
-    const bounds = arrays2Box2d(lats, lngs);
-    
-    if (initiatives.length > 0) {
-      EventBus.Map.needsToBeZoomedAndPanned.pub({
-        initiatives: initiatives,
-        bounds: bounds,
-        options: {}
-      });
-    }
-  }
-
   notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
-    this._notifyMapNeedsToNeedsToBeZoomedAndPanned([initiative]);    
+    const data = EventBus.Map.mkSelectAndZoomData([initiative]);
+    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned() {
     const initiatives = this.parent.contentStack.current()?.initiatives;
-    if (!initiatives) return;
-
-    this._notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
+    if (!initiatives || initiatives.length <= 0)
+      return;
+    const data = EventBus.Map.mkSelectAndZoomData(initiatives);
+    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
   }
 
   notifyShowInitiativeTooltip(initiative: Initiative) {

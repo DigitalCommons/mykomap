@@ -47,52 +47,22 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]): void {
-    const lats = initiatives.map(x => x.lat);
-    const lngs = initiatives.map(x => x.lng);
-    let options: EventBus.Map.ZoomOptions = { maxZoom: this.config.getMaxZoomOnGroup() };
-    if (initiatives.length == 1)
-      options = { maxZoom: this.config.getMaxZoomOnOne() };
-
-    if (options.maxZoom == 0)
-      options = {};
-
-    if (initiatives.length > 0) {
-      EventBus.Map.needsToBeZoomedAndPanned.pub({
-        initiatives: initiatives,
-        bounds: [
-          [arrayMin(lats), arrayMin(lngs)],
-          [arrayMax(lats), arrayMax(lngs)]
-        ]
-        , options
-      });
-      
-      //rm for now as it isn't working well enough
-    }
+    if (initiatives.length <= 0)
+      return;
+    const data = EventBus.Map.mkSelectAndZoomData(initiatives, { maxZoom: this.config.getMaxZoomOnGroup() });
+    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
   }
 
 
   notifyMapNeedsToNeedsToSelectInitiative(initiatives: Initiative[]): void {
-    let options: EventBus.Map.ZoomOptions = { maxZoom: this.config.getMaxZoomOnGroup() };
-    if (initiatives.length == 1)
-      options = { maxZoom: this.config.getMaxZoomOnOne() };
-
-    if (options.maxZoom == 0)
-      options = {};
-
+    if (initiatives.length == 0)
+      return;
+    
+    const maxZoom = initiatives.length === 1? this.config.getMaxZoomOnGroup() : undefined;
     const defaultPos = this.config.getDefaultLatLng();
-    if (initiatives.length > 0) {
-      const lats = initiatives.map(x => x.lat || defaultPos[0]);
-      const lngs = initiatives.map(x => x.lng || defaultPos[1]);
-      const data: EventBus.Map.SelectAndZoomData = {
-        initiatives: initiatives,
-        bounds: [
-          [arrayMin(lats), arrayMin(lngs)],
-          [arrayMax(lats), arrayMax(lngs)]
-        ]
-        , options
-      };
-      EventBus.Map.selectAndZoomOnInitiative.pub(data);
-    }
+    
+    const data = EventBus.Map.mkSelectAndZoomData(initiatives, { maxZoom, defaultPos });
+    EventBus.Map.selectAndZoomOnInitiative.pub(data);
   }
 
   onInitiativeMouseoverInSidebar(initiative: Initiative): void {
@@ -163,12 +133,4 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
   
-}
-
-function arrayMin(lats: any[]): number {
-    throw new Error('Function not implemented.');
-}
-
-function arrayMax(lats: any[]): number {
-    throw new Error('Function not implemented.');
 }
