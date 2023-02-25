@@ -1,8 +1,9 @@
 // Model for SSE Initiatives.
-
+import { toError } from '../../toerror';
 import type { Dictionary, Box2d } from '../../common_types';
-import type { Registry } from '../registries';
 import type { Config } from './config';
+import { EventBus } from '../../eventbus';
+import { toNumber, toString } from '../../utils';
 import type {
   DialogueSize,
 } from './config_schema';
@@ -38,53 +39,26 @@ import {
 } from './sparqldataloader';
 
 import {
-  DataAggregator,
+    DataAggregator
 } from './dataaggregator';
+
+import {
+  Initiative,
+  InitiativeObj
+} from './initiative';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
 
-const eventbus = require('../eventbus');
-import { functionalLabels } from '../../localisations';
 import { CsvDataLoader } from './csvdataloader';
 
-export class Initiative {
-  //  This is used for associating internal data, like map markers
-  __internal: Dictionary<any> = {};
-  
-  [id: string]: any | undefined;
-  
-  hasLocation() {
-    return this.lat && this.lng;
-  }
-  
-  // Appends a searchable value to the `searchstr` property, creating it if not present.
-  // Uppercasses the value first.
-  appendSearchableValue(value: string) {
-    if (this.searchstr === undefined)
-      this.searchstr = value.toUpperCase();
-    else
-      this.searchstr += ' '+ value.toUpperCase();
-  }
-}
-
-interface Filter {
-  filterName: string;
-  verboseName: string;
-  initiatives: Initiative[];
-}
 
 export interface DataLoaderMeta<T> {
   type: string;
   label: string;
   loader: DataLoader<T>; // Subtypes of loaders can expose metadata under .meta
 };
-type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
-
-export interface InitiativeObj {
-  uri: string;
-  [name: string]: any;
-}
+export type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
 
 export type PropSourceId = string;
 
@@ -118,9 +92,47 @@ export type PropDefs = Dictionary<PropDef>;
 // A convenience variation of PropDefs used in ConfigData
 export type FieldDefs = Dictionary<PropDef | PropDef['type']>;
 
+// A convenient composite PropDef variation which combines vocab and
+// multi property definitions. It is essentially either a VocabPropDef
+// or a MultiPropDef with an added uri field - so the uri field is
+// always present at the top level.
+export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
+
+// A dictory of AnyVocabPropDefs
+export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
+
 export function sortInitiatives(a: Initiative, b: Initiative) {
-  return a.name.localeCompare(b.name);
+  return toString(a.name).localeCompare(toString(b.name));
 }
+
+// Inserts an element into a sorted array
+export function sortedInsert(element: any, array: any[]) {
+  array.splice(locationOf(element, array), 0, element);
+  return array;
+
+  // Internal helper function
+  function locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
+    var pivot = Math.floor(start + (end - start) / 2);
+    if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
+      //SPECIAL CASE FOR ARRAY WITH LEN = 1
+      if (array.length == 1) {
+        return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+      }
+      else if
+        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+      else
+        return pivot + 1;
+    }
+    
+    if (sortInitiatives(array[pivot], element) > 0) {
+      return locationOf(element, array, start, pivot);
+    } else {
+      return locationOf(element, array, pivot, end);
+    }
+  }
+}
+
+
 
 // Implement the latitude/longitude fall-back logic for InitiativeObj.
 //
@@ -141,20 +153,14 @@ function mkLocFromParamBuilder(from: string, overrideParam: string) {
     // Overwrite with manually added lat lng if present For
     // historical reasons, "0" counts as undefined (meaning, use
     // lat/lng), cos it used to mean this in the old wonky data.
-    if ('manLat' in params && params.manLat !== "0" && !isNaN(Number.parseFloat(params.manLat)) ||
-      'manLng' in params && params.manLng !== "0" && !isNaN(Number.parseFloat(params.manLng))) {
+    if ('manLat' in params && params.manLat !== "0" && toNumber(params.manLat, null) !== null ||
+      'manLng' in params && params.manLng !== "0" && toNumber(params.manLng, null) !== null) {
       param = params[overrideParam];
     }
 
     // Ensure param is a number
-    if (isNaN(Number.parseFloat(param)))
-      return undefined;
-
-    // Preserve undefs/nulls/empty strings as undefined 
-    if (param === undefined || param === null || param === "")
-      return undefined;
-
-    return Number(param);
+    param = toNumber(param, null);
+    return param === null? undefined : param;
   };
 }
 
@@ -219,7 +225,8 @@ export interface DataServices {
 
   //// non-proxies
 
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[];
+  /// Returns a list of property values matching the given filter
+  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[];
 
   // Get the current dataset, or true
   //
@@ -252,11 +259,22 @@ export interface DataServices {
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
 
   getPropertySchema(propName: string): PropDef | undefined;
-  
+
+  /// Returns a VocabPropDefs index of the property schema definitions
+  /// which use vocabs, keyed by their names.
+  ///
+  /// The values include both the propDef, and a guaranteed URI field
+  /// (for convenience, since the definition can come in more than one
+  /// form)
+  ///
+  /// If the vocabId parameter is set, these are also filtered to
+  /// those using just this vocab.
+  getVocabPropDefs(vocabId?: string): VocabPropDefs;
+    
   getSidebarButtonColour(): string;
 
   // requires dataAggregator
-  latLngBounds(initiatives: Initiative[]): Box2d;
+  latLngBounds(initiatives?: Initiative[]): Box2d;
 
   // Loads the currently active dataset(s) and configured vocabs
   //
@@ -275,7 +293,7 @@ export interface DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  reset(dataset: string): Promise<void>;
+  reset(dataset: string | true): Promise<void>;
 }
 
 // Loads zero or more datasets incrementally using the supplied dataLoaders.
@@ -342,6 +360,9 @@ export class DataServicesImpl implements DataServices {
   
   // The per-instance propert schema, which can be extended by configuration.
   readonly propertySchema: PropDefs = { ...basePropertySchema };
+
+  // The VocabPropDefs index
+  private vocabPropDefs: VocabPropDefs;
   
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs?: VocabServices = undefined;
@@ -461,17 +482,35 @@ export class DataServicesImpl implements DataServices {
       const language = this.config.getLanguage();
       console.info("using language", language);
     }
+    
+    this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
+
+    {
+      // Check that all the filterable fields are also vocab fields -
+      // Something is wrong if not.
+      const badFields = this.config.getFilterableFields()
+        .filter(name => !this.vocabPropDefs[name]);
+      
+      if (badFields.length > 0) {
+        throw new Error(
+          `Filterable fields config must not include `+
+            `the non-vocab fields: ${badFields.join(", ")}`
+        );
+      }
+    }
+    
+
   }
 
   getAggregatedData(): AggregatedData {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: Filter[], field: string): Initiative[] {
+  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[] {
     //construct an array of the filters that aren't the one matching the field
-    let otherFilters: Filter[] = [];
+    let otherFilters: EventBus.Map.Filter[] = [];
     filters.forEach(filter => {
-      if (filter.verboseName.split(":")[0] !== field)
+      if (filter.verboseName?.split(":")[0] !== field)
         otherFilters.push(filter);
     });
 
@@ -488,15 +527,19 @@ export class DataServicesImpl implements DataServices {
     });
 
     //find the initiative variable associated with the field
-    const alternatePossibleFilterValues: Initiative[] = [];
+    const alternatePossibleFilterValues: unknown[] = [];
     const vocabID = this.getVocabTitlesAndVocabIDs()[field];
     if (vocabID) {
-      const initiativeVariable = this.aggregatedData.vocabFilteredFields[vocabID];
-
-      if (initiativeVariable) {
+      // Find the first propdef which uses this vocabID. This may not
+      // be the only one!  However, this is how it was implemented
+      // before, and we're only taking the first step to fixing that
+      // here.
+      const propEnt = Object.entries(this.vocabPropDefs)
+        .find((ent): ent is [string, AnyVocabPropDef] => ent[1]?.uri === vocabID);
+      if (propEnt) {
         //loop through the initiatives and get the possible values for the initiative variable
         sharedInitiatives.forEach(initiative => {
-          const prop = initiative[initiativeVariable]
+          const prop = initiative[propEnt[0]]
           if (prop !== undefined)
             alternatePossibleFilterValues.push(prop);
         })
@@ -536,30 +579,72 @@ export class DataServicesImpl implements DataServices {
       return this.vocabs.getLocalisedVocabs(this.getLanguage());
     return {};
   }
-  
+
   //get an array of possible filters from  a list of initiatives
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
     let possibleFilterValues: string[] = [];
 
-    const vocabFilteredFields = this.aggregatedData.vocabFilteredFields;
-
+    // Need to call this method to ensure the result is computed
     filteredInitiatives.forEach(initiative => {
-      for (const vocabID in vocabFilteredFields) {
-        const vff = vocabFilteredFields[vocabID]
-        if (!vff)
-          continue;
-        let termIdentifier = initiative[vff];
-
-        if (!possibleFilterValues.includes(termIdentifier))
-          possibleFilterValues.push(termIdentifier);
+      for(const name in this.config.getFilterableFields()) {    
+        
+        let id = initiative[name];
+          
+        // Add the value if it isn't there
+        if (typeof id === 'string' && !possibleFilterValues.includes(id))
+          possibleFilterValues.push(id);
       }
-    })
+    });
 
     return possibleFilterValues;
   }
 
   getPropertySchema(propName: string): PropDef | undefined {
     return this.propertySchema[propName];
+  }
+
+  /// Returns a vocab URI, given a PropDef which has one, or undefined
+  static propDefToVocabUri(propDef?: PropDef): string|undefined {
+    if (propDef === undefined) return undefined;
+    if (propDef.type === 'vocab') return propDef.uri;
+    if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
+    return undefined;
+  }
+
+  /// Predicate for testing if a PropDef has a vocab URI
+  static isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
+    return !!this.propDefToVocabUri(propDef);
+  }
+  
+  /// Returns a VocabPropDefs index of propdefs using vocabs, keyed by their names.
+  ///
+  /// The values include both the propDef, and a guaranteed URI field
+  /// (for convenience, since the definition can come in more than one
+  /// form)
+  ///
+  /// If the vocabId parameter is set, these are also filtered to
+  /// those using just this vocab.
+  static vocabPropDefs(propDefs: PropDefs, vocabId?: string): VocabPropDefs {
+    const results: VocabPropDefs = {};
+    for(const name in propDefs) {
+      const def = propDefs[name];
+      if (!def)
+        continue;
+
+      if (def.type === 'vocab') {
+        if (vocabId === undefined || def.uri === vocabId)
+          results[name] = def;
+      }
+      if (def.type === 'multi' && def.of.type === 'vocab') {
+        if (vocabId === undefined || def.of.uri === vocabId)
+          results[name] = { type: 'multi', uri: def.of.uri, of: def.of };
+      }
+    }
+    return results;
+  }
+
+  getVocabPropDefs(): VocabPropDefs {
+    return this.vocabPropDefs;
   }
   
   getSidebarButtonColour(): string {
@@ -571,7 +656,6 @@ export class DataServicesImpl implements DataServices {
       return {};
 
     return this.vocabs.getTerms(this.getLanguage(),
-                                this.aggregatedData.vocabFilteredFields,
                                 this.aggregatedData.initiativesByUid,
                                 this.propertySchema); 
   }
@@ -592,7 +676,7 @@ export class DataServicesImpl implements DataServices {
     return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
   }
   
-  latLngBounds(initiatives: Initiative[]): Box2d {
+  latLngBounds(initiatives?: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east
     //
@@ -602,11 +686,11 @@ export class DataServicesImpl implements DataServices {
     }
 
     const lats = (initiatives || this.aggregatedData.loadedInitiatives)
-                   .filter((obj: Initiative) => obj.lat !== null && !isNaN(obj.lat))
-                   .map((obj: Initiative) => obj.lat);
+                   .map(obj => toNumber(obj.lat, null))
+                   .filter((val): val is number => val !== null)
     const lngs = (initiatives || this.aggregatedData.loadedInitiatives)
-                   .filter((obj: Initiative) => obj.lng !== null && !isNaN(obj.lng))
-                   .map((obj: Initiative) => obj.lng);
+                   .map(obj => toNumber(obj.lng, null))
+                   .filter((val): val is number => val !== null)
     const west = Math.min.apply(Math, lngs);
     const east = Math.max.apply(Math, lngs);
     const south = Math.min.apply(Math, lats);
@@ -650,17 +734,13 @@ export class DataServicesImpl implements DataServices {
     try {
       await this.loadVocabs();
         
-      eventbus.publish({ topic: "Vocabularies.loaded" });
+      EventBus.Vocabularies.loaded.pub();
     }
     catch(error) {
       this.vocabs = undefined;
       
       console.error("vocabs load failed", error);
-
-      eventbus.publish({
-        topic: "Vocabularies.loadFailed",
-        data: { error: error }
-      });
+      EventBus.Vocabularies.loadFailed.pub(toError(error));
     }
 
     try {
@@ -668,50 +748,31 @@ export class DataServicesImpl implements DataServices {
         .map(id => this.datasets[id]?.loader)
         .filter((ds): ds is DataLoader<InitiativeObj> => ds !== undefined)
 
-      const onItemComplete = (initiative: Initiative) => {
-        // Broadcast the creation of the initiative
-        eventbus.publish({ topic: "Initiative.new", data: initiative });
-      };
-      const onSetComplete = (id: string) => {
-        // Publish completion event
-        eventbus.publish({ topic: "Initiative.datasetLoaded" });
-      };
-      const onSetFail = (id: string, error: Error) => {
-        eventbus.publish({
-          topic: "Initiative.loadFailed",
-          data: { error: error, dataset: id }
-        });
-      };
-      
       const labels = this.functionalLabels[this.config.getLanguage()] ?? {};
       if (this.vocabs === undefined)
         throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new DataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
-        onItemComplete, onSetComplete, onSetFail
+        initiative => EventBus.Initiative.created.pub(initiative),
+        dataset => EventBus.Initiatives.datasetLoaded.pub(dataset),
+        (dataset, error) => EventBus.Initiatives.loadFailed.pub({dataset, error})
       );
 
-      eventbus.publish({
-        topic: "Initiative.loadStarted",
-        data: { message: "Started loading data" }
-      });
+      EventBus.Initiatives.loadStarted.pub();
 
       await loadDatasets(dataLoaders, aggregator);
       aggregator.allComplete(); // finish the aggregation
       
       this.aggregatedData = aggregator;
-      
-      eventbus.publish({ topic: "Initiative.complete" });
+
+      EventBus.Initiatives.loadComplete.pub();
     }
     catch(error) {
       this.aggregatedData = new AggregatedData();
       
       console.error("data load failed", error);
 
-      eventbus.publish({
-        topic: "Initiative.loadFailed",
-        data: { error: error }
-      });
+      EventBus.Initiatives.loadFailed.pub({error: toError(error)});
     }
   }
 
@@ -736,7 +797,7 @@ export class DataServicesImpl implements DataServices {
   //
   // @param dataset - if boolean `true`, then all datasets will be loaded.
   // Otherwise, only the dataset with a matching name is loaded (if any).
-  async reset(dataset: string) {
+  async reset(dataset: string | true) {
     // If the dataset is the same as that currently selected, nothing to do
     if (dataset === this.currentDatasets)
       return;
@@ -744,20 +805,11 @@ export class DataServicesImpl implements DataServices {
     this.aggregatedData = new AggregatedData();
 
     //publish reset to map markers
-    eventbus.publish({
-      topic: "Initiative.reset",
-      data: { dataset: "all" }
-    });
+    EventBus.Initiatives.reset.pub();
 
     this.currentDatasets = dataset;
     await this.loadData();
   }  
 }
 
-
-export function init(registry: Registry): DataServices {
-  const config = registry("config") as Config;
-
-  return new DataServicesImpl(config, functionalLabels);
-}
 

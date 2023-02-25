@@ -3,7 +3,7 @@ import type {
 } from '../src/map-app/app/model/dataloader';
 import {
   InitiativeObj,
-} from '../src/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/initiative';
 import {
   assert
 } from 'chai';

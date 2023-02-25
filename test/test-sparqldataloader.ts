@@ -1,26 +1,13 @@
 import 'cross-fetch/polyfill'; // d3.json needs window.fetch
 import * as chaiAsPromised from 'chai-as-promised';
-import { use, expect, assert } from 'chai';
+import { use, expect } from 'chai';
 import * as nock from 'nock';
 import { json } from 'd3';
 
-import { Config } from '../src/map-app/app/model/config';
-import type {
-  DataConsumer
-} from '../src/map-app/app/model/dataloader';
 import {
   loadDatasets,
 } from '../src/map-app/app/model/dataservices';
 
-import {
-  PropDefs,
-  Initiative,
-  InitiativeObj,
-  DataServices,
-  basePropertySchema
-} from '../src/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../src/map-app/app/model/vocabs';
-import { Dictionary } from '../src/map-app/common_types';
 import {
   SparqlDataLoader,
 } from '../src/map-app/app/model/sparqldataloader';

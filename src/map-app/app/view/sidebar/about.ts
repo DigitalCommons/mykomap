@@ -1,48 +1,34 @@
 // The view aspects of the About sidebar
-"use strict";
-const d3 = require('d3');
-const eventbus = require('../../eventbus');
+import { BaseSidebarView  } from './base';
+import { Dictionary } from '../../../common_types';
+import { Config } from '../../model/config';
+import { d3Selection } from '../d3-utils';
+import { SidebarView } from '../sidebar';
+import { AboutSidebarPresenter } from '../../presenter/sidebar/about';
 
-function init(registry) {
-  const config = registry('config');
-  const sidebarView = registry('view/sidebar/base');
-  const dataServices = registry('model/dataservices');
-  const presenter = registry('presenter/sidebar/about');
-
-  const labels = dataServices.getFunctionalLabels();
-
-  // Our local Sidebar object:
-  function Sidebar() { }
-
-  // Our local Sidebar inherits from sidebar:
-  var proto = Object.create(sidebarView.base.prototype);
-
+export class AboutSidebarView extends BaseSidebarView {
+  readonly presenter: AboutSidebarPresenter;
+  
   // And adds some overrides and new properties of it's own:
-  proto.title = "about";
-  proto.hasHistoryNavigation = false; // No forward/back buttons for this sidebar
+  readonly title = "about";
+  hasHistoryNavigation = false; // No forward/back buttons for this sidebar
 
-  // TODO These same consts are here and in view/sidebar/initiative.
-  //      Find a common place for them.
-  const sectionHeadingClasses =
-    "w3-bar-item w3-tiny w3-light-grey w3-padding-small";
-  const hoverColour = " w3-hover-light-blue";
-  const accordionClasses =
-    "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + hoverColour;
-  const sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
+  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly config: Config) {
+    super();
+    this.presenter = new AboutSidebarPresenter(this);
+  }
 
-  proto.populateFixedSelection = function (selection) {
-    let textContent = labels.aboutTitle;
+  populateFixedSelection(selection: d3Selection) {
+    const textContent = this.labels?.aboutTitle ?? '';
     selection
       .append("div")
       .attr("class", "w3-container")
       .append("h1")
       .text(textContent);
-  };
+  }
 
-  proto.populateScrollableSelection = function (selection) {
-    const that = this;
-
-    const lang = config.getLanguage();
+  populateScrollableSelection(selection: d3Selection) {
+    const lang = this.config.getLanguage();
     
     // We need to be careful to guard against weird characters, especially quotes,
     // from the language code, as these can create vulnerabilities.
@@ -52,19 +38,19 @@ function init(registry) {
     selection
       .append('div')
       .attr("class", "w3-container about-text")
-      .html(config.aboutHtml())
+      .html(this.config.aboutHtml())
     // Remove all elements which have a language tag which is not the target language tag
       .selectAll(`[lang]:not([lang='${lang}'])`)
       .remove();
     
-    const dataSection = selection.append('div')
-                                 .attr("class", "w3-container about-data");
+    selection.append('div')
+      .attr("class", "w3-container about-data");
 
     
     /*********************************************************************************
      * COMMENTED PENDING A REVIEW/REFRESH OF THE DATA AND WIKI DOCS
     const sourceParag = dataSection.append('p')
-    sourceParag.text(labels.source)
+    sourceParag.text(this.labels.source)
 
     const li = sourceParag
       .append('ul')
@@ -94,7 +80,7 @@ function init(registry) {
       });
 
     dataSection.append('p')
-      .text(labels.technicalInfo);
+      .text(this.labels.technicalInfo);
 
     const technicalInfoUrl = 'https://github.com/DigitalCommons/mykomap/wiki';
     dataSection
@@ -107,7 +93,7 @@ function init(registry) {
     *********************************************************************************/
     
     // If a version is available display it
-    const version = config.getVersionTag();
+    const version = this.config.getVersionTag();
     if (version) {
       selection
         .append("div")
@@ -116,21 +102,6 @@ function init(registry) {
         .attr("style", "font-style: italic;")
         .text(`mykomap@${version}`);
     }
-  };
-
-
-  Sidebar.prototype = proto;
-
-  proto.hasHistoryNavigation = false;
-
-  function createSidebar() {
-    var view = new Sidebar();
-    view.setPresenter(presenter.createPresenter(view));
-    return view;
   }
-  return {
-    createSidebar: createSidebar
-  };
-}
 
-module.exports = init;
+}

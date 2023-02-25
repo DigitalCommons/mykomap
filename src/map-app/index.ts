@@ -1,15 +1,19 @@
-"use strict";
-
 import type { Dictionary } from "./common_types";
-import type { DataServices } from "./app/model/dataservices";
+import { DataServices, DataServicesImpl } from "./app/model/dataservices";
 
+import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData, Config } from './app/model/config';
-import { makeRegistry, Registry } from './app/registries';
+import { MapPresenterFactory } from "./app/presenter/map";
+import { MarkerViewFactory } from "./app/view/map/marker";
+import { getPopup } from "./app/view/map/default_popup";
+import { SidebarView } from './app/view/sidebar';
+import { MapView } from "./app/view/map";
+import { initView } from './app/view';
 
 /** Convert names-like-this into namesLikeThis
  */
 export function snakeToCamelCase(str: string): string {
-  return str.replace(/-([^-])/g, (m, p1) => p1.toUpperCase());
+  return str.replace(/-([^-])/g, (_, p1) => p1.toUpperCase());
 }
 
 /** Parse attributes from an element, convert snake-case names to camelCase
@@ -72,83 +76,40 @@ export function parseUrlParameters(search: string): UrlParams {
 }
 
 
-// Create an initialised module registry.
-//
-// `config` should be a config object created using `model/config.js`
-export function initRegistry(config: Config): Registry {
-  const registry: Registry = makeRegistry();
-  
-  registry.def('config', () => config);
-  registry.def('model/dataservices',
-               () => require('./app/model/dataservices').init(registry));
-
-  // Register the view/presenter modules so they can find each other.
-  // The order matters insofar that dependencies must come before dependants.
-  registry.def('view/base', () => require('./app/view/base'));
-  registry.def('view/map/popup', () => require('./app/view/map/default_popup'));
-  registry.def('presenter/map/marker', () => require('./app/presenter/map/marker')(registry));
-  registry.def('view/map/marker', () => require('./app/view/map/marker')(registry));
-  registry.def('presenter/map', () => require('./app/presenter/map').init(registry));
-  registry.def('view/map', () => require('./app/view/map')(registry));
-  registry.def('presenter/searchbox', () => require('./app/presenter/searchbox')(registry));
-  registry.def('view/searchbox', () => require('./app/view/searchbox')(registry));
-  registry.def('view/sidebar/base', () => require('./app/view/sidebar/base'));    
-  registry.def('presenter/sidebar/base', () => require('./app/presenter/sidebar/base')(registry));
-  registry.def('presenter/sidebar/about', () => require('./app/presenter/sidebar/about')(registry));
-  registry.def('presenter/sidebar/directory', () => require('./app/presenter/sidebar/directory')(registry));
-  registry.def('presenter/sidebar/datasets', () => require('./app/presenter/sidebar/datasets')(registry));
-  registry.def('presenter/sidebar/initiatives', () => require('./app/presenter/sidebar/initiatives')(registry));
-  registry.def('presenter/sidebar', () => require('./app/presenter/sidebar')(registry));
-  registry.def('view/sidebar/about', () => require('./app/view/sidebar/about')(registry));
-  registry.def('view/sidebar/directory', () => require('./app/view/sidebar/directory')(registry));
-  registry.def('view/sidebar/datasets', () => require('./app/view/sidebar/datasets')(registry));
-  registry.def('view/sidebar/initiatives', () => require('./app/view/sidebar/initiatives')(registry));
-  registry.def('view/sidebar', () => require('./app/view/sidebar')(registry));
-  registry.def('presenter/sidebar/mainmenu', () => require('./app/presenter/sidebar/mainmenu')(registry));
-  
-  // The code for each view is loaded by src/app/view.js
-  // Initialize the views:
-  registry.def('view', () => require('./app/view.js')(registry));
-
-  return registry;
-};
-
-
 export async function fetchConfigs(params?: {
-    configJson?: string,
-    versionJson?: string,
-    aboutHtml?: string,
+  configJson?: string,
+  versionJson?: string,
+  aboutHtml?: string,
 }): Promise<ConfigData> {
-    const {
-	configJson = "configuration/config.json",
-	versionJson = "configuration/version.json",
-	aboutHtml =  "configuration/about.html",
-    } = params || {};
-    const config = fetch(configJson);
-    const versions = fetch(versionJson);
-    const about = fetch(aboutHtml);
-    const detectErrors = (r: any) => {
-	// We don't throw an error as I can't seem to catch individual exceptions in the
-	// promise chain below correctly, without a 'Pause on exceptions'
-	// breakpoint firing and fouling the page load, or the load
-	// fouling anyway (for another reason?)
-	return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
-    };
-    const getJson = (r: any) => detectErrors(r) || r.json();
-    const getText = (r: any) => detectErrors(r) || r.text();
-
-    return Promise
-	.all([config.then(getJson), versions.then(getJson), about.then(getText)])
-	.then(([config, versions, about]) => {
+  const {
+	  configJson = "configuration/config.json",
+	  versionJson = "configuration/version.json",
+	  aboutHtml =  "configuration/about.html",
+  } = params || {};
+  const config = fetch(configJson);
+  const versions = fetch(versionJson);
+  const about = fetch(aboutHtml);
+  const detectErrors = (r: any) => {
+	  // We don't throw an error as I can't seem to catch individual exceptions in the
+	  // promise chain below correctly, without a 'Pause on exceptions'
+	  // breakpoint firing and fouling the page load, or the load
+	  // fouling anyway (for another reason?)
+	  return r.ok? false : new Error(`Request failed: ${r.status} (${r.statusText})`);
+  };
+  const getJson = (r: any) => detectErrors(r) || r.json();
+  const getText = (r: any) => detectErrors(r) || r.text();
+  
+  return Promise
+	  .all([config.then(getJson), versions.then(getJson), about.then(getText)])
+	  .then(([config, versions, about]) => {
 	    if (about instanceof Error) {
-		console.info("Using blank 'about' text as about.html inaccessible.", about.message);
-		console.debug("Ignored fetch error", about);
-		about = '';
+		    console.info("Using blank 'about' text as about.html inaccessible.", about.message);
+		    console.debug("Ignored fetch error", about);
+		    about = '';
 	    }
 	    const combinedConfig = { ...config, ...versions, aboutHtml: about };
 	    return combinedConfig;
-	});
-
+	  }); 
 }
 
 // Start the application in the context fo a web page
@@ -221,19 +182,55 @@ export function webRun(window: Window, base_config: ConfigData): void {
   // Override any config values with the url/attribute params 
   config.add(combined);
 
-  // Get the registry of modules. This manages module dependencies,
-  // and is a hang-over from when we used requireJS.
-  const registry = initRegistry(config);
+  const dataServices =  new DataServicesImpl(config, functionalLabels);
   
-  const view = registry('view') as { init: () => void };
-  const dataServices = registry('model/dataservices') as DataServices;
-
   // Expose the data for debugging
   /// @ts-ignore
   window.dataServices = dataServices
   
   // Each view will ensure that the code for its presenter is loaded.
-  view.init();
+  {
+    const popup = config.getCustomPopup() || getPopup;
+    const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
+    
+    // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
+    // when it runs, but SidebarView needs a link to the MapPresenterFactory.
+    // Maybe later the code can be untangled further so there is no loop.
+    const mkSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
+      return new Promise<SidebarView>((resolve) => {
+        const sidebarView = new SidebarView(
+          dataServices.getFunctionalLabels(),
+          config,
+          dataServices,
+          markerViewFactory,
+          mapPresenterFactory,
+          dataServices.getSidebarButtonColour()
+        );
+        resolve(sidebarView);
+      });
+    };
+
+    const mapPresenterFactory =  new MapPresenterFactory(
+      config,
+      dataServices,
+      markerViewFactory,
+      mkSidebarView
+    );
+
+    const dialogueSize = dataServices.getDialogueSize();
+    const mapView = new MapView(
+      mapPresenterFactory,
+      dataServices.getFunctionalLabels(),
+      dialogueSize.height,
+      dialogueSize.width,
+      dialogueSize.descriptionRatio,
+      markerViewFactory
+    );
+
+    initView(config);
+    mapView.createMap();
+    mapPresenterFactory.map = mapView.map; // Link this back for views to access
+  }
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();

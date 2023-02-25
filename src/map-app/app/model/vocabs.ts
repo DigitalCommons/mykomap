@@ -1,6 +1,8 @@
 import type { Dictionary } from '../../common_types';
-import type { Initiative, PropDefs, PropDef } from './dataservices';
+import { PropDefs, PropDef, DataServicesImpl } from './dataservices';
+import { Initiative } from './initiative';
 import type { DataConsumer } from './dataloader';
+import { promoteToArray } from '../../utils';
 
 export interface Vocab {
   title: string;
@@ -30,6 +32,7 @@ export type SparqlVocabResponse = VocabIndex & {
   meta: SparqlVocabMeta;
 }
 
+export type VocabLookup = (url: string) => Vocab;
 
 export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse {
   if (typeof(value) !== 'object')
@@ -52,6 +55,12 @@ export interface VocabServices {
   //
   // Keeps trying until all abbreviations applied.
   abbrevUri(uri: string): string;
+
+  // Gets a vocab for the given URI / language
+  // Throws an exception if the URI can't be found.
+  // Uses the value of getFallBackLanguage() if the language can't be found.
+  // Returns the Vocab found.
+  getVocabForUri(uri: string, language: string): Vocab;
   
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
   // Returns '?' if there is no value found
@@ -80,7 +89,6 @@ export interface VocabServices {
   // of vocab ID to term label (in the given language, if available,
   // else the fallBackLanguage)
   getTerms(language: string,
-           vocabFilteredFields: Dictionary,
            initiativesByUid: Dictionary<Initiative>,
            propertySchema: PropDefs): Dictionary<Dictionary>;
 
@@ -152,46 +160,77 @@ export class VocabServiceImpl implements VocabServices {
     return Object.fromEntries(entries);
   }
   
-  //construct the object of terms for advanced search
-  getTerms(language: string, vocabFilteredFields: Dictionary, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs) {
+  /// Construct the object of terms for advanced search
+  ///
+  /// For each initiative in initiativesByUid, this iterates over the
+  /// properties in propertySchema, finds those properties which are
+  /// vocabs, and constructs an index of:
+  ///
+  /// - vocab titles (in the specified language, if present in the
+  ///   vocab), to
+  /// - vocab term IDs seen in the initiatives, to
+  /// - the corresponding vocab term names (again, in the specified
+  ///   language, if present in the vocab)
+  ///
+  /// (See test-vocab-services.ts for test case examples of this)
+  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs): Dictionary<Dictionary> {
 
     let usedTerms: Dictionary<Dictionary> = {};
-
-    let vocabLang = this.fallBackLanguage;
-
-    for (const vocabID in vocabFilteredFields) {
-      vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-
-      const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
-      usedTerms[vocabTitle] = {};
-    }
-
+    const vocabProps = DataServicesImpl.vocabPropDefs(propertySchema);
+    
     for (const initiativeUid in initiativesByUid) {
       const initiative = initiativesByUid[initiativeUid];
       if (!initiative)
         continue;
 
-      for (const vocabID in vocabFilteredFields) {
-        const propName = vocabFilteredFields[vocabID];
-        if (!propName)
+      for(const propName in propertySchema) {
+        const vocabPropDef = vocabProps[propName];
+        if (!vocabPropDef)
           continue;
         
-        const id = initiative[propName];
-        if (!id)
+        let vocabID = vocabPropDef.uri;
+
+        // If a MultiPropDef, initiative[propName] should be an array already, but could be null/undefined. Convert to an array.
+        // If a VocabPropDef, it should *not* be an array, but equally could be null/undefined. Convert to an array of zero/one value.
+        let uris: unknown[] | undefined;
+        const val = initiative[propName];
+        if (vocabPropDef.type === 'multi') {
+          if (val instanceof Array)
+            uris = val;
+          else if (val == null) // or undef
+            uris = [];
+          else {
+            console.warn(`initiative has non-array value in MultiPropDef property ${propName} -  ignoring property`, initiative);
+            continue;
+          }
+        }
+        else if (vocabPropDef.type === 'vocab') {
+          if (typeof val === 'string')
+            uris = [val]
+          else if (val == null) // or undef
+            uris = [];
+          else { 
+            console.warn(`initiative has non-string value in VocabPropDef property ${propName} -  ignoring property`, initiative);
+            continue;
+          }
+        }
+        else {
+          // Shouldn't ever get here, but it keeps the compiler happy
+          console.warn(`initiative has unknown VocabPropDef type for property ${propName} -  ignoring property`, initiative);
           continue;
-
-        vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-
+        }
+            
+        const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
         const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
         
-        
-        const propDef = propertySchema[propName];
-        if (!propDef) console.warn(`couldn't find a property called '${propName}'`);
-
-        // Currently still keeping the output data structure the same, so use id not term
+        // Currently still keeping the output data structure the same, so use uri not term
         const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-        if (!temp[id])
-          temp[id] = this.vocabs.vocabs[vocabID][vocabLang].terms[id];
+        uris.forEach(uri => {
+          if (uri == null) return;
+          const key = this.abbrevUri(String(uri));
+            if (key in temp) return;
+          temp[key] = this.vocabs.vocabs[vocabID][vocabLang].terms[key];
+        });
       }
     }
 
@@ -208,23 +247,37 @@ export class VocabServiceImpl implements VocabServices {
 
     if (propDef.type !== 'vocab')
       throw new Error(`property ${id} is not a vocab property`);
-    
+
+    try {
+      return this.getVocabForUri(propDef.uri, language);
+    }
+    catch(e) {
+      if (e instanceof Error) {
+        e.message += `, for property ${id}`;
+        throw(e);
+      }
+      else {
+        throw new Error(`${e}. for property ${id}`);
+      }
+    }
+  }
+
+  getVocabForUri(uri: string, language: string = this.fallBackLanguage): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
-    const vocab = this.vocabs.vocabs[this.abbrevUri(propDef.uri)];
-    if (!vocab) {
-      throw new Error(`no vocab defined with URI ${propDef.uri} ` +
+    const vocab = this.vocabs.vocabs[this.abbrevUri(uri)];
+    if (!vocab)
+      throw new Error(`no vocab defined with URI ${uri} ` +
         `(expecting one of: ${Object.keys(this.vocabs.vocabs).join(', ')})`);
-    }
-    const vocabLang = vocab[language] ? language : this.fallBackLanguage;
+
+    const vocabLang = vocab[language]? language : this.fallBackLanguage;
     const localVocab = vocab[vocabLang];
-    if (!localVocab) {
-      throw new Error(`no title in lang ${vocabLang} for property: '${id}'`);
-    }
+    if (!localVocab)
+      throw new Error(`no title in lang ${language} for uri ${uri}'`);
 
     return localVocab;
   }
-
+  
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   // Falls back to the default fall-back language if no language given, or
   // the term is not localised in that language

@@ -1,5 +1,3 @@
-"use strict";
-
 // Dynamic entry point for mykomap sites.
 //
 // This loads the config/version/about files dynamically, partly for historical reasons

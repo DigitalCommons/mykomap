@@ -6,24 +6,12 @@ import {
   ParseStepResult,
 } from 'papaparse';
 import * as chaiAsPromised from 'chai-as-promised';
-import { use, expect, assert } from 'chai';
+import { use, expect } from 'chai';
 import * as nock from 'nock';
-import { json } from 'd3';
-
-import { Config } from '../src/map-app/app/model/config';
-import {
-  DataConsumer,
-} from '../src/map-app/app/model/dataloader';
 
 import {
-  PropDefs,
-  Initiative,
-  InitiativeObj,
-  DataServices,
-  basePropertySchema,
   loadDatasets,
 } from '../src/map-app/app/model/dataservices';
-import { VocabIndex, VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 
 import { Dictionary } from '../src/map-app/common_types';
 import {
@@ -37,6 +25,7 @@ import {
 import {
   TestConsumer,
 } from './testconsumer';
+import { InitiativeObj } from '../src/map-app/app/model/initiative';
 
 const cannedVocabs = require('./cannedVocabs.json');
 

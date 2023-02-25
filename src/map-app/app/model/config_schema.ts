@@ -14,7 +14,6 @@
  * REMEMBER TO REGENERATE CONFIG.md IF YOU ALTER THIS SCHEMA.
  */
 
-//"use strict";
 
 import type {
   Dictionary,
@@ -24,7 +23,6 @@ import type {
 
 import type {
   DataServices,
-  Initiative,
   PropDef,
   PropDefs,
   FieldDefs,
@@ -34,9 +32,7 @@ import type {
   ObjTransformFunc,
 } from '../../obj-transformer';
 
-import type {
-  InitiativeObj,
-} from './dataservices';
+import { Initiative, InitiativeObj } from './initiative';
 
 class TypeDef<T> {
   constructor(params: {
