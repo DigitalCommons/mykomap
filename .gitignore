@@ -29,3 +29,4 @@ node_modules/
 /src/services/locCache.json
 /src/services/latest_timestamp.txt
 /dist/
+/build/
