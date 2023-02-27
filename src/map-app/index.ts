@@ -1,8 +1,7 @@
 import type { Dictionary } from "./common_types";
-import { DataServices, DataServicesImpl } from "./app/model/dataservices";
-
+import { DataServicesImpl } from "./app/model/dataservices";
 import { functionalLabels } from './localisations';
-import { init as config_builder, ConfigData, Config } from './app/model/config';
+import { init as config_builder, ConfigData } from './app/model/config';
 import { MapPresenterFactory } from "./app/presenter/map";
 import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
