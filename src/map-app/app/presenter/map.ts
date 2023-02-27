@@ -11,6 +11,7 @@ import { MapView, Map } from '../view/map';
 import { Marker } from 'leaflet';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
+import { getPopup } from "../view/map/default_popup";
 
 export class MapPresenterFactory {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
@@ -22,16 +23,35 @@ export class MapPresenterFactory {
   allMarkers: Marker[] = [];
   public map?: Map;
   private mapPresenter?: MapPresenter;
+  // for deferred load of sidebarView - breaking a recursive dep
+  readonly getSidebarView: (f: MapPresenterFactory) => Promise<SidebarView>;
+  readonly markerViewFactory: MarkerViewFactory;
   
   constructor(readonly config: Config,
-              readonly dataservices: DataServices,
-              readonly markerView: MarkerViewFactory,
-              // for deferred load of sidebarView - breaking a recursive dep
-              readonly getSidebarView: (f: MapPresenterFactory) => Promise<SidebarView> ) {
+              readonly dataServices: DataServices) {
+    const popup = this.config.getCustomPopup() || getPopup;
+    this.markerViewFactory = new MarkerViewFactory(this.config.getDefaultLatLng(), popup, this.dataServices);
+    
+    // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
+    // when it runs, but SidebarView needs a link to the MapPresenterFactory.
+    // Maybe later the code can be untangled further so there is no loop.
+    this.getSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
+      return new Promise<SidebarView>((resolve) => {
+        const sidebarView = new SidebarView(
+          this.dataServices.getFunctionalLabels(),
+          this.config,
+          this.dataServices,
+          this.markerViewFactory,
+          mapPresenterFactory,
+          this.dataServices.getSidebarButtonColour()
+        );
+        resolve(sidebarView);
+      });
+    };
   }
 
   createMap() {
-    if (!this.mapPresenter) return;
+    if (this.mapPresenter) return;
     
     this.mapPresenter = this.createPresenter();
     this.mapPresenter.view.createMap();
@@ -41,9 +61,9 @@ export class MapPresenterFactory {
   
   onNewInitiatives() {
     this.initiativesOutsideOfFilterUIDMap = Object.assign(
-      {}, this.dataservices.getAggregatedData().initiativesByUid
+      {}, this.dataServices.getAggregatedData().initiativesByUid
     );
-    this.loadedInitiatives = this.dataservices.getAggregatedData().loadedInitiatives;
+    this.loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
   }
   
   createPresenter(): MapPresenter {
@@ -126,14 +146,14 @@ export class MapPresenter extends BasePresenter {
   
   constructor(readonly factory: MapPresenterFactory) {
     super();
-    const dialogueSize = factory.dataservices.getDialogueSize();
+    const dialogueSize = factory.dataServices.getDialogueSize();
     this.view = new MapView(
       this,
-      factory.dataservices.getFunctionalLabels(),
+      factory.dataServices.getFunctionalLabels(),
       dialogueSize.height,
       dialogueSize.width,
       dialogueSize.descriptionRatio,
-      factory.markerView,
+      factory.markerViewFactory,
     );
   }
     
@@ -311,7 +331,7 @@ export class MapPresenter extends BasePresenter {
 
   getInitialBounds() {
     return this.factory.config.getInitialBounds() == undefined ?
-           this.factory.dataservices.latLngBounds() : this.factory.config.getInitialBounds();
+           this.factory.dataServices.latLngBounds() : this.factory.config.getInitialBounds();
   }
 
   getInitialZoom() { }
@@ -331,8 +351,8 @@ export class MapPresenter extends BasePresenter {
     //if there are currently any filters 
     if (this.factory.getFiltered().length > 0) {
       //display only filtered initiatives, the rest should be hidden
-      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());
-      this.factory.markerView.showMarkers(this.factory.getFiltered());
+      this.factory.markerViewFactory.hideMarkers(this.getInitiativesOutsideOfFilter());
+      this.factory.markerViewFactory.showMarkers(this.factory.getFiltered());
     } else //if no filters available show everything
       this.removeFilters();
   }
@@ -357,7 +377,7 @@ export class MapPresenter extends BasePresenter {
 
     //if this is the first filter, add items to the filteredInitiativesUIDMap
     if (Object.keys(this.factory.filtered).length <= 1) {
-      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getAggregatedData().initiativesByUid);
+      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataServices.getAggregatedData().initiativesByUid);
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
@@ -394,10 +414,10 @@ export class MapPresenter extends BasePresenter {
     //remove filters
     this.factory.filtered = {};
     this.factory.filteredInitiativesUIDMap = {};
-    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getAggregatedData().initiativesByUid);
+    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataServices.getAggregatedData().initiativesByUid);
     this.factory.verboseNamesMap = {};
     //show all markers
-    this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
+    this.factory.markerViewFactory.showMarkers(this.factory.loadedInitiatives);
   }
 
   removeFilter(filterName: string) {
@@ -472,7 +492,7 @@ export class MapPresenter extends BasePresenter {
       console.log("no results, hide everything");
       //hide all 
       this.factory.hidden = this.factory.loadedInitiatives;
-      this.factory.markerView.hideMarkers(this.factory.hidden);
+      this.factory.markerViewFactory.hideMarkers(this.factory.hidden);
       return;
     }
 
@@ -496,9 +516,9 @@ export class MapPresenter extends BasePresenter {
     );
 
     //hide all unneeded markers
-    this.factory.markerView.hideMarkers(this.factory.hidden);
+    this.factory.markerViewFactory.hideMarkers(this.factory.hidden);
     //make sure the markers you need to highlight are shown
-    this.factory.markerView.showMarkers(data.initiatives);
+    this.factory.markerViewFactory.showMarkers(data.initiatives);
 
     //zoom and pan
 
@@ -509,7 +529,7 @@ export class MapPresenter extends BasePresenter {
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = this.factory.dataservices.latLngBounds(data.initiatives)
+      const latlng = this.factory.dataServices.latLngBounds(data.initiatives)
       EventBus.Map.needsToBeZoomedAndPanned.pub({
           initiatives: data.initiatives,
           bounds: latlng,
@@ -534,20 +554,20 @@ export class MapPresenter extends BasePresenter {
       return;
 
     //show hidden markers
-    //this.factory.markerView.showMarkers(hidden);
+    //this.factory.markerViewFactory.showMarkers(hidden);
     this.applyFilter();
 
     if (this.factory.getFiltered().length > 0) {
       //hide the initiatives that were outside of the filter
-      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
+      this.factory.markerViewFactory.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
       //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
       //with the difference between getFiltered() and data.initiatives
       //i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      this.factory.markerView.showMarkers(this.factory.hidden);
+      this.factory.markerViewFactory.showMarkers(this.factory.hidden);
     } else //if no filters available then the search was under global (only hidden ones need to be shown)
-      this.factory.markerView.showMarkers(this.factory.hidden);
+      this.factory.markerViewFactory.showMarkers(this.factory.hidden);
 
     //reset the hidden array
     this.factory.hidden = [];
