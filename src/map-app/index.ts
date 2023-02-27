@@ -2,12 +2,7 @@ import type { Dictionary } from "./common_types";
 import { DataServicesImpl } from "./app/model/dataservices";
 import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData } from './app/model/config';
-import { MapPresenterFactory } from "./app/presenter/map";
-import { MarkerViewFactory } from "./app/view/map/marker";
-import { getPopup } from "./app/view/map/default_popup";
-import { SidebarView } from './app/view/sidebar';
-import { MapView } from "./app/view/map";
-import { insertPageTitle } from './app/view';
+import { initUI } from './app/view';
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -186,50 +181,8 @@ export function webRun(window: Window, base_config: ConfigData): void {
   // Expose the data for debugging
   /// @ts-ignore
   window.dataServices = dataServices
-  
-  // Each view will ensure that the code for its presenter is loaded.
-  {
-    const popup = config.getCustomPopup() || getPopup;
-    const markerViewFactory = new MarkerViewFactory(config.getDefaultLatLng(), popup, dataServices);
-    
-    // This is here to resolve a circular dependency loop - MapPresenterFactory needs the SidebarView
-    // when it runs, but SidebarView needs a link to the MapPresenterFactory.
-    // Maybe later the code can be untangled further so there is no loop.
-    const mkSidebarView = (mapPresenterFactory: MapPresenterFactory) => {
-      return new Promise<SidebarView>((resolve) => {
-        const sidebarView = new SidebarView(
-          dataServices.getFunctionalLabels(),
-          config,
-          dataServices,
-          markerViewFactory,
-          mapPresenterFactory,
-          dataServices.getSidebarButtonColour()
-        );
-        resolve(sidebarView);
-      });
-    };
 
-    const mapPresenterFactory =  new MapPresenterFactory(
-      config,
-      dataServices,
-      markerViewFactory,
-      mkSidebarView
-    );
-
-    const dialogueSize = dataServices.getDialogueSize();
-    const mapView = new MapView(
-      mapPresenterFactory,
-      dataServices.getFunctionalLabels(),
-      dialogueSize.height,
-      dialogueSize.width,
-      dialogueSize.descriptionRatio,
-      markerViewFactory
-    );
-
-    insertPageTitle(config);
-    mapView.createMap();
-    mapPresenterFactory.map = mapView.map; // Link this back for views to access
-  }
+  initUI(config, dataServices);
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();
