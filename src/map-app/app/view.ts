@@ -43,16 +43,6 @@ export function initView(config: Config): void {
     const titleNode = d3.select("html head title");
     titleNode.text(title);
   }
-  
-  // @todo - make obsolete
-  d3.select("#about-btn")
-    .attr("title", "See information about this app in new tab")
-    .on("click", function() {
-      window.open(
-        "https://github.com/p6data-coop/ise-linked-open-data/blob/master/map-app/README.md",
-        "_blank"
-      );
-    });
 }
 
 
