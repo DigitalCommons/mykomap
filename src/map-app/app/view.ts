@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import '../map-app.css'; // Required to embed styles 
 import { Config } from './model/config';
 
-export function initView(config: Config): void {
+export function insertPageTitle(config: Config): void {
   const lang = config.getLanguage();
   
   // We need to be careful to guard against weird characters, especially quotes,

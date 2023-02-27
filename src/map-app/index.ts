@@ -8,7 +8,7 @@ import { MarkerViewFactory } from "./app/view/map/marker";
 import { getPopup } from "./app/view/map/default_popup";
 import { SidebarView } from './app/view/sidebar';
 import { MapView } from "./app/view/map";
-import { initView } from './app/view';
+import { insertPageTitle } from './app/view';
 
 /** Convert names-like-this into namesLikeThis
  */
@@ -227,7 +227,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
       markerViewFactory
     );
 
-    initView(config);
+    insertPageTitle(config);
     mapView.createMap();
     mapPresenterFactory.map = mapView.map; // Link this back for views to access
   }
