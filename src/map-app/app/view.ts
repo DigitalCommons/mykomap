@@ -75,24 +75,14 @@ export function initUI(config: Config, dataServices: DataServices) {
     });
   };
 
-  const mapPresenterFactory =  new MapPresenterFactory(
+  insertPageTitle(config);
+  
+  const mapPresenterFactory = new MapPresenterFactory(
     config,
     dataServices,
     markerViewFactory,
-    mkSidebarView
+    mkSidebarView,
   );
 
-  const dialogueSize = dataServices.getDialogueSize();
-  const mapView = new MapView(
-    mapPresenterFactory,
-    dataServices.getFunctionalLabels(),
-    dialogueSize.height,
-    dialogueSize.width,
-    dialogueSize.descriptionRatio,
-    markerViewFactory
-  );
-
-  insertPageTitle(config);
-  mapView.createMap();
-  mapPresenterFactory.map = mapView.map; // Link this back for views to access
+  mapPresenterFactory.createMap();
 }

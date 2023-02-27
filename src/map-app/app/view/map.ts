@@ -38,8 +38,6 @@ interface ActiveMap {
 export type Map = leaflet.Map & ActiveMap & ContextMap;
 
 export class MapView extends BaseView {
-  readonly presenter: MapPresenter;
-  
   map?: Map;
   private flag: boolean = false;
   private _settingActiveArea: boolean = false;
@@ -67,14 +65,13 @@ export class MapView extends BaseView {
   /// Initialises the view, but does not create the map yet.
   ///
   /// To do that, call #createMap
-  constructor(mapPresenterFactory: MapPresenterFactory,
+  constructor(readonly presenter: MapPresenter,
               readonly labels: Dictionary,
               readonly dialogueHeight: string = '225px', // MUST BE IN PX
               readonly dialogueWidth: string = '35vw',
               readonly descriptionRatio: number = 2.5,
               readonly markerViewFactory: MarkerViewFactory) {
     super();
-    this.presenter = mapPresenterFactory.createPresenter(this);
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `

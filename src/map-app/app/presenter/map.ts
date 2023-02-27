@@ -21,6 +21,7 @@ export class MapPresenterFactory {
   hidden: Initiative[] = [];
   allMarkers: Marker[] = [];
   public map?: Map;
+  private mapPresenter?: MapPresenter;
   
   constructor(readonly config: Config,
               readonly dataservices: DataServices,
@@ -29,6 +30,15 @@ export class MapPresenterFactory {
               readonly getSidebarView: (f: MapPresenterFactory) => Promise<SidebarView> ) {
   }
 
+  createMap() {
+    if (!this.mapPresenter) return;
+    
+    this.mapPresenter = this.createPresenter();
+    this.mapPresenter.view.createMap();
+    this.map = this.mapPresenter.view.map; // Link this back for views to access
+  }
+  
+  
   onNewInitiatives() {
     this.initiativesOutsideOfFilterUIDMap = Object.assign(
       {}, this.dataservices.getAggregatedData().initiativesByUid
@@ -36,8 +46,8 @@ export class MapPresenterFactory {
     this.loadedInitiatives = this.dataservices.getAggregatedData().loadedInitiatives;
   }
   
-  createPresenter(view: MapView): MapPresenter {
-    const p = new MapPresenter(this, view);
+  createPresenter(): MapPresenter {
+    const p = new MapPresenter(this);
     EventBus.Initiatives.datasetLoaded.sub(() => {
       this.onNewInitiatives();
       p.onInitiativeDatasetLoaded();
@@ -111,10 +121,20 @@ export class MapPresenterFactory {
 }
 
 export class MapPresenter extends BasePresenter {
+  readonly view: MapView;
   previouslySelected: Initiative[] = [];
   
-  constructor(readonly factory: MapPresenterFactory, readonly view: MapView) {
+  constructor(readonly factory: MapPresenterFactory) {
     super();
+    const dialogueSize = factory.dataservices.getDialogueSize();
+    this.view = new MapView(
+      this,
+      factory.dataservices.getFunctionalLabels(),
+      dialogueSize.height,
+      dialogueSize.width,
+      dialogueSize.descriptionRatio,
+      factory.markerView,
+    );
   }
     
   static copyTextToClipboard(text: string) {
