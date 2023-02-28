@@ -14,6 +14,10 @@ export class MapView extends BaseView {
   private _settingActiveArea: boolean = false;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
+  private readonly dialogueHeight;
+  private readonly dialogueWidth;
+  private readonly labels: Dictionary;
+  private readonly markerViewFactory: MarkerViewFactory;
   private selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
 
@@ -36,13 +40,17 @@ export class MapView extends BaseView {
   /// Initialises the view, but does not create the map yet.
   ///
   /// To do that, call #createMap
-  constructor(readonly presenter: MapPresenter,
-              readonly labels: Dictionary,
-              readonly dialogueHeight: string = '225px', // MUST BE IN PX
-              readonly dialogueWidth: string = '35vw',
-              readonly descriptionRatio: number = 2.5,
-              readonly markerViewFactory: MarkerViewFactory) {
+  constructor(readonly presenter: MapPresenter) {
     super();
+
+    this.labels = presenter.mapUI.dataServices.getFunctionalLabels(),
+    this.markerViewFactory = presenter.mapUI.markerViewFactory;
+
+    const dialogueSize = presenter.mapUI.dataServices.getDialogueSize();
+    this.dialogueHeight = dialogueSize.height ?? '225px'; // MUST BE IN PX
+    this.dialogueWidth = dialogueSize.width ?? '35vw';
+    const descriptionRatio: number = dialogueSize.descriptionRatio ?? 2.5;
+
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
