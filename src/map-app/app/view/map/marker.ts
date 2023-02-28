@@ -1,26 +1,14 @@
 import * as leaflet from 'leaflet';
-import 'leaflet.markercluster';
-import 'leaflet.awesome-markers';
 import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
 import { DataServices } from '../../model/dataservices';
 import { InitiativeRenderFunction } from '../../model/config_schema';
-import { Map } from '../../map';
+import { ExtendedMarker, Map } from '../../map';
 import { Point2d } from '../../../common_types';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
 import { MarkerViewFactory } from './markerviewfactory';
-
-// Cater for the earlier JS hack in which a boolean is stored in
-// marker objects...
-//interface ExtendedMarkerOptions extends leaflet.MarkerOptions {
-//  initiative: Initiative;
-//}
-export interface ExtendedMarker extends leaflet.Marker {
-  hasPhysicalLocation?: boolean;
-//  options: ExtendedMarkerOptions;
-}
 
 export class MapMarkerView extends BaseView {
   readonly presenter: MapMarkerPresenter;

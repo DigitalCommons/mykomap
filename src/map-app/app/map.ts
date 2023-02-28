@@ -1,6 +1,8 @@
 import * as leaflet from 'leaflet';
 import 'leaflet-active-area';
 //import * as contextmenu from 'leaflet-contextmenu';
+import 'leaflet.markercluster';
+import 'leaflet.awesome-markers';
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
 import 'leaflet/dist/leaflet.css';
@@ -29,3 +31,15 @@ export interface ActiveMap {
 }
 
 export type Map = leaflet.Map & ActiveMap & ContextMap;
+
+
+// Cater for the earlier JS hack in which a boolean is stored in
+// marker objects...
+//interface ExtendedMarkerOptions extends leaflet.MarkerOptions {
+//  initiative: Initiative;
+//}
+export interface ExtendedMarker extends leaflet.Marker {
+  hasPhysicalLocation?: boolean;
+//  options: ExtendedMarkerOptions;
+}
+
