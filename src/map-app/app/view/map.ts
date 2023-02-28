@@ -1,6 +1,5 @@
 import { Box2d, Dictionary } from "../../common_types";
-import { MapPresenter, MapPresenterFactory } from "../presenter/map";
-import { MarkerViewFactory } from "./map/marker";
+import { MapPresenter } from "../presenter/map";
 import {  BaseView  } from './base';
 
 import * as d3 from 'd3';
@@ -12,6 +11,7 @@ import 'leaflet-active-area';
 import 'leaflet/dist/leaflet.css';
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
+import { MarkerViewFactory } from "./map/markerviewfactory";
 
 // This is a hack added to allow leaflet icons be the right size
 // @ts-ignore 

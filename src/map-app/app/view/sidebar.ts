@@ -7,7 +7,7 @@ import { BaseView } from './base';
 import { DatasetsSidebarView } from './sidebar/datasets';
 import { DirectorySidebarView } from './sidebar/directory';
 import { InitiativesSidebarView } from './sidebar/initiatives';
-import { MarkerViewFactory } from './map/marker';
+import { MarkerViewFactory } from './map/markerviewfactory';
 import { MapPresenterFactory } from '../presenter/map';
 import { DataServices } from '../model/dataservices';
 import { Dictionary } from '../../common_types';

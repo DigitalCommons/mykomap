@@ -4,7 +4,7 @@ import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
 import { Config } from '../model/config_schema';
 import { DataServices } from '../model/dataservices';
-import { ExtendedMarker, MarkerViewFactory } from '../view/map/marker';
+import { ExtendedMarker } from '../view/map/marker';
 import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
 import { MapView, Map } from '../view/map';
@@ -12,6 +12,7 @@ import { Marker } from 'leaflet';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
 import { getPopup } from "../view/map/default_popup";
+import { MarkerViewFactory } from '../view/map/markerviewfactory';
 
 export class MapPresenterFactory {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};

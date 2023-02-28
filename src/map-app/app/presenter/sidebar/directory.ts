@@ -3,7 +3,7 @@ import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
 import { Config } from '../../model/config';
 import { DataServices } from '../../model/dataservices';
-import { MarkerViewFactory } from '../../view/map/marker';
+import { MarkerViewFactory } from '../../view/map/markerviewfactory';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
 import { Initiative } from '../../model/initiative';

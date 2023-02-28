@@ -7,7 +7,7 @@ import { DataServices } from "../../model/dataservices";
 import { Initiative } from "../../model/initiative";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
-import { MarkerViewFactory } from "../map/marker";
+import { MarkerViewFactory } from "../map/markerviewfactory";
 import { SidebarView } from "../sidebar";
 import { BaseSidebarView } from "./base";
 import { toString as _toString } from "../../../utils";
