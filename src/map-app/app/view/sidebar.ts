@@ -2,17 +2,19 @@
 import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
-import { AboutSidebarView } from '../view/sidebar/about';
 import { BaseView } from './base';
 import { DatasetsSidebarView } from './sidebar/datasets';
 import { DirectorySidebarView } from './sidebar/directory';
 import { InitiativesSidebarView } from './sidebar/initiatives';
 import { Dictionary } from '../../common_types';
 import { BaseSidebarView } from './sidebar/base';
+import { AboutSidebarPresenter } from '../presenter/sidebar/about';
+import { BaseSidebarPresenter } from '../presenter/sidebar/base';
 
 export class SidebarView extends BaseView {
   sidebarName?: string;
   sidebar: Dictionary<BaseSidebarView> = {};
+  children: Dictionary<BaseSidebarPresenter> = {};
   
   constructor(readonly presenter: SidebarPresenter,
               readonly sidebarButtonColour: string ) {
@@ -115,7 +117,8 @@ export class SidebarView extends BaseView {
   createSidebars() {
 
     this.sidebar = {};
-
+    this.children = {};
+    
     if(this.presenter.showingDirectory())
       this.sidebar.directory = new DirectorySidebarView(this,
                                                         this.presenter.mapui.labels,
@@ -131,9 +134,7 @@ export class SidebarView extends BaseView {
                                                             this.presenter.mapui);
 
     if(this.presenter.showingAbout())
-      this.sidebar.about = new AboutSidebarView(this,
-                                                this.presenter.mapui.labels,
-                                                this.presenter.mapui.config);
+      this.children.about = new AboutSidebarPresenter(this.presenter);
     
     if(this.presenter.showingDatasets())
       this.sidebar.datasets = new DatasetsSidebarView(this,
