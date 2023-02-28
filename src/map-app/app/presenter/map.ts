@@ -15,15 +15,7 @@ export class MapPresenter extends BasePresenter {
   
   constructor(readonly mapUI: MapUI) {
     super();
-    const dialogueSize = mapUI.dataServices.getDialogueSize();
-    this.view = new MapView(
-      this,
-      mapUI.dataServices.getFunctionalLabels(),
-      dialogueSize.height,
-      dialogueSize.width,
-      dialogueSize.descriptionRatio,
-      mapUI.markerViewFactory,
-    );
+    this.view = new MapView(this);
   }
     
   static copyTextToClipboard(text: string) {
