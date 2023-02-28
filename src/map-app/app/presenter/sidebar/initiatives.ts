@@ -1,20 +1,15 @@
-import { Dictionary } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
-import { DataServices, MultiPropDef, VocabPropDef } from '../../model/dataservices';
+import { MultiPropDef, VocabPropDef } from '../../model/dataservices';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
-import { MapUI } from '../../mapui';
 import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
-import { Config } from '../../model/config';
 import { SearchResults } from './searchresults';
 import { Initiative } from '../../model/initiative';
-import { arrays2Box2d, toString as _toString, yesANumber } from '../../../utils';
+import { toString as _toString } from '../../../utils';
+import { SidebarPresenter } from '../sidebar';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
-  readonly config: Config;
-  readonly dataServices: DataServices;
-  readonly labels: Partial<Record<string, string>>;
-  readonly map: MapUI;
+  readonly view: InitiativesSidebarView;
   
   _eventbusRegister(): void {
     EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
@@ -26,16 +21,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Search.changeSearchText.sub(text => this.changeSearchText(text));
   }
 
-  constructor(public view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapUI) {
-    if (!view.parent.presenter)
-      throw new Error(`Can't construct an instance with a parent view which has no presenter`);
-    super(view.parent.presenter);
-    this.config = config;
-    this.dataServices = dataServices;
-    // a lookup for labels of buttons and titles
-    this.labels = labels;
-    // the MapUI
-    this.map = map;
+  constructor(readonly parent: SidebarPresenter) {
+    super(parent);
+    this.view = new InitiativesSidebarView(this);
     this._eventbusRegister();
   }
 
@@ -55,9 +43,11 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   ///   but could also be "any"
   /// - filterValueText is the display text for the selecte drop-down value
   changeFilters(filterCategoryName: string, filterValue: string, filterValueText: string) {
+    const mapui = this.parent.mapui;
+    
     // Get the vocab URI from a map of vocab titles to abbreviated vocab URIs
     // FIXME if titles of vocabs match, this map will be incomplete!
-    const vocabTitlesAndVocabIDs =  this.dataServices.getVocabTitlesAndVocabIDs(); 
+    const vocabTitlesAndVocabIDs =  mapui.dataServices.getVocabTitlesAndVocabIDs(); 
     const vocabID = vocabTitlesAndVocabIDs[filterCategoryName];
     if (vocabID === undefined || vocabID === null)
       throw new Error(`Unknown title used to identify this vocab: '${filterCategoryName}'`);
@@ -72,7 +62,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     // information is provided. Currently the title field of the vocab
     // is used, which isn't sufficient to identify the property
     // uniquely.
-    const propDefs = this.config.fields();
+    const propDefs = mapui.config.fields();
     let propName: string;
     let propDef: VocabPropDef | MultiPropDef | undefined;
     for(propName in propDefs) {
@@ -92,9 +82,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
 
     //remove old filter 
-    const currentFilters = this.map.getFiltersFull();
+    const currentFilters = mapui.getFiltersFull();
 
-    if (currentFilters.length > 0) {
+    if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
         filter && filter.verboseName?.split(":")[0] === filterCategoryName
       })
@@ -109,7 +99,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       return;
 
     // Get initiatives for new filter
-    const allInitiatives = Object.values(this.dataServices.getAggregatedData().initiativesByUid);
+    const allInitiatives = Object.values(mapui.dataServices.getAggregatedData().initiativesByUid);
     const filteredInitiatives = allInitiatives.filter((i): i is Initiative =>
       !!i && i[propName] == filterValue
     )
@@ -157,7 +147,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //console.log("sidebar/initiatives historyButtonsUsed");
     //console.log(lastContent);
     //this.notifyMarkersNeedToShowNewSelection(lastContent);
-    this.view?.refresh();
+    this.view.refresh();
   }
 
   onInitiativeResults(data: EventBus.Search.Results) {
@@ -165,7 +155,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
     //get the uniquids of the applied filters
-    const filterKeys = Object.keys(this.map.getFilteredMap());
+    const filterKeys = Object.keys(this.parent.mapui.getFilteredMap());
 
     //go in if there are any filters
     if (filterKeys.length != 0) {
@@ -180,7 +170,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //filter
     this.parent.contentStack.append(
       new SearchResults(data.results, data.text,
-                        this.map.getFiltersVerbose(), this.map.getFilters(), this.labels)
+                        this.parent.mapui.getFiltersVerbose(), this.parent.mapui.getFilters(), this.parent.mapui.labels)
     );
 
     //highlight markers on search results 
@@ -201,11 +191,11 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     }
 
     this.notifySidebarNeedsToShowInitiatives();
-    this.view?.refresh();
+    this.view.refresh();
   }
 
   getFilterNames() {
-    return this.map.getFiltersVerbose();
+    return this.parent.mapui.getFiltersVerbose();
   }
 
   initClicked(initiative: Initiative) {
@@ -223,7 +213,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //console.log(this.parent.contentStack.current());
 
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
-    this.view?.refresh();
+    this.view.refresh();
     EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
   }
   
@@ -242,7 +232,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
     // this.notifySidebarNeedsToShowInitiatives();
-    this.view?.refresh();
+    this.view.refresh();
   }
 
   onMarkerSelectionToggled(initiative: Initiative) {
@@ -260,7 +250,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //this.contentStack.append(new StackItem(initiatives));
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
-    this.view?.refresh();
+    this.view.refresh();
   }
 
   onSearchHistory() {
@@ -269,7 +259,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   searchedInitiativeClicked(uri?: string) {
-    if (uri) this.view?.onInitiativeClicked(uri);
+    if (uri) this.view.onInitiativeClicked(uri);
   }
 
   performSearch(text: string) {
@@ -280,7 +270,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       EventBus.Markers.needToShowLatestSelection.pub([]);
 
       //should be async
-      var results = this.dataServices.getAggregatedData().search(text);
+      var results = this.parent.mapui.dataServices.getAggregatedData().search(text);
       EventBus.Search.initiativeResults.pub({ text: text, results: results });
     }
 
@@ -295,13 +285,13 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Markers.needToShowLatestSelection.pub([]);
 
     //should be async
-    var results = Object.values(this.dataServices.getAggregatedData().initiativesByUid)
+    var results = Object.values(this.parent.mapui.dataServices.getAggregatedData().initiativesByUid)
       .filter((i): i is Initiative => !!i);
     EventBus.Search.initiativeResults.pub({ text: "", results: results });
   }
 
   changeSearchText(txt: string) {
-    this.view?.changeSearchText(txt);
+    this.view.changeSearchText(txt);
   }
 }
 

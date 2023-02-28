@@ -11,6 +11,7 @@ import { BaseSidebarView } from './sidebar/base';
 import { AboutSidebarPresenter } from '../presenter/sidebar/about';
 import { BaseSidebarPresenter } from '../presenter/sidebar/base';
 import { DirectorySidebarPresenter } from '../presenter/sidebar/directory';
+import { InitiativesSidebarPresenter } from '../presenter/sidebar/initiatives';
 
 export class SidebarView extends BaseView {
   sidebarName?: string;
@@ -124,11 +125,7 @@ export class SidebarView extends BaseView {
       this.children.directory = new DirectorySidebarPresenter(this.presenter);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(this,
-                                                            this.presenter.mapui.config,
-                                                            this.presenter.mapui.labels,
-                                                            this.presenter.mapui.dataServices,
-                                                            this.presenter.mapui);
+      this.children.initiatives = new InitiativesSidebarPresenter(this.presenter);
 
     if(this.presenter.showingAbout())
       this.children.about = new AboutSidebarPresenter(this.presenter);
