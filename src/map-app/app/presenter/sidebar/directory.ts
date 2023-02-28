@@ -1,29 +1,30 @@
-import { Box2d, Dictionary } from '../../../common_types';
 import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
-import { Config } from '../../model/config';
-import { DataServices } from '../../model/dataservices';
-import { MarkerViewFactory } from '../../view/map/markerviewfactory';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
 import { Initiative } from '../../model/initiative';
+import { SidebarPresenter } from '../sidebar';
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
+  readonly view: DirectorySidebarView;
+  
+  constructor(readonly parent: SidebarPresenter) {
+    super(parent);
+    this.view = new DirectorySidebarView(this);
 
-  constructor(readonly view: DirectorySidebarView, readonly config: Config, readonly dataServices: DataServices, readonly markerView: MarkerViewFactory) {
-    super(view.parent.presenter);
+    EventBus.Initiatives.reset.sub(() => {
+      // User has deselected
+      // TODO: This probably shouldn\t be here
+      EventBus.Markers.needToShowLatestSelection.pub([]);
+      //todo reload new ones inside instead (without closing)
+      EventBus.Sidebar.hideInitiativeList.pub();
+    });
+    EventBus.Directory.initiativeClicked.sub(initiative => this.initiativeClicked(initiative));
+    EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
 
   currentItem(): StackItem | undefined {
     return this.parent.contentStack.current();
-  }
-
-  getVerboseValuesForFields(): Dictionary<Dictionary> {
-    return this.dataServices.getVerboseValuesForFields();
-  }
-
-  getRegisteredValues(): Dictionary<Dictionary<Initiative[]>> {
-    return this.dataServices.getAggregatedData().registeredValues;
   }
 
   notifyViewToBuildDirectory(): void {
@@ -33,33 +34,24 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
   getInitiativesForFieldAndSelectionKey(field: string, key?: string): Initiative[] {
     if (key == null)
-      return this.dataServices.getAggregatedData().loadedInitiatives;
+      return this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives;
     else
-      return this.dataServices.getAggregatedData().registeredValues[field]?.[key] ?? [];
-  }
-
-  getInitiativeByUniqueId(uid: string): Initiative | undefined {
-    return this.dataServices.getAggregatedData().initiativesByUid[uid];
-  }
-
-  doesDirectoryHaveColours() {
-    return this.config.doesDirectoryHaveColours();
+      return this.parent.mapui.dataServices.getAggregatedData().registeredValues[field]?.[key] ?? [];
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]): void {
     if (initiatives.length <= 0)
       return;
-    const data = EventBus.Map.mkSelectAndZoomData(initiatives, { maxZoom: this.config.getMaxZoomOnGroup() });
+    const data = EventBus.Map.mkSelectAndZoomData(initiatives, { maxZoom: this.parent.mapui.config.getMaxZoomOnGroup() });
     EventBus.Map.needsToBeZoomedAndPanned.pub(data);
   }
-
 
   notifyMapNeedsToNeedsToSelectInitiative(initiatives: Initiative[]): void {
     if (initiatives.length == 0)
       return;
     
-    const maxZoom = initiatives.length === 1? this.config.getMaxZoomOnGroup() : undefined;
-    const defaultPos = this.config.getDefaultLatLng();
+    const maxZoom = initiatives.length === 1? this.parent.mapui.config.getMaxZoomOnGroup() : undefined;
+    const defaultPos = this.parent.mapui.config.getDefaultLatLng();
     
     const data = EventBus.Map.mkSelectAndZoomData(initiatives, { maxZoom, defaultPos });
     EventBus.Map.selectAndZoomOnInitiative.pub(data);
@@ -102,7 +94,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,
-        this.markerView.getInitiativeContent(initiative) ?? ''
+        this.parent.mapui.markerViewFactory.getInitiativeContent(initiative) ?? ''
       );
 
     }
@@ -115,22 +107,6 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
 
       //doesn't do much?
     }
-  }
-
-  latLngBounds(initiatives: Initiative[]): Box2d  {
-    return this.dataServices.latLngBounds(initiatives);
-  }
-
-  _eventbusRegiter() {
-    EventBus.Initiatives.reset.sub(() => {
-      // User has deselected
-      // TODO: This probably shouldn\t be here
-      EventBus.Markers.needToShowLatestSelection.pub([]);
-      //todo reload new ones inside instead (without closing)
-      EventBus.Sidebar.hideInitiativeList.pub();
-    });
-    EventBus.Directory.initiativeClicked.sub(initiative => this.initiativeClicked(initiative));
-    EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
   
 }

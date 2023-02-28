@@ -10,6 +10,7 @@ import { Dictionary } from '../../common_types';
 import { BaseSidebarView } from './sidebar/base';
 import { AboutSidebarPresenter } from '../presenter/sidebar/about';
 import { BaseSidebarPresenter } from '../presenter/sidebar/base';
+import { DirectorySidebarPresenter } from '../presenter/sidebar/directory';
 
 export class SidebarView extends BaseView {
   sidebarName?: string;
@@ -120,11 +121,7 @@ export class SidebarView extends BaseView {
     this.children = {};
     
     if(this.presenter.showingDirectory())
-      this.sidebar.directory = new DirectorySidebarView(this,
-                                                        this.presenter.mapui.labels,
-                                                        this.presenter.mapui.config,
-                                                        this.presenter.mapui.dataServices,
-                                                        this.presenter.mapui.markerViewFactory);
+      this.children.directory = new DirectorySidebarPresenter(this.presenter);
 
     if(this.presenter.showingSearch())
       this.sidebar.initiatives = new InitiativesSidebarView(this,
