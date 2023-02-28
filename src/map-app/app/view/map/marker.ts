@@ -56,7 +56,7 @@ export class MapMarkerView extends BaseView {
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
 
-      this.cluster = this.presenter.mapUI.markerViewFactory.hiddenClusterGroup;
+      this.cluster = this.presenter.mapUI.markers.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
     }
@@ -95,7 +95,7 @@ export class MapMarkerView extends BaseView {
       this.marker.on("click", (e) => {
         this.onClick(e);
       });
-      this.cluster = this.presenter.mapUI.markerViewFactory.unselectedClusterGroup;
+      this.cluster = this.presenter.mapUI.markers.unselectedClusterGroup;
       this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = true;
     }
@@ -153,7 +153,7 @@ export class MapMarkerView extends BaseView {
   }
 
   setSelected(initiative: Initiative) {
-    const factory = this.presenter.mapUI.markerViewFactory;
+    const factory = this.presenter.mapUI.markers;
     const marker = initiative.__internal.marker;
     if (!(marker instanceof leaflet.Marker)) {
       console.error("initiative has no marker reference", initiative);

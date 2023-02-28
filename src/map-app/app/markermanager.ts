@@ -1,13 +1,13 @@
-import { Dictionary } from '../../../common_types';
+import { Dictionary } from '../common_types';
 import * as leaflet from 'leaflet';
-import { InitiativeRenderFunction } from '../../model/config_schema';
-import { Initiative } from '../../model/initiative';
-import { toString as _toString } from '../../../utils';
-import { MapMarkerPresenter } from '../../presenter/map/marker';
-import { MapUI } from '../../mapui';
-import { getPopup } from './default_popup';
+import { InitiativeRenderFunction } from './model/config_schema';
+import { Initiative } from './model/initiative';
+import { toString as _toString } from '../utils';
+import { MapMarkerPresenter } from './presenter/map/marker';
+import { MapUI } from './mapui';
+import { getPopup } from './view/map/default_popup';
 
-export class MarkerViewFactory {
+export class MarkerManager {
   private readonly popup: InitiativeRenderFunction;
   
   // Keep a mapping between initiatives and their Markers:
