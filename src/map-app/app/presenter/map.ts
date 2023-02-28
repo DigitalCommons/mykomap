@@ -106,8 +106,6 @@ export class MapPresenter extends BasePresenter {
 
   onInitiativeNew(initiative: Initiative) {
     const marker = this.view.addMarker(initiative).view.marker as ExtendedMarker; // Coercion!
-
-    if (marker.hasPhysicalLocation) this.mapUI.allMarkers.push(marker);
   }
   
   refreshInitiative(initiative: Initiative) {
@@ -118,7 +116,6 @@ export class MapPresenter extends BasePresenter {
   onInitiativeReset() {
 
     this.view.removeAllMarkers();
-    this.mapUI.allMarkers = [];
     this.mapUI.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
@@ -129,7 +126,7 @@ export class MapPresenter extends BasePresenter {
     const bounds = this.getInitialBounds();
     if (bounds)
       this.view.fitBounds({bounds: bounds});
-    this.view.unselectedClusterGroup?.addLayers(this.mapUI.allMarkers);
+    this.view.unselectedClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
   }
 
