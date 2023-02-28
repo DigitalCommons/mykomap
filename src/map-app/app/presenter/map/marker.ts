@@ -4,7 +4,7 @@ import { toPoint2d, toString as _toString } from '../../../utils';
 import { InitiativeRenderFunction } from '../../model/config_schema';
 import { DataServices } from '../../model/dataservices';
 import { Initiative } from '../../model/initiative';
-import { BasePresenter } from '../../presenter';
+import { BasePresenter } from '../base';
 import { MapMarkerView } from '../../view/map/marker';
 
 export class MapMarkerPresenter extends BasePresenter {

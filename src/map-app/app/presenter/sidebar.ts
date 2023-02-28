@@ -1,7 +1,7 @@
 import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
 import { SidebarView } from '../view/sidebar';
-import { BasePresenter } from '../presenter';
+import { BasePresenter } from './base';
 
 export class SidebarPresenter extends BasePresenter {
   readonly contentStack = new Stack();

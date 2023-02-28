@@ -1,4 +1,4 @@
-import { BasePresenter } from '../presenter';
+import { BasePresenter } from './base';
 import * as d3 from 'd3';
 import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
