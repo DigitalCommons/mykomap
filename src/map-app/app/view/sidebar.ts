@@ -3,17 +3,8 @@ import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
 import { BaseView } from './base';
-import { Dictionary } from '../../common_types';
-import { BaseSidebarView } from './sidebar/base';
-import { AboutSidebarPresenter } from '../presenter/sidebar/about';
-import { BaseSidebarPresenter } from '../presenter/sidebar/base';
-import { DirectorySidebarPresenter } from '../presenter/sidebar/directory';
-import { InitiativesSidebarPresenter } from '../presenter/sidebar/initiatives';
-import { DatasetsSidebarPresenter } from '../presenter/sidebar/datasets';
 
 export class SidebarView extends BaseView {
-  sidebarName?: string;
-  children: Dictionary<BaseSidebarPresenter> = {};
   
   constructor(readonly presenter: SidebarPresenter,
               readonly sidebarButtonColour: string ) {
@@ -22,8 +13,6 @@ export class SidebarView extends BaseView {
     
     this.createOpenButton();
     this.createButtonRow();
-    this.createSidebars();
-    this.changeSidebar(); // Use the default
   }
 
   createOpenButton() {
@@ -56,7 +45,7 @@ export class SidebarView extends BaseView {
       .on("click", () => {
         EventBus.Map.removeSearchFilter.pub();
         //notify zoom
-        this.changeSidebar("directory");
+        this.presenter.changeSidebar("directory");
         this.showInitiativeList();
 
         //deselect
@@ -76,7 +65,7 @@ export class SidebarView extends BaseView {
         //deselect
         EventBus.Markers.needToShowLatestSelection.pub([]);
         EventBus.Initiatives.showSearchHistory.pub();
-        this.changeSidebar("initiatives");
+        this.presenter.changeSidebar("initiatives");
       })
       .append("i")
       .attr("class", "fa fa-search");
@@ -90,7 +79,7 @@ export class SidebarView extends BaseView {
       .on("click", () => {
         this.hideInitiativeList();
         EventBus.Markers.needToShowLatestSelection.pub([]);
-        this.changeSidebar("about");
+        this.presenter.changeSidebar("about");
       })
       .append("i")
       .attr("class", "fa fa-info-circle");
@@ -104,57 +93,13 @@ export class SidebarView extends BaseView {
         .on("click", () => {
           this.hideInitiativeList();
           EventBus.Markers.needToShowLatestSelection.pub([]);
-          this.changeSidebar("datasets");
+          this.presenter.changeSidebar("datasets");
         })
         .append("i")
         .attr("class", "fa fa-database");
     }
 
 
-  }
-
-  createSidebars() {
-    this.children = {};
-    
-    if(this.presenter.showingDirectory())
-      this.children.directory = new DirectorySidebarPresenter(this.presenter);
-
-    if(this.presenter.showingSearch())
-      this.children.initiatives = new InitiativesSidebarPresenter(this.presenter);
-
-    if(this.presenter.showingAbout())
-      this.children.about = new AboutSidebarPresenter(this.presenter);
-    
-    if(this.presenter.showingDatasets())
-      this.children.datasets = new DatasetsSidebarPresenter(this.presenter);
-  }
-
-  // Changes or refreshes the sidebar
-  //
-  // @param name - the sidebar to change (needs to be one of the keys
-  // of this.sidebar)
-  changeSidebar(name?: string) {
-    if (name !== undefined) {
-      // Validate name
-      if (!(name in this.children)) {
-        console.warn(`ignoring request to switch to non-existant sidebar '${name}'`);
-        name = undefined;
-      }
-    }
-
-    if (name === undefined) {
-      // By default, use the first sidebar defined (JS key order is that of first definition)
-      const names = Object.keys(this.children);
-      
-      if (names.length === 0)
-        return; // Except in this case, there is nothing we can do!
-
-      name = names[0];
-    }
-    
-    // Change the current sidebar
-    this.sidebarName = name;
-    this.children[this.sidebarName]?.refreshView();
   }
 
   showSidebar() {
@@ -180,7 +125,7 @@ export class SidebarView extends BaseView {
       d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
-    this.changeSidebar(); // Refresh the content of the sidebar
+    this.presenter.changeSidebar(); // Refresh the content of the sidebar
     if (document.getElementById("dir-filter") && window.outerWidth >= 1080)
       document.getElementById("dir-filter")?.focus();
   }

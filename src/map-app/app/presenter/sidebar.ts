@@ -1,8 +1,14 @@
+import { Dictionary } from '../../common_types';
 import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
 import { MapUI } from '../mapui';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
+import { AboutSidebarPresenter } from './sidebar/about';
+import { BaseSidebarPresenter } from './sidebar/base';
+import { DatasetsSidebarPresenter } from './sidebar/datasets';
+import { DirectorySidebarPresenter } from './sidebar/directory';
+import { InitiativesSidebarPresenter } from './sidebar/initiatives';
 
 export class SidebarPresenter extends BasePresenter {
   readonly view: SidebarView;
@@ -11,6 +17,8 @@ export class SidebarPresenter extends BasePresenter {
   readonly showSearchPanel: boolean;
   readonly showAboutPanel: boolean;
   readonly showDatasetsPanel: boolean;
+  private children: Dictionary<BaseSidebarPresenter> = {};
+  private sidebarName?: string;
 
   constructor(readonly mapui: MapUI) {
     super();
@@ -20,10 +28,53 @@ export class SidebarPresenter extends BasePresenter {
     this.showDatasetsPanel = mapui.config.getShowDatasetsPanel();
     this.view = new SidebarView(this, mapui.dataServices.getSidebarButtonColour());
     this._eventbusRegister();
+
+    this.createSidebars();
+    this.changeSidebar();
+  }
+
+  createSidebars() {
+    this.children = {};
+    
+    if(this.showingDirectory())
+      this.children.directory = new DirectorySidebarPresenter(this);
+
+    if(this.showingSearch())
+      this.children.initiatives = new InitiativesSidebarPresenter(this);
+
+    if(this.showingAbout())
+      this.children.about = new AboutSidebarPresenter(this);
+    
+    if(this.showingDatasets())
+      this.children.datasets = new DatasetsSidebarPresenter(this);
   }
   
+  // Changes or refreshes the sidebar
+  //
+  // @param name - the sidebar to change (needs to be one of the keys
+  // of this.sidebar)
   changeSidebar(name?: string) {
-    this.view.changeSidebar(name);
+    if (name !== undefined) {
+      // Validate name
+      if (!(name in this.children)) {
+        console.warn(`ignoring request to switch to non-existant sidebar '${name}'`);
+        name = undefined;
+      }
+    }
+
+    if (name === undefined) {
+      // By default, use the first sidebar defined (JS key order is that of first definition)
+      const names = Object.keys(this.children);
+      
+      if (names.length === 0)
+        return; // Except in this case, there is nothing we can do!
+
+      name = names[0];
+    }
+    
+    // Change the current sidebar
+    this.sidebarName = name;
+    this.children[this.sidebarName]?.refreshView();
   }
 
   showSidebar() {
