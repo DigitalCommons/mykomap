@@ -3,19 +3,16 @@ import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
 import { BaseView } from './base';
-import { DatasetsSidebarView } from './sidebar/datasets';
-import { DirectorySidebarView } from './sidebar/directory';
-import { InitiativesSidebarView } from './sidebar/initiatives';
 import { Dictionary } from '../../common_types';
 import { BaseSidebarView } from './sidebar/base';
 import { AboutSidebarPresenter } from '../presenter/sidebar/about';
 import { BaseSidebarPresenter } from '../presenter/sidebar/base';
 import { DirectorySidebarPresenter } from '../presenter/sidebar/directory';
 import { InitiativesSidebarPresenter } from '../presenter/sidebar/initiatives';
+import { DatasetsSidebarPresenter } from '../presenter/sidebar/datasets';
 
 export class SidebarView extends BaseView {
   sidebarName?: string;
-  sidebar: Dictionary<BaseSidebarView> = {};
   children: Dictionary<BaseSidebarPresenter> = {};
   
   constructor(readonly presenter: SidebarPresenter,
@@ -117,8 +114,6 @@ export class SidebarView extends BaseView {
   }
 
   createSidebars() {
-
-    this.sidebar = {};
     this.children = {};
     
     if(this.presenter.showingDirectory())
@@ -131,9 +126,7 @@ export class SidebarView extends BaseView {
       this.children.about = new AboutSidebarPresenter(this.presenter);
     
     if(this.presenter.showingDatasets())
-      this.sidebar.datasets = new DatasetsSidebarView(this,
-                                                      this.presenter.mapui.labels,
-                                                      this.presenter.mapui.dataServices);
+      this.children.datasets = new DatasetsSidebarPresenter(this.presenter);
   }
 
   // Changes or refreshes the sidebar
@@ -143,7 +136,7 @@ export class SidebarView extends BaseView {
   changeSidebar(name?: string) {
     if (name !== undefined) {
       // Validate name
-      if (!(name in this.sidebar)) {
+      if (!(name in this.children)) {
         console.warn(`ignoring request to switch to non-existant sidebar '${name}'`);
         name = undefined;
       }
@@ -151,7 +144,7 @@ export class SidebarView extends BaseView {
 
     if (name === undefined) {
       // By default, use the first sidebar defined (JS key order is that of first definition)
-      const names = Object.keys(this.sidebar);
+      const names = Object.keys(this.children);
       
       if (names.length === 0)
         return; // Except in this case, there is nothing we can do!
@@ -161,7 +154,7 @@ export class SidebarView extends BaseView {
     
     // Change the current sidebar
     this.sidebarName = name;
-    this.sidebar[this.sidebarName]?.refresh();
+    this.children[this.sidebarName]?.refreshView();
   }
 
   showSidebar() {
