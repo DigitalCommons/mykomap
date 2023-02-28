@@ -2,12 +2,12 @@ import { BasePresenter } from './base';
 import * as d3 from 'd3';
 import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
-import { ExtendedMarker } from '../view/map/marker';
 import { Dictionary } from '../../common_types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
 import { MapUI } from '../mapui';
+import { ExtendedMarker } from '../map';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
