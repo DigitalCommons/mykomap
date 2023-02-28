@@ -32,14 +32,3 @@ export interface ActiveMap {
 
 export type Map = leaflet.Map & ActiveMap & ContextMap;
 
-
-// Cater for the earlier JS hack in which a boolean is stored in
-// marker objects...
-//interface ExtendedMarkerOptions extends leaflet.MarkerOptions {
-//  initiative: Initiative;
-//}
-export interface ExtendedMarker extends leaflet.Marker {
-  hasPhysicalLocation?: boolean;
-//  options: ExtendedMarkerOptions;
-}
-

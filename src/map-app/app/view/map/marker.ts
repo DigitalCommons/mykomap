@@ -2,12 +2,11 @@ import * as leaflet from 'leaflet';
 import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
-import { ExtendedMarker } from '../../map';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
 
 export class MapMarkerView extends BaseView {
-  readonly marker: ExtendedMarker;
+  readonly marker: leaflet.Marker;
   
   // Using font-awesome icons, the available choices can be seen here:
   // http://fortawesome.github.io/Font-Awesome/icons/
@@ -44,7 +43,7 @@ export class MapMarkerView extends BaseView {
       this.marker = leaflet.marker(this.presenter.mapUI.config.getDefaultLatLng(), {
         icon: icon,
 //        initiative: this.initiative // FIXME this *seems* to be unused, and creates type checking errors
-      }) as ExtendedMarker;
+      }) as leaflet.Marker;
 
       initiative.__internal.marker = this.marker;
 
@@ -58,7 +57,7 @@ export class MapMarkerView extends BaseView {
 
       this.cluster = this.presenter.mapUI.markers.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
-      this.marker.hasPhysicalLocation = false;
+      this.presenter.hasPhysicalLocation = false;
     }
     else {
       // FIXME this should not be hardwiring primaryActivity!
@@ -97,7 +96,7 @@ export class MapMarkerView extends BaseView {
       });
       this.cluster = this.presenter.mapUI.markers.unselectedClusterGroup;
       this.cluster.addLayer(this.marker);
-      this.marker.hasPhysicalLocation = true;
+      this.presenter.hasPhysicalLocation = true;
     }
   }
 
@@ -247,7 +246,6 @@ export class MapMarkerView extends BaseView {
   }
 
   destroy() {
-    //this.marker.hasPhysicalLocation = false;
     this.cluster.removeLayer(this.marker);
   }
 

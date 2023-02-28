@@ -6,7 +6,6 @@ import { toString as _toString } from '../utils';
 import { MapMarkerPresenter } from './presenter/map/marker';
 import { MapUI } from './mapui';
 import { getPopup } from './view/map/default_popup';
-import { ExtendedMarker } from './map';
 
 export class MarkerManager {
   private readonly popup: InitiativeRenderFunction;
@@ -116,9 +115,9 @@ export class MarkerManager {
     return this.unselectedClusterGroup;
   }
   
-  withPhysicalLocation(): ExtendedMarker[] {
+  withPhysicalLocation(): leaflet.Marker[] {
     return Object.values(this.markerForInitiative)
-      .map((mp) => mp?.view.marker.hasPhysicalLocation? mp.view.marker : undefined)
-      .filter((marker): marker is ExtendedMarker => marker !== undefined)
+      .map((mp) => mp?.hasPhysicalLocation? mp.view.marker : undefined)
+      .filter((marker): marker is leaflet.Marker => marker !== undefined)
   }
 }
