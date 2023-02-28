@@ -119,6 +119,11 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
       }
     };
   }
+
+  /// Refreshes the view
+  refreshView() {
+    this.view.refresh();
+  }
 }
 
 

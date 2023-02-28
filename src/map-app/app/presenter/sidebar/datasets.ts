@@ -1,22 +1,25 @@
 import { DataLoaderMap, DataServices } from '../../model/dataservices';
 import { InitiativeObj } from '../../model/initiative';
 import { DatasetsSidebarView } from '../../view/sidebar/datasets';
+import { SidebarPresenter } from '../sidebar';
 import { BaseSidebarPresenter } from './base';
 
 export class DatasetsSidebarPresenter extends BaseSidebarPresenter {
-  mixedId = "all";
+  readonly view: DatasetsSidebarView;
+  private readonly mixedId = "all";
 
   
-  constructor(readonly view: DatasetsSidebarView, readonly dataServices: DataServices) {
-    super(view.parent.presenter);
+  constructor(readonly parent: SidebarPresenter) {
+    super(parent);
+    this.view = new DatasetsSidebarView(this);
   }
   
   getDatasets(): DataLoaderMap<InitiativeObj> {
-    return this.dataServices.getDatasets();
+    return this.parent.mapui.dataServices.getDatasets();
   }
   
   getDefault(): string {
-    let val = this.dataServices.getCurrentDatasets();
+    let val = this.parent.mapui.dataServices.getCurrentDatasets();
     return val === true? "all" : val;
   }
   
@@ -32,6 +35,6 @@ export class DatasetsSidebarPresenter extends BaseSidebarPresenter {
   //remove initiatives from menu on the side
   //remove initiatives from map
   changeDatasets(dataset: string | true) {
-    this.dataServices.reset(dataset); // simply delegate
+    this.parent.mapui.dataServices.reset(dataset); // simply delegate
   };
 }
