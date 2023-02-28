@@ -8,7 +8,7 @@ import { DatasetsSidebarView } from './sidebar/datasets';
 import { DirectorySidebarView } from './sidebar/directory';
 import { InitiativesSidebarView } from './sidebar/initiatives';
 import { MarkerViewFactory } from './map/markerviewfactory';
-import { MapPresenterFactory } from '../presenter/map';
+import { MapUI } from '../mapui';
 import { DataServices } from '../model/dataservices';
 import { Dictionary } from '../../common_types';
 import { Config } from '../model/config';
@@ -23,14 +23,14 @@ export class SidebarView extends BaseView {
               readonly config: Config,
               readonly dataServices: DataServices,
               readonly markerView: MarkerViewFactory,
-              readonly mapPresenterFactory: MapPresenterFactory,
+              readonly mapui: MapUI,
               readonly sidebarButtonColour: string ) {
     super();
     this.labels = labels;
     this.config = config;
     this.dataServices = dataServices;
     this.markerView = markerView;
-    this.mapPresenterFactory = mapPresenterFactory;
+    this.mapui = mapui;
     this.sidebarButtonColour = sidebarButtonColour;
 
     this.presenter = new SidebarPresenter(
@@ -142,7 +142,7 @@ export class SidebarView extends BaseView {
       this.sidebar.directory = new DirectorySidebarView(this, this.labels, this.config, this.dataServices, this.markerView);
 
     if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(this, this.config, this.labels, this.dataServices, this.mapPresenterFactory);
+      this.sidebar.initiatives = new InitiativesSidebarView(this, this.config, this.labels, this.dataServices, this.mapui);
 
     if(this.presenter.showingAbout())
       this.sidebar.about = new AboutSidebarView(this, this.labels, this.config);

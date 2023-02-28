@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
-import { MapPresenterFactory } from '../../presenter/map';
+import { MapUI } from '../../mapui';
 import { DataServices } from '../../model/dataservices';
 import { Dictionary } from '../../../common_types';
 import { Config } from '../../model/config';
@@ -24,9 +24,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
               readonly config: Config,
               readonly labels: Dictionary,
               readonly dataServices: DataServices,
-              readonly mapPresenterFactory: MapPresenterFactory) {
+              readonly mapui: MapUI) {
     super();
-    this.presenter = new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory);
+    this.presenter = new InitiativesSidebarPresenter(this, labels, config, dataServices, mapui);
   }
 
 	populateFixedSelection(selection: d3Selection) {
@@ -217,7 +217,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
-		const currentFilters = this.mapPresenterFactory.getFilters();
+		const currentFilters = this.mapui.getFilters();
 		const item = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
@@ -246,8 +246,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
       	this.presenter.performSearchNoText();
 		}
 
-		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
-		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull()
+		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapui.getFiltered());
+		const activeFilterCategories = this.mapui.getFiltersFull()
       .map(filter => filter.verboseName)
       .filter((name): name is string => name != undefined)
       .map(name => name.split(":")[0]);
@@ -284,7 +284,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			let alternatePossibleFilterValues: unknown[] = [];
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
 				alternatePossibleFilterValues = this.dataServices.getAlternatePossibleFilterValues(
-					this.mapPresenterFactory.getFiltersFull(), field);
+					this.mapui.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {
 				const [id, label] = entry;

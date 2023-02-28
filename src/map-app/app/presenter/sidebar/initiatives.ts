@@ -2,7 +2,7 @@ import { Dictionary } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
 import { DataServices, MultiPropDef, VocabPropDef } from '../../model/dataservices';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
-import { MapPresenterFactory } from '../map';
+import { MapUI } from '../../mapui';
 import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
 import { Config } from '../../model/config';
@@ -14,7 +14,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly config: Config;
   readonly dataServices: DataServices;
   readonly labels: Partial<Record<string, string>>;
-  readonly map: MapPresenterFactory;
+  readonly map: MapUI;
   
   _eventbusRegister(): void {
     EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
@@ -26,7 +26,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Search.changeSearchText.sub(text => this.changeSearchText(text));
   }
 
-  constructor(public view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapPresenterFactory) {
+  constructor(public view: InitiativesSidebarView, labels: Dictionary, config: Config, dataServices: DataServices, map: MapUI) {
     if (!view.parent.presenter)
       throw new Error(`Can't construct an instance with a parent view which has no presenter`);
     super(view.parent.presenter);
@@ -34,7 +34,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this.dataServices = dataServices;
     // a lookup for labels of buttons and titles
     this.labels = labels;
-    // a MapPresenterFactory
+    // the MapUI
     this.map = map;
     this._eventbusRegister();
   }
