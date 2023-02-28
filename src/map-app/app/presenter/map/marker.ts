@@ -12,7 +12,8 @@ export class MapMarkerPresenter extends BasePresenter {
   
   constructor(readonly mapUI: MapUI,
               readonly initiative: Initiative,
-              readonly popup: InitiativeRenderFunction) {
+              readonly popup: InitiativeRenderFunction,
+              public hasPhysicalLocation: boolean = false) {
     super();
     this.view = new MapMarkerView(this);
   }

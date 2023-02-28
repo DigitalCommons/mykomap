@@ -7,7 +7,6 @@ import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
 import { MapUI } from '../mapui';
-import { ExtendedMarker } from '../map';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
@@ -105,7 +104,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   onInitiativeNew(initiative: Initiative) {
-    const marker = this.view.addMarker(initiative).view.marker as ExtendedMarker; // Coercion!
+    this.view.addMarker(initiative);
   }
   
   refreshInitiative(initiative: Initiative) {
