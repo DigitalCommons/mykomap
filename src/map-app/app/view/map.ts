@@ -39,7 +39,6 @@ export type Map = leaflet.Map & ActiveMap & ContextMap;
 
 export class MapView extends BaseView {
   map?: Map;
-  private flag: boolean = false;
   private _settingActiveArea: boolean = false;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
