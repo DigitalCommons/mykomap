@@ -1,41 +1,41 @@
-import { Dictionary, Point2d } from '../../../common_types';
-import { MapMarkerView } from './marker';
+import { Dictionary } from '../../../common_types';
 import * as leaflet from 'leaflet';
 import { InitiativeRenderFunction } from '../../model/config_schema';
-import { DataServices } from '../../model/dataservices';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
-import { Map } from '../../map';
+import { MapMarkerPresenter } from '../../presenter/map/marker';
+import { MapUI } from '../../mapui';
+import { getPopup } from './default_popup';
 
 export class MarkerViewFactory {
-
+  private readonly popup: InitiativeRenderFunction;
+  
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
-  markerForInitiative: Dictionary<MapMarkerView> = {};
+  markerForInitiative: Dictionary<MapMarkerPresenter> = {};
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
   hiddenClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
   unselectedClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
 
-  constructor(readonly defaultLatLng: Point2d,
-              readonly popup: InitiativeRenderFunction,
-              readonly dataServices: DataServices) {
+  constructor(readonly mapUI: MapUI) {
+    this.popup = mapUI.config.getCustomPopup() || getPopup;
   }
 
   setSelected(initiative: Initiative) {
     const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.setSelected(initiative);
+    this.markerForInitiative[uri]?.view.setSelected(initiative);
   }
   setUnselected(initiative: Initiative) {
     const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.setUnselected(initiative);
+    this.markerForInitiative[uri]?.view.setUnselected(initiative);
   }
 
   destroyAll() {
     let initiatives = Object.keys(this.markerForInitiative);
     initiatives.forEach(initiative => {
-      this.markerForInitiative[initiative]?.destroy();
+      this.markerForInitiative[initiative]?.view.destroy();
     });
     this.markerForInitiative = {};
   }
@@ -45,8 +45,8 @@ export class MarkerViewFactory {
     initiatives.forEach(initiative => {
       const uri = _toString(initiative.uri);      
       const marker = this.markerForInitiative[uri];
-      if (marker && !marker.isVisible())
-        marker.show();
+      if (marker && !marker.view.isVisible())
+        marker.view.show();
     });
 
   }
@@ -55,17 +55,17 @@ export class MarkerViewFactory {
     initiatives.forEach(initiative => {
       const uri = _toString(initiative.uri);      
       if (this.markerForInitiative[uri])
-        this.markerForInitiative[uri]?.destroy();
+        this.markerForInitiative[uri]?.view.destroy();
     });
   }
 
-  createMarker(map: Map, initiative: Initiative) {
+  createMarker(initiative: Initiative) {
     const uri = _toString(initiative.uri, null);
     if (uri === null)
       throw new Error(`initiative is missing the mandatory uri property: ${initiative}`);
-    const view = new MapMarkerView(this.dataServices, this.popup, map, initiative, this.defaultLatLng, this);
-    this.markerForInitiative[uri] = view;
-    return view;
+    const presenter = new MapMarkerPresenter(this.mapUI, initiative, this.popup);
+    this.markerForInitiative[uri] = presenter;
+    return presenter;
   }
 
   refreshMarker(initiative: Initiative) {
@@ -79,7 +79,7 @@ export class MarkerViewFactory {
       return;
     }
     
-    marker.marker.setPopupContent(marker.presenter.getInitiativeContent(initiative));
+    marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
   }
 
   setSelectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
@@ -93,12 +93,12 @@ export class MarkerViewFactory {
 
   showTooltip(initiative: Initiative) {
     const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.showTooltip(initiative);
+    this.markerForInitiative[uri]?.view.showTooltip(initiative);
   }
   
   hideTooltip(initiative: Initiative) {
     const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.hideTooltip(initiative);
+    this.markerForInitiative[uri]?.view.hideTooltip(initiative);
   }
 
   getInitiativeContent(initiative: Initiative) {
