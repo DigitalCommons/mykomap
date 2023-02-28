@@ -2,16 +2,11 @@ import * as leaflet from 'leaflet';
 import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
-import { DataServices } from '../../model/dataservices';
-import { InitiativeRenderFunction } from '../../model/config_schema';
-import { ExtendedMarker, Map } from '../../map';
-import { Point2d } from '../../../common_types';
+import { ExtendedMarker } from '../../map';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
-import { MarkerViewFactory } from './markerviewfactory';
 
 export class MapMarkerView extends BaseView {
-  readonly presenter: MapMarkerPresenter;
   readonly marker: ExtendedMarker;
   
   // Using font-awesome icons, the available choices can be seen here:
@@ -20,15 +15,11 @@ export class MapMarkerView extends BaseView {
   cluster: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
   
-  constructor(readonly dataServices: DataServices,
-              readonly popup: InitiativeRenderFunction,
-              readonly mapObj: Map,
-              readonly initiative: Initiative,
-              readonly defaultLatLng: Point2d,
-              readonly factory: MarkerViewFactory) {
+  constructor(readonly presenter: MapMarkerPresenter) {
+              
     super();
-    this.presenter = new MapMarkerPresenter(this, dataServices, popup);
-
+    const initiative = this.presenter.initiative;
+    
     // options argument overrides our default options:
     const opts = Object.assign(this.dfltOptions, {
       // icon: this.presenter.getIcon(initiative),
@@ -50,7 +41,7 @@ export class MapMarkerView extends BaseView {
 //         cluster: false // FIXME commented as fails typechecking, and I can't find any evidence that this does something useful
       });
 
-      this.marker = leaflet.marker(this.defaultLatLng, {
+      this.marker = leaflet.marker(this.presenter.mapUI.config.getDefaultLatLng(), {
         icon: icon,
 //        initiative: this.initiative // FIXME this *seems* to be unused, and creates type checking errors
       }) as ExtendedMarker;
@@ -65,14 +56,14 @@ export class MapMarkerView extends BaseView {
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
 
-      this.cluster = this.factory.hiddenClusterGroup;
+      this.cluster = this.presenter.mapUI.markerViewFactory.hiddenClusterGroup;
       //this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = false;
     }
     else {
       // FIXME this should not be hardwiring primaryActivity!
       // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
-      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
+      const primaryActivity: any = _toString(initiative.primaryActivity, null);
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
         markerColor: primaryActivity !== null
@@ -104,7 +95,7 @@ export class MapMarkerView extends BaseView {
       this.marker.on("click", (e) => {
         this.onClick(e);
       });
-      this.cluster = this.factory.unselectedClusterGroup;
+      this.cluster = this.presenter.mapUI.markerViewFactory.unselectedClusterGroup;
       this.cluster.addLayer(this.marker);
       this.marker.hasPhysicalLocation = true;
     }
@@ -126,17 +117,17 @@ export class MapMarkerView extends BaseView {
       console.log("shift");
     }
     if (e.originalEvent.shiftKey) {
-      this.presenter.notifySelectionToggled(this.initiative);
+      this.presenter.notifySelectionToggled(this.presenter.initiative);
     } else {
-      console.log(this.initiative);
+      console.log(this.presenter.initiative);
       // this.presenter.notifySelectionSet(this.initiative);
-      EventBus.Directory.initiativeClicked.pub(this.initiative);
+      EventBus.Directory.initiativeClicked.pub(this.presenter.initiative);
     }
   }
 
   setUnselected(initiative: Initiative) {
     //close pop-up
-    this.mapObj.closePopup();
+    this.presenter.mapUI.map?.closePopup();
     //close information on the left hand side (for smaller screens)
     EventBus.Sidebar.hideInitiative.pub();
     //reset the map vars and stop the zoom event from triggering selectInitiative ({target}) method
@@ -145,7 +136,7 @@ export class MapMarkerView extends BaseView {
     if (initiative.hasLocation()) {
       // FIXME this should not be hardwiring primaryActivity!
       // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
-      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
+      const primaryActivity: any = _toString(this.presenter.initiative.primaryActivity, null);
       this.marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
@@ -162,6 +153,7 @@ export class MapMarkerView extends BaseView {
   }
 
   setSelected(initiative: Initiative) {
+    const factory = this.presenter.mapUI.markerViewFactory;
     const marker = initiative.__internal.marker;
     if (!(marker instanceof leaflet.Marker)) {
       console.error("initiative has no marker reference", initiative);
@@ -173,7 +165,7 @@ export class MapMarkerView extends BaseView {
     if (initiative.hasLocation()) {
       // FIXME this should not be hardwiring primaryActivity!
       // FIXME casting to 'any' for now as the types defined for markerColor do not include the values provided!
-      const primaryActivity: any = _toString(this.initiative.primaryActivity, null);
+      const primaryActivity: any = _toString(this.presenter.initiative.primaryActivity, null);
       marker.setIcon(
         leaflet.AwesomeMarkers.icon({
           prefix: "fa",
@@ -192,22 +184,22 @@ export class MapMarkerView extends BaseView {
     
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     // @ts-ignore the sneaky access of a private member
-    else if (this.factory.unselectedClusterGroup._inZoomAnimation) {
-      this.factory.unselectedClusterGroup.on("animationend", _ => {
+    else if (factory.unselectedClusterGroup._inZoomAnimation) {
+      factory.unselectedClusterGroup.on("animationend", _ => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
-        if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker
+        if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker
         ) {
           if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
             marker.__parent.spiderfy();
           }
         }
         marker.openPopup();
-        this.factory.unselectedClusterGroup.off("animationend");
+        factory.unselectedClusterGroup.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
-      if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
+      if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
         if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
           marker.__parent.spiderfy();
         }
@@ -217,14 +209,14 @@ export class MapMarkerView extends BaseView {
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = (e: leaflet.LeafletEvent) => {
-      if (this.factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
+      if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
         this.setUnselected(initiative);
         EventBus.Directory.initiativeClicked.pub(undefined); // deselects
-        this.factory.unselectedClusterGroup.off("animationend", deselectInitiative);
+        factory.unselectedClusterGroup.off("animationend", deselectInitiative);
       }
     }
     //check for clustering at each animation of the layer
-   this.factory.unselectedClusterGroup.on("animationend", deselectInitiative);
+   factory.unselectedClusterGroup.on("animationend", deselectInitiative);
 
   }
 
@@ -237,7 +229,7 @@ export class MapMarkerView extends BaseView {
 
     // This variation spiderfys the cluster to which the marker belongs.
     // This only works if selectedClusterGroup is actually a ClusterGroup!
-    // const cluster = this.factory.unselectedClusterGroup.getVisibleParent(this.marker);
+    // const cluster = factory.unselectedClusterGroup.getVisibleParent(this.marker);
     // if (cluster && typeof cluster.spiderfy === 'function') {
     //   cluster.spiderfy();
     // }

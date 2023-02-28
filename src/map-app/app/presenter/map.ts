@@ -105,7 +105,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   onInitiativeNew(initiative: Initiative) {
-    const marker = this.view.addMarker(initiative).marker as ExtendedMarker; // Coercion!
+    const marker = this.view.addMarker(initiative).view.marker as ExtendedMarker; // Coercion!
 
     if (marker.hasPhysicalLocation) this.mapUI.allMarkers.push(marker);
   }

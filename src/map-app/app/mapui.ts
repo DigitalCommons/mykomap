@@ -6,7 +6,6 @@ import { MapPresenter } from "./presenter/map";
 import { MarkerViewFactory } from "./view/map/markerviewfactory";
 import { Config } from "./model/config";
 import { DataServices } from "./model/dataservices";
-import { getPopup } from "./view/map/default_popup";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
@@ -28,8 +27,7 @@ export class MapUI {
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
-    const popup = this.config.getCustomPopup() || getPopup;
-    this.markerViewFactory = new MarkerViewFactory(this.config.getDefaultLatLng(), popup, this.dataServices);
+    this.markerViewFactory = new MarkerViewFactory(this);
     this.labels = this.dataServices.getFunctionalLabels();
     
     // This is here to resolve a circular dependency loop - MapUI needs the SidebarView
