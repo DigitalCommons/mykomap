@@ -5,7 +5,7 @@ import { InitiativeRenderFunction } from '../../model/config_schema';
 import { DataServices } from '../../model/dataservices';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
-import { Map } from '../map';
+import { Map } from '../../map';
 
 export class MarkerViewFactory {
 

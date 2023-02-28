@@ -6,7 +6,7 @@ import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
 import { DataServices } from '../../model/dataservices';
 import { InitiativeRenderFunction } from '../../model/config_schema';
-import { Map } from '../map';
+import { Map } from '../../map';
 import { Point2d } from '../../../common_types';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
