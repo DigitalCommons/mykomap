@@ -3,13 +3,13 @@ import { Dictionary } from "../common_types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
-import { SidebarView } from "./view/sidebar";
 import { MarkerViewFactory } from "./view/map/markerviewfactory";
 import { Config } from "./model/config";
 import { DataServices } from "./model/dataservices";
 import { getPopup } from "./view/map/default_popup";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
+import { SidebarPresenter } from "./presenter/sidebar";
 
 export class MapUI {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
@@ -22,28 +22,23 @@ export class MapUI {
   public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
-  readonly getSidebarView: (f: MapUI) => Promise<SidebarView>;
+  readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
   readonly markerViewFactory: MarkerViewFactory;
+  readonly labels: Dictionary;
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
     const popup = this.config.getCustomPopup() || getPopup;
     this.markerViewFactory = new MarkerViewFactory(this.config.getDefaultLatLng(), popup, this.dataServices);
+    this.labels = this.dataServices.getFunctionalLabels();
     
     // This is here to resolve a circular dependency loop - MapUI needs the SidebarView
     // when it runs, but SidebarView needs a link to the MapUI.
     // Maybe later the code can be untangled further so there is no loop.
-    this.getSidebarView = (mapUI: MapUI) => {
-      return new Promise<SidebarView>((resolve) => {
-        const sidebarView = new SidebarView(
-          this.dataServices.getFunctionalLabels(),
-          this.config,
-          this.dataServices,
-          this.markerViewFactory,
-          mapUI,
-          this.dataServices.getSidebarButtonColour()
-        );
-        resolve(sidebarView);
+    this.getSidebarPresenter = (mapUI: MapUI) => {
+      return new Promise<SidebarPresenter>((resolve) => {
+        const sidebarPresenter = new SidebarPresenter(mapUI);
+        resolve(sidebarPresenter);
       });
     };
   }

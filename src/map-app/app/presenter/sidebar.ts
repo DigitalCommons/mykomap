@@ -1,17 +1,24 @@
 import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
+import { MapUI } from '../mapui';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
 
 export class SidebarPresenter extends BasePresenter {
+  readonly view: SidebarView;
   readonly contentStack = new Stack();
+  readonly showDirectoryPanel: boolean;
+  readonly showSearchPanel: boolean;
+  readonly showAboutPanel: boolean;
+  readonly showDatasetsPanel: boolean;
 
-  constructor(readonly view: SidebarView,
-              readonly showDirectoryPanel: boolean,
-              readonly showSearchPanel: boolean,
-              readonly showAboutPanel: boolean,
-              readonly showDatasetsPanel: boolean) {
+  constructor(readonly mapui: MapUI) {
     super();
+    this.showDirectoryPanel = mapui.config.getShowDirectoryPanel();
+    this.showSearchPanel = mapui.config.getShowSearchPanel();
+    this.showAboutPanel = mapui.config.getShowAboutPanel();
+    this.showDatasetsPanel = mapui.config.getShowDatasetsPanel();
+    this.view = new SidebarView(this, mapui.dataServices.getSidebarButtonColour());
     this._eventbusRegister();
   }
   
