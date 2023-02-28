@@ -3,7 +3,7 @@ import { Dictionary } from "../common_types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
-import { MarkerViewFactory } from "./view/map/markerviewfactory";
+import { MarkerManager } from "./markermanager";
 import { Config } from "./model/config";
 import { DataServices } from "./model/dataservices";
 import { EventBus } from "../eventbus";
@@ -22,12 +22,12 @@ export class MapUI {
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
   readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
-  readonly markerViewFactory: MarkerViewFactory;
+  readonly markers: MarkerManager;
   readonly labels: Dictionary;
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
-    this.markerViewFactory = new MarkerViewFactory(this);
+    this.markers = new MarkerManager(this);
     this.labels = this.dataServices.getFunctionalLabels();
     
     // This is here to resolve a circular dependency loop - MapUI needs the SidebarView

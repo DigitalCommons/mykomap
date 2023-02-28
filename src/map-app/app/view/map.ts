@@ -7,7 +7,7 @@ import * as leaflet from 'leaflet';
 
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
-import { MarkerViewFactory } from "./map/markerviewfactory";
+import { MarkerManager } from "../markermanager";
 
 export class MapView extends BaseView {
   map?: Map;
@@ -17,7 +17,7 @@ export class MapView extends BaseView {
   private readonly dialogueHeight;
   private readonly dialogueWidth;
   private readonly labels: Dictionary;
-  private readonly markerViewFactory: MarkerViewFactory;
+  private readonly markers: MarkerManager;
   private selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
 
@@ -43,8 +43,8 @@ export class MapView extends BaseView {
   constructor(readonly presenter: MapPresenter) {
     super();
 
-    this.labels = presenter.mapUI.dataServices.getFunctionalLabels(),
-    this.markerViewFactory = presenter.mapUI.markerViewFactory;
+    this.labels = presenter.mapUI.dataServices.getFunctionalLabels();
+    this.markers = presenter.mapUI.markers;
 
     const dialogueSize = presenter.mapUI.dataServices.getDialogueSize();
     this.dialogueHeight = dialogueSize.height ?? '225px'; // MUST BE IN PX
@@ -149,36 +149,36 @@ export class MapView extends BaseView {
         .classed("logo", true);
     }
 
-    this.markerViewFactory.setSelectedClusterGroup(this.selectedClusterGroup);
-    this.markerViewFactory.setUnselectedClusterGroup(this.unselectedClusterGroup);
+    this.markers.setSelectedClusterGroup(this.selectedClusterGroup);
+    this.markers.setUnselectedClusterGroup(this.unselectedClusterGroup);
   }
 
   removeAllMarkers() {
-    this.markerViewFactory.destroyAll();
+    this.markers.destroyAll();
   }
 
   addMarker(initiative: Initiative) {
-    return this.markerViewFactory.createMarker(initiative);
+    return this.markers.createMarker(initiative);
   }
 
   refreshMarker(initiative: Initiative) {
-    this.markerViewFactory.refreshMarker(initiative);
+    this.markers.refreshMarker(initiative);
   }
 
   setSelected(initiative: Initiative) {
-    this.markerViewFactory.setSelected(initiative);
+    this.markers.setSelected(initiative);
   }
 
   setUnselected(initiative: Initiative) {
-    this.markerViewFactory.setUnselected(initiative);
+    this.markers.setUnselected(initiative);
   }
 
   showTooltip(initiative: Initiative) {
-    this.markerViewFactory.showTooltip(initiative);
+    this.markers.showTooltip(initiative);
   }
 
   hideTooltip(initiative: Initiative) {
-    this.markerViewFactory.hideTooltip(initiative);
+    this.markers.hideTooltip(initiative);
   }
 
   setZoom(zoom: number) {
@@ -190,7 +190,7 @@ export class MapView extends BaseView {
   }
 
   getClusterGroup() {
-    return this.markerViewFactory.getClusterGroup();
+    return this.markers.getClusterGroup();
   }
 
   setView(data: EventBus.Map.ZoomData) {

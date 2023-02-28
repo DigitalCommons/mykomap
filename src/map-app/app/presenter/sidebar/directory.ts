@@ -94,7 +94,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       // Populate the sidebar and hoghlight the iitiative in the directory
       this.view.populateInitiativeSidebar(
         initiative,
-        this.parent.mapui.markerViewFactory.getInitiativeContent(initiative) ?? ''
+        this.parent.mapui.markers.getInitiativeContent(initiative) ?? ''
       );
 
     }
