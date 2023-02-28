@@ -17,7 +17,6 @@ export class MapUI {
   filteredInitiativesUIDMap: Dictionary<Initiative> = {};
   verboseNamesMap: Dictionary = {};
   hidden: Initiative[] = [];
-  allMarkers: Marker[] = [];
   public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
