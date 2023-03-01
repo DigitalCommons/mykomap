@@ -1,8 +1,11 @@
 import * as d3 from 'd3';
 import '../map-app.css'; // Required to embed styles 
 import { Config } from './model/config';
+import { MapUI } from "../app/mapui";
+import { DataServices } from './model/dataservices';
 
-export function initView(config: Config): void {
+
+function insertPageTitle(config: Config): void {
   const lang = config.getLanguage();
   
   // We need to be careful to guard against weird characters, especially quotes,
@@ -43,16 +46,16 @@ export function initView(config: Config): void {
     const titleNode = d3.select("html head title");
     titleNode.text(title);
   }
-  
-  // @todo - make obsolete
-  d3.select("#about-btn")
-    .attr("title", "See information about this app in new tab")
-    .on("click", function() {
-      window.open(
-        "https://github.com/p6data-coop/ise-linked-open-data/blob/master/map-app/README.md",
-        "_blank"
-      );
-    });
 }
 
 
+export function initUI(config: Config, dataServices: DataServices) {
+  insertPageTitle(config);
+  
+  const mapui = new MapUI(
+    config,
+    dataServices,
+  );
+
+  mapui.createMap();
+}

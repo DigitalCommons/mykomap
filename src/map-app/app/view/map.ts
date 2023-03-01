@@ -1,50 +1,23 @@
 import { Box2d, Dictionary } from "../../common_types";
-import { MapPresenter, MapPresenterFactory } from "../presenter/map";
-import { MarkerViewFactory } from "./map/marker";
-import {  BaseView  } from './base';
-
+import { MapPresenter } from "../presenter/map";
+import { BaseView } from './base';
+import { Map } from '../map';
 import * as d3 from 'd3';
 import * as leaflet from 'leaflet';
-import 'leaflet-active-area';
-//import * as contextmenu from 'leaflet-contextmenu';
 
-/* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
-import 'leaflet/dist/leaflet.css';
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
-
-// This is a hack added to allow leaflet icons be the right size
-// @ts-ignore 
-delete leaflet.Icon.Default.prototype._getIconUrl;
-leaflet.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
-});
-
-// Methods for leaflet-contextmenu
-interface ContextMap {
-  
-}
-// Methods for leaflet-active-area
-// This plug-in doesn't have any typescript annotations published.
-interface ActiveMap {
-  setActiveArea(
-    css: { position: string; top: string; left: string; right: string; bottom: string;},
-    refocusMap: boolean, animateRefocus: boolean
-  ): void;
-}
-
-export type Map = leaflet.Map & ActiveMap & ContextMap;
+import { MarkerManager } from "../markermanager";
 
 export class MapView extends BaseView {
-  readonly presenter: MapPresenter;
-  
   map?: Map;
-  private flag: boolean = false;
   private _settingActiveArea: boolean = false;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
+  private readonly dialogueHeight;
+  private readonly dialogueWidth;
+  private readonly labels: Dictionary;
+  private readonly markers: MarkerManager;
   private selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
 
@@ -67,14 +40,17 @@ export class MapView extends BaseView {
   /// Initialises the view, but does not create the map yet.
   ///
   /// To do that, call #createMap
-  constructor(mapPresenterFactory: MapPresenterFactory,
-              readonly labels: Dictionary,
-              readonly dialogueHeight: string = '225px', // MUST BE IN PX
-              readonly dialogueWidth: string = '35vw',
-              readonly descriptionRatio: number = 2.5,
-              readonly markerViewFactory: MarkerViewFactory) {
+  constructor(readonly presenter: MapPresenter) {
     super();
-    this.presenter = mapPresenterFactory.createPresenter(this);
+
+    this.labels = presenter.mapUI.dataServices.getFunctionalLabels();
+    this.markers = presenter.mapUI.markers;
+
+    const dialogueSize = presenter.mapUI.dataServices.getDialogueSize();
+    this.dialogueHeight = dialogueSize.height ?? '225px'; // MUST BE IN PX
+    this.dialogueWidth = dialogueSize.width ?? '35vw';
+    const descriptionRatio: number = dialogueSize.descriptionRatio ?? 2.5;
+
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
@@ -173,39 +149,36 @@ export class MapView extends BaseView {
         .classed("logo", true);
     }
 
-    this.markerViewFactory.setSelectedClusterGroup(this.selectedClusterGroup);
-    this.markerViewFactory.setUnselectedClusterGroup(this.unselectedClusterGroup);
+    this.markers.setSelectedClusterGroup(this.selectedClusterGroup);
+    this.markers.setUnselectedClusterGroup(this.unselectedClusterGroup);
   }
 
   removeAllMarkers() {
-    this.markerViewFactory.destroyAll();
+    this.markers.destroyAll();
   }
 
   addMarker(initiative: Initiative) {
-    const map = this.map;
-    if (!map)
-      throw new Error("Map field not yet initialised");
-    return this.markerViewFactory.createMarker(map, initiative);
+    return this.markers.createMarker(initiative);
   }
 
   refreshMarker(initiative: Initiative) {
-    this.markerViewFactory.refreshMarker(initiative);
+    this.markers.refreshMarker(initiative);
   }
 
   setSelected(initiative: Initiative) {
-    this.markerViewFactory.setSelected(initiative);
+    this.markers.setSelected(initiative);
   }
 
   setUnselected(initiative: Initiative) {
-    this.markerViewFactory.setUnselected(initiative);
+    this.markers.setUnselected(initiative);
   }
 
   showTooltip(initiative: Initiative) {
-    this.markerViewFactory.showTooltip(initiative);
+    this.markers.showTooltip(initiative);
   }
 
   hideTooltip(initiative: Initiative) {
-    this.markerViewFactory.hideTooltip(initiative);
+    this.markers.hideTooltip(initiative);
   }
 
   setZoom(zoom: number) {
@@ -217,7 +190,7 @@ export class MapView extends BaseView {
   }
 
   getClusterGroup() {
-    return this.markerViewFactory.getClusterGroup();
+    return this.markers.getClusterGroup();
   }
 
   setView(data: EventBus.Map.ZoomData) {

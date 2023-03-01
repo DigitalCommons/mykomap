@@ -2,13 +2,9 @@
 import * as d3 from "d3";
 import { Dictionary } from "../../../common_types";
 import { EventBus } from "../../../eventbus";
-import { Config } from "../../model/config";
-import { DataServices } from "../../model/dataservices";
 import { Initiative } from "../../model/initiative";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
-import { MarkerViewFactory } from "../map/marker";
-import { SidebarView } from "../sidebar";
 import { BaseSidebarView } from "./base";
 import { toString as _toString } from "../../../utils";
 
@@ -21,14 +17,12 @@ function labelToTag(uri: string) {
 
 
 export class DirectorySidebarView extends BaseSidebarView {
-  readonly presenter: DirectorySidebarPresenter;
   
   hasHistoryNavigation: boolean = false;
   dissapear?: number;
 
-  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly config: Config, readonly dataServices: DataServices, readonly markerView: MarkerViewFactory) {
+  constructor(readonly presenter: DirectorySidebarPresenter) {
     super();
-    this.presenter = new DirectorySidebarPresenter(this, config, dataServices, markerView);
   }
 
 
@@ -100,11 +94,11 @@ export class DirectorySidebarView extends BaseSidebarView {
     let list = selection
       .append("ul")
       .classed("sea-directory-list", true)
-      .classed("colours", this.presenter.doesDirectoryHaveColours());
+      .classed("colours", this.presenter.parent.mapui.config.doesDirectoryHaveColours());
 
     // key may be null, for the special 'Every item' case
     const addItem = (field: string, key?: string)  => {
-      let valuesByName = this.presenter.getVerboseValuesForFields()[field];
+      let valuesByName = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[field];
       let label = key;
       let tag = key;
 
@@ -117,7 +111,7 @@ export class DirectorySidebarView extends BaseSidebarView {
 
       if (key == null) {
         tag = 'all-entries';
-        label = fieldIsCountries(field) ? this.labels.allCountries : this.labels.allEntries;
+        label = fieldIsCountries(field) ? this.presenter.parent.mapui.labels.allCountries : this.presenter.parent.mapui.labels.allEntries;
       }
       else {
         tag = uriToTag(key);
@@ -145,7 +139,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .forEach(key => addItem(field, key));
     }
 
-    const registeredValues = this.presenter.getRegisteredValues();
+    const registeredValues = this.presenter.parent.mapui.dataServices.getAggregatedData().registeredValues;
     // Just run om the first property for now
     // TODO: Support user selectable fields
     for (let field in registeredValues) {
@@ -162,8 +156,8 @@ export class DirectorySidebarView extends BaseSidebarView {
 
   // selectionKey may be null, for the special 'Every item' case
   listInitiativesForSelection(directoryField: string, selectionKey?: string) {
-    let that = this;
-    let initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
+    const labels = this.presenter.parent.mapui.labels;
+    const initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
       directoryField,
       selectionKey
     );
@@ -178,22 +172,22 @@ export class DirectorySidebarView extends BaseSidebarView {
     let selectionLabel = selectionKey;
     if (selectionLabel == null) {
       if (fieldIsCountries(directoryField))
-        selectionLabel = this.labels?.allCountries ?? '';
+        selectionLabel = this.presenter.parent.mapui.labels?.allCountries ?? '';
       else
-        selectionLabel = this.labels?.allEntries ?? '';
+        selectionLabel = this.presenter.parent.mapui.labels?.allEntries ?? '';
     }
 
     //deselect all
-    that.presenter.clearLatestSelection();
+    this.presenter.clearLatestSelection();
 
-    that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
+    this.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
 
     const sidebar = d3.select("#map-app-sidebar");
     const sidebarButton = d3.select("#map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", this.labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", labels?.hideDirectory ?? '');
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
-    const values = this.presenter.getVerboseValuesForFields()[directoryField];
+    const values = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[directoryField];
     
     if (!initiativeListSidebar.empty() && !sidebarButton.empty()) {
       initiativeListSidebar.insert(() => sidebarButton.node(),
@@ -227,7 +221,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
-      .attr("title", this.labels?.showSearch ?? '')
+      .attr("title", labels?.showSearch ?? '')
       .on("click", function () {
 
         EventBus.Sidebar.hideInitiativeList.pub();
@@ -243,7 +237,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", this.labels?.showInfo ?? '')
+      .attr("title", labels?.showInfo ?? '')
       .on("click", function () {
         EventBus.Sidebar.hideInitiativeList.pub();
         EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -258,7 +252,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       sidebarBtnHolder
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", this.labels?.showDatasets ?? '')
+        .attr("title", labels?.showDatasets ?? '')
         .on("click", function () {
           EventBus.Sidebar.hideInitiativeList.pub();
           EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -273,9 +267,9 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", this.labels.close + title)
-      .on("click", function () {
-        that.presenter.removeFilters(directoryField + selectionKey);
+      .attr("title", labels.close + title)
+      .on("click", () => {
+        this.presenter.removeFilters(directoryField + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
@@ -285,9 +279,9 @@ export class DirectorySidebarView extends BaseSidebarView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
-      .attr("title", this.labels.close + title)
-      .on("click", function () {
-        that.presenter.removeFilters(directoryField + selectionKey);
+      .attr("title", labels.close + title)
+      .on("click", () => {
+        this.presenter.removeFilters(directoryField + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
@@ -296,8 +290,8 @@ export class DirectorySidebarView extends BaseSidebarView {
       .append("h2")
       .classed("sea-field", true)
       .text(title)
-      .on("click", function () {
-        that.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
+      .on("click", () => {
+        this.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
       });
     const list = selection.append("ul").classed("sea-initiative-list", true);
     for (let initiative of initiatives) {
@@ -322,11 +316,11 @@ export class DirectorySidebarView extends BaseSidebarView {
         .on("click", function () {
           EventBus.Directory.initiativeClicked.pub(initiative);
         })
-        .on("mouseover", function (_) {
-          that.presenter.onInitiativeMouseoverInSidebar(initiative);
+        .on("mouseover", () => {
+          this.presenter.onInitiativeMouseoverInSidebar(initiative);
         })
-        .on("mouseout", function (_) {
-          that.presenter.onInitiativeMouseoutInSidebar(initiative);
+        .on("mouseout", () => {
+          this.presenter.onInitiativeMouseoutInSidebar(initiative);
         });
 
 
@@ -339,7 +333,7 @@ export class DirectorySidebarView extends BaseSidebarView {
           if (target?.className === "w3-btn")
             return;
           if (event.propertyName === "transform")
-            this.parent.updateSidebarWidth();
+            this.presenter.parent.view.updateSidebarWidth();
         },
         false
       )
@@ -360,7 +354,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     initiativeContentElement
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", `${this.labels?.close ?? ''} ${initiative.name}`)
+      .attr("title", `${this.presenter.parent.mapui.labels?.close ?? ''} ${initiative.name}`)
       .on("click", function () {
         EventBus.Directory.initiativeClicked.pub(undefined);
       })

@@ -1,120 +1,20 @@
-import { BasePresenter } from '../presenter';
+import { BasePresenter } from './base';
 import * as d3 from 'd3';
 import { EventBus } from '../../eventbus';
 import * as leaflet from 'leaflet';
-import { Config } from '../model/config_schema';
-import { DataServices } from '../model/dataservices';
-import { ExtendedMarker, MarkerViewFactory } from '../view/map/marker';
-import { SidebarView } from '../view/sidebar';
 import { Dictionary } from '../../common_types';
-import { MapView, Map } from '../view/map';
-import { Marker } from 'leaflet';
+import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
-
-export class MapPresenterFactory {
-  initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
-  public loadedInitiatives: Initiative[] = [];
-  filtered: Dictionary<Initiative[]> = {};
-  filteredInitiativesUIDMap: Dictionary<Initiative> = {};
-  verboseNamesMap: Dictionary = {};
-  hidden: Initiative[] = [];
-  allMarkers: Marker[] = [];
-  public map?: Map;
-  
-  constructor(readonly config: Config,
-              readonly dataservices: DataServices,
-              readonly markerView: MarkerViewFactory,
-              // for deferred load of sidebarView - breaking a recursive dep
-              readonly getSidebarView: (f: MapPresenterFactory) => Promise<SidebarView> ) {
-  }
-
-  onNewInitiatives() {
-    this.initiativesOutsideOfFilterUIDMap = Object.assign(
-      {}, this.dataservices.getAggregatedData().initiativesByUid
-    );
-    this.loadedInitiatives = this.dataservices.getAggregatedData().loadedInitiatives;
-  }
-  
-  createPresenter(view: MapView): MapPresenter {
-    const p = new MapPresenter(this, view);
-    EventBus.Initiatives.datasetLoaded.sub(() => {
-      this.onNewInitiatives();
-      p.onInitiativeDatasetLoaded();
-    });
-    EventBus.Initiative.created.sub(initiative => p.onInitiativeNew(initiative));
-    EventBus.Initiative.refreshed.sub(initiative => {
-      this.onNewInitiatives();
-      p.refreshInitiative(initiative);
-    });
-    EventBus.Initiatives.reset.sub(() => {
-        this.onNewInitiatives();
-        p.onInitiativeReset();
-    });
-    EventBus.Initiatives.loadComplete.sub(() => {
-      this.onNewInitiatives();
-      p.onInitiativeLoadComplete();
-      p.onInitiativeComplete();
-    });
-    EventBus.Initiatives.loadStarted.sub(() => p.onInitiativeLoadMessage());
-    EventBus.Initiatives.loadFailed.sub(error => p.onInitiativeLoadMessage(error));
-    
-    EventBus.Markers.needToShowLatestSelection.sub(initiative => p.onMarkersNeedToShowLatestSelection(initiative));
-    EventBus.Map.needsToBeZoomedAndPanned.sub(data => p.onMapNeedsToBeZoomedAndPanned(data));
-    EventBus.Map.needToShowInitiativeTooltip.sub(initiative => p.onNeedToShowInitiativeTooltip(initiative));
-    EventBus.Map.needToHideInitiativeTooltip.sub(initiative => p.onNeedToHideInitiativeTooltip(initiative));
-    EventBus.Map.setZoom.sub(zoom => p.setZoom(zoom));
-    EventBus.Map.setActiveArea.sub(area => p.setActiveArea(area.offset));
-    EventBus.Map.fitBounds.sub(bounds => p.onBoundsRequested(bounds));
-    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => p.selectAndZoomOnInitiative(zoom));
-    EventBus.Map.addFilter.sub(filter => p.addFilter(filter));
-    EventBus.Map.removeFilter.sub(filter => p.removeFilter(filter));
-    EventBus.Map.removeFilters.sub(() => p.removeFilters());
-    EventBus.Map.addSearchFilter.sub(filter => p.addSearchFilter(filter));
-    EventBus.Map.removeSearchFilter.sub(() => p.removeSearchFilter());
-
-    return p;
-  }
-  
-  //should return an array of unique initiatives in filters
-  getFiltered(): Initiative[] {
-    return Object.values(this.filteredInitiativesUIDMap)
-      .filter((i): i is Initiative => i !== undefined);
-  }
-
-  getFilteredMap() {
-    return this.filteredInitiativesUIDMap;
-  }
-
-  getFilters(){
-    return Object.keys(this.filtered);
-  }
-
-  getFiltersFull(): EventBus.Map.Filter[] {
-    const filterArray: EventBus.Map.Filter[] = []
-    
-    for(let filterName in this.verboseNamesMap){
-      filterArray.push({
-        filterName: filterName,
-        verboseName: this.verboseNamesMap[filterName] ?? '',
-        initiatives: this.filtered[filterName] ?? []
-      })
-    }
-
-    return filterArray;
-  }
-
-  getFiltersVerbose(): string[] {
-    return Object.values(this.verboseNamesMap)
-      .filter((i): i is string => i !== undefined);
-  }
-}
+import { MapUI } from '../mapui';
 
 export class MapPresenter extends BasePresenter {
+  readonly view: MapView;
   previouslySelected: Initiative[] = [];
   
-  constructor(readonly factory: MapPresenterFactory, readonly view: MapView) {
+  constructor(readonly mapUI: MapUI) {
     super();
+    this.view = new MapView(this);
   }
     
   static copyTextToClipboard(text: string) {
@@ -166,11 +66,11 @@ export class MapPresenter extends BasePresenter {
   }
 
   getTileUrl() {
-    return this.factory.config.getTileUrl();
+    return this.mapUI.config.getTileUrl();
   }
   
   getMapAttribution() {
-    return this.factory.config.getMapAttribution();
+    return this.mapUI.config.getMapAttribution();
   }
   
   getMapEventHandlers(): Dictionary<leaflet.LeafletEventHandlerFn> {
@@ -187,10 +87,10 @@ export class MapPresenter extends BasePresenter {
       load: (_: leaflet.LeafletEvent) => {
         console.log("Map loaded");
 
-        let defaultOpenSidebar = this.factory.config.getDefaultOpenSidebar();
+        let defaultOpenSidebar = this.mapUI.config.getDefaultOpenSidebar();
 
         // Trigger loading of the sidebar, the deps should all be in place now.
-        this.factory.getSidebarView(this.factory).then(sidebar => {
+        this.mapUI.getSidebarPresenter(this.mapUI).then(sidebar => {
           if (defaultOpenSidebar)
             sidebar.showSidebar()
         });
@@ -204,9 +104,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   onInitiativeNew(initiative: Initiative) {
-    const marker = this.view.addMarker(initiative).marker as ExtendedMarker; // Coercion!
-
-    if (marker.hasPhysicalLocation) this.factory.allMarkers.push(marker);
+    this.view.addMarker(initiative);
   }
   
   refreshInitiative(initiative: Initiative) {
@@ -217,8 +115,7 @@ export class MapPresenter extends BasePresenter {
   onInitiativeReset() {
 
     this.view.removeAllMarkers();
-    this.factory.allMarkers = [];
-    this.factory.loadedInitiatives = [];
+    this.mapUI.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
   }
@@ -228,7 +125,7 @@ export class MapPresenter extends BasePresenter {
     const bounds = this.getInitialBounds();
     if (bounds)
       this.view.fitBounds({bounds: bounds});
-    this.view.unselectedClusterGroup?.addLayers(this.factory.allMarkers);
+    this.view.unselectedClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
   }
 
@@ -290,8 +187,8 @@ export class MapPresenter extends BasePresenter {
   }
 
   getInitialBounds() {
-    return this.factory.config.getInitialBounds() == undefined ?
-           this.factory.dataservices.latLngBounds() : this.factory.config.getInitialBounds();
+    return this.mapUI.config.getInitialBounds() == undefined ?
+           this.mapUI.dataServices.latLngBounds() : this.mapUI.config.getInitialBounds();
   }
 
   getInitialZoom() { }
@@ -301,7 +198,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   getDisableClusteringAtZoomFromConfig() {
-    return this.factory.config.getDisableClusteringAtZoom() || false;
+    return this.mapUI.config.getDisableClusteringAtZoom() || false;
   }
 
 
@@ -309,10 +206,10 @@ export class MapPresenter extends BasePresenter {
   //FILTERS
   applyFilter() {
     //if there are currently any filters 
-    if (this.factory.getFiltered().length > 0) {
+    if (this.mapUI.getFiltered().length > 0) {
       //display only filtered initiatives, the rest should be hidden
-      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());
-      this.factory.markerView.showMarkers(this.factory.getFiltered());
+      this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());
+      this.mapUI.markers.showMarkers(this.mapUI.getFiltered());
     } else //if no filters available show everything
       this.removeFilters();
   }
@@ -326,18 +223,18 @@ export class MapPresenter extends BasePresenter {
       return;
     
     //if filter already exists don't do anything
-    if (Object.keys(this.factory.filtered).includes(filterName))
+    if (Object.keys(this.mapUI.filtered).includes(filterName))
       return;
 
     //add filter
-    this.factory.filtered[filterName] = initiatives;
+    this.mapUI.filtered[filterName] = initiatives;
 
     //add the verbose name of the filter
-    this.factory.verboseNamesMap[filterName] = verboseName;
+    this.mapUI.verboseNamesMap[filterName] = verboseName;
 
     //if this is the first filter, add items to the filteredInitiativesUIDMap
-    if (Object.keys(this.factory.filtered).length <= 1) {
-      this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({},this.factory.dataservices.getAggregatedData().initiativesByUid);
+    if (Object.keys(this.mapUI.filtered).length <= 1) {
+      this.mapUI.initiativesOutsideOfFilterUIDMap = Object.assign({},this.mapUI.dataServices.getAggregatedData().initiativesByUid);
       //add to array only new unique entries
       initiatives.forEach(initiative => {
         //rm entry from outside map
@@ -346,8 +243,8 @@ export class MapPresenter extends BasePresenter {
           console.warn("initiative has non-string uri property, ignoring", initiative);
         }
         else {
-          delete this.factory.initiativesOutsideOfFilterUIDMap[uri];
-          this.factory.filteredInitiativesUIDMap[uri] = initiative;
+          delete this.mapUI.initiativesOutsideOfFilterUIDMap[uri];
+          this.mapUI.filteredInitiativesUIDMap[uri] = initiative;
         }
       });
     }
@@ -355,16 +252,16 @@ export class MapPresenter extends BasePresenter {
        filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
      */
     else {      
-      for(const initiativeUniqueId in this.factory.filteredInitiativesUIDMap){
-        const initiative = this.factory.filteredInitiativesUIDMap[initiativeUniqueId];
+      for(const initiativeUniqueId in this.mapUI.filteredInitiativesUIDMap){
+        const initiative = this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId];
         if(initiative && !initiatives.includes(initiative)){
-          this.factory.initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},this.factory.filteredInitiativesUIDMap[initiativeUniqueId]);
-          delete this.factory.filteredInitiativesUIDMap[initiativeUniqueId];
+          this.mapUI.initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId]);
+          delete this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId];
         }
       }
     }
 
-    console.log(this.factory.filteredInitiativesUIDMap);
+    console.log(this.mapUI.filteredInitiativesUIDMap);
 
     //apply filters
     this.applyFilter();
@@ -372,25 +269,25 @@ export class MapPresenter extends BasePresenter {
 
   removeFilters() {
     //remove filters
-    this.factory.filtered = {};
-    this.factory.filteredInitiativesUIDMap = {};
-    this.factory.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.factory.dataservices.getAggregatedData().initiativesByUid);
-    this.factory.verboseNamesMap = {};
+    this.mapUI.filtered = {};
+    this.mapUI.filteredInitiativesUIDMap = {};
+    this.mapUI.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.mapUI.dataServices.getAggregatedData().initiativesByUid);
+    this.mapUI.verboseNamesMap = {};
     //show all markers
-    this.factory.markerView.showMarkers(this.factory.loadedInitiatives);
+    this.mapUI.markers.showMarkers(this.mapUI.loadedInitiatives);
   }
 
   removeFilter(filterName: string) {
     //if filter doesn't exist don't do anything
-    if (!Object.keys(this.factory.filtered).includes(filterName))
+    if (!Object.keys(this.mapUI.filtered).includes(filterName))
       return;
 
     //remove the filter
-    let oldFilterVals = this.factory.filtered[filterName];
-    delete this.factory.filtered[filterName];
+    let oldFilterVals = this.mapUI.filtered[filterName];
+    delete this.mapUI.filtered[filterName];
 
     //if no filters left call remove all and stop
-    if (Object.keys(this.factory.filtered).length <= 0) {
+    if (Object.keys(this.mapUI.filtered).length <= 0) {
       this.removeFilters();
       return;
     }
@@ -399,21 +296,21 @@ export class MapPresenter extends BasePresenter {
     oldFilterVals?.forEach(i => {
       const uri = _toString(i.uri, null);
       if (uri !== null)
-        this.factory.initiativesOutsideOfFilterUIDMap[uri] = i;
+        this.mapUI.initiativesOutsideOfFilterUIDMap[uri] = i;
       else
         console.warn("inititive has non-string uri property, ignoring", i);
     });
 
     //remove filter initatitives 
     //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    Object.keys(this.factory.filtered).forEach(k => {
-      this.factory.filtered[k]?.forEach(i => {
+    Object.keys(this.mapUI.filtered).forEach(k => {
+      this.mapUI.filtered[k]?.forEach(i => {
         const uri = _toString(i.uri, null);
         if (uri !== null) {
           //add in unique ones
-          this.factory.filteredInitiativesUIDMap[uri] = i;
+          this.mapUI.filteredInitiativesUIDMap[uri] = i;
           //remove the ones you added
-          delete this.factory.initiativesOutsideOfFilterUIDMap[uri];
+          delete this.mapUI.initiativesOutsideOfFilterUIDMap[uri];
         }
         else
           console.warn("inititive has non-string uri property, ignoring", i);
@@ -421,7 +318,7 @@ export class MapPresenter extends BasePresenter {
     });
 
     //remove filter from verbose name
-    delete this.factory.verboseNamesMap[filterName];
+    delete this.mapUI.verboseNamesMap[filterName];
 
 
     //apply filters
@@ -432,7 +329,7 @@ export class MapPresenter extends BasePresenter {
 
   //should return an array of unique initiatives outside of filters
   getInitiativesOutsideOfFilter(): Initiative[] {
-    return Object.values(this.factory.initiativesOutsideOfFilterUIDMap)
+    return Object.values(this.mapUI.initiativesOutsideOfFilterUIDMap)
       .filter((i): i is Initiative => i !== undefined);
   }
   //FILTERS END
@@ -451,8 +348,8 @@ export class MapPresenter extends BasePresenter {
       // return;
       console.log("no results, hide everything");
       //hide all 
-      this.factory.hidden = this.factory.loadedInitiatives;
-      this.factory.markerView.hideMarkers(this.factory.hidden);
+      this.mapUI.hidden = this.mapUI.loadedInitiatives;
+      this.mapUI.markers.hideMarkers(this.mapUI.hidden);
       return;
     }
 
@@ -460,10 +357,10 @@ export class MapPresenter extends BasePresenter {
        //this was causing a bug and doesn't seem to do anything useful
 
        //if the results match the previous results don't do anything
-       if (data.initiatives == this.factory.lastRequest)
+       if (data.initiatives == this.mapUI.lastRequest)
        return;
 
-       this.factory.lastRequest = data.initiatives; //cache the last request
+       this.mapUI.lastRequest = data.initiatives; //cache the last request
      */
 
 
@@ -471,25 +368,25 @@ export class MapPresenter extends BasePresenter {
     const initiativeIds = data.initiatives.map(i => i.uri);
     
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    this.factory.hidden = this.factory.loadedInitiatives.filter(i => 
+    this.mapUI.hidden = this.mapUI.loadedInitiatives.filter(i => 
       !initiativeIds.includes(i.uri)
     );
 
     //hide all unneeded markers
-    this.factory.markerView.hideMarkers(this.factory.hidden);
+    this.mapUI.markers.hideMarkers(this.mapUI.hidden);
     //make sure the markers you need to highlight are shown
-    this.factory.markerView.showMarkers(data.initiatives);
+    this.mapUI.markers.showMarkers(data.initiatives);
 
     //zoom and pan
 
     if (data.initiatives.length > 0) {
       var options: EventBus.Map.ZoomOptions = {
-        maxZoom: this.factory.config.getMaxZoomOnSearch()
+        maxZoom: this.mapUI.config.getMaxZoomOnSearch()
       }
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = this.factory.dataservices.latLngBounds(data.initiatives)
+      const latlng = this.mapUI.dataServices.latLngBounds(data.initiatives)
       EventBus.Map.needsToBeZoomedAndPanned.pub({
           initiatives: data.initiatives,
           bounds: latlng,
@@ -499,7 +396,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   getLogo() {
-    return this.factory.config.logo();
+    return this.mapUI.config.logo();
   }
 
   selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
@@ -510,27 +407,27 @@ export class MapPresenter extends BasePresenter {
   removeSearchFilter() {
 
     //if no search filter to remove just return
-    if (this.factory.hidden.length === 0)
+    if (this.mapUI.hidden.length === 0)
       return;
 
     //show hidden markers
-    //this.factory.markerView.showMarkers(hidden);
+    //this.mapUI.markers.showMarkers(hidden);
     this.applyFilter();
 
-    if (this.factory.getFiltered().length > 0) {
+    if (this.mapUI.getFiltered().length > 0) {
       //hide the initiatives that were outside of the filter
-      this.factory.markerView.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
+      this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
       //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
       //with the difference between getFiltered() and data.initiatives
       //i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      this.factory.markerView.showMarkers(this.factory.hidden);
+      this.mapUI.markers.showMarkers(this.mapUI.hidden);
     } else //if no filters available then the search was under global (only hidden ones need to be shown)
-      this.factory.markerView.showMarkers(this.factory.hidden);
+      this.mapUI.markers.showMarkers(this.mapUI.hidden);
 
     //reset the hidden array
-    this.factory.hidden = [];
+    this.mapUI.hidden = [];
 
     EventBus.Markers.needToShowLatestSelection.pub([]);
   }

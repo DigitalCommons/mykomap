@@ -1,20 +1,21 @@
-import { Dictionary, Point2d } from '../../../common_types';
+import { Point2d } from '../../../common_types';
 import { EventBus } from '../../../eventbus';
 import { toPoint2d, toString as _toString } from '../../../utils';
 import { InitiativeRenderFunction } from '../../model/config_schema';
-import { DataServices } from '../../model/dataservices';
 import { Initiative } from '../../model/initiative';
-import { BasePresenter } from '../../presenter';
+import { BasePresenter } from '../base';
 import { MapMarkerView } from '../../view/map/marker';
+import { MapUI } from '../../mapui';
 
 export class MapMarkerPresenter extends BasePresenter {
-  readonly labels: Dictionary;
-  constructor(readonly view: MapMarkerView,
-              readonly dataServices: DataServices,
-              readonly popup: InitiativeRenderFunction) {
+  readonly view: MapMarkerView;
+  
+  constructor(readonly mapUI: MapUI,
+              readonly initiative: Initiative,
+              readonly popup: InitiativeRenderFunction,
+              public hasPhysicalLocation: boolean = false) {
     super();
-    this.labels = dataServices.getFunctionalLabels();
-    this.popup = popup;
+    this.view = new MapMarkerView(this);
   }
 
   notifySelectionToggled(initiative: Initiative): void {
@@ -34,6 +35,6 @@ export class MapMarkerPresenter extends BasePresenter {
   }
 
   getInitiativeContent(initiative: Initiative): string {
-    return this.popup(initiative, this.dataServices);
+    return this.popup(initiative, this.mapUI.dataServices);
   }
 }

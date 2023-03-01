@@ -3,11 +3,7 @@ import * as d3 from 'd3';
 import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
-import { MapPresenterFactory } from '../../presenter/map';
-import { DataServices } from '../../model/dataservices';
 import { Dictionary } from '../../../common_types';
-import { Config } from '../../model/config';
-import { SidebarView } from '../sidebar';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../presenter/sidebar/searchresults';
 import { Initiative } from '../../model/initiative';
@@ -16,33 +12,28 @@ import { promoteToArray, toString as _toString } from '../../../utils';
 
 
 export class InitiativesSidebarView extends BaseSidebarView {
-  readonly presenter: InitiativesSidebarPresenter;
-  
 	readonly title: string = 'Initiatives';
   
-  constructor(readonly parent: SidebarView,
-              readonly config: Config,
-              readonly labels: Dictionary,
-              readonly dataServices: DataServices,
-              readonly mapPresenterFactory: MapPresenterFactory) {
+  constructor(readonly presenter: InitiativesSidebarPresenter) {
     super();
-    this.presenter = new InitiativesSidebarPresenter(this, labels, config, dataServices, mapPresenterFactory);
+//    this.presenter = new InitiativesSidebarPresenter(this, labels, config, dataServices, mapui);
   }
 
 	populateFixedSelection(selection: d3Selection) {
+    const labels = this.presenter.parent.mapui.labels;
 		const container = selection
 			.append("div")
 			.attr("class", "w3-container");
 		container
 			.append("h1")
-			.text(this.labels?.search ?? '');
+			.text(labels?.search ?? '');
 
 		this.createSearchBox(container);
 
 		let textContent = ""; // default content, if no initiatives to show
     const item = this.presenter.currentItem();
 		if (item instanceof SearchResults) {
-			textContent = this.labels.search + ": " + item.searchString;
+			textContent = labels.search + ": " + item.searchString;
 
 			//change the text in the search bar
       EventBus.Search.changeSearchText.pub(item.searchedFor);
@@ -58,7 +49,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.append("div")
 
 
-		const terms = this.dataServices.getTerms();
+		const terms = this.presenter.parent.mapui.dataServices.getTerms();
 
 		this.createAdvancedSearch(advancedSearchContainer, terms);
 	}
@@ -210,14 +201,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.attr("id", "search-box")
 			.attr("class", "w3-input w3-border-0 w3-round w3-mobile")
 			.attr("type", "search")
-			.attr("placeholder", this.labels?.searchInitiatives ?? '')
+			.attr("placeholder", this.presenter.parent.mapui.labels?.searchInitiatives ?? '')
 			.attr("autocomplete", "off");
 
 		document.getElementById("search-box")?.focus();
 	}
 
 	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
-		const currentFilters = this.mapPresenterFactory.getFilters();
+		const currentFilters = this.presenter.parent.mapui.getFilters();
 		const item = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
@@ -246,8 +237,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
       	this.presenter.performSearchNoText();
 		}
 
-		const possibleFilterValues = this.dataServices.getPossibleFilterValues(this.mapPresenterFactory.getFiltered());
-		const activeFilterCategories = this.mapPresenterFactory.getFiltersFull()
+    const mapui = this.presenter.parent.mapui;
+		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.getFiltered());
+		const activeFilterCategories = mapui.getFiltersFull()
       .map(filter => filter.verboseName)
       .filter((name): name is string => name != undefined)
       .map(name => name.split(":")[0]);
@@ -268,7 +260,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 			dropDown
 				.append("option")
-				.text(`- ${this.labels.any} -`)
+				.text(`- ${mapui.labels.any} -`)
 				.attr("value", "any")
 				.attr("class", "advanced-option")
 
@@ -283,8 +275,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			//find alternative possible filters for an active filter
 			let alternatePossibleFilterValues: unknown[] = [];
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
-				alternatePossibleFilterValues = this.dataServices.getAlternatePossibleFilterValues(
-					this.mapPresenterFactory.getFiltersFull(), field);
+				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
+					mapui.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
@@ -313,8 +305,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	populateScrollableSelection(selection: d3Selection) {
-		var noFilterTxt = this.labels?.whenSearch ?? '';
-		var freshSearchText = this.presenter.getFilterNames().length > 0 ?
+    const labels = this.presenter.parent.mapui.labels;
+		const noFilterTxt = labels?.whenSearch ?? '';
+		const freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
     const item = this.presenter.currentItem();
@@ -327,7 +320,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(this.labels?.clearFilters ?? '')
+					.text(labels?.clearFilters ?? '')
 					.on("click", () => {
 						//redo search
 						this.presenter.removeFilters();
@@ -345,7 +338,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
-							.text(this.labels?.nothingMatched ?? '');
+							.text(labels?.nothingMatched ?? '');
 
 					break;
 				case 1:
@@ -374,7 +367,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(this.labels?.clearFilters ?? '')
+					.text(labels?.clearFilters ?? '')
 					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
 						this.presenter.removeFilters();
