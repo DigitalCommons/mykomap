@@ -2,49 +2,17 @@
 import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
-import { AboutSidebarView } from '../view/sidebar/about';
 import { BaseView } from './base';
-import { DatasetsSidebarView } from './sidebar/datasets';
-import { DirectorySidebarView } from './sidebar/directory';
-import { InitiativesSidebarView } from './sidebar/initiatives';
-import { MarkerViewFactory } from './map/marker';
-import { MapPresenterFactory } from '../presenter/map';
-import { DataServices } from '../model/dataservices';
-import { Dictionary } from '../../common_types';
-import { Config } from '../model/config';
-import { BaseSidebarView } from './sidebar/base';
 
 export class SidebarView extends BaseView {
-  readonly presenter: SidebarPresenter;
-  sidebarName?: string;
-  sidebar: Dictionary<BaseSidebarView> = {};
   
-  constructor(readonly labels: Dictionary,
-              readonly config: Config,
-              readonly dataServices: DataServices,
-              readonly markerView: MarkerViewFactory,
-              readonly mapPresenterFactory: MapPresenterFactory,
+  constructor(readonly presenter: SidebarPresenter,
               readonly sidebarButtonColour: string ) {
     super();
-    this.labels = labels;
-    this.config = config;
-    this.dataServices = dataServices;
-    this.markerView = markerView;
-    this.mapPresenterFactory = mapPresenterFactory;
     this.sidebarButtonColour = sidebarButtonColour;
-
-    this.presenter = new SidebarPresenter(
-      this,
-      this.config.getShowDirectoryPanel(),
-      this.config.getShowSearchPanel(),
-      this.config.getShowAboutPanel(),
-      this.config.getShowDatasetsPanel()
-    );
     
     this.createOpenButton();
     this.createButtonRow();
-    this.createSidebars();
-    this.changeSidebar(); // Use the default
   }
 
   createOpenButton() {
@@ -52,7 +20,7 @@ export class SidebarView extends BaseView {
       .append("button")
       .attr("class", "w3-btn")
       .attr("style","background-color: " + this.sidebarButtonColour)
-      .attr("title", this.labels?.showDirectory ?? '')
+      .attr("title", this.presenter.mapui.labels?.showDirectory ?? '')
       .on("click", () => this.showSidebar())
       .append("i")
       .attr("class", "fa fa-angle-right");
@@ -60,7 +28,7 @@ export class SidebarView extends BaseView {
 
   createButtonRow() {
     const selection = this.d3selectAndClear("#map-app-sidebar-header");
-
+    const labels = this.presenter.mapui.labels;
     // This is where the navigation buttons will go.
     // These are recreated when the sidebar is changed, e.g. from MainMenu to initiatives.
     selection.append("span")
@@ -73,11 +41,11 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
-      .attr("title", this.labels?.showDirectory ?? '')
+      .attr("title", labels?.showDirectory ?? '')
       .on("click", () => {
         EventBus.Map.removeSearchFilter.pub();
         //notify zoom
-        this.changeSidebar("directory");
+        this.presenter.changeSidebar("directory");
         this.showInitiativeList();
 
         //deselect
@@ -91,13 +59,13 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", this.labels?.showSearch ?? '')
+      .attr("title", labels?.showSearch ?? '')
       .on("click", () => {
         this.hideInitiativeList();
         //deselect
         EventBus.Markers.needToShowLatestSelection.pub([]);
         EventBus.Initiatives.showSearchHistory.pub();
-        this.changeSidebar("initiatives");
+        this.presenter.changeSidebar("initiatives");
       })
       .append("i")
       .attr("class", "fa fa-search");
@@ -107,11 +75,11 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", this.labels?.showInfo ?? '')
+      .attr("title", labels?.showInfo ?? '')
       .on("click", () => {
         this.hideInitiativeList();
         EventBus.Markers.needToShowLatestSelection.pub([]);
-        this.changeSidebar("about");
+        this.presenter.changeSidebar("about");
       })
       .append("i")
       .attr("class", "fa fa-info-circle");
@@ -121,62 +89,17 @@ export class SidebarView extends BaseView {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", this.labels?.showDatasets ?? '')
+        .attr("title", labels?.showDatasets ?? '')
         .on("click", () => {
           this.hideInitiativeList();
           EventBus.Markers.needToShowLatestSelection.pub([]);
-          this.changeSidebar("datasets");
+          this.presenter.changeSidebar("datasets");
         })
         .append("i")
         .attr("class", "fa fa-database");
     }
 
 
-  }
-
-  createSidebars() {
-
-    this.sidebar = {};
-
-    if(this.presenter.showingDirectory())
-      this.sidebar.directory = new DirectorySidebarView(this, this.labels, this.config, this.dataServices, this.markerView);
-
-    if(this.presenter.showingSearch())
-      this.sidebar.initiatives = new InitiativesSidebarView(this, this.config, this.labels, this.dataServices, this.mapPresenterFactory);
-
-    if(this.presenter.showingAbout())
-      this.sidebar.about = new AboutSidebarView(this, this.labels, this.config);
-    
-    if(this.presenter.showingDatasets())
-      this.sidebar.datasets = new DatasetsSidebarView(this, this.labels, this.dataServices);
-  }
-
-  // Changes or refreshes the sidebar
-  //
-  // @param name - the sidebar to change (needs to be one of the keys
-  // of this.sidebar)
-  changeSidebar(name?: string) {
-    if (name !== undefined) {
-      // Validate name
-      if (!(name in this.sidebar)) {
-        console.warn(`ignoring request to switch to non-existant sidebar '${name}'`);
-        name = undefined;
-      }
-    }
-
-    if (name === undefined) {
-      // By default, use the first sidebar defined (JS key order is that of first definition)
-      const names = Object.keys(this.sidebar);
-      
-      if (names.length === 0)
-        return; // Except in this case, there is nothing we can do!
-
-      name = names[0];
-    }
-    
-    // Change the current sidebar
-    this.sidebarName = name;
-    this.sidebar[this.sidebarName]?.refresh();
   }
 
   showSidebar() {
@@ -199,10 +122,10 @@ export class SidebarView extends BaseView {
       .classed("sea-sidebar-open", true);
     
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
-      d3.select(".w3-btn").attr("title", this.labels?.hideDirectory ?? '');
+      d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
-    this.changeSidebar(); // Refresh the content of the sidebar
+    this.presenter.changeSidebar(); // Refresh the content of the sidebar
     if (document.getElementById("dir-filter") && window.outerWidth >= 1080)
       document.getElementById("dir-filter")?.focus();
   }
@@ -250,7 +173,7 @@ export class SidebarView extends BaseView {
         false
       )
       .classed("sea-sidebar-open", false);
-    d3.select(".w3-btn").attr("title", this.labels?.showDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.showDirectory ?? '');
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
 
   }
@@ -273,7 +196,7 @@ export class SidebarView extends BaseView {
     //else show it
     const sidebar = d3.select("#map-app-sidebar");
     const sidebarButton = d3.select("#map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", this.labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
 
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     if (!initiativeListSidebar.empty() && !sidebarButton.empty())
@@ -313,6 +236,6 @@ export class SidebarView extends BaseView {
     )
       .classed("sea-sidebar-list-initiatives", false);
 
-    d3.select(".w3-btn").attr("title", this.labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
   }  
 }

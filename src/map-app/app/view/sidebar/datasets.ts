@@ -1,25 +1,19 @@
 import * as d3 from "d3";
-import { Dictionary } from "../../../common_types";
-import { DataServices } from "../../model/dataservices";
 import { DatasetsSidebarPresenter } from "../../presenter/sidebar/datasets";
 import { d3Selection } from "../d3-utils";
-import { SidebarView } from "../sidebar";
 import { BaseSidebarView } from "./base";
 
 export class DatasetsSidebarView extends BaseSidebarView {
-  readonly presenter: DatasetsSidebarPresenter;
-
   // And adds some overrides and new properties of it's own:
   readonly title: string = "datasets";
   hasHistoryNavigation: boolean = false; // No forward/back buttons for this sidebar
   
-  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly dataServices: DataServices) {
+  constructor(readonly presenter: DatasetsSidebarPresenter) {
     super();
-    this.presenter = new DatasetsSidebarPresenter(this, dataServices);
   }
 
   populateFixedSelection(selection: d3Selection): void {
-    let textContent = this.labels.datasets ?? '';
+    let textContent = this.presenter.parent.mapui.labels.datasets ?? '';
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -61,7 +55,7 @@ export class DatasetsSidebarView extends BaseSidebarView {
         .attr("class", color_class(Object.keys(datasets).length))
         .attr("id", `${defaultIdMixed}-btn`)
         .attr("title", "load mixed dataset")
-        .text(this.labels.mixedSources ?? '');
+        .text(this.presenter.parent.mapui.labels.mixedSources ?? '');
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);

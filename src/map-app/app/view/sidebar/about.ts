@@ -1,25 +1,20 @@
 // The view aspects of the About sidebar
 import { BaseSidebarView  } from './base';
-import { Dictionary } from '../../../common_types';
-import { Config } from '../../model/config';
 import { d3Selection } from '../d3-utils';
-import { SidebarView } from '../sidebar';
 import { AboutSidebarPresenter } from '../../presenter/sidebar/about';
 
 export class AboutSidebarView extends BaseSidebarView {
-  readonly presenter: AboutSidebarPresenter;
   
   // And adds some overrides and new properties of it's own:
   readonly title = "about";
   hasHistoryNavigation = false; // No forward/back buttons for this sidebar
 
-  constructor(readonly parent: SidebarView, readonly labels: Dictionary, readonly config: Config) {
+  constructor(readonly presenter: AboutSidebarPresenter) {
     super();
-    this.presenter = new AboutSidebarPresenter(this);
   }
 
   populateFixedSelection(selection: d3Selection) {
-    const textContent = this.labels?.aboutTitle ?? '';
+    const textContent = this.presenter.parent.mapui.labels?.aboutTitle ?? '';
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -28,7 +23,7 @@ export class AboutSidebarView extends BaseSidebarView {
   }
 
   populateScrollableSelection(selection: d3Selection) {
-    const lang = this.config.getLanguage();
+    const lang = this.presenter.parent.mapui.config.getLanguage();
     
     // We need to be careful to guard against weird characters, especially quotes,
     // from the language code, as these can create vulnerabilities.
@@ -38,7 +33,7 @@ export class AboutSidebarView extends BaseSidebarView {
     selection
       .append('div')
       .attr("class", "w3-container about-text")
-      .html(this.config.aboutHtml())
+      .html(this.presenter.parent.mapui.config.aboutHtml())
     // Remove all elements which have a language tag which is not the target language tag
       .selectAll(`[lang]:not([lang='${lang}'])`)
       .remove();
@@ -93,7 +88,7 @@ export class AboutSidebarView extends BaseSidebarView {
     *********************************************************************************/
     
     // If a version is available display it
-    const version = this.config.getVersionTag();
+    const version = this.presenter.parent.mapui.config.getVersionTag();
     if (version) {
       selection
         .append("div")
