@@ -486,15 +486,15 @@ export class DataServicesImpl implements DataServices {
     this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
 
     {
-      // Check that all the filterable fields are also vocab fields -
+      // Check that all the filterable fields are property names -
       // Something is wrong if not.
       const badFields = this.config.getFilterableFields()
-        .filter(name => !this.vocabPropDefs[name]);
+        .filter(name => !this.propertySchema[name]);
       
       if (badFields.length > 0) {
         throw new Error(
-          `Filterable fields config must not include `+
-            `the non-vocab fields: ${badFields.join(", ")}`
+          `Filterable fields config must only include `+
+            `names of defined properties: ${badFields.join(", ")}`
         );
       }
     }
@@ -588,10 +588,14 @@ export class DataServicesImpl implements DataServices {
     filteredInitiatives.forEach(initiative => {
       for(const name in this.config.getFilterableFields()) {    
         
-        let id = initiative[name];
+        const id = initiative[name];
           
-        // Add the value if it isn't there
-        if (typeof id === 'string' && !possibleFilterValues.includes(id))
+        // Add the value - if it is a vocab field and isn't already there
+        if (typeof id !== 'string')
+          continue;
+        if (!DataServicesImpl.isVocabPropDef(this.propertySchema[id]))
+          continue;
+        if (!possibleFilterValues.includes(id))
           possibleFilterValues.push(id);
       }
     });
