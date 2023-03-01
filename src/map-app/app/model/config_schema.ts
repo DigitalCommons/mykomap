@@ -115,6 +115,7 @@ export interface ReadableConfig {
   getDefaultLatLng(): Point2d;
   getDefaultOpenSidebar(): boolean;
   getDialogueSize(): DialogueSize;
+  getDirectoryField(): string|undefined;
   getDisableClusteringAtZoom(): number;
   getFilterableFields(): string[];
   getInitialBounds(): Box2d | undefined;
@@ -145,6 +146,7 @@ export interface ReadableConfig {
 export interface WritableConfig {
   setDefaultLatLng(val: Point2d): void;
   setDialogueSize(val: DialogueSize): void;
+  setDirectoryField(val: string|undefined): void;
   setDirectoryHasColours(val: boolean): void;
   setDisableClusteringAtZoom(cal: number): void;
   setFilterableFields(val: string[]): void;
@@ -203,6 +205,7 @@ export class ConfigData {
     "height": "225px",
     "descriptionRatio": 2.5,
   };
+  directoryField?: string;
   disableClusteringAtZoom: number = 0;
   doesDirectoryHaveColours: boolean = false;
   elem_id: string = 'map-app';
@@ -514,6 +517,14 @@ export class Config implements ReadableConfig, WritableConfig {
         getter: 'getDialogueSize',
         setter: 'setDialogueSize',
         type: types.dialogueSize,
+      },
+      directoryField: {
+        id: 'directoryField',
+        descr: 'Defines the instance property used to populate the directory. '+
+          'Must be an instance property name.',
+        getter: 'getDirectoryField',
+        setter: 'setDirectoryField',
+        type: types.string,
       },
       disableClusteringAtZoom: {
         id: 'disableClusteringAtZoom',
@@ -924,6 +935,9 @@ ${def.descr}
   getDialogueSize(): DialogueSize {
     return this.data.dialogueSize;
   }
+  getDirectoryField(): string|undefined {
+    return this.data.directoryField;
+  }
   getDisableClusteringAtZoom(): number {
     return this.data.disableClusteringAtZoom;
   }
@@ -1005,6 +1019,9 @@ ${def.descr}
   }
   setDialogueSize(val: DialogueSize): void {
     this.data.dialogueSize = val;
+  }
+  setDirectoryField(val: string): void {
+    this.data.directoryField = val;
   }
   setDirectoryHasColours(val: boolean): void {
     this.data.doesDirectoryHaveColours = val;
