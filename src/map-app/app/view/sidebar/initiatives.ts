@@ -30,12 +30,12 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		this.createSearchBox(container);
 
 		let textContent = ""; // default content, if no initiatives to show
-    const item = this.presenter.currentItem();
-		if (item instanceof SearchResults) {
-			textContent = labels.search + ": " + item.searchString;
+    const lastSearchResults = this.presenter.currentItem();
+		if (lastSearchResults instanceof SearchResults) {
+			textContent = labels.search + ": " + lastSearchResults.searchString;
 
 			//change the text in the search bar
-      EventBus.Search.changeSearchText.pub(item.searchedFor);
+      EventBus.Search.changeSearchText.pub(lastSearchResults.searchedFor);
 		}
 
 		container
@@ -208,7 +208,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
 		const currentFilters = this.presenter.parent.mapui.getFilters();
-		const item = this.presenter.currentItem();
+		const lastSearchResults = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
 		const changeFilter = (event: Event) => {
@@ -224,13 +224,13 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 			this.presenter.changeFilters(filterCategoryName, filterValue, filterValueText);
 
-			//repeat the last search after changing the filter
-			//if there is no last search, or the last search is empty, do a special search
-			if (item instanceof SearchResults) {
-				if (item.searchedFor == "")
-					this.presenter.performSearchNoText();
+			// After changing the filter, we need to repeat the last text
+			// search on top of that, if there is one.
+			if (lastSearchResults instanceof SearchResults) {
+				if (lastSearchResults.searchedFor == "")
+					this.presenter.performSearchNoText(); 
 				else
-					this.presenter.performSearch(item.searchedFor);
+					this.presenter.performSearch(lastSearchResults.searchedFor);
       }
 			else
       	this.presenter.performSearchNoText();
@@ -309,8 +309,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		const freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
-    const item = this.presenter.currentItem();
-		if (item instanceof SearchResults) {
+    const lastSearchResults = this.presenter.currentItem();
+		if (lastSearchResults instanceof SearchResults) {
 			// add clear button
 			if (this.presenter.getFilterNames().length > 0) {
 				selection
@@ -323,14 +323,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.on("click", () => {
 						//redo search
 						this.presenter.removeFilters();
-						if (item.searchedFor)
-							this.presenter.performSearch(item.searchedFor);
+						if (lastSearchResults.searchedFor)
+							this.presenter.performSearch(lastSearchResults.searchedFor);
 						else
 							this.presenter.performSearchNoText();
 					});
 			}
 
-			const initiatives = item == null ? [] : item.initiatives;
+			const initiatives = lastSearchResults == null ? [] : lastSearchResults.initiatives;
 			switch (initiatives.length) {
 				case 0:
 					selection
