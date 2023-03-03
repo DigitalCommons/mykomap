@@ -1,7 +1,7 @@
 // FIXME prevent malicious content in replacements (like description)
-import type { DataServices } from "../../model/dataservices";
-import type { Initiative } from "../../model/initiative";
-import { toString as _toString } from "../../../utils";
+import type { DataServices } from "./model/dataservices";
+import type { Initiative } from "./model/initiative";
+import { toString as _toString } from "../utils";
 
 export function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality

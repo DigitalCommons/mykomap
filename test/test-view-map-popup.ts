@@ -7,7 +7,7 @@ import { DataServicesImpl, PropDefs, basePropertySchema } from '../src/map-app/a
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
 
-import { getPopup } from '../src/map-app/app/view/map/default_popup';
+import { getPopup } from '../src/map-app/app/defaultpopup';
 const expectedContent = require('./expected/popups/default.json');
 
 // The standard schema as it was when the test was created, translated
