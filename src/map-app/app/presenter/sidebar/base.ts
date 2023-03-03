@@ -3,7 +3,7 @@ import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
-import { SearchResults } from './searchresults';
+import { SearchResults } from '../../../searchresults';
 
 export interface NavigationCallback {
   disabled: boolean;
