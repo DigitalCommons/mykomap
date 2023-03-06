@@ -8,6 +8,7 @@ import * as leaflet from 'leaflet';
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../markermanager";
+import { PhraseBook } from "../../localisations";
 
 export class MapView extends BaseView {
   map?: Map;
@@ -16,7 +17,7 @@ export class MapView extends BaseView {
   private readonly dialogueSizeStyles: HTMLStyleElement;
   private readonly dialogueHeight;
   private readonly dialogueWidth;
-  private readonly labels: Dictionary;
+  private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
   private selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
@@ -87,10 +88,10 @@ export class MapView extends BaseView {
     const tileMapURL = this.presenter.getTileUrl() ?? osmURL;
 
     let mapAttribution = this.presenter.getMapAttribution();
-    mapAttribution = mapAttribution.replace('contributors', this.labels.contributers ?? '');
-    mapAttribution = mapAttribution.replace('Other data', this.labels.otherData ?? '');
-    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy ?? ''}</a>`);
-    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer ?? '');
+    mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
+    mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
+    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
 
     var eventHandlers = this.presenter.getMapEventHandlers();
@@ -397,7 +398,7 @@ export class MapView extends BaseView {
     if (error) {
       console.error(error);
       d3.select("#" + id).style('display', 'none');
-      d3.select("#" + id + "txt").text(`${this.labels.errorLoading ?? ''} - id: ${error.dataset ?? '<?>'}`);
+      d3.select("#" + id + "txt").text(`${this.labels.errorLoading} - id: ${error.dataset ?? '<?>'}`);
     }
     else {
       let loading = d3.select('#' + id);
@@ -448,5 +449,3 @@ export class MapView extends BaseView {
   }
 
 }
-
-

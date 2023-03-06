@@ -14,7 +14,7 @@ export class AboutSidebarView extends BaseSidebarView {
   }
 
   populateFixedSelection(selection: d3Selection) {
-    const textContent = this.presenter.parent.mapui.labels?.aboutTitle ?? '';
+    const textContent = this.presenter.parent.mapui.labels.aboutTitle;
     selection
       .append("div")
       .attr("class", "w3-container")

@@ -25,7 +25,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.attr("class", "w3-container");
 		container
 			.append("h1")
-			.text(labels?.search ?? '');
+			.text(labels.search);
 
 		this.createSearchBox(container);
 
@@ -200,7 +200,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.attr("id", "search-box")
 			.attr("class", "w3-input w3-border-0 w3-round w3-mobile")
 			.attr("type", "search")
-			.attr("placeholder", this.presenter.parent.mapui.labels?.searchInitiatives ?? '')
+			.attr("placeholder", this.presenter.parent.mapui.labels.searchInitiatives)
 			.attr("autocomplete", "off");
 
 		document.getElementById("search-box")?.focus();
@@ -305,7 +305,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 	populateScrollableSelection(selection: d3Selection) {
     const labels = this.presenter.parent.mapui.labels;
-		const noFilterTxt = labels?.whenSearch ?? '';
+		const noFilterTxt = labels.whenSearch;
 		const freshSearchText = this.presenter.getFilterNames().length > 0 ?
 			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
 
@@ -319,7 +319,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(labels?.clearFilters ?? '')
+					.text(labels.clearFilters)
 					.on("click", () => {
 						//redo search
 						this.presenter.removeFilters();
@@ -337,7 +337,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 							.append("div")
 							.attr("class", "w3-container w3-center")
 							.append("p")
-							.text(labels?.nothingMatched ?? '');
+							.text(labels.nothingMatched);
 
 					break;
 				case 1:
@@ -366,7 +366,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.attr("id", "clearSearchFilterBtn")
 					.append("button")
 					.attr("class", "w3-button w3-black")
-					.text(labels?.clearFilters ?? '')
+					.text(labels.clearFilters)
 					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
 						this.presenter.removeFilters();

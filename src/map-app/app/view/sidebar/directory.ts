@@ -172,9 +172,9 @@ export class DirectorySidebarView extends BaseSidebarView {
     let selectionLabel = selectionKey;
     if (selectionLabel == null) {
       if (fieldIsCountries(directoryField))
-        selectionLabel = this.presenter.parent.mapui.labels?.allCountries ?? '';
+        selectionLabel = this.presenter.parent.mapui.labels.allCountries;
       else
-        selectionLabel = this.presenter.parent.mapui.labels?.allEntries ?? '';
+        selectionLabel = this.presenter.parent.mapui.labels.allEntries;
     }
 
     //deselect all
@@ -184,7 +184,7 @@ export class DirectorySidebarView extends BaseSidebarView {
 
     const sidebar = d3.select("#map-app-sidebar");
     const sidebarButton = d3.select("#map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", labels.hideDirectory);
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
     const values = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[directoryField];
@@ -221,7 +221,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 initiative-list-sidebar-btn")
-      .attr("title", labels?.showSearch ?? '')
+      .attr("title", labels.showSearch)
       .on("click", function () {
 
         EventBus.Sidebar.hideInitiativeList.pub();
@@ -237,7 +237,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels?.showInfo ?? '')
+      .attr("title", labels.showInfo)
       .on("click", function () {
         EventBus.Sidebar.hideInitiativeList.pub();
         EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -252,7 +252,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       sidebarBtnHolder
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", labels?.showDatasets ?? '')
+        .attr("title", labels.showDatasets)
         .on("click", function () {
           EventBus.Sidebar.hideInitiativeList.pub();
           EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -354,7 +354,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     initiativeContentElement
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", `${this.presenter.parent.mapui.labels?.close ?? ''} ${initiative.name}`)
+      .attr("title", `${this.presenter.parent.mapui.labels.close} ${initiative.name}`)
       .on("click", function () {
         EventBus.Directory.initiativeClicked.pub(undefined);
       })

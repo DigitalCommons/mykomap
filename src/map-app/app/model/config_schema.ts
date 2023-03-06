@@ -33,6 +33,7 @@ import type {
 } from '../../obj-transformer';
 
 import { Initiative, InitiativeObj } from './initiative';
+import { isIso6391Code, Iso6391Code } from '../../localisations';
 
 class TypeDef<T> {
   constructor(params: {
@@ -211,8 +212,8 @@ export class ConfigData {
   gitcommit: string = '0';
   htmlTitle: string = '';
   initialBounds?: Box2d;
-  language: string = 'EN';
-  languages: string[] = ['EN'];
+  language: Iso6391Code = 'EN';
+  languages: Iso6391Code[] = ['EN'];
   logo?: string;
   mapAttribution: string = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
     'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> ' +
@@ -250,16 +251,19 @@ export type ConfigSchemas = { [K in keyof ConfigData]: ConfigSchema<ConfigData[K
 
 // Validates/normalises a language code.
 // This is defined here as it is used more than once.
-function validateLang(lang: any): string {
-  if (typeof lang !== 'string' || lang.match(/[^\w -]/))
-    throw new Error(`rejecting suspect language code '${lang}'`);
-  return lang.trim().toUpperCase();
+function validateLang(lang: unknown): Iso6391Code {
+  if (typeof lang === 'string') {
+    const lang2 = lang.trim().toUpperCase();
+    if (isIso6391Code(lang2))
+      return lang2;
+  }
+  throw new Error(`rejecting suspect language code '${lang}'`);
 }
 
 // Returns the normalised language
 // This is `lang` (uppercased) if it is valid and one of those in `langs`,
 // else the first element of `langs` is returned.
-function normLanguage(lang: any, langs: string[]): string {
+function normLanguage(lang: unknown, langs: Iso6391Code[]): Iso6391Code {
   let normLang = validateLang(lang);
   if (!langs.includes(normLang)) {
     // Warn about this, presumably this has been defined wrongly, and attempt to recover
@@ -311,6 +315,10 @@ const types = {
     // No-op
     parseString: (val: string) => val,
   }),
+  iso639_1: new TypeDef<Iso6391Code>({
+    name: '{ISO639-1 Code}',
+    parseString: (val: string) => isIso6391Code(val)? val : 'EN',
+  }),
   latLng: new TypeDef<Point2d>({
     name: '{Point2d}',
     descr: 'A two-element array defining latitude and longitude in degrees.',
@@ -350,6 +358,13 @@ const types = {
     stringDescr: 'A comma-delimited list of strings. No escaping is used, ' +
                  "so no commas can exist in the strings. Spaces are not trimmed.",
     parseString: (val: string) => val.split(/,/),
+  }),
+  arrayOfIso6391Code: new TypeDef<Iso6391Code[]>({
+    name: '{Array<ISO639-1 code>}',
+    descr: 'An array of ISO639-1 two-character country codes.',
+    stringDescr: 'A comma-delimited list of valid ISO639-1 codes. Spaces are trimmed, '+
+                 'and the case will be normalised so does not matter, but invalid codes are errors',
+    parseString: (val: string) => val.split(/,/).map(validateLang),
   }),
   dialogueSize: new TypeDef<DialogueSize>({
     name: '{DialogueSize}',
@@ -585,7 +600,7 @@ export class Config implements ReadableConfig, WritableConfig {
           'Will be upcased if not already.',
         getter: 'getLanguage',
         setter: 'setLanguage',
-        type: types.string,
+        type: types.iso639_1,
       },
       languages: {
         id: 'languages',
@@ -596,7 +611,7 @@ export class Config implements ReadableConfig, WritableConfig {
           'phrase is missing.',
         defaultDescr: "```\n"+JSON.stringify(defaultConfig.languages, null, 2)+"\n```",
         getter: 'getLanguages',
-        type: types.arrayOfString,
+        type: types.arrayOfIso6391Code,
       },
       logo: {
         id: 'logo',
@@ -933,10 +948,10 @@ ${def.descr}
   getInitialBounds(): Box2d | undefined {
     return this.data.initialBounds;
   }
-  getLanguage(): string {
+  getLanguage(): Iso6391Code {
     return this.data.language;
   }
-  getLanguages(): string[] {
+  getLanguages(): Iso6391Code[] {
     return this.data.languages;
   }
   getMapAttribution(): string {

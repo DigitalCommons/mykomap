@@ -13,7 +13,7 @@ export class DatasetsSidebarView extends BaseSidebarView {
   }
 
   populateFixedSelection(selection: d3Selection): void {
-    let textContent = this.presenter.parent.mapui.labels.datasets ?? '';
+    let textContent = this.presenter.parent.mapui.labels.datasets;
     selection
       .append("div")
       .attr("class", "w3-container")
@@ -55,7 +55,7 @@ export class DatasetsSidebarView extends BaseSidebarView {
         .attr("class", color_class(Object.keys(datasets).length))
         .attr("id", `${defaultIdMixed}-btn`)
         .attr("title", "load mixed dataset")
-        .text(this.presenter.parent.mapui.labels.mixedSources ?? '');
+        .text(this.presenter.parent.mapui.labels.mixedSources);
       btn.on("click", () => {
         d3.select(".sea-field-active").classed("sea-field-active", false);
         btn.classed("sea-field-active", true);

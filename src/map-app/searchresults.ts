@@ -1,6 +1,6 @@
-import { Dictionary } from "./common_types";
 import { StackItem } from "./stack";
 import { Initiative } from "./app/model/initiative";
+import { PhraseBook } from "./localisations";
 
 /// Represents a search result on the sidebar contentStack
 export class SearchResults extends StackItem { 
@@ -15,7 +15,7 @@ export class SearchResults extends StackItem {
               searchString: string,
               filterVerboseNames: string[],
               filterNames: string[],
-              labels: Dictionary) {
+              labels: PhraseBook) {
     super(initiatives);
     this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?

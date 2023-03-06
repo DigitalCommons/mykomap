@@ -20,7 +20,7 @@ export class SidebarView extends BaseView {
       .append("button")
       .attr("class", "w3-btn")
       .attr("style","background-color: " + this.sidebarButtonColour)
-      .attr("title", this.presenter.mapui.labels?.showDirectory ?? '')
+      .attr("title", this.presenter.mapui.labels.showDirectory)
       .on("click", () => this.showSidebar())
       .append("i")
       .attr("class", "fa fa-angle-right");
@@ -41,7 +41,7 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto")
-      .attr("title", labels?.showDirectory ?? '')
+      .attr("title", labels.showDirectory)
       .on("click", () => {
         EventBus.Map.removeSearchFilter.pub();
         //notify zoom
@@ -59,7 +59,7 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels?.showSearch ?? '')
+      .attr("title", labels.showSearch)
       .on("click", () => {
         this.hideInitiativeList();
         //deselect
@@ -75,7 +75,7 @@ export class SidebarView extends BaseView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0")
-      .attr("title", labels?.showInfo ?? '')
+      .attr("title", labels.showInfo)
       .on("click", () => {
         this.hideInitiativeList();
         EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -89,7 +89,7 @@ export class SidebarView extends BaseView {
       selection
         .append("button")
         .attr("class", "w3-button w3-border-0")
-        .attr("title", labels?.showDatasets ?? '')
+        .attr("title", labels.showDatasets)
         .on("click", () => {
           this.hideInitiativeList();
           EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -122,7 +122,7 @@ export class SidebarView extends BaseView {
       .classed("sea-sidebar-open", true);
     
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
-      d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
+      d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
 
     this.presenter.changeSidebar(); // Refresh the content of the sidebar
@@ -173,7 +173,7 @@ export class SidebarView extends BaseView {
         false
       )
       .classed("sea-sidebar-open", false);
-    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.showDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.showDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-right");
 
   }
@@ -196,7 +196,7 @@ export class SidebarView extends BaseView {
     //else show it
     const sidebar = d3.select("#map-app-sidebar");
     const sidebarButton = d3.select("#map-app-sidebar-button");
-    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
 
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     if (!initiativeListSidebar.empty() && !sidebarButton.empty())
@@ -236,6 +236,6 @@ export class SidebarView extends BaseView {
     )
       .classed("sea-sidebar-list-initiatives", false);
 
-    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels?.hideDirectory ?? '');
+    d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
   }  
 }

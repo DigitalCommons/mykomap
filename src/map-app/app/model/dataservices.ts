@@ -47,10 +47,11 @@ import {
   InitiativeObj
 } from './initiative';
 
+import { CsvDataLoader } from './csvdataloader';
+import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
+
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
-
-import { CsvDataLoader } from './csvdataloader';
 
 
 export interface DataLoaderMeta<T> {
@@ -250,10 +251,10 @@ export interface DataServices {
   getDialogueSize(): DialogueSize;
 
   // Gets the functional labels for the current language (obtained via getLanguage)
-  getFunctionalLabels(): Dictionary<string>;
+  getFunctionalLabels(): PhraseBook;
 
   // Gets the current language set in the config (or the fallback language if unset)
-  getLanguage(): string;
+  getLanguage(): Iso6391Code;
   
   //get an array of possible filters from  a list of initiatives
   getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
@@ -353,10 +354,10 @@ export async function loadDatasets<D, T extends DataConsumer<D>>(dataLoaders: Da
 // Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
   readonly config: Config;
-  readonly fallBackLanguage: string;
+  readonly fallBackLanguage: Iso6391Code;
   readonly datasets: DataLoaderMap<InitiativeObj> = {};
   readonly vocabLoaders: DataLoaderMap<VocabIndex> = {};
-  readonly functionalLabels: Dictionary<Dictionary<string>>;
+  readonly functionalLabels: PhraseBooks;
   
   // The per-instance propert schema, which can be extended by configuration.
   readonly propertySchema: PropDefs = { ...basePropertySchema };
@@ -373,7 +374,7 @@ export class DataServicesImpl implements DataServices {
   // otherwise a string to indicate which dataset is loaded
   currentDatasets: string | true = true;
   
-  constructor(config: Config, functionalLabels: Dictionary<Dictionary<string>>) {
+  constructor(config: Config, functionalLabels: PhraseBooks) {
     this.config = config;
     this.functionalLabels = functionalLabels;
     
@@ -566,11 +567,24 @@ export class DataServicesImpl implements DataServices {
       return dialogueSize;
   }
 
-  getFunctionalLabels(): Dictionary<string> {
-    return this.functionalLabels[this.getLanguage()] ?? {};
+  getFunctionalLabels(): PhraseBook {
+    const lang = this.getLanguage();
+    const phraseBook = this.functionalLabels[lang];
+    if (phraseBook)
+      return phraseBook;
+
+    const langs = Object.keys(this.functionalLabels).filter(isIso6391Code);
+
+    // Default to first lang, if there is one! May be undefined if length == 0!
+    const lang2: Iso6391Code|undefined = langs[0];
+    const phraseBook2 = this.functionalLabels[lang2];
+    if (phraseBook2)
+      return phraseBook2;
+    
+    throw new Error(`no phrasebooks defined!`); // Should never happen!
   }
   
-  getLanguage(): string {
+  getLanguage(): Iso6391Code {
     return this.config.getLanguage();
   }
   

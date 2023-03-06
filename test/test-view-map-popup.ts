@@ -8,6 +8,7 @@ import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
 import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
 
 import { getPopup } from '../src/map-app/app/defaultpopup';
+import { phraseBooks } from '../src/map-app/localisations';
 const expectedContent = require('./expected/popups/default.json');
 
 // The standard schema as it was when the test was created, translated
@@ -70,7 +71,7 @@ const vocabs = new VocabServiceImpl(cannedVocabs, 'EN');
 
 const cannedData = require('./cannedData.json');
 const datasetId = 'testDataset';
-const dataservices = new DataServicesImpl(config, {'EN': {contact: 'Contact'}});
+const dataservices = new DataServicesImpl(config, phraseBooks);
 const aggregator = new DataAggregator(config, fieldSchema, vocabs, {});
 aggregator.addBatch(datasetId, cannedData.data);
 aggregator.complete(datasetId);

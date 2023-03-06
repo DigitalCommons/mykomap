@@ -9,6 +9,7 @@ import { DataServices } from "./model/dataservices";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
+import { PhraseBook } from "../localisations";
 
 export class MapUI {
   initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
@@ -22,7 +23,7 @@ export class MapUI {
   // for deferred load of sidebarView - breaking a recursive dep
   readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
   readonly markers: MarkerManager;
-  readonly labels: Dictionary;
+  readonly labels: PhraseBook;
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
