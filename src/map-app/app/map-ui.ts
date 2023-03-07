@@ -23,12 +23,12 @@ export class FilterService<I> {
   // The set of all items. Should be unchanged.
   private allItems: I[] = [];
   
-  filteredIndex: Set<I> = new Set();
-  unfilteredIndex: Set<I> = new Set();
+  private filteredIndex: Set<I> = new Set();
+  private unfilteredIndex: Set<I> = new Set();
 
   /// An index of filter names to a list of items matched by that filter
-  filtered: Dictionary<Set<I>> = {};
-  verboseNamesMap: Dictionary = {};
+  private filtered: Dictionary<Set<I>> = {};
+  private verboseNamesMap: Dictionary = {};
   hidden: I[] = [];
 
   constructor() {
