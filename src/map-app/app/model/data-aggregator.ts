@@ -20,7 +20,7 @@ import {
 
 import {
   PropertyIndexer
-} from './propertyindexer';
+} from './property-indexer';
 
 import {
   PropDefIndex

@@ -10,7 +10,7 @@ import {
 
 import {
   PropertyIndexer
-} from '../src/map-app/app/model/propertyindexer';
+} from '../src/map-app/app/model/property-indexer';
 
 import { Initiative } from '../src/map-app/app/model/initiative';
 import { Vocab } from '../src/map-app/app/model/vocabs';
