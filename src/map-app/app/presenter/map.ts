@@ -5,7 +5,7 @@ import * as leaflet from 'leaflet';
 import { Dictionary } from '../../common-types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
-import { toString as _toString } from '../../utils';
+import { initiativeUris, toString as _toString } from '../../utils';
 import { MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
@@ -223,11 +223,7 @@ export class MapPresenter extends BasePresenter {
       return;
     
     // add filter
-    const initiativeIndex = initiatives.reduce<Dictionary<Initiative>>(
-      (ix, it) => { ix[_toString(it.uri)] = it; return ix; },
-      {}
-    );
-    this.mapUI.filter.addFilter(filterName, initiativeIndex, verboseName);
+    this.mapUI.filter.addFilter(filterName, initiativeUris(initiatives), verboseName);
 
     // apply filters
     this.applyFilter();

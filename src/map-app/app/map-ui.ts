@@ -27,7 +27,7 @@ export class FilterService<I> {
   unfilteredIndex: Dictionary<I> = {}; // initiativesOutsideOfFilterUIDMap
 
   /// An index of filter names to a list of items matched by that filter
-  filtered: Dictionary<Dictionary<I>> = {}; // filtered
+  filtered: Dictionary<string[]> = {}; // filtered
   verboseNamesMap: Dictionary = {};
   hidden: I[] = [];
 
@@ -69,7 +69,7 @@ export class FilterService<I> {
       const filtered = this.filtered[filterName];
       if (!filtered)
         continue;
-      const initiatives = Object.values(filtered);
+      const initiatives = filtered.map(id => this.allItems[id]);
       filterArray.push({
         filterName: filterName,
         verboseName: this.verboseNamesMap[filterName] ?? '',
@@ -89,12 +89,12 @@ export class FilterService<I> {
     return !!this.filtered[id];
   }
   
-  addFilter(name: string, itemIndex: Dictionary<I>, verboseName?: string): void {
+  addFilter(name: string, itemIds: string[], verboseName?: string): void {
     // if filter already exists don't do anything
     if (this.isFiltered(name))
       return;
 
-    this.filtered[name] = itemIndex;
+    this.filtered[name] = itemIds;
     this.verboseNamesMap[name] = verboseName;
     
     // if this is the first filter, add items to the filteredInitiativesUIDMap
@@ -102,8 +102,8 @@ export class FilterService<I> {
       this.unfilteredIndex = Object.assign({}, this.allItems);
       
       // add to array only new unique entries
-      for(const id in itemIndex) {
-        const item = itemIndex[id];
+      for(const id of itemIds) {
+        const item = this.allItems[id];
         // rm entry from outside map
         delete this.unfilteredIndex[id];
         this.filteredIndex[id] = item;
@@ -113,8 +113,8 @@ export class FilterService<I> {
       // if this is the second or more filter, remove items from the 
       // filteredIndex if they don't appear in the new filter's set of initiatives
       for(const id in this.filteredIndex){
-        const item = this.filteredIndex[id];
-        if(item && !itemIndex[id]){
+        const item = this.allItems[id];
+        if(item && !itemIds.includes(id)){
           this.unfilteredIndex[id] = Object.assign({},this.filteredIndex[id]);
           delete this.filteredIndex[id];
         }
@@ -130,7 +130,7 @@ export class FilterService<I> {
       return;
 
     // remove the filter
-    const oldFilterIndex = this.filtered[filterName];
+    const oldFilterIds = this.filtered[filterName] ?? [];
     delete this.filtered[filterName];
 
     // if no filters left call remove all and stop
@@ -140,19 +140,19 @@ export class FilterService<I> {
     }
 
     // add in the values that you are removing 
-    for(const id in oldFilterIndex) {      
-      this.unfilteredIndex[id] = oldFilterIndex[id];
+    for(const id of oldFilterIds) {      
+      this.unfilteredIndex[id] = this.allItems[id];
     }
 
     // remove filter initatives 
     // TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
     for(const filterName in this.filtered) {
-      const ix = this.filtered[filterName];
-      if (!ix) continue;
+      const ids = this.filtered[filterName];
+      if (!ids) continue;
 
-      for(const id in ix) {
+      for(const id in ids) {
         // add in unique ones
-        this.filteredIndex[id] = ix[id];
+        this.filteredIndex[id] = this.allItems[id];
         // remove the ones you added
         delete this.unfilteredIndex[id];
       }
