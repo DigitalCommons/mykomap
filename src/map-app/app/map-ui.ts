@@ -245,11 +245,6 @@ export class MapUI {
     return p;
   }
   
-  //should return an array of unique initiatives in filters
-  getFiltered(): Initiative[] {
-    return this.filter.getFiltered();
-  }
-
   getFilteredMap(): Dictionary<Initiative> {
     return this.filter.filteredIndex;
   }

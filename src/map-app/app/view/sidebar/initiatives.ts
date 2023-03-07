@@ -237,7 +237,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 
     const mapui = this.presenter.parent.mapui;
-		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.getFiltered());
+		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
 		const activeFilterCategories = mapui.getFiltersFull()
       .map(filter => filter.verboseName)
       .filter((name): name is string => name != undefined)

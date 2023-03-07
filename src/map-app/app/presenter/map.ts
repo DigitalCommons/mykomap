@@ -206,7 +206,8 @@ export class MapPresenter extends BasePresenter {
   //FILTERS
   applyFilter() {
     // if there are currently any filters
-    if (this.mapUI.getFilters().length > 0) {
+    const filters = this.mapUI.filter.getFilteredIds();
+    if (filters.length > 0) {
       // display only filtered initiatives, the rest should be hidden
       this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());
       this.mapUI.markers.showMarkers(this.mapUI.filter.getFiltered());
