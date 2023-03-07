@@ -245,10 +245,6 @@ export class MapUI {
     return p;
   }
   
-  getFilteredMap(): Dictionary<Initiative> {
-    return this.filter.filteredIndex;
-  }
-
   getFilters(): string[]  {
     return this.filter.getFilteredIds()
   }

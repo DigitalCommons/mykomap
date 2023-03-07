@@ -5,7 +5,7 @@ import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
-import { toString as _toString } from '../../../utils';
+import { initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
@@ -155,7 +155,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
     //get the uniquids of the applied filters
-    const filterKeys = Object.keys(this.parent.mapui.getFilteredMap());
+    const filterKeys = initiativeUris(this.parent.mapui.filter.getFiltered());
 
     //go in if there are any filters
     if (filterKeys.length != 0) {
