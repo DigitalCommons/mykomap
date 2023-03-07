@@ -20,7 +20,7 @@ import {
 
 import {
   SparqlVocabLoader,
-} from './sparqlvocabloader';
+} from './sparql-vocab-loader';
 
 import {
   JsonVocabLoader,
