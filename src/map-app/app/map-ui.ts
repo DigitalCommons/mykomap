@@ -1,11 +1,11 @@
 import { Marker } from "leaflet";
-import { Dictionary } from "../common_types";
+import { Dictionary } from "../common-types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
-import { MarkerManager } from "./markermanager";
+import { MarkerManager } from "./marker-manager";
 import { Config } from "./model/config";
-import { DataServices } from "./model/dataservices";
+import { DataServices } from "./model/data-services";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";

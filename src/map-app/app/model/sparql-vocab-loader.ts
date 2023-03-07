@@ -1,12 +1,12 @@
 import type {
   Dictionary,
-} from '../../common_types';
+} from '../../common-types';
 
 import {
   DataLoader,
   DataConsumer,
   DataLoaderError,
-} from './dataloader';
+} from './data-loader';
 
 import {
   VocabIndex,
@@ -15,7 +15,7 @@ import {
 } from './vocabs';
 
 import { json } from 'd3';
-import { HostSparqlVocabParams } from './config_schema';
+import { HostSparqlVocabParams } from './config-schema';
 
 // For loading Vocabs using a DataConsumer
 //

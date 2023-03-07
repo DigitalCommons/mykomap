@@ -1,7 +1,7 @@
-import { basePropertySchema, PropDef, PropDefs } from "../src/map-app/app/model/dataservices";
+import { basePropertySchema, PropDef, PropDefs } from "../src/map-app/app/model/data-services";
 import { Initiative, InitiativeObj } from "../src/map-app/app/model/initiative";
 import { SparqlVocabResponse, VocabIndex } from "../src/map-app/app/model/vocabs";
-import { Dictionary } from "../src/map-app/common_types";
+import { Dictionary } from "../src/map-app/common-types";
 
 // The Vocabs (just has a couple of kinds)
 export const sparqlVocabResponse1: SparqlVocabResponse = {

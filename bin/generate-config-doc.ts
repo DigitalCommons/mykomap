@@ -4,6 +4,6 @@
  */
 
 /** Stub the Require.js framework `define` function. */
-import { Config } from "../src/map-app/app/model/config_schema";
+import { Config } from "../src/map-app/app/model/config-schema";
 const config = new Config();
 console.log(config.generateDoc());

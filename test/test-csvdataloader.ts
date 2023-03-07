@@ -11,12 +11,12 @@ import * as nock from 'nock';
 
 import {
   loadDatasets,
-} from '../src/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/data-services';
 
-import { Dictionary } from '../src/map-app/common_types';
+import { Dictionary } from '../src/map-app/common-types';
 import {
   CsvDataLoader,
-} from '../src/map-app/app/model/csvdataloader';
+} from '../src/map-app/app/model/csv-data-loader';
 import {
   ObjTransform,
   Transforms as T,

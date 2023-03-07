@@ -1,12 +1,12 @@
-import type { Dictionary } from '../../common_types';
+import type { Dictionary } from '../../common-types';
 
 import type {
   DataConsumer
-} from './dataloader';
+} from './data-loader';
 
 import {
   AggregatedData
-} from './dataloader';
+} from './data-loader';
 
 import {
   PropDefs,
@@ -16,15 +16,15 @@ import {
   ValuePropDef,
   VocabPropDef,
   sortedInsert,
-} from './dataservices';
+} from './data-services';
 
 import {
   PropertyIndexer
-} from './propertyindexer';
+} from './property-indexer';
 
 import {
   PropDefIndex
-} from './propdefindex';
+} from './prop-def-index';
 
 import {
   Config,

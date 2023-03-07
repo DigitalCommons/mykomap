@@ -1,6 +1,6 @@
 import type {
   Dictionary
-} from '../../common_types';
+} from '../../common-types';
 
 import type {
   Initiative,
@@ -8,7 +8,7 @@ import type {
 
 import {
   sortInitiatives,
-} from './dataservices';
+} from './data-services';
 
 
 // For loading data incrementally

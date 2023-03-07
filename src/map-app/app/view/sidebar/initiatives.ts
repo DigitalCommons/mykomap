@@ -3,9 +3,9 @@ import * as d3 from 'd3';
 import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
-import { Dictionary } from '../../../common_types';
+import { Dictionary } from '../../../common-types';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
-import { SearchResults } from '../../../searchresults';
+import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { promoteToArray, toString as _toString } from '../../../utils';
 

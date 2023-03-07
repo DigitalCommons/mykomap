@@ -1,6 +1,6 @@
 import type {
   Dictionary,
-} from './common_types';
+} from './common-types';
 
 import {
   bindNew,

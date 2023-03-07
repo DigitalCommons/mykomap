@@ -2,7 +2,7 @@ import {
   DataLoader,
   DataConsumer,
   DataLoaderError,
-} from './dataloader';
+} from './data-loader';
 
 import {
   VocabIndex,

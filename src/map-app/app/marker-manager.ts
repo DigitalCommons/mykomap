@@ -1,11 +1,11 @@
-import { Dictionary } from '../common_types';
+import { Dictionary } from '../common-types';
 import * as leaflet from 'leaflet';
-import { InitiativeRenderFunction } from './model/config_schema';
+import { InitiativeRenderFunction } from './model/config-schema';
 import { Initiative } from './model/initiative';
 import { toString as _toString } from '../utils';
 import { MapMarkerPresenter } from './presenter/map/marker';
-import { MapUI } from './mapui';
-import { getPopup } from './defaultpopup';
+import { MapUI } from './map-ui';
+import { getPopup } from './default-popup';
 
 export class MarkerManager {
   private readonly popup: InitiativeRenderFunction;

@@ -1,30 +1,30 @@
 // Model for SSE Initiatives.
-import { toError } from '../../toerror';
-import type { Dictionary, Box2d } from '../../common_types';
+import { toError } from '../../to-error';
+import type { Dictionary, Box2d } from '../../common-types';
 import type { Config } from './config';
 import { EventBus } from '../../eventbus';
 import { toNumber, toString } from '../../utils';
 import type {
   DialogueSize,
-} from './config_schema';
+} from './config-schema';
 
 import type {
   DataConsumer,
   DataLoader,
-} from './dataloader';
+} from './data-loader';
 
 import {
   AggregatedData,
   DataLoaderError,
-} from './dataloader';
+} from './data-loader';
 
 import {
   SparqlVocabLoader,
-} from './sparqlvocabloader';
+} from './sparql-vocab-loader';
 
 import {
   JsonVocabLoader,
-} from './jsonvocabloader';
+} from './json-vocab-loader';
 
 import {
   Vocab,
@@ -36,18 +36,18 @@ import {
 
 import {
   SparqlDataLoader,
-} from './sparqldataloader';
+} from './sparql-data-loader';
 
 import {
     DataAggregator
-} from './dataaggregator';
+} from './data-aggregator';
 
 import {
   Initiative,
   InitiativeObj
 } from './initiative';
 
-import { CsvDataLoader } from './csvdataloader';
+import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");

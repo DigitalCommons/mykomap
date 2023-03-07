@@ -2,7 +2,7 @@ import {
   DataLoader,
   DataConsumer,
   AggregatedData,
-} from './dataloader';
+} from './data-loader';
 
 import {
   InitiativeObj,

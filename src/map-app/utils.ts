@@ -1,4 +1,4 @@
-import { Box2d, Point2d } from "./common_types";
+import { Box2d, Point2d } from "./common-types";
 
 /// A function which aggregates an array of numbers (or null/undefined) into a single number.
 export type numberAryFn = (array: Array<number|undefined|null>) => number | undefined;

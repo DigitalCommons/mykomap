@@ -1,4 +1,4 @@
-import type { Assoc } from './common_types';
+import type { Assoc } from './common-types';
 
 /// A list of the ISO639-1 2 character international country
 /// codes. Note, this standard changes slowly...

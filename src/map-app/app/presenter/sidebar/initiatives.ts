@@ -1,9 +1,9 @@
 import { EventBus } from '../../../eventbus';
-import { MultiPropDef, VocabPropDef } from '../../model/dataservices';
+import { MultiPropDef, VocabPropDef } from '../../model/data-services';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
-import { SearchResults } from '../../../searchresults';
+import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';

@@ -1,7 +1,7 @@
 import {
   DataLoader,
   DataConsumer,
-} from './dataloader';
+} from './data-loader';
 
 import {
   InitiativeObj,

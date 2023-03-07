@@ -1,14 +1,14 @@
 
 import { expect } from 'chai';
 
-import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
+import { DataAggregator } from '../src/map-app/app/model/data-aggregator';
 import { Config } from '../src/map-app/app/model/config';
 import {
   Initiative,
   InitiativeObj,
 } from '../src/map-app/app/model/initiative';
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
-import { Dictionary } from '../src/map-app/common_types';
+import { Dictionary } from '../src/map-app/common-types';
 import {
   sparqlVocabResponse1 as vocabIndex,
   propertySchema1 as propertySchema

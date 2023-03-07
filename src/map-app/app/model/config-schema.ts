@@ -19,14 +19,14 @@ import type {
   Dictionary,
   Point2d,
   Box2d
-} from '../../common_types';
+} from '../../common-types';
 
 import type {
   DataServices,
   PropDef,
   PropDefs,
   FieldDefs,
-} from './dataservices';
+} from './data-services';
 
 import type {
   ObjTransformFunc,

@@ -2,12 +2,12 @@ import { assert } from 'chai';
 import { init as configBuilder } from '../src/map-app/app/model/config';
 const config = configBuilder();
 
-import { Dictionary } from '../src/map-app/common_types';
-import { DataServicesImpl, PropDefs, basePropertySchema } from '../src/map-app/app/model/dataservices';
+import { Dictionary } from '../src/map-app/common-types';
+import { DataServicesImpl, PropDefs, basePropertySchema } from '../src/map-app/app/model/data-services';
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
-import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
+import { DataAggregator } from '../src/map-app/app/model/data-aggregator';
 
-import { getPopup } from '../src/map-app/app/defaultpopup';
+import { getPopup } from '../src/map-app/app/default-popup';
 import { phraseBooks } from '../src/map-app/localisations';
 const expectedContent = require('./expected/popups/default.json');
 
@@ -81,7 +81,7 @@ dataservices.aggregatedData = aggregator; // Hack this into place
 
 const initiatives = aggregator.initiativesByUid;
 
-describe('The default_popup.js module', function () {
+describe('The default-popup.ts module', function () {
 
   const allContent: Dictionary<string> = {};
   Object.entries(initiatives).forEach((ent) => {

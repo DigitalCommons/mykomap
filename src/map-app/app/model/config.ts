@@ -9,7 +9,7 @@
 import {
   ConfigData,
   Config,
-} from './config_schema';
+} from './config-schema';
 
 export { ConfigData, Config };
 

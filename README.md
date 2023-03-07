@@ -315,7 +315,7 @@ development web-server, publishing a project consuming mykomap in
 	
 Developer convenience. Regenerates the documentation for `config.json`
 in `CONFIG.md`. Developers should run this when the schema definitions
-in `config_schema.js` are changed.
+in `config-schema.ts` are changed.
 
 # MISCELLANEA
 
