@@ -205,12 +205,12 @@ export class MapPresenter extends BasePresenter {
 
   //FILTERS
   applyFilter() {
-    //if there are currently any filters 
+    // if there are currently any filters
     if (this.mapUI.getFilters().length > 0) {
-      //display only filtered initiatives, the rest should be hidden
-      this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());
-      this.mapUI.markers.showMarkers(this.mapUI.getFiltered());
-    } else //if no filters available show everything
+      // display only filtered initiatives, the rest should be hidden
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());
+      this.mapUI.markers.showMarkers(this.mapUI.filter.getFiltered());
+    } else // if no filters available show everything
       this.removeFilters();
   }
 
@@ -222,116 +222,31 @@ export class MapPresenter extends BasePresenter {
     if (filterName === undefined)
       return;
     
-    //if filter already exists don't do anything
-    if (Object.keys(this.mapUI.filtered).includes(filterName))
-      return;
+    // add filter
+    const initiativeIndex = initiatives.reduce<Dictionary<Initiative>>(
+      (ix, it) => { ix[_toString(it.uri)] = it; return ix; },
+      {}
+    );
+    this.mapUI.filter.addFilter(filterName, initiativeIndex, verboseName);
 
-    //add filter
-    this.mapUI.filtered[filterName] = initiatives;
-
-    //add the verbose name of the filter
-    this.mapUI.verboseNamesMap[filterName] = verboseName;
-
-    //if this is the first filter, add items to the filteredInitiativesUIDMap
-    if (Object.keys(this.mapUI.filtered).length <= 1) {
-      this.mapUI.initiativesOutsideOfFilterUIDMap = Object.assign({},this.mapUI.dataServices.getAggregatedData().initiativesByUid);
-      //add to array only new unique entries
-      initiatives.forEach(initiative => {
-        //rm entry from outside map
-        const uri = _toString(initiative.uri, null);
-        if (uri === null) {
-          console.warn("initiative has non-string uri property, ignoring", initiative);
-        }
-        else {
-          delete this.mapUI.initiativesOutsideOfFilterUIDMap[uri];
-          this.mapUI.filteredInitiativesUIDMap[uri] = initiative;
-        }
-      });
-    }
-    /* if this is the second or more filter, remove items from the 
-       filteredInitiativesUIDMap if they don't appear in the new filter's set of initiatives
-     */
-    else {      
-      for(const initiativeUniqueId in this.mapUI.filteredInitiativesUIDMap){
-        const initiative = this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId];
-        if(initiative && !initiatives.includes(initiative)){
-          this.mapUI.initiativesOutsideOfFilterUIDMap[initiativeUniqueId] = Object.assign({},this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId]);
-          delete this.mapUI.filteredInitiativesUIDMap[initiativeUniqueId];
-        }
-      }
-    }
-
-    console.log(this.mapUI.filteredInitiativesUIDMap);
-
-    //apply filters
+    // apply filters
     this.applyFilter();
   }
 
-  removeFilters() {
-    //remove filters
-    this.mapUI.filtered = {};
-    this.mapUI.filteredInitiativesUIDMap = {};
-    this.mapUI.initiativesOutsideOfFilterUIDMap = Object.assign({}, this.mapUI.dataServices.getAggregatedData().initiativesByUid);
-    this.mapUI.verboseNamesMap = {};
-    //show all markers
+  removeFilters(): void {
+    this.mapUI.filter.reset(this.mapUI.dataServices.getAggregatedData().initiativesByUid);
+
+    // Show all the markers. FIXME why not the same .initiativesByUid as above?
     this.mapUI.markers.showMarkers(this.mapUI.loadedInitiatives);
   }
 
   removeFilter(filterName: string) {
-    //if filter doesn't exist don't do anything
-    if (!Object.keys(this.mapUI.filtered).includes(filterName))
-      return;
-
-    //remove the filter
-    let oldFilterVals = this.mapUI.filtered[filterName];
-    delete this.mapUI.filtered[filterName];
-
-    //if no filters left call remove all and stop
-    if (Object.keys(this.mapUI.filtered).length <= 0) {
-      this.removeFilters();
-      return;
-    }
-
-    //add in the values that you are removing 
-    oldFilterVals?.forEach(i => {
-      const uri = _toString(i.uri, null);
-      if (uri !== null)
-        this.mapUI.initiativesOutsideOfFilterUIDMap[uri] = i;
-      else
-        console.warn("inititive has non-string uri property, ignoring", i);
-    });
-
-    //remove filter initatitives 
-    //TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    Object.keys(this.mapUI.filtered).forEach(k => {
-      this.mapUI.filtered[k]?.forEach(i => {
-        const uri = _toString(i.uri, null);
-        if (uri !== null) {
-          //add in unique ones
-          this.mapUI.filteredInitiativesUIDMap[uri] = i;
-          //remove the ones you added
-          delete this.mapUI.initiativesOutsideOfFilterUIDMap[uri];
-        }
-        else
-          console.warn("inititive has non-string uri property, ignoring", i);
-      })
-    });
-
-    //remove filter from verbose name
-    delete this.mapUI.verboseNamesMap[filterName];
-
+    this.mapUI.filter.removeFilter(filterName);
 
     //apply filters
     this.applyFilter();
   }
 
-
-
-  //should return an array of unique initiatives outside of filters
-  getInitiativesOutsideOfFilter(): Initiative[] {
-    return Object.values(this.mapUI.initiativesOutsideOfFilterUIDMap)
-      .filter((i): i is Initiative => i !== undefined);
-  }
   //FILTERS END
 
 
@@ -348,8 +263,8 @@ export class MapPresenter extends BasePresenter {
       // return;
       console.log("no results, hide everything");
       //hide all 
-      this.mapUI.hidden = this.mapUI.loadedInitiatives;
-      this.mapUI.markers.hideMarkers(this.mapUI.hidden);
+      this.mapUI.filter.hidden = this.mapUI.loadedInitiatives;
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
       return;
     }
 
@@ -368,12 +283,12 @@ export class MapPresenter extends BasePresenter {
     const initiativeIds = data.initiatives.map(i => i.uri);
     
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    this.mapUI.hidden = this.mapUI.loadedInitiatives.filter(i => 
+    this.mapUI.filter.hidden = this.mapUI.loadedInitiatives.filter(i => 
       !initiativeIds.includes(i.uri)
     );
 
     //hide all unneeded markers
-    this.mapUI.markers.hideMarkers(this.mapUI.hidden);
+    this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
     //make sure the markers you need to highlight are shown
     this.mapUI.markers.showMarkers(data.initiatives);
 
@@ -407,27 +322,29 @@ export class MapPresenter extends BasePresenter {
   removeSearchFilter() {
 
     //if no search filter to remove just return
-    if (this.mapUI.hidden.length === 0)
+    if (this.mapUI.filter.hidden.length === 0)
       return;
 
     //show hidden markers
     //this.mapUI.markers.showMarkers(hidden);
     this.applyFilter();
 
+    // FIXME why do what seems to be more or less the same as applyFilter does here?
     if (this.mapUI.getFilters().length > 0) {
       //hide the initiatives that were outside of the filter
-      this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
-      //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());// this can be sped up
+      //you can speed up the above statement by replacing this.getUnfiltered() 
       //with the difference between getFiltered() and data.initiatives
       //i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      this.mapUI.markers.showMarkers(this.mapUI.hidden);
-    } else //if no filters available then the search was under global (only hidden ones need to be shown)
-      this.mapUI.markers.showMarkers(this.mapUI.hidden);
+      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
+    }
+    else // if no filters available then the search was under global (only hidden ones need to be shown)
+      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
 
     //reset the hidden array
-    this.mapUI.hidden = [];
+    this.mapUI.filter.hidden = [];
 
     EventBus.Markers.needToShowLatestSelection.pub([]);
   }

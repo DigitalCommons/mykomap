@@ -1,4 +1,3 @@
-import { Marker } from "leaflet";
 import { Dictionary } from "../common-types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
@@ -10,25 +9,176 @@ import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
+import { compactArray, toString as _toString } from '../utils';
+
+/// Expresses a filtering operation on a FilterService<I>
+export interface Filter<I> {
+  filterName?: string;
+  verboseName?: string;
+  initiatives: I[];
+}
+
+/// Manages a set of filtered/unfiltered items of type I
+export class FilterService<I> {
+  // The set of all items. Should be unchanged.
+  private allItems: Dictionary<I> = {};
+  
+  filteredIndex: Dictionary<I> = {}; // filteredInitiativesuidmap
+  unfilteredIndex: Dictionary<I> = {}; // initiativesOutsideOfFilterUIDMap
+
+  /// An index of filter names to a list of items matched by that filter
+  filtered: Dictionary<Dictionary<I>> = {}; // filtered
+  verboseNamesMap: Dictionary = {};
+  hidden: I[] = [];
+
+  constructor() {
+  }
+
+  /// Resets the filter to the unfiltered state, including all the given items.
+  ///
+  /// Note: copies the index so that changes do not alter the original index.
+  reset(items?: Dictionary<I>) {
+    if (items)
+      this.allItems = items;
+    this.filtered = {};
+    this.filteredIndex = {};
+    this.verboseNamesMap = {};
+    this.unfilteredIndex = Object.assign({}, this.allItems);
+  }
+
+  /// Gets an array of the current filtered items
+  getFiltered(): I[] {
+    return Object.values(this.filteredIndex)
+      .filter((i): i is I => i !== undefined);
+  }
+
+  /// Gets an array of the current unfiltered items
+  getUnfiltered(): I[] {
+    return Object.values(this.unfilteredIndex)
+      .filter((i): i is I => i !== undefined);
+  }
+
+  getFilteredIds(): string[] {
+    return Object.keys(this.filtered);
+  }
+
+  getFiltersFull(): Filter<I>[] {
+    const filterArray: Filter<I>[] = []
+    
+    for(let filterName in this.verboseNamesMap){
+      const filtered = this.filtered[filterName];
+      if (!filtered)
+        continue;
+      const initiatives = Object.values(filtered);
+      filterArray.push({
+        filterName: filterName,
+        verboseName: this.verboseNamesMap[filterName] ?? '',
+        initiatives: compactArray(initiatives),
+      })
+    }
+    
+    return filterArray;
+  }
+
+  getFiltersVerbose(): string[] {
+    return Object.values(this.verboseNamesMap)
+      .filter((i): i is string => i !== undefined);
+  }
+
+  isFiltered(id: string): boolean {
+    return !!this.filtered[id];
+  }
+  
+  addFilter(name: string, itemIndex: Dictionary<I>, verboseName?: string): void {
+    // if filter already exists don't do anything
+    if (this.isFiltered(name))
+      return;
+
+    this.filtered[name] = itemIndex;
+    this.verboseNamesMap[name] = verboseName;
+    
+    // if this is the first filter, add items to the filteredInitiativesUIDMap
+    if (Object.keys(this.filtered).length <= 1) {
+      this.unfilteredIndex = Object.assign({}, this.allItems);
+      
+      // add to array only new unique entries
+      for(const id in itemIndex) {
+        const item = itemIndex[id];
+        // rm entry from outside map
+        delete this.unfilteredIndex[id];
+        this.filteredIndex[id] = item;
+      }
+    }
+    else {      
+      // if this is the second or more filter, remove items from the 
+      // filteredIndex if they don't appear in the new filter's set of initiatives
+      for(const id in this.filteredIndex){
+        const item = this.filteredIndex[id];
+        if(item && !itemIndex[id]){
+          this.unfilteredIndex[id] = Object.assign({},this.filteredIndex[id]);
+          delete this.filteredIndex[id];
+        }
+      }
+    }
+
+    console.log(this.filteredIndex);
+  }
+
+  removeFilter(filterName: string): void {
+    // if filter doesn't exist don't do anything
+    if (!this.isFiltered(filterName))
+      return;
+
+    // remove the filter
+    const oldFilterIndex = this.filtered[filterName];
+    delete this.filtered[filterName];
+
+    // if no filters left call remove all and stop
+    if (Object.keys(this.filtered).length <= 0) {
+      this.reset();
+      return;
+    }
+
+    // add in the values that you are removing 
+    for(const id in oldFilterIndex) {      
+      this.unfilteredIndex[id] = oldFilterIndex[id];
+    }
+
+    // remove filter initatives 
+    // TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
+    for(const filterName in this.filtered) {
+      const ix = this.filtered[filterName];
+      if (!ix) continue;
+
+      for(const id in ix) {
+        // add in unique ones
+        this.filteredIndex[id] = ix[id];
+        // remove the ones you added
+        delete this.unfilteredIndex[id];
+      }
+    }
+
+    // remove filter from verbose name
+    delete this.verboseNamesMap[filterName];
+  }
+}
+
 
 export class MapUI {
-  initiativesOutsideOfFilterUIDMap: Dictionary<Initiative> = {};
   public loadedInitiatives: Initiative[] = [];
-  filtered: Dictionary<Initiative[]> = {};
-  filteredInitiativesUIDMap: Dictionary<Initiative> = {};
-  verboseNamesMap: Dictionary = {};
-  hidden: Initiative[] = [];
   public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
   readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
   readonly markers: MarkerManager;
   readonly labels: PhraseBook;
+  readonly filter: FilterService<Initiative>;
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
     this.markers = new MarkerManager(this);
     this.labels = this.dataServices.getFunctionalLabels();
+    this.filter = new FilterService();
     
     // This is here to resolve a circular dependency loop - MapUI needs the SidebarView
     // when it runs, but SidebarView needs a link to the MapUI.
@@ -51,9 +201,7 @@ export class MapUI {
   
   
   onNewInitiatives() {
-    this.initiativesOutsideOfFilterUIDMap = Object.assign(
-      {}, this.dataServices.getAggregatedData().initiativesByUid
-    );
+    this.filter.reset(this.dataServices.getAggregatedData().initiativesByUid);
     this.loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
   }
   
@@ -99,35 +247,23 @@ export class MapUI {
   
   //should return an array of unique initiatives in filters
   getFiltered(): Initiative[] {
-    return Object.values(this.filteredInitiativesUIDMap)
-      .filter((i): i is Initiative => i !== undefined);
+    return this.filter.getFiltered();
   }
 
-  getFilteredMap() {
-    return this.filteredInitiativesUIDMap;
+  getFilteredMap(): Dictionary<Initiative> {
+    return this.filter.filteredIndex;
   }
 
-  getFilters(){
-    return Object.keys(this.filtered);
+  getFilters(): string[]  {
+    return this.filter.getFilteredIds()
   }
 
   getFiltersFull(): EventBus.Map.Filter[] {
-    const filterArray: EventBus.Map.Filter[] = []
-    
-    for(let filterName in this.verboseNamesMap){
-      filterArray.push({
-        filterName: filterName,
-        verboseName: this.verboseNamesMap[filterName] ?? '',
-        initiatives: this.filtered[filterName] ?? []
-      })
-    }
-
-    return filterArray;
+    return this.filter.getFiltersFull();
   }
 
   getFiltersVerbose(): string[] {
-    return Object.values(this.verboseNamesMap)
-      .filter((i): i is string => i !== undefined);
+    return this.filter.getFiltersVerbose();
   }
 }
 

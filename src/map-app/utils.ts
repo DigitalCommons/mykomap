@@ -204,3 +204,10 @@ export function promoteToArray<T = unknown[]>(x: unknown): T | unknown[] {
   return [x];
 }
 
+/// Compact an array (or an empty reference) of possibly undefined values into
+/// an array with no undefined values
+export function compactArray<T>(x: (T | undefined | null)[] | undefined | null): T[] {
+  if (!x)
+    return [];
+  return x.filter((it): it is T => it !== undefined);
+}
