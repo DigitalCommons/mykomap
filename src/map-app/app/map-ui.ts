@@ -243,10 +243,6 @@ export class MapUI {
     EventBus.Map.removeSearchFilter.sub(() => p.removeSearchFilter());
 
     return p;
-  }
-  
-  getFiltersVerbose(): string[] {
-    return this.filter.getFiltersVerbose();
-  }
+  }  
 }
 

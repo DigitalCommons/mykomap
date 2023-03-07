@@ -170,7 +170,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //filter
     this.parent.contentStack.append(
       new SearchResults(data.results, data.text,
-                        this.parent.mapui.getFiltersVerbose(),
+                        this.parent.mapui.filter.getFiltersVerbose(),
                         this.parent.mapui.filter.getFilteredIds(),
                         this.parent.mapui.labels)
     );
@@ -197,7 +197,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   getFilterNames() {
-    return this.parent.mapui.getFiltersVerbose();
+    return this.parent.mapui.filter.getFiltersVerbose();
   }
 
   initClicked(initiative: Initiative) {
