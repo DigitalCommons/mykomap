@@ -24,7 +24,7 @@ import {
 
 import {
   PropDefIndex
-} from './propdefindex';
+} from './prop-def-index';
 
 import {
   Config,

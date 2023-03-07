@@ -1,7 +1,7 @@
 import { Dictionary } from "../../common-types";
 import { sortedInsert } from "./data-services";
 import { Vocab, VocabLookup } from "./vocabs";
-import { PropDefIndex } from "./propdefindex";
+import { PropDefIndex } from "./prop-def-index";
 import { Initiative } from "./initiative";
 
 // Aggregates selected Initiative properties into an index

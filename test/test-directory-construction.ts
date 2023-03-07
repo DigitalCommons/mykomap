@@ -14,7 +14,7 @@ import {
 
 import { Initiative } from '../src/map-app/app/model/initiative';
 import { Vocab } from '../src/map-app/app/model/vocabs';
-import { PropDefIndex } from '../src/map-app/app/model/propdefindex';
+import { PropDefIndex } from '../src/map-app/app/model/prop-def-index';
 
 const vocabMap = vocabIndex.vocabs;
 
