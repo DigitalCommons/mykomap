@@ -256,8 +256,8 @@ export interface DataServices {
   // Gets the current language set in the config (or the fallback language if unset)
   getLanguage(): Iso6391Code;
   
-  //get an array of possible filters from  a list of initiatives
-  getPossibleFilterValues(filteredInitiatives: Initiative[]): string[];
+  //get an array of possible filters from  a list of initiative URIs
+  getPossibleFilterValues(filteredInitiativeUris: string[]): string[];
 
   getPropertySchema(propName: string): PropDef | undefined;
 
@@ -594,13 +594,17 @@ export class DataServicesImpl implements DataServices {
     return {};
   }
 
-  //get an array of possible filters from  a list of initiatives
-  getPossibleFilterValues(filteredInitiatives: Initiative[]): string[] {
-    let possibleFilterValues: string[] = [];
+  //get an array of possible filters from  a list of initiative URIs
+  getPossibleFilterValues(filteredInitiativeUris: string[]): string[] {
+    const possibleFilterValues: string[] = [];
 
     // Need to call this method to ensure the result is computed
-    filteredInitiatives.forEach(initiative => {
+    filteredInitiativeUris.forEach(uri => {
       for(const name in this.config.getFilterableFields()) {    
+
+        const initiative = this.aggregatedData.initiativesByUid[uri];
+        if (!initiative)
+          continue;
         
         const id = initiative[name];
           

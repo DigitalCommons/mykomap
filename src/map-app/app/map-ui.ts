@@ -46,18 +46,6 @@ export class FilterService<I> {
     this.unfilteredIndex = Object.assign({}, this.allItems);
   }
 
-  /// Gets an array of the current filtered items
-  getFiltered(): I[] {
-    return Object.values(this.filteredIndex)
-      .filter((i): i is I => i !== undefined);
-  }
-
-  /// Gets an array of the current unfiltered items
-  getUnfiltered(): I[] {
-    return Object.values(this.unfilteredIndex)
-      .filter((i): i is I => i !== undefined);
-  }
-
   /// Gets an array of the current filtered items' ids
   getFilteredIds(): string[] {
     return Object.keys(this.filteredIndex);
