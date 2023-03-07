@@ -36,7 +36,7 @@ import {
 
 import {
   SparqlDataLoader,
-} from './sparqldataloader';
+} from './sparql-data-loader';
 
 import {
     DataAggregator

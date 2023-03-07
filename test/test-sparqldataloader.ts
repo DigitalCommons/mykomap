@@ -10,7 +10,7 @@ import {
 
 import {
   SparqlDataLoader,
-} from '../src/map-app/app/model/sparqldataloader';
+} from '../src/map-app/app/model/sparql-data-loader';
 
 import {
   TestConsumer,
