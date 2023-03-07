@@ -82,7 +82,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
 
     //remove old filter 
-    const currentFilters = mapui.getFiltersFull();
+    const currentFilters = mapui.filter.getFiltersFull();
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {

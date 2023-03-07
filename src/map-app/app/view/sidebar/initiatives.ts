@@ -238,7 +238,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
     const mapui = this.presenter.parent.mapui;
 		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
-		const activeFilterCategories = mapui.getFiltersFull()
+		const activeFilterCategories = mapui.filter.getFiltersFull()
       .map(filter => filter.verboseName)
       .filter((name): name is string => name != undefined)
       .map(name => name.split(":")[0]);
@@ -275,7 +275,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			let alternatePossibleFilterValues: unknown[] = [];
 			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
 				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
-					mapui.getFiltersFull(), field);
+					mapui.filter.getFiltersFull(), field);
 
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
