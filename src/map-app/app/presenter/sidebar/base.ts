@@ -49,7 +49,6 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
             verboseName: filter.verboseName
           };
           EventBus.Map.addFilter.pub(filterData);
-
         });
       }
 

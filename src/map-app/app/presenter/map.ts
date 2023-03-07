@@ -5,7 +5,7 @@ import * as leaflet from 'leaflet';
 import { Dictionary } from '../../common-types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
-import { initiativeUris, compactArray, toString as _toString } from '../../utils';
+import { initiativeUris, toString as _toString } from '../../utils';
 import { MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
@@ -209,34 +209,29 @@ export class MapPresenter extends BasePresenter {
     const filters = this.mapUI.filter.getFilterIds();
     if (filters.length > 0) {
       // display only filtered initiatives, the rest should be hidden
-      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfilteredIds());
-      this.mapUI.markers.showMarkers(this.mapUI.filter.getFilteredIds());
+      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.getUnfilteredIds()));
+      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.getFilteredIds()));
     } else // if no filters available show everything
       this.removeFilters();
   }
 
   addFilter(data: EventBus.Map.Filter) {
-    let initiatives = data.initiatives;
-    let filterName = data.filterName;
-    let verboseName = data.verboseName;
-
-    if (filterName === undefined)
+    if (data.filterName === undefined)
       return;
     
     // add filter
-    this.mapUI.filter.addFilter(filterName, initiativeUris(initiatives), verboseName);
+    this.mapUI.filter.addFilter(data.filterName, data.initiatives, data.verboseName);
 
     // apply filters
     this.applyFilter();
   }
 
   removeFilters(): void {
-    this.mapUI.filter.reset(this.mapUI.dataServices.getAggregatedData().initiativesByUid);
+    this.mapUI.filter.reset(this.mapUI.loadedInitiatives);
 
     // Show all the markers. FIXME why not the same .initiativesByUid as above?
-    this.mapUI.markers.showMarkers(
-      compactArray(this.mapUI.loadedInitiatives.map(it => _toString(it.url, undefined)))
-    );
+    const uris = initiativeUris(this.mapUI.loadedInitiatives);
+    this.mapUI.markers.showMarkers(uris);
   }
 
   removeFilter(filterName: string) {
@@ -256,14 +251,14 @@ export class MapPresenter extends BasePresenter {
   addSearchFilter(data: EventBus.Map.Filter) {
     
     //if no results remove the filter, currently commented out
-    if (data.initiatives != null && data.initiatives.length == 0) {
+    if (data.initiatives.length == 0) {
       // uncommenting this will reveal all initiatives on a failed search
       // this.removeSearchFilter();
       // return;
       console.log("no results, hide everything");
-      //hide all 
-      this.mapUI.filter.hidden = compactArray(this.mapUI.loadedInitiatives.map(it => _toString(it.uri)));
-      this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
+      // hide all 
+      this.mapUI.filter.hidden = this.mapUI.loadedInitiatives;
+      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.hidden));
       return;
     }
 
@@ -279,24 +274,21 @@ export class MapPresenter extends BasePresenter {
 
 
     //get the ids from the passed data
-    const initiativeIds = compactArray(data.initiatives.map(i => _toString(i.uri, undefined)));
-    
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    this.mapUI.filter.hidden = this.mapUI.loadedInitiatives
-      .map(i => _toString(i.uri, undefined))
-      .filter((uri): uri is string => uri !== undefined && !initiativeIds.includes(uri));
+    const notFiltered = data.initiatives.filter(it => !this.mapUI.loadedInitiatives.includes(it));
+    this.mapUI.filter.hidden = notFiltered;
 
     //hide all unneeded markers
-    this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
+    this.mapUI.markers.hideMarkers(initiativeUris(notFiltered));
     //make sure the markers you need to highlight are shown
-    this.mapUI.markers.showMarkers(initiativeIds);
+    this.mapUI.markers.showMarkers(initiativeUris(data.initiatives));
 
     //zoom and pan
 
     if (data.initiatives.length > 0) {
       var options: EventBus.Map.ZoomOptions = {
         maxZoom: this.mapUI.config.getMaxZoomOnSearch()
-      }
+      } 
       if (options.maxZoom == 0)
         options = {};
 
@@ -331,16 +323,17 @@ export class MapPresenter extends BasePresenter {
     // FIXME why do what seems to be more or less the same as applyFilter does here?
     if (this.mapUI.filter.getFilterIds().length > 0) {
       //hide the initiatives that were outside of the filter
-      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfilteredIds());// this can be sped up
-      //you can speed up the above statement by replacing getUnfilteredIds() 
-      //with the difference between getFilteredIds() and data.initiatives
-      //i.e. getting the initiatives that are outside of the filter but still shown
+      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.getUnfilteredIds()));
+      // this can be sped up
+      // you can speed up the above statement by replacing this.getUnfilteredIds() 
+      // with the difference between getFilteredIds() and data.initiatives
+      // i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
+      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.hidden));
     }
     else // if no filters available then the search was under global (only hidden ones need to be shown)
-      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
+      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.hidden));
 
     //reset the hidden array
     this.mapUI.filter.hidden = [];

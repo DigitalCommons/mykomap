@@ -1,9 +1,10 @@
 // Model for SSE Initiatives.
 import { toError } from '../../to-error';
+import { toString as _toString } from '../../utils';
 import type { Dictionary, Box2d } from '../../common-types';
 import type { Config } from './config';
 import { EventBus } from '../../eventbus';
-import { toNumber, toString } from '../../utils';
+import { compactArray, toNumber, toString } from '../../utils';
 import type {
   DialogueSize,
 } from './config-schema';
@@ -256,8 +257,8 @@ export interface DataServices {
   // Gets the current language set in the config (or the fallback language if unset)
   getLanguage(): Iso6391Code;
   
-  //get an array of possible filters from  a list of initiative URIs
-  getPossibleFilterValues(filteredInitiativeUris: string[]): string[];
+  //get an array of possible filters from  a list of initiatives
+  getPossibleFilterValues(initiatives: Initiative[]): string[];
 
   getPropertySchema(propName: string): PropDef | undefined;
 
@@ -507,7 +508,7 @@ export class DataServicesImpl implements DataServices {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[] {
+  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[] { // FIXME move to FilterService
     //construct an array of the filters that aren't the one matching the field
     let otherFilters: EventBus.Map.Filter[] = [];
     filters.forEach(filter => {
@@ -519,7 +520,7 @@ export class DataServicesImpl implements DataServices {
     let sharedInitiatives: Initiative[] = [];
     otherFilters.forEach((filter, i) => {
       if (i < 1)
-        sharedInitiatives = Object.values(filter.initiatives);
+        sharedInitiatives = filter.initiatives;
       else
         //loop through sharedInitiatives and remove ones without a match in filter.initiatives
         sharedInitiatives = sharedInitiatives.filter(initiative =>
@@ -594,18 +595,13 @@ export class DataServicesImpl implements DataServices {
     return {};
   }
 
-  //get an array of possible filters from  a list of initiative URIs
-  getPossibleFilterValues(filteredInitiativeUris: string[]): string[] {
+  //get an array of possible filters from  a list of initiatives
+  getPossibleFilterValues(initiatives: Initiative[]): string[] {
     const possibleFilterValues: string[] = [];
 
     // Need to call this method to ensure the result is computed
-    filteredInitiativeUris.forEach(uri => {
+    initiatives.forEach(initiative => {
       for(const name in this.config.getFilterableFields()) {    
-
-        const initiative = this.aggregatedData.initiativesByUid[uri];
-        if (!initiative)
-          continue;
-        
         const id = initiative[name];
           
         // Add the value - if it is a vocab field and isn't already there

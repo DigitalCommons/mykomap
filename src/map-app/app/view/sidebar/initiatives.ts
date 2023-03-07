@@ -273,10 +273,12 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 			//find alternative possible filters for an active filter
 			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
+			if (currentFilters.length > 0 && activeFilterCategories.includes(field)) {
+        const filters = mapui.filter.getFiltersFull();
 				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
-					mapui.filter.getFiltersFull(), field);
-
+					filters, field
+        );
+      }
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
 				const option = dropDown
