@@ -207,7 +207,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
-		const currentFilters = this.presenter.parent.mapui.getFilters();
+		const currentFilters = this.presenter.parent.mapui.filter.getFilteredIds();
 		const lastSearchResults = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter

@@ -170,7 +170,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //filter
     this.parent.contentStack.append(
       new SearchResults(data.results, data.text,
-                        this.parent.mapui.getFiltersVerbose(), this.parent.mapui.getFilters(), this.parent.mapui.labels)
+                        this.parent.mapui.getFiltersVerbose(),
+                        this.parent.mapui.filter.getFilteredIds(),
+                        this.parent.mapui.labels)
     );
 
     //highlight markers on search results 

@@ -245,10 +245,6 @@ export class MapUI {
     return p;
   }
   
-  getFilters(): string[]  {
-    return this.filter.getFilteredIds()
-  }
-
   getFiltersFull(): EventBus.Map.Filter[] {
     return this.filter.getFiltersFull();
   }
