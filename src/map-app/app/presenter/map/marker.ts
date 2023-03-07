@@ -1,7 +1,7 @@
 import { Point2d } from '../../../common-types';
 import { EventBus } from '../../../eventbus';
 import { toPoint2d, toString as _toString } from '../../../utils';
-import { InitiativeRenderFunction } from '../../model/config_schema';
+import { InitiativeRenderFunction } from '../../model/config-schema';
 import { Initiative } from '../../model/initiative';
 import { BasePresenter } from '../base';
 import { MapMarkerView } from '../../view/map/marker';

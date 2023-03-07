@@ -15,7 +15,7 @@ import {
 } from './vocabs';
 
 import { json } from 'd3';
-import { HostSparqlVocabParams } from './config_schema';
+import { HostSparqlVocabParams } from './config-schema';
 
 // For loading Vocabs using a DataConsumer
 //

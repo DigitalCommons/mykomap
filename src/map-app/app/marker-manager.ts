@@ -1,6 +1,6 @@
 import { Dictionary } from '../common-types';
 import * as leaflet from 'leaflet';
-import { InitiativeRenderFunction } from './model/config_schema';
+import { InitiativeRenderFunction } from './model/config-schema';
 import { Initiative } from './model/initiative';
 import { toString as _toString } from '../utils';
 import { MapMarkerPresenter } from './presenter/map/marker';

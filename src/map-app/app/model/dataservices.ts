@@ -6,7 +6,7 @@ import { EventBus } from '../../eventbus';
 import { toNumber, toString } from '../../utils';
 import type {
   DialogueSize,
-} from './config_schema';
+} from './config-schema';
 
 import type {
   DataConsumer,
