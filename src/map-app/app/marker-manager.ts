@@ -4,7 +4,7 @@ import { InitiativeRenderFunction } from './model/config_schema';
 import { Initiative } from './model/initiative';
 import { toString as _toString } from '../utils';
 import { MapMarkerPresenter } from './presenter/map/marker';
-import { MapUI } from './mapui';
+import { MapUI } from './map-ui';
 import { getPopup } from './default-popup';
 
 export class MarkerManager {

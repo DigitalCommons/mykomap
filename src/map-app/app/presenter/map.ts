@@ -6,7 +6,7 @@ import { Dictionary } from '../../common-types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { toString as _toString } from '../../utils';
-import { MapUI } from '../mapui';
+import { MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;

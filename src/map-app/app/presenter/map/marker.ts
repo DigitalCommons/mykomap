@@ -5,7 +5,7 @@ import { InitiativeRenderFunction } from '../../model/config_schema';
 import { Initiative } from '../../model/initiative';
 import { BasePresenter } from '../base';
 import { MapMarkerView } from '../../view/map/marker';
-import { MapUI } from '../../mapui';
+import { MapUI } from '../../map-ui';
 
 export class MapMarkerPresenter extends BasePresenter {
   readonly view: MapMarkerView;

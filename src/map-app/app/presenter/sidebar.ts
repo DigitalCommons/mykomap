@@ -1,7 +1,7 @@
 import { Dictionary } from '../../common-types';
 import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
-import { MapUI } from '../mapui';
+import { MapUI } from '../map-ui';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
 import { AboutSidebarPresenter } from './sidebar/about';

@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import '../map-app.css'; // Required to embed styles 
 import { Config } from './model/config';
-import { MapUI } from "../app/mapui";
+import { MapUI } from "../app/map-ui";
 import { DataServices } from './model/dataservices';
 
 
