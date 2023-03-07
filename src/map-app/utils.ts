@@ -1,3 +1,4 @@
+import { Initiative } from "./app/model/initiative";
 import { Box2d, Point2d } from "./common-types";
 
 /// A function which aggregates an array of numbers (or null/undefined) into a single number.
@@ -210,4 +211,15 @@ export function compactArray<T>(x: (T | undefined | null)[] | undefined | null):
   if (!x)
     return [];
   return x.filter((it): it is T => it !== undefined);
+}
+
+/// Converts a list of initiatives into a list of strings
+export function initiativeUris(initiatives: (Initiative|undefined)[]): string[] {
+  const uris: string[] = [];
+  for(const initiative of initiatives) {
+    const uri = initiative?.uri;
+    if (typeof uri === 'string')
+      uris.push(uri);
+  }
+  return uris;
 }
