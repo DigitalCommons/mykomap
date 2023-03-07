@@ -11,12 +11,12 @@ import type {
 import type {
   DataConsumer,
   DataLoader,
-} from './dataloader';
+} from './data-loader';
 
 import {
   AggregatedData,
   DataLoaderError,
-} from './dataloader';
+} from './data-loader';
 
 import {
   SparqlVocabLoader,

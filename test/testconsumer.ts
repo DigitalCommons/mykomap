@@ -1,6 +1,6 @@
 import type {
   DataConsumer
-} from '../src/map-app/app/model/dataloader';
+} from '../src/map-app/app/model/data-loader';
 import {
   InitiativeObj,
 } from '../src/map-app/app/model/initiative';

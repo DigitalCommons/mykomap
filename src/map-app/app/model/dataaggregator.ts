@@ -2,11 +2,11 @@ import type { Dictionary } from '../../common-types';
 
 import type {
   DataConsumer
-} from './dataloader';
+} from './data-loader';
 
 import {
   AggregatedData
-} from './dataloader';
+} from './data-loader';
 
 import {
   PropDefs,
