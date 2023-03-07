@@ -16,7 +16,7 @@ import {
 import { Dictionary } from '../src/map-app/common-types';
 import {
   CsvDataLoader,
-} from '../src/map-app/app/model/csvdataloader';
+} from '../src/map-app/app/model/csv-data-loader';
 import {
   ObjTransform,
   Transforms as T,

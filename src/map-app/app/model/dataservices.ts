@@ -47,7 +47,7 @@ import {
   InitiativeObj
 } from './initiative';
 
-import { CsvDataLoader } from './csvdataloader';
+import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
