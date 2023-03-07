@@ -5,7 +5,7 @@ const config = configBuilder();
 import { Dictionary } from '../src/map-app/common-types';
 import { DataServicesImpl, PropDefs, basePropertySchema } from '../src/map-app/app/model/dataservices';
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
-import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
+import { DataAggregator } from '../src/map-app/app/model/data-aggregator';
 
 import { getPopup } from '../src/map-app/app/default-popup';
 import { phraseBooks } from '../src/map-app/localisations';

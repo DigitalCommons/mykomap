@@ -1,5 +1,5 @@
 import { PropDef, PropDefs } from './dataservices';
-import { ParamBuilder } from './dataaggregator';
+import { ParamBuilder } from './data-aggregator';
 import { Dictionary } from '../../common-types';
 
 /// This represents an initiative represented as bare JSON

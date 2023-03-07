@@ -1,7 +1,7 @@
 
 import { expect } from 'chai';
 
-import { DataAggregator } from '../src/map-app/app/model/dataaggregator';
+import { DataAggregator } from '../src/map-app/app/model/data-aggregator';
 import { Config } from '../src/map-app/app/model/config';
 import {
   Initiative,

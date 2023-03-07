@@ -40,7 +40,7 @@ import {
 
 import {
     DataAggregator
-} from './dataaggregator';
+} from './data-aggregator';
 
 import {
   Initiative,
