@@ -63,14 +63,14 @@ export class FilterService<I> {
   getFiltersFull(): Filter<I>[] {
     const filterArray: Filter<I>[] = []
     
-    for(let filterName in this.verboseNamesMap){
-      const filtered = this.filtered[filterName];
+    for(let filterId in this.verboseNamesMap){
+      const filtered = this.filtered[filterId];
       if (!filtered)
         continue;
       const initiatives = filtered.map(id => this.allItems[id]);
       filterArray.push({
-        filterName: filterName,
-        verboseName: this.verboseNamesMap[filterName] ?? '',
+        filterName: filterId,
+        verboseName: this.verboseNamesMap[filterId] ?? '',
         initiatives: compactArray(initiatives),
       })
     }
@@ -122,14 +122,14 @@ export class FilterService<I> {
     console.log(this.filteredIndex);
   }
 
-  removeFilter(filterName: string): void {
+  removeFilter(filterId: string): void {
     // if filter doesn't exist don't do anything
-    if (!this.isFiltered(filterName))
+    if (!this.isFiltered(filterId))
       return;
 
     // remove the filter
-    const oldFilterIds = this.filtered[filterName] ?? [];
-    delete this.filtered[filterName];
+    const oldFilterIds = this.filtered[filterId] ?? [];
+    delete this.filtered[filterId];
 
     // if no filters left call remove all and stop
     if (Object.keys(this.filtered).length <= 0) {
@@ -144,8 +144,8 @@ export class FilterService<I> {
 
     // remove filter initatives 
     // TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    for(const filterName in this.filtered) {
-      const ids = this.filtered[filterName];
+    for(const filterId2 in this.filtered) {
+      const ids = this.filtered[filterId2];
       if (!ids) continue;
 
       for(const id in ids) {
@@ -157,7 +157,7 @@ export class FilterService<I> {
     }
 
     // remove filter from verbose name
-    delete this.verboseNamesMap[filterName];
+    delete this.verboseNamesMap[filterId];
   }
 }
 
