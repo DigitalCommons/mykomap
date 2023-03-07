@@ -1,5 +1,5 @@
 import { EventBus } from '../../../eventbus';
-import { MultiPropDef, VocabPropDef } from '../../model/dataservices';
+import { MultiPropDef, VocabPropDef } from '../../model/data-services';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';

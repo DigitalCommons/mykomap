@@ -6,7 +6,7 @@ import { json } from 'd3';
 
 import {
   loadDatasets,
-} from '../src/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/data-services';
 
 import {
   SparqlDataLoader,

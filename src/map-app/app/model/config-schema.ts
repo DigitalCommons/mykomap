@@ -26,7 +26,7 @@ import type {
   PropDef,
   PropDefs,
   FieldDefs,
-} from './dataservices';
+} from './data-services';
 
 import type {
   ObjTransformFunc,

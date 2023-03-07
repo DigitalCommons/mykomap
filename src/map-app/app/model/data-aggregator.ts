@@ -16,7 +16,7 @@ import {
   ValuePropDef,
   VocabPropDef,
   sortedInsert,
-} from './dataservices';
+} from './data-services';
 
 import {
   PropertyIndexer

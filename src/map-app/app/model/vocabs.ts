@@ -1,5 +1,5 @@
 import type { Dictionary } from '../../common-types';
-import { PropDefs, PropDef, DataServicesImpl } from './dataservices';
+import { PropDefs, PropDef, DataServicesImpl } from './data-services';
 import { Initiative } from './initiative';
 import type { DataConsumer } from './data-loader';
 import { promoteToArray } from '../../utils';

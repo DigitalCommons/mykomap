@@ -11,7 +11,7 @@ import * as nock from 'nock';
 
 import {
   loadDatasets,
-} from '../src/map-app/app/model/dataservices';
+} from '../src/map-app/app/model/data-services';
 
 import { Dictionary } from '../src/map-app/common-types';
 import {

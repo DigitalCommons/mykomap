@@ -8,7 +8,7 @@ import type {
 
 import {
   sortInitiatives,
-} from './dataservices';
+} from './data-services';
 
 
 // For loading data incrementally

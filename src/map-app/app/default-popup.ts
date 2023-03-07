@@ -1,5 +1,5 @@
 // FIXME prevent malicious content in replacements (like description)
-import type { DataServices } from "./model/dataservices";
+import type { DataServices } from "./model/data-services";
 import type { Initiative } from "./model/initiative";
 import { toString as _toString } from "../utils";
 

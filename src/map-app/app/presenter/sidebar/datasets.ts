@@ -1,4 +1,4 @@
-import { DataLoaderMap, DataServices } from '../../model/dataservices';
+import { DataLoaderMap, DataServices } from '../../model/data-services';
 import { InitiativeObj } from '../../model/initiative';
 import { DatasetsSidebarView } from '../../view/sidebar/datasets';
 import { SidebarPresenter } from '../sidebar';

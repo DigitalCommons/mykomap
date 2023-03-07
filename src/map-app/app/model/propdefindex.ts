@@ -1,5 +1,5 @@
 import { Dictionary } from "../../common-types";
-import { PropDef, PropDefs } from "./dataservices";
+import { PropDef, PropDefs } from "./data-services";
 import { VocabLookup } from "./vocabs";
 
 /// Wraps a PropDefs instance, providing localised titles

@@ -1,4 +1,4 @@
-import { PropDef, PropDefs } from './dataservices';
+import { PropDef, PropDefs } from './data-services';
 import { ParamBuilder } from './data-aggregator';
 import { Dictionary } from '../../common-types';
 
