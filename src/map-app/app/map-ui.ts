@@ -83,13 +83,13 @@ export class FilterService<I> {
       .filter((i): i is string => i !== undefined);
   }
 
-  isFiltered(id: string): boolean {
+  isFilterId(id: string): boolean {
     return !!this.filtered[id];
   }
   
   addFilter(name: string, items: I[], verboseName?: string): void {
     // if filter already exists don't do anything
-    if (this.isFiltered(name))
+    if (this.isFilterId(name))
       return;
 
     const itemSet = this.filtered[name] = new Set(items);
@@ -122,7 +122,7 @@ export class FilterService<I> {
 
   removeFilter(filterId: string): void {
     // if filter doesn't exist don't do anything
-    if (!this.isFiltered(filterId))
+    if (!this.isFilterId(filterId))
       return;
 
     // remove the filter
