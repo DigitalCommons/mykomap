@@ -7,7 +7,7 @@ import * as leaflet from 'leaflet';
 
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
-import { MarkerManager } from "../markermanager";
+import { MarkerManager } from "../marker-manager";
 import { PhraseBook } from "../../localisations";
 
 export class MapView extends BaseView {

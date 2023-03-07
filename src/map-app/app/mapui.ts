@@ -3,7 +3,7 @@ import { Dictionary } from "../common-types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
-import { MarkerManager } from "./markermanager";
+import { MarkerManager } from "./marker-manager";
 import { Config } from "./model/config";
 import { DataServices } from "./model/dataservices";
 import { EventBus } from "../eventbus";
