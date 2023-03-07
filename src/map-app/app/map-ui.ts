@@ -47,13 +47,13 @@ export class FilterService<I> {
       .reduce<Set<I>>((ix, it) => { ix.add(it); return ix; }, new Set());
   }
 
-  /// Gets an array of the current filtered items' ids
-  getFilteredIds(): I[] {
+  /// Gets an array of the current filtered items
+  getFiltered(): I[] {
     return Array.from(this.filteredIndex);
   }
 
-  /// Gets an array of the current unfiltered items' ids
-  getUnfilteredIds(): I[] {
+  /// Gets an array of the current unfiltered items
+  getUnfiltered(): I[] {
     return Array.from(this.unfilteredIndex);
   }
 
