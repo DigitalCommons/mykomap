@@ -24,7 +24,7 @@ import {
 
 import {
   JsonVocabLoader,
-} from './jsonvocabloader';
+} from './json-vocab-loader';
 
 import {
   Vocab,
