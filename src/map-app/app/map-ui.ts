@@ -29,7 +29,7 @@ export class FilterService<I> {
   /// An index of filter names to a list of items matched by that filter
   filtered: Dictionary<string[]> = {}; // filtered
   verboseNamesMap: Dictionary = {};
-  hidden: I[] = [];
+  hidden: string[] = [];
 
   constructor() {
   }
@@ -56,6 +56,16 @@ export class FilterService<I> {
   getUnfiltered(): I[] {
     return Object.values(this.unfilteredIndex)
       .filter((i): i is I => i !== undefined);
+  }
+
+  /// Gets an array of the current filtered items' ids
+  getFilteredIds(): string[] {
+    return Object.keys(this.filteredIndex);
+  }
+
+  /// Gets an array of the current unfiltered items' ids
+  getUnfilteredIds(): string[] {
+    return Object.keys(this.unfilteredIndex);
   }
 
   getFilterIds(): string[] {

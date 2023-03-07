@@ -40,10 +40,9 @@ export class MarkerManager {
     this.markerForInitiative = {};
   }
 
-  showMarkers(initiatives: Initiative[]) {
+  showMarkers(initiativeUris: string[]) {
     //show markers only if it is not currently vissible
-    initiatives.forEach(initiative => {
-      const uri = _toString(initiative.uri);      
+    initiativeUris.forEach(uri => {
       const marker = this.markerForInitiative[uri];
       if (marker && !marker.view.isVisible())
         marker.view.show();
@@ -51,9 +50,8 @@ export class MarkerManager {
 
   }
 
-  hideMarkers(initiatives: Initiative[]) {
-    initiatives.forEach(initiative => {
-      const uri = _toString(initiative.uri);      
+  hideMarkers(initiativeUris: string[]) {
+    initiativeUris.forEach(uri => {
       if (this.markerForInitiative[uri])
         this.markerForInitiative[uri]?.view.destroy();
     });
