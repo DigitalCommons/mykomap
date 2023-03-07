@@ -1,4 +1,4 @@
-import { Dictionary } from "../../common_types";
+import { Dictionary } from "../../common-types";
 import { PropDef, PropDefs } from "./dataservices";
 import { VocabLookup } from "./vocabs";
 

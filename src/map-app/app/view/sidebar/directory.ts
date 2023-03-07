@@ -1,6 +1,6 @@
 // The view aspects of the Main Menu sidebar
 import * as d3 from "d3";
-import { Dictionary } from "../../../common_types";
+import { Dictionary } from "../../../common-types";
 import { EventBus } from "../../../eventbus";
 import { Initiative } from "../../model/initiative";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";

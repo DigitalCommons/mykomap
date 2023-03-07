@@ -1,4 +1,4 @@
-import { Point2d } from '../../../common_types';
+import { Point2d } from '../../../common-types';
 import { EventBus } from '../../../eventbus';
 import { toPoint2d, toString as _toString } from '../../../utils';
 import { InitiativeRenderFunction } from '../../model/config_schema';

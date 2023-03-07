@@ -1,4 +1,4 @@
-import type { Dictionary } from '../../common_types';
+import type { Dictionary } from '../../common-types';
 import { PropDefs, PropDef, DataServicesImpl } from './dataservices';
 import { Initiative } from './initiative';
 import type { DataConsumer } from './dataloader';

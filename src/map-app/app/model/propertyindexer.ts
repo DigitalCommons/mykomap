@@ -1,4 +1,4 @@
-import { Dictionary } from "../../common_types";
+import { Dictionary } from "../../common-types";
 import { sortedInsert } from "./dataservices";
 import { Vocab, VocabLookup } from "./vocabs";
 import { PropDefIndex } from "./propdefindex";

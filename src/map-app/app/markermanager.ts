@@ -1,4 +1,4 @@
-import { Dictionary } from '../common_types';
+import { Dictionary } from '../common-types';
 import * as leaflet from 'leaflet';
 import { InitiativeRenderFunction } from './model/config_schema';
 import { Initiative } from './model/initiative';

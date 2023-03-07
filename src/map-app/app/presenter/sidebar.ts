@@ -1,4 +1,4 @@
-import { Dictionary } from '../../common_types';
+import { Dictionary } from '../../common-types';
 import { EventBus } from '../../eventbus';
 import { Stack } from '../../stack';
 import { MapUI } from '../mapui';

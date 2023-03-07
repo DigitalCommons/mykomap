@@ -1,6 +1,6 @@
 import { PropDef, PropDefs } from './dataservices';
 import { ParamBuilder } from './dataaggregator';
-import { Dictionary } from '../../common_types';
+import { Dictionary } from '../../common-types';
 
 /// This represents an initiative represented as bare JSON
 export interface InitiativeObj {

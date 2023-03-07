@@ -1,5 +1,5 @@
 import { Marker } from "leaflet";
-import { Dictionary } from "../common_types";
+import { Dictionary } from "../common-types";
 import { Initiative } from "./model/initiative";
 import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";

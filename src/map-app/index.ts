@@ -1,4 +1,4 @@
-import type { Dictionary } from "./common_types";
+import type { Dictionary } from "./common-types";
 import { DataServicesImpl } from "./app/model/dataservices";
 import { functionalLabels } from './localisations';
 import { init as config_builder, ConfigData } from './app/model/config';

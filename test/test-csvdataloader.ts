@@ -13,7 +13,7 @@ import {
   loadDatasets,
 } from '../src/map-app/app/model/dataservices';
 
-import { Dictionary } from '../src/map-app/common_types';
+import { Dictionary } from '../src/map-app/common-types';
 import {
   CsvDataLoader,
 } from '../src/map-app/app/model/csvdataloader';

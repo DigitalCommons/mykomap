@@ -6,7 +6,7 @@ import {
 } from './data';
 import {
   Dictionary
-} from '../src/map-app/common_types';
+} from '../src/map-app/common-types';
 
 import {
   PropertyIndexer

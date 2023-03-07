@@ -1,4 +1,4 @@
-import type { Dictionary } from '../../common_types';
+import type { Dictionary } from '../../common-types';
 
 import type {
   DataConsumer

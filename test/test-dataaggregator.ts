@@ -8,7 +8,7 @@ import {
   InitiativeObj,
 } from '../src/map-app/app/model/initiative';
 import { VocabServiceImpl } from '../src/map-app/app/model/vocabs';
-import { Dictionary } from '../src/map-app/common_types';
+import { Dictionary } from '../src/map-app/common-types';
 import {
   sparqlVocabResponse1 as vocabIndex,
   propertySchema1 as propertySchema

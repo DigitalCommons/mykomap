@@ -1,4 +1,4 @@
-import { Box2d, Dictionary } from "../../common_types";
+import { Box2d, Dictionary } from "../../common-types";
 import { MapPresenter } from "../presenter/map";
 import { BaseView } from './base';
 import { Map } from '../map';
