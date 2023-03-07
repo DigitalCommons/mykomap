@@ -206,7 +206,7 @@ export class MapPresenter extends BasePresenter {
   //FILTERS
   applyFilter() {
     // if there are currently any filters
-    const filters = this.mapUI.filter.getFilteredIds();
+    const filters = this.mapUI.filter.getFilterIds();
     if (filters.length > 0) {
       // display only filtered initiatives, the rest should be hidden
       this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());
@@ -327,7 +327,7 @@ export class MapPresenter extends BasePresenter {
     this.applyFilter();
 
     // FIXME why do what seems to be more or less the same as applyFilter does here?
-    if (this.mapUI.filter.getFilteredIds().length > 0) {
+    if (this.mapUI.filter.getFilterIds().length > 0) {
       //hide the initiatives that were outside of the filter
       this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());// this can be sped up
       //you can speed up the above statement by replacing this.getUnfiltered() 

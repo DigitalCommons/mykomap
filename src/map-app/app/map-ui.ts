@@ -58,7 +58,7 @@ export class FilterService<I> {
       .filter((i): i is I => i !== undefined);
   }
 
-  getFilteredIds(): string[] {
+  getFilterIds(): string[] {
     return Object.keys(this.filtered);
   }
 
