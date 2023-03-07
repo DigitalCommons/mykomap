@@ -1,5 +1,5 @@
 // Model for SSE Initiatives.
-import { toError } from '../../toerror';
+import { toError } from '../../to-error';
 import type { Dictionary, Box2d } from '../../common-types';
 import type { Config } from './config';
 import { EventBus } from '../../eventbus';
