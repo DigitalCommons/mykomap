@@ -7,6 +7,7 @@ import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
+import { MapFilter } from '../../map-ui';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly view: InitiativesSidebarView;
@@ -108,7 +109,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     filteredInitiatives = Initiative.textSearch(searchText, filteredInitiatives);
 
     // create new filter
-    let filterData: EventBus.Map.Filter = {
+    let filterData: MapFilter = {
       filterName: filterValue,
       result: filteredInitiatives,
       verboseName: filterCategoryName + ": " + filterValueText

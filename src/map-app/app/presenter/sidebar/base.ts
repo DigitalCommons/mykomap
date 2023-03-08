@@ -4,6 +4,7 @@ import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { SearchResults } from '../../../search-results';
+import { MapFilter } from '../../map-ui';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -43,7 +44,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
       if(newContent instanceof SearchResults && newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
-          let filterData: EventBus.Map.Filter = {
+          let filterData: MapFilter = {
             filterName: filter.filterName,
             result: newContent.initiatives,
             verboseName: filter.verboseName
@@ -52,7 +53,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
         });
       }
 
-      const data: EventBus.Map.Filter = { result: newContent.initiatives };
+      const data: MapFilter = { result: newContent.initiatives };
       EventBus.Map.addSearchFilter.pub(data);
 
       this.historyButtonsUsed();
@@ -73,7 +74,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
         if(newContent.filters[0]){     
           newContent.filters.forEach(filter=>{
-            let filterData: EventBus.Map.Filter = {
+            let filterData: MapFilter = {
               filterName: filter.filterName,
               result: newContent.initiatives,
               verboseName: filter.verboseName
@@ -82,7 +83,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
           });
         }
 
-        const data: EventBus.Map.Filter = { result: newContent.initiatives };
+        const data: MapFilter = { result: newContent.initiatives };
         EventBus.Map.addSearchFilter.pub(data);
       }
       else{

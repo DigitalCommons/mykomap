@@ -18,6 +18,8 @@ export interface Filter<I> {
   result: I[];
 }
 
+export type MapFilter = Filter<Initiative>;
+
 /// Manages a set of filtered/unfiltered items of type I
 export class FilterService<I> {
   // The set of all items. Should be unchanged.
