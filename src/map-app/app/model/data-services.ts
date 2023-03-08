@@ -516,11 +516,11 @@ export class DataServicesImpl implements DataServices {
     let sharedInitiatives: Initiative[] = [];
     otherFilters.forEach((filter, i) => {
       if (i < 1)
-        sharedInitiatives = filter.initiatives;
+        sharedInitiatives = filter.result;
       else
         //loop through sharedInitiatives and remove ones without a match in filter.initiatives
         sharedInitiatives = sharedInitiatives.filter(initiative =>
-          filter.initiatives.includes(initiative)
+          filter.result.includes(initiative)
         );
     });
 

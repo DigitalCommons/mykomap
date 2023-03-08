@@ -110,7 +110,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     // create new filter
     let filterData: EventBus.Map.Filter = {
       filterName: filterValue,
-      initiatives: filteredInitiatives,
+      result: filteredInitiatives,
       verboseName: filterCategoryName + ": " + filterValueText
     }
     EventBus.Map.addFilter.pub(filterData);
@@ -180,7 +180,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them
-    EventBus.Map.addSearchFilter.pub({ initiatives: data.results });
+    EventBus.Map.addSearchFilter.pub({ result: data.results });
 
     if (data.results.length == 1) {
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);

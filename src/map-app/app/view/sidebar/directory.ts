@@ -209,7 +209,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     }
 
     EventBus.Map.addFilter.pub({
-      initiatives: initiatives,
+      result: initiatives,
       filterName: selectionKey ?? '',
       verboseName: (directoryField + ": " + title)
     });

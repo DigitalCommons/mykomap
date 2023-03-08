@@ -54,7 +54,7 @@ export namespace EventBus {
     export interface Filter {
       filterName?: string;
       verboseName?: string;
-      initiatives: Initiative[];
+      result: Initiative[];
     }
     export interface BoundsData {
       bounds: LatLngBoundsExpression;

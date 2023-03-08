@@ -220,7 +220,7 @@ export class MapPresenter extends BasePresenter {
       return;
     
     // add filter
-    this.mapUI.filter.addFilter(data.filterName, data.initiatives, data.verboseName);
+    this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
 
     // apply filters
     this.applyFilter();
@@ -251,7 +251,7 @@ export class MapPresenter extends BasePresenter {
   addSearchFilter(data: EventBus.Map.Filter) {
     
     //if no results remove the filter, currently commented out
-    if (data.initiatives.length == 0) {
+    if (data.result.length == 0) {
       // uncommenting this will reveal all initiatives on a failed search
       // this.removeSearchFilter();
       // return;
@@ -275,26 +275,26 @@ export class MapPresenter extends BasePresenter {
 
     //get the ids from the passed data
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    const notFiltered = data.initiatives.filter(it => !this.mapUI.loadedInitiatives.includes(it));
+    const notFiltered = data.result.filter(it => !this.mapUI.loadedInitiatives.includes(it));
     this.mapUI.filter.hidden = notFiltered;
 
     //hide all unneeded markers
     this.mapUI.markers.hideMarkers(initiativeUris(notFiltered));
     //make sure the markers you need to highlight are shown
-    this.mapUI.markers.showMarkers(initiativeUris(data.initiatives));
+    this.mapUI.markers.showMarkers(initiativeUris(data.result));
 
     //zoom and pan
 
-    if (data.initiatives.length > 0) {
+    if (data.result.length > 0) {
       var options: EventBus.Map.ZoomOptions = {
         maxZoom: this.mapUI.config.getMaxZoomOnSearch()
       } 
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = this.mapUI.dataServices.latLngBounds(data.initiatives)
+      const latlng = this.mapUI.dataServices.latLngBounds(data.result)
       EventBus.Map.needsToBeZoomedAndPanned.pub({
-          initiatives: data.initiatives,
+          initiatives: data.result,
           bounds: latlng,
           options: options
       });

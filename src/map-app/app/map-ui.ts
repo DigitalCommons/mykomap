@@ -15,7 +15,7 @@ import { toString as _toString } from '../utils';
 export interface Filter<I> {
   filterName?: string;
   verboseName?: string;
-  initiatives: I[];
+  result: I[];
 }
 
 /// Manages a set of filtered/unfiltered items of type I
@@ -71,7 +71,7 @@ export class FilterService<I> {
       filterArray.push({
         filterName: filterId,
         verboseName: this.verboseNamesMap[filterId] ?? '',
-        initiatives: Array.from(filtered),
+        result: Array.from(filtered),
       })
     }
     

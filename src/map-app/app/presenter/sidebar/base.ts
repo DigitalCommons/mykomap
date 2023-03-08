@@ -45,14 +45,14 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
         newContent.filters.forEach(filter=>{
           let filterData: EventBus.Map.Filter = {
             filterName: filter.filterName,
-            initiatives: newContent.initiatives,
+            result: newContent.initiatives,
             verboseName: filter.verboseName
           };
           EventBus.Map.addFilter.pub(filterData);
         });
       }
 
-      const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+      const data: EventBus.Map.Filter = { result: newContent.initiatives };
       EventBus.Map.addSearchFilter.pub(data);
 
       this.historyButtonsUsed();
@@ -75,14 +75,14 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
           newContent.filters.forEach(filter=>{
             let filterData: EventBus.Map.Filter = {
               filterName: filter.filterName,
-              initiatives: newContent.initiatives,
+              result: newContent.initiatives,
               verboseName: filter.verboseName
             };
             EventBus.Map.addFilter.pub(filterData);
           });
         }
 
-        const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+        const data: EventBus.Map.Filter = { result: newContent.initiatives };
         EventBus.Map.addSearchFilter.pub(data);
       }
       else{
