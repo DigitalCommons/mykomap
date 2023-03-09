@@ -225,43 +225,7 @@ export class MapUI {
   }
   
   createPresenter(): MapPresenter {
-    const p = new MapPresenter(this);
-    EventBus.Initiatives.datasetLoaded.sub(() => {
-      this.onNewInitiatives();
-      p.onInitiativeDatasetLoaded();
-    });
-    EventBus.Initiative.created.sub(initiative => p.onInitiativeNew(initiative));
-    EventBus.Initiative.refreshed.sub(initiative => {
-      this.onNewInitiatives();
-      p.refreshInitiative(initiative);
-    });
-    EventBus.Initiatives.reset.sub(() => {
-        this.onNewInitiatives();
-        p.onInitiativeReset();
-    });
-    EventBus.Initiatives.loadComplete.sub(() => {
-      this.onNewInitiatives();
-      p.onInitiativeLoadComplete();
-      p.onInitiativeComplete();
-    });
-    EventBus.Initiatives.loadStarted.sub(() => p.onInitiativeLoadMessage());
-    EventBus.Initiatives.loadFailed.sub(error => p.onInitiativeLoadMessage(error));
-    
-    EventBus.Markers.needToShowLatestSelection.sub(initiative => p.onMarkersNeedToShowLatestSelection(initiative));
-    EventBus.Map.needsToBeZoomedAndPanned.sub(data => p.onMapNeedsToBeZoomedAndPanned(data));
-    EventBus.Map.needToShowInitiativeTooltip.sub(initiative => p.onNeedToShowInitiativeTooltip(initiative));
-    EventBus.Map.needToHideInitiativeTooltip.sub(initiative => p.onNeedToHideInitiativeTooltip(initiative));
-    EventBus.Map.setZoom.sub(zoom => p.setZoom(zoom));
-    EventBus.Map.setActiveArea.sub(area => p.setActiveArea(area.offset));
-    EventBus.Map.fitBounds.sub(bounds => p.onBoundsRequested(bounds));
-    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => p.selectAndZoomOnInitiative(zoom));
-    EventBus.Map.addFilter.sub(filter => p.addFilter(filter));
-    EventBus.Map.removeFilter.sub(filter => p.removeFilter(filter));
-    EventBus.Map.removeFilters.sub(() => p.removeFilters());
-    EventBus.Map.addSearchFilter.sub(filter => p.addSearchFilter(filter));
-    EventBus.Map.removeSearchFilter.sub(() => p.removeSearchFilter());
-
-    return p;
+    return new MapPresenter(this);
   }  
 }
 

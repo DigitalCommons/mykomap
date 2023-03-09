@@ -15,6 +15,41 @@ export class MapPresenter extends BasePresenter {
   constructor(readonly mapUI: MapUI) {
     super();
     this.view = new MapView(this);
+
+    EventBus.Initiatives.datasetLoaded.sub(() => {
+      this.mapUI.onNewInitiatives();
+      this.onInitiativeDatasetLoaded();
+    });
+    EventBus.Initiative.created.sub(initiative => this.onInitiativeNew(initiative));
+    EventBus.Initiative.refreshed.sub(initiative => {
+      this.mapUI.onNewInitiatives();
+      this.refreshInitiative(initiative);
+    });
+    EventBus.Initiatives.reset.sub(() => {
+        this.mapUI.onNewInitiatives();
+        this.onInitiativeReset();
+    });
+    EventBus.Initiatives.loadComplete.sub(() => {
+      this.mapUI.onNewInitiatives();
+      this.onInitiativeLoadComplete();
+      this.onInitiativeComplete();
+    });
+    EventBus.Initiatives.loadStarted.sub(() => this.onInitiativeLoadMessage());
+    EventBus.Initiatives.loadFailed.sub(error => this.onInitiativeLoadMessage(error));
+    
+    EventBus.Markers.needToShowLatestSelection.sub(initiative => this.onMarkersNeedToShowLatestSelection(initiative));
+    EventBus.Map.needsToBeZoomedAndPanned.sub(data => this.onMapNeedsToBeZoomedAndPanned(data));
+    EventBus.Map.needToShowInitiativeTooltip.sub(initiative => this.onNeedToShowInitiativeTooltip(initiative));
+    EventBus.Map.needToHideInitiativeTooltip.sub(initiative => this.onNeedToHideInitiativeTooltip(initiative));
+    EventBus.Map.setZoom.sub(zoom => this.setZoom(zoom));
+    EventBus.Map.setActiveArea.sub(area => this.setActiveArea(area.offset));
+    EventBus.Map.fitBounds.sub(bounds => this.onBoundsRequested(bounds));
+    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));
+    EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
+    EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
+    EventBus.Map.removeFilters.sub(() => this.removeFilters());
+    EventBus.Map.addSearchFilter.sub(filter => this.addSearchFilter(filter));
+    EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
   }
     
   static copyTextToClipboard(text: string) {
