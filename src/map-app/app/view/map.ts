@@ -19,7 +19,7 @@ export class MapView extends BaseView {
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  private selectedClusterGroup?: leaflet.MarkerClusterGroup;
+  selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
 
   // Used to initialise the map for the "loading" spinner
@@ -74,7 +74,7 @@ export class MapView extends BaseView {
 
   }
 
-  createMap() {
+  createMap(eventHandlers: Dictionary<leaflet.LeafletEventHandlerFn>, mapAttribution: string, disableClusteringAtZoom: number|false, tileUrl?: string): Map {
     document.body.appendChild(this.dialogueSizeStyles);
     
     // setup map (could potentially add this to the map initialization instead)
@@ -84,17 +84,15 @@ export class MapView extends BaseView {
       worldBounds = leaflet.latLngBounds(corner1, corner2);
 
     const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    console.log(this.presenter.getTileUrl())
-    const tileMapURL = this.presenter.getTileUrl() ?? osmURL;
+    console.log(tileUrl)
+    const tileMapURL = tileUrl ?? osmURL;
 
-    let mapAttribution = this.presenter.getMapAttribution();
     mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
     mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
     mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
     mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
 
-    var eventHandlers = this.presenter.getMapEventHandlers();
 
     // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
     this.map = leaflet.map("map-app-leaflet-map", {
@@ -122,7 +120,7 @@ export class MapView extends BaseView {
       .addTo(this.map);
 
     const options: leaflet.MarkerClusterGroupOptions = {};
-    const disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
+
     if (disableClusteringAtZoom)
       options.disableClusteringAtZoom = disableClusteringAtZoom;
 
@@ -150,8 +148,7 @@ export class MapView extends BaseView {
         .classed("logo", true);
     }
 
-    this.markers.setSelectedClusterGroup(this.selectedClusterGroup);
-    this.markers.setUnselectedClusterGroup(this.unselectedClusterGroup);
+    return this.map;
   }
 
   removeAllMarkers() {

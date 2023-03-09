@@ -7,6 +7,7 @@ import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { initiativeUris, toString as _toString } from '../../utils';
 import { MapFilter, MapSearch, MapUI } from '../map-ui';
+import { Map } from '../map';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
@@ -98,6 +99,23 @@ export class MapPresenter extends BasePresenter {
     }
 
     textArea.remove()
+  }
+
+  createMap(): Map {
+    const map = this.view.createMap(
+      this.getMapEventHandlers(),
+      this.getMapAttribution(),
+      this.getDisableClusteringAtZoomFromConfig(),
+      this.mapUI.config.getTileUrl()
+    );
+
+    // Now the view's (un)selectedClusterGroup should have been updated
+    if (this.view.selectedClusterGroup)
+      this.mapUI.markers.setSelectedClusterGroup(this.view.selectedClusterGroup);
+    if (this.view.unselectedClusterGroup)
+      this.mapUI.markers.setUnselectedClusterGroup(this.view.unselectedClusterGroup);
+
+    return map;
   }
 
   getTileUrl() {

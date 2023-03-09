@@ -214,8 +214,7 @@ export class MapUI {
     if (this.mapPresenter) return;
     
     this.mapPresenter = this.createPresenter();
-    this.mapPresenter.view.createMap();
-    this.map = this.mapPresenter.view.map; // Link this back for views to access
+    this.map = this.mapPresenter.createMap(); // Link this back for views to access
   }
   
   
