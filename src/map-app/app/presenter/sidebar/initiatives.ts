@@ -146,7 +146,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Sidebar.showInitiatives.pub();
   }
   
-  historyButtonsUsed(lastContent: StackItem) {
+  historyButtonsUsed() {
     //console.log("sidebar/initiatives historyButtonsUsed");
     //console.log(lastContent);
     //this.notifyMarkersNeedToShowNewSelection(lastContent);

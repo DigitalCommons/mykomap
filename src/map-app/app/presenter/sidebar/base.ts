@@ -55,7 +55,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
       const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
       EventBus.Map.addSearchFilter.pub(data);
 
-      this.historyButtonsUsed(lastContent);
+      this.historyButtonsUsed();
     };
   }
   
@@ -88,13 +88,13 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
       else{
         EventBus.Map.removeSearchFilter.pub();
       }
-      this.historyButtonsUsed(lastContent);
+      this.historyButtonsUsed();
     };
   }
 
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
-  historyButtonsUsed(lastContent?: StackItem): void {    
+  historyButtonsUsed(): void {    
     this.view.refresh();
   }
 
