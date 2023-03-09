@@ -27,7 +27,7 @@ export class FilterService<I> {
   private unfilteredIndex: Set<I> = new Set();
 
   /// An index of filter names to a list of items matched by that filter
-  private filtered: Dictionary<Set<I>> = {};
+  private filter: Dictionary<Set<I>> = {};
   private verboseNamesMap: Dictionary = {};
   hidden: I[] = [];
 
@@ -40,7 +40,7 @@ export class FilterService<I> {
   reset(items?: I[]) {
     if (items)
       this.allItems = items;
-    this.filtered = {};
+    this.filter = {};
     this.filteredIndex = new Set();
     this.verboseNamesMap = {};
     this.unfilteredIndex = this.allItems
@@ -58,14 +58,14 @@ export class FilterService<I> {
   }
 
   getFilterIds(): string[] {
-    return Object.keys(this.filtered);
+    return Object.keys(this.filter);
   }
 
   getFiltersFull(): Filter<I>[] {
     const filterArray: Filter<I>[] = []
     
     for(let filterId in this.verboseNamesMap){
-      const filtered = this.filtered[filterId];
+      const filtered = this.filter[filterId];
       if (!filtered)
         continue;
       filterArray.push({
@@ -84,19 +84,19 @@ export class FilterService<I> {
   }
 
   isFilterId(id: string): boolean {
-    return !!this.filtered[id];
+    return !!this.filter[id];
   }
-  
+
   addFilter(name: string, items: I[], verboseName?: string): void {
     // if filter already exists don't do anything
     if (this.isFilterId(name))
       return;
 
-    const itemSet = this.filtered[name] = new Set(items);
+    const itemSet = this.filter[name] = new Set(items);
     this.verboseNamesMap[name] = verboseName;
     
     // if this is the first filter, add items to the filteredInitiativesUIDMap
-    if (Object.keys(this.filtered).length <= 1) {
+    if (Object.keys(this.filter).length <= 1) {
       this.unfilteredIndex = new Set(this.allItems);
       
       // add to array only new unique entries
@@ -126,11 +126,11 @@ export class FilterService<I> {
       return;
 
     // remove the filter
-    const oldFilterItems = this.filtered[filterId] ?? new Set();
-    delete this.filtered[filterId];
+    const oldFilterItems = this.filter[filterId] ?? new Set();
+    delete this.filter[filterId];
 
     // if no filters left call remove all and stop
-    if (Object.keys(this.filtered).length <= 0) {
+    if (Object.keys(this.filter).length <= 0) {
       this.reset();
       return;
     }
@@ -140,8 +140,8 @@ export class FilterService<I> {
 
     // remove filter initatives 
     // TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    for(const filterId2 in this.filtered) {
-      const items = this.filtered[filterId2];
+    for(const filterId2 in this.filter) {
+      const items = this.filter[filterId2];
       if (!items) continue;
 
       items.forEach(item => {
