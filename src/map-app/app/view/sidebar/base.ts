@@ -47,7 +47,15 @@ export abstract class BaseSidebarView extends BaseView {
   loadHistoryNavigation(): void {
     // Fwd/back navigation for moving around the contentStack of a particular sidebar
     // (e.g. moving between different search results)
-    var buttons = this.presenter.historyNavigation();
+    const backButton = {
+      disabled: this.presenter.isBackButtonDisabled(),
+      onClick: () => this.presenter.onBackButtonClick(),
+    };
+    const forwardButton = {
+      disabled: this.presenter.isForwardButtonDisabled(),
+      onClick: () => this.presenter.onForwardButtonClick(),
+    };
+
     //w3-button
     var buttonClasses = "w3-white w3-cell w3-border-0";
     var selection = this.d3selectAndClear(
@@ -70,8 +78,8 @@ export abstract class BaseSidebarView extends BaseView {
         .attr("class", "fa " + faClass);
     }
     if (this.hasHistoryNavigation) {
-	    createButton(buttons.back, "fa-arrow-left", "Earlier search results");
-	    createButton(buttons.forward, "fa-arrow-right", "Later search results");
+	    createButton(backButton, "fa-arrow-left", "Earlier search results");
+	    createButton(forwardButton, "fa-arrow-right", "Later search results");
     }
   }
 

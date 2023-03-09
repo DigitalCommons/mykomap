@@ -9,12 +9,6 @@ export interface NavigationCallback {
   onClick: () => void;
 }
 
-export interface NavigationButtons {
-  back: NavigationCallback;
-  forward: NavigationCallback;
-}
-
-
 /// This class is a base for sidebar presenters.
 export abstract class BaseSidebarPresenter extends BasePresenter {
   abstract readonly view: BaseSidebarView;
@@ -33,17 +27,22 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     EventBus.Markers.needToShowLatestSelection.pub([]);
   }
 
-  historyNavigation(): NavigationButtons {
-    return {
-      back: {
-        disabled: this.parent.contentStack.isAtStart(),
-        onClick: () => { this.parent.contentStack.back(); this.historyButtonsUsed(); },
-      },
-      forward: {
-        disabled: this.parent.contentStack.isAtEnd(),
-        onClick: () => { this.parent.contentStack.forward(); this.historyButtonsUsed(); },
-      },
-    };
+  isBackButtonDisabled(): boolean {
+    return this.parent.contentStack.isAtStart();
+  }
+
+  isForwardButtonDisabled(): boolean {
+    return this.parent.contentStack.isAtEnd();
+  }
+
+  onBackButtonClick(): void {
+    this.parent.contentStack.back();
+    this.historyButtonsUsed();
+  }
+
+  onForwardButtonClick(): void {
+    this.parent.contentStack.forward();
+    this.historyButtonsUsed();
   }
 
   /// Refreshes the view
