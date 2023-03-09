@@ -17,10 +17,6 @@ export interface NavigationButtons {
 
 
 /// This class is a base for sidebar presenters.
-///
-/// Weirdly, for historical reasons which are largely unknown
-/// at the point of writing this, it has only members on the *prototype*
-/// which all derivatives will share... See the static initializer.
 export abstract class BaseSidebarPresenter extends BasePresenter {
   abstract readonly view: BaseSidebarView;
 
