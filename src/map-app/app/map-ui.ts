@@ -23,7 +23,9 @@ export class FilterService<I> {
   // The set of all items. Should be unchanged.
   private allItems: I[] = [];
   
+  /// The set of items included for the last filter added
   private filteredIndex: Set<I> = new Set();
+  /// set of items excluded for the last filter added
   private unfilteredIndex: Set<I> = new Set();
 
   /// An index of filter names to a list of items matched by that filter
@@ -95,20 +97,31 @@ export class FilterService<I> {
     const itemSet = this.filter[name] = new Set(items);
     this.verboseNamesMap[name] = verboseName;
     
-    // if this is the first filter, add items to the filteredInitiativesUIDMap
+    // filteredIndex should contain the union of all filters added so far.
+    // At all times, filteredIndex + unfilteredIndex should equal allItems
     if (Object.keys(this.filter).length <= 1) {
+      // if this is the first filter, add items to the filteredInitiativesUIDMap
+
+      // In boolean set logic:
+      // filteredIndex := items
+      // unfilteredIndex := allItems ∪ ¬items [union of allItems and not items]
+      
       this.unfilteredIndex = new Set(this.allItems);
       
-      // add to array only new unique entries
       for(const item of items) {
-        // rm entry from outside map
         this.unfilteredIndex.delete(item);
         this.filteredIndex.add(item);
       }
     }
     else {      
-      // if this is the second or more filter, remove items from the 
-      // filteredIndex if they don't appear in the new filter's set of initiatives
+      // if this is the second or more filter, remove items from the
+      // filteredIndex if they don't appear in the new filter's set of
+      // initiatives.
+
+      // In boolean set logic:
+      // filteredIndex := filteredIndex ∩ items
+      // unfilteredIndex := (filteredIndex ∩ ¬items) ∪ unfilteredIndex 
+
       this.filteredIndex.forEach(item => {
         if(!itemSet.has(item)){
           this.unfilteredIndex.add(item);
