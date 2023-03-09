@@ -2,7 +2,6 @@ import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
-import { SearchResults } from '../../../search-results';
 import { MapFilter, MapSearch } from '../../map-ui';
 
 export interface NavigationCallback {
@@ -23,75 +22,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
   constructor(readonly parent: SidebarPresenter) {
     super();
   }
-
-  backButtonClicked(): () => void {
-    return () => {
-      //console.log("backButtonClicked");
-      //console.log(this);
-      const lastContent = this.parent.contentStack.current();
-      const newContent = this.parent.contentStack.previous();
-      if (!newContent || newContent == lastContent)
-        return;
-      
-      // TODO: Think: maybe better to call a method on this that indicates thay
-      //       the contentStack has been changed.
-      //       Then it is up to the this to perform other actions related to this
-      //       (e.g. where it affects which initiatives are selected)
-      //this.view.refresh();
-
-      EventBus.Map.removeFilters.pub();
-
-      if(newContent.filters[0]){    
-        newContent.filters.forEach(filter=>{
-          let filterData: MapFilter = {
-            filterName: filter.filterName,
-            result: newContent.initiatives,
-            verboseName: filter.verboseName
-          };
-          EventBus.Map.addFilter.pub(filterData);
-        });
-      }
-
-      const data: MapSearch = { result: newContent.initiatives };
-      EventBus.Map.addSearchFilter.pub(data);
-
-      this.historyButtonsUsed();
-    };
-  }
   
-  forwardButtonClicked(): () => void {
-    return () => {
-      //console.log("forwardButtonClicked");
-      //console.log(this);
-      const lastContent = this.parent.contentStack.current();
-      const newContent = this.parent.contentStack.next();
-      if (newContent == lastContent)
-        return;
-      //this.view.refresh();
-      if(newContent){
-        EventBus.Map.removeFilters.pub();
-
-        if(newContent.filters[0]){     
-          newContent.filters.forEach(filter=>{
-            let filterData: MapFilter = {
-              filterName: filter.filterName,
-              result: newContent.initiatives,
-              verboseName: filter.verboseName
-            };
-            EventBus.Map.addFilter.pub(filterData);
-          });
-        }
-
-        const data: MapSearch = { result: newContent.initiatives };
-        EventBus.Map.addSearchFilter.pub(data);
-      }
-      else{
-        EventBus.Map.removeSearchFilter.pub();
-      }
-      this.historyButtonsUsed();
-    };
-  }
-
   // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
   // it should override this definition with its own:
   historyButtonsUsed(): void {    
@@ -106,12 +37,12 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     return {
       back: {
         disabled: this.parent.contentStack.isAtStart(),
-        onClick: this.backButtonClicked()
+        onClick: () => { this.parent.contentStack.back(); this.historyButtonsUsed(); },
       },
       forward: {
         disabled: this.parent.contentStack.isAtEnd(),
-        onClick: this.forwardButtonClicked()
-      }
+        onClick: () => { this.parent.contentStack.forward(); this.historyButtonsUsed(); },
+      },
     };
   }
 
