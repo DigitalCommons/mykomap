@@ -52,7 +52,7 @@ export class MapPresenter extends BasePresenter {
     EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
   }
     
-  static copyTextToClipboard(text: string) {
+  private static copyTextToClipboard(text: string) {
     const body = d3.select(document.body)
     const textArea = body.append("textarea")
       .attr(
@@ -138,16 +138,16 @@ export class MapPresenter extends BasePresenter {
     };
   }
 
-  onInitiativeNew(initiative: Initiative) {
+  private onInitiativeNew(initiative: Initiative) {
     this.view.addMarker(initiative);
   }
   
-  refreshInitiative(initiative: Initiative) {
+  private refreshInitiative(initiative: Initiative) {
     this.view.refreshMarker(initiative);
   }
 
 
-  onInitiativeReset() {
+  private onInitiativeReset() {
 
     this.view.removeAllMarkers();
     this.mapUI.loadedInitiatives = [];
@@ -155,7 +155,7 @@ export class MapPresenter extends BasePresenter {
     //rm markers 
   }
 
-  onInitiativeComplete() {
+  private onInitiativeComplete() {
     // Load the markers into the clustergroup
     const bounds = this.getInitialBounds();
     if (bounds)
@@ -165,14 +165,14 @@ export class MapPresenter extends BasePresenter {
   }
 
 
-  onInitiativeDatasetLoaded() {
+  private onInitiativeDatasetLoaded() {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
     //console.log(data.latLngBounds());
     // this.view.fitBounds([[-45.87859, -162.60022], [76.47861, 176.84446]]);
   }
 
-  onInitiativeLoadComplete() {
+  private onInitiativeLoadComplete() {
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
@@ -180,7 +180,7 @@ export class MapPresenter extends BasePresenter {
 
   }
   
-  onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {
+  private onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {
     this.view.startLoading(error);
   }
 
@@ -197,38 +197,36 @@ export class MapPresenter extends BasePresenter {
     });
   }
 
-  onNeedToShowInitiativeTooltip(data: Initiative) {
+  private onNeedToShowInitiativeTooltip(data: Initiative) {
     this.view.showTooltip(data);
   }
   
-  onNeedToHideInitiativeTooltip(data: Initiative) {
+  private onNeedToHideInitiativeTooltip(data: Initiative) {
     this.view.hideTooltip(data);
   }
   
-  onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
+  private onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
     console.log("onMapNeedsToBeZoomedAndPanned ", latLngBounds);
     this.view.flyToBounds(latLngBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
   }
 
-  onBoundsRequested(data: EventBus.Map.BoundsData) {
+  private onBoundsRequested(data: EventBus.Map.BoundsData) {
     this.view.fitBounds(data);
   }
 
-  setZoom(zoom: number) {
+  private setZoom(zoom: number) {
     console.log("Zooming to ", zoom);
     this.view.setZoom(zoom);
   }
 
-  getInitialBounds() {
+  private getInitialBounds() {
     return this.mapUI.config.getInitialBounds() == undefined ?
            this.mapUI.dataServices.latLngBounds() : this.mapUI.config.getInitialBounds();
   }
 
-  getInitialZoom() { }
-
-  setActiveArea(offset: number) {
+  private setActiveArea(offset: number) {
     this.view.setActiveArea(offset);
   }
 
@@ -239,7 +237,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //FILTERS
-  applyFilter() {
+  private applyFilter() {
     // if there are currently any filters
     const filters = this.mapUI.filter.getFilterIds();
     if (filters.length > 0) {
@@ -250,7 +248,7 @@ export class MapPresenter extends BasePresenter {
       this.removeFilters();
   }
 
-  addFilter(data: MapFilter) {
+  private addFilter(data: MapFilter) {
     // add filter
     this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
 
@@ -258,7 +256,7 @@ export class MapPresenter extends BasePresenter {
     this.applyFilter();
   }
 
-  removeFilters(): void {
+  private removeFilters(): void {
     this.mapUI.filter.reset(this.mapUI.loadedInitiatives);
 
     // Show all the markers. FIXME why not the same .initiativesByUid as above?
@@ -266,7 +264,7 @@ export class MapPresenter extends BasePresenter {
     this.mapUI.markers.showMarkers(uris);
   }
 
-  removeFilter(filterName: string) {
+  private removeFilter(filterName: string) {
     this.mapUI.filter.removeFilter(filterName);
 
     //apply filters
@@ -280,7 +278,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //highlights markers, hides markers not in the current selection
-  addSearchFilter(data: MapSearch) {
+  private addSearchFilter(data: MapSearch) {
     
     //if no results remove the filter, currently commented out
     if (data.result.length == 0) {
@@ -337,12 +335,12 @@ export class MapPresenter extends BasePresenter {
     return this.mapUI.config.logo();
   }
 
-  selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
+  private selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
   //this can get called multiple times make sure it doesn't crash
-  removeSearchFilter() {
+  private removeSearchFilter() {
 
     //if no search filter to remove just return
     if (this.mapUI.filter.hidden.length === 0)
