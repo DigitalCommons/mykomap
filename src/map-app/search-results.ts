@@ -1,6 +1,6 @@
 import { Initiative } from "./app/model/initiative";
 import { PhraseBook } from "./localisations";
-import { StackItem } from "./stack";
+import { Stack } from "./stack";
 
 export interface SearchFilter {
   filterName: string;
@@ -8,24 +8,26 @@ export interface SearchFilter {
 }
 
 /// Represents a search result on the sidebar contentStack
-export class SearchResults extends StackItem { 
-  readonly searchedFor: string;
+export class SearchResults { 
   readonly searchString: string;
   readonly filters: SearchFilter[];
   
-  constructor(initiatives: Initiative[],
-              searchString: string,
+  constructor(readonly initiatives: Initiative[],
+              readonly searchedFor: string,
               filterVerboseNames: string[],
               filterNames: string[],
               labels: PhraseBook) {
-    super(initiatives);
-    this.searchedFor = searchString;
     this.searchString = filterVerboseNames.length > 0 ?
-      `"${searchString}" ${labels.in} ${filterVerboseNames.join(' '+labels.and+' ')}` :
-      `"${searchString}"`;
+      `"${searchedFor}" ${labels.in} ${filterVerboseNames.join(' '+labels.and+' ')}` :
+      `"${searchedFor}"`;
     this.filters = filterNames.map((filterName, index) => ({
       filterName,
       verboseName: filterVerboseNames[index]
     }));
   }
+}
+
+
+/// A stack which represents the state of the map
+export class StateStack extends Stack<SearchResults> {
 }

@@ -41,7 +41,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
       EventBus.Map.removeFilters.pub();
 
-      if(newContent instanceof SearchResults && newContent.filters[0]){    
+      if(newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
           let filterData: MapFilter = {
             filterName: filter.filterName,
@@ -68,7 +68,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
       if (newContent == lastContent)
         return;
       //this.view.refresh();
-      if(newContent && newContent instanceof SearchResults){
+      if(newContent){
         EventBus.Map.removeFilters.pub();
 
         if(newContent.filters[0]){     
