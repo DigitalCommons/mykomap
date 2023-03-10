@@ -223,3 +223,9 @@ export function initiativeUris(initiatives: (Initiative|undefined)[]): string[] 
   }
   return uris;
 }
+
+
+export function assert(expr: unknown, msg?: string): asserts expr {
+  if (!expr) throw new Error(msg);
+}
+
