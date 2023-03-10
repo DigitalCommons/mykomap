@@ -171,7 +171,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     }
 
     //filter
-    this.parent.contentStack.append(
+    this.parent.contentStack.push(
       new SearchResults(data.results, data.text,
                         this.parent.mapui.filter.getFiltersVerbose(),
                         this.parent.mapui.filter.getFilterIds(),

@@ -1,16 +1,29 @@
 
 // A general purpose stack class
 export class Stack<T> {
-  private index: number = 0;
+  private index: number = 0; // Should never be negative
   private storage: T[] = [];
 
   constructor() {
   }
 
-  append(obj: T) {
-    // This implementation adds things to the very end, so the stack grows and grows:
-    this.storage.push(obj);
-    this.index = this.storage.length - 1;
+  // Add an item to the stack, so that it is the last item in the
+  // stack.
+  //
+  // In other words, this removes any forward entries higher than the
+  // index. This is the normal behaviour for an undo stack!  If you
+  // undo, then redo, this means the forward history gets cleared.
+  //
+  // After a push, .isAtEnd() will always be true.
+  //
+  push(obj: T) {
+    // When length == 0 and index == 0, or more generally:
+    if (this.storage.length <= this.index)
+      this.storage.length = this.index+1; //truncates storage
+    else
+      this.index += 1; // usual case
+
+    this.storage[this.index] = obj; // sets storage.length to index+1
   }
 
   current(): T | undefined {
