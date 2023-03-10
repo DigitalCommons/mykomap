@@ -8,7 +8,7 @@ import { Map } from '../map';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
-  previouslySelected: Initiative[] = [];
+  private previouslySelected: Initiative[] = [];
   
   constructor(readonly mapUI: MapUI) {
     super();
@@ -18,10 +18,10 @@ export class MapPresenter extends BasePresenter {
       this.mapUI.onNewInitiatives();
       this.onInitiativeDatasetLoaded();
     });
-    EventBus.Initiative.created.sub(initiative => this.onInitiativeNew(initiative));
+    EventBus.Initiative.created.sub(initiative => this.mapUI.markers.createMarker(initiative));
     EventBus.Initiative.refreshed.sub(initiative => {
       this.mapUI.onNewInitiatives();
-      this.refreshInitiative(initiative);
+      this.mapUI.markers.refreshMarker(initiative);
     });
     EventBus.Initiatives.reset.sub(() => {
         this.mapUI.onNewInitiatives();
@@ -52,8 +52,8 @@ export class MapPresenter extends BasePresenter {
     
   createMap(): Map {
     const map = this.view.createMap(
-      this.getMapAttribution(),
-      this.getDisableClusteringAtZoomFromConfig(),
+      this.mapUI.config.getMapAttribution(),
+      this.mapUI.config.getDisableClusteringAtZoom(),
       this.mapUI.config.getTileUrl()
     );
 
@@ -64,14 +64,6 @@ export class MapPresenter extends BasePresenter {
       this.mapUI.markers.setUnselectedClusterGroup(this.view.unselectedClusterGroup);
 
     return map;
-  }
-
-  getTileUrl() {
-    return this.mapUI.config.getTileUrl();
-  }
-  
-  getMapAttribution() {
-    return this.mapUI.config.getMapAttribution();
   }
 
   onInitiativeClicked() {
@@ -90,18 +82,8 @@ export class MapPresenter extends BasePresenter {
     });
   }
   
-  private onInitiativeNew(initiative: Initiative) {
-    this.view.addMarker(initiative);
-  }
-  
-  private refreshInitiative(initiative: Initiative) {
-    this.view.refreshMarker(initiative);
-  }
-
-
   private onInitiativeReset() {
-
-    this.view.removeAllMarkers();
+    this.mapUI.markers.destroyAll();
     this.mapUI.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
@@ -137,24 +119,24 @@ export class MapPresenter extends BasePresenter {
   }
 
   onMarkersNeedToShowLatestSelection(selected: Initiative[]) {
-    this.previouslySelected.forEach((e) => {
-      this.view.setUnselected(e);
+    this.previouslySelected.forEach((initiative) => {
+      this.mapUI.markers.setUnselected(initiative);
     });
 
     this.previouslySelected = selected;
     
     //zoom in and then select 
-    selected.forEach((e) => {
-      this.view.setSelected(e);
+    selected.forEach((initiative) => {
+      this.mapUI.markers.setSelected(initiative);
     });
   }
 
-  private onNeedToShowInitiativeTooltip(data: Initiative) {
-    this.view.showTooltip(data);
+  private onNeedToShowInitiativeTooltip(initiative: Initiative) {
+    this.mapUI.markers.showTooltip(initiative);
   }
   
-  private onNeedToHideInitiativeTooltip(data: Initiative) {
-    this.view.hideTooltip(data);
+  private onNeedToHideInitiativeTooltip(initiative: Initiative) {
+    this.mapUI.markers.hideTooltip(initiative);
   }
   
   private onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
@@ -180,10 +162,6 @@ export class MapPresenter extends BasePresenter {
 
   private setActiveArea(offset: number) {
     this.view.setActiveArea(offset);
-  }
-
-  getDisableClusteringAtZoomFromConfig() {
-    return this.mapUI.config.getDisableClusteringAtZoom() || false;
   }
 
 

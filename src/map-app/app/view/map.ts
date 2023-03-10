@@ -216,34 +216,6 @@ export class MapView extends BaseView {
     return this.map;
   }
 
-  removeAllMarkers() {
-    this.markers.destroyAll();
-  }
-
-  addMarker(initiative: Initiative) {
-    return this.markers.createMarker(initiative);
-  }
-
-  refreshMarker(initiative: Initiative) {
-    this.markers.refreshMarker(initiative);
-  }
-
-  setSelected(initiative: Initiative) {
-    this.markers.setSelected(initiative);
-  }
-
-  setUnselected(initiative: Initiative) {
-    this.markers.setUnselected(initiative);
-  }
-
-  showTooltip(initiative: Initiative) {
-    this.markers.showTooltip(initiative);
-  }
-
-  hideTooltip(initiative: Initiative) {
-    this.markers.hideTooltip(initiative);
-  }
-
   setZoom(zoom: number) {
     this.map?.setZoom(zoom);
   }
