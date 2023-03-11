@@ -93,6 +93,13 @@ export class Initiative {
     return [...initiatives].sort((a, b) => Initiative.compare(a, b, prop));
   }  
 
+  // Filters initiatives by the named field
+  static filter(initiatives: Initiative[], prop: string, valueRequired: unknown) {
+    return initiatives.filter(
+      it => it[prop] == valueRequired
+    )
+  }
+  
   //  This is used for associating internal data, like map markers
   __internal: Dictionary<unknown> = {};
 

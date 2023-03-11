@@ -5,7 +5,7 @@ import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
-import { initiativeUris, toString as _toString } from '../../../utils';
+import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
@@ -63,7 +63,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     // is used, which isn't sufficient to identify the property
     // uniquely.
     const propDefs = mapui.config.fields();
-    let propName: string;
+    let propName: string|undefined;
     let propDef: VocabPropDef | MultiPropDef | undefined;
     for(propName in propDefs) {
       const def = propDefs[propName];
@@ -78,6 +78,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       }
     }
     
+    if (!propName)
+      throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
     if (!propDef)
       throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
 
@@ -99,10 +101,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       return;
 
     // Get initiatives for new filter
-    const allInitiatives = Object.values(mapui.dataServices.getAggregatedData().initiativesByUid);
-    let filteredInitiatives = allInitiatives.filter(
-      (i): i is Initiative => !!i && i[propName] == filterValue
-    );
+    const allInitiatives = compactArray(Object.values(mapui.dataServices.getAggregatedData().initiativesByUid));
+    let filteredInitiatives = Initiative.filter(allInitiatives, propName, filterValue);
 
     // Apply the text search on top
     filteredInitiatives = Initiative.textSearch(searchText, filteredInitiatives);
