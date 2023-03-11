@@ -105,7 +105,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     );
 
     // Apply the text search on top
-    filteredInitiatives = Initiative.textSearch(filteredInitiatives, searchText);
+    filteredInitiatives = Initiative.textSearch(searchText, filteredInitiatives);
 
     // create new filter
     let filterData: EventBus.Map.Filter = {
@@ -275,8 +275,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       EventBus.Markers.needToShowLatestSelection.pub([]);
 
       //should be async
-      var results = Initiative.textSearch(this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives, text);
-      EventBus.Search.initiativeResults.pub({ text: text, results: results });
+      const results = Initiative.textSearch(text, this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives);      
+      EventBus.Search.initiativeResults.pub({ text: text, results: Initiative.textSort(results) });
     }
 
     else {

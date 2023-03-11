@@ -65,17 +65,17 @@ export class Initiative {
     }
   }
 
-  /// Compares two initiatives by their name properties
+  /// Compares two initiatives by a given property as a string (name, by default)
   ///
   /// If none, the empty string is used.
-  static compare(a: Initiative, b: Initiative) {
-    return _toString(a.name).localeCompare(_toString(b.name));
+  static compare(a: Initiative, b: Initiative, prop: string = 'name'): number {
+    return _toString(a[prop]).localeCompare(_toString(b[prop]));
   }
-  
+
   /// Searches initiatives for objects whose searchstr fields include the search text
   ///
-  /// @return a list sorted by the name field.
-  static textSearch(initiatives: Initiative[], text: string): Initiative[] {
+  /// @return a new list of initiatives sorted by the `name` field.
+  static textSearch(text: string, initiatives: Initiative[]): Initiative[] {
     if (text === '') {
       return [ ...initiatives ].sort(Initiative.compare);
     }
@@ -85,7 +85,14 @@ export class Initiative {
       i => typeof i.searchstr === 'string' && i.searchstr.includes(up)
     ).sort(Initiative.compare);
   }
-  
+
+  // Sorts initiatives by the named field, if text
+  //
+  // @return a list of matching initiatives.
+  static textSort(initiatives: Initiative[], prop: string = 'name'): Initiative[] {
+    return [...initiatives].sort((a, b) => Initiative.compare(a, b, prop));
+  }  
+
   //  This is used for associating internal data, like map markers
   __internal: Dictionary<unknown> = {};
 
@@ -96,4 +103,5 @@ export class Initiative {
   hasLocation(): boolean {
     return !!(this.lat && this.lng);
   }
+
 }
