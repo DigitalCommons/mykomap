@@ -16,6 +16,12 @@ export interface Filter<I> {
   filterName: string;
   verboseName: string;
   result: I[];
+  localisedVocabTitle: string;
+  localisedTerm: string;
+}
+
+export interface Search<I> {
+  result: I[];
 }
 
 export interface Search<I> {
@@ -28,6 +34,8 @@ export type MapSearch = Search<Initiative>;
 interface FilterDef<I> {
   verboseName: string;
   items: Set<I>;
+  localisedTerm: string;
+  localisedVocabTitle: string;
 }
 
 /// Manages a set of filtered/unfiltered items of type I
@@ -78,13 +86,15 @@ export class FilterService<I> {
     const filterArray: Filter<I>[] = []
     
     for(let filterId in this.filters){
-      const filtered = this.filters[filterId];
-      if (!filtered)
+      const filter = this.filters[filterId];
+      if (!filter)
         continue;
       filterArray.push({
         filterName: filterId,
-        verboseName: filtered.verboseName,
-        result: Array.from(filtered.items),
+        verboseName: filter.verboseName,
+        result: Array.from(filter.items),
+        localisedTerm: filter.localisedTerm,
+        localisedVocabTitle: filter.localisedVocabTitle,
       })
     }
     
@@ -99,17 +109,18 @@ export class FilterService<I> {
     return !!this.filters[id];
   }
 
-  addFilter(name: string, items: I[], verboseName: string): void {
+  addFilter(filter: Filter<I>): void {
     // if filter already exists don't do anything
-    const filter = this.filters[name];
-    if (filter)
+    if (filter.filterName && this.filters[filter.filterName])
       return;
 
-    const newFilter = {
-      items: new Set(items),
-      verboseName: verboseName,
+    const newFilter: FilterDef<I> = {
+      items: new Set(filter.result),
+      verboseName: filter.verboseName,
+      localisedVocabTitle: filter.localisedVocabTitle,
+      localisedTerm: filter.localisedTerm,
     };
-    this.filters[name] = newFilter;
+    this.filters[filter.filterName] = newFilter;
     
     // filteredIndex should contain the union of all filters added so far.
     // At all times, filteredIndex + unfilteredIndex should equal allItems
@@ -122,7 +133,7 @@ export class FilterService<I> {
       
       this.unfilteredIndex = new Set(this.allItems);
       
-      for(const item of items) {
+      for(const item of filter.result) {
         this.unfilteredIndex.delete(item);
         this.filteredIndex.add(item);
       }

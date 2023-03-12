@@ -179,7 +179,7 @@ export class MapPresenter extends BasePresenter {
 
   private addFilter(data: MapFilter) {
     // add filter
-    this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
+    this.mapUI.filter.addFilter(data);
 
     // apply filters
     this.applyFilter();

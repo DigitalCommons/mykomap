@@ -509,7 +509,7 @@ export class DataServicesImpl implements DataServices {
     //construct an array of the filters that aren't the one matching the field
     let otherFilters: MapFilter[] = [];
     filters.forEach(filter => {
-      if (filter.verboseName.split(":")[0] !== field)
+      if (filter.localisedVocabTitle !== field)
         otherFilters.push(filter);
     });
 

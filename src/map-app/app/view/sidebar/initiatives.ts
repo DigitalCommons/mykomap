@@ -239,8 +239,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
     const mapui = this.presenter.parent.mapui;
 		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
 		const activeFilterCategories = mapui.filter.getFiltersFull()
-      .map(filter => filter.verboseName)
-      .map(name => name.split(":")[0]);
+      .map(filter => filter.localisedVocabTitle);
 
 		for (const field in vocabDict) {
 			container

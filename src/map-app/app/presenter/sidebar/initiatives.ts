@@ -2,7 +2,7 @@ import { EventBus } from '../../../eventbus';
 import { MultiPropDef, VocabPropDef } from '../../model/data-services';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { BaseSidebarPresenter } from './base';
-import { SearchResults } from '../../../search-results';
+import { SearchFilter, SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
@@ -88,7 +88,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
-        filter && filter.verboseName.split(":")[0] === filterCategoryName
+        filter && filter.localisedVocabTitle === filterCategoryName
       })
       
       if (oldFilter) {
@@ -111,6 +111,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     let filterData: MapFilter = {
       filterName: filterValue,
       result: filteredInitiatives,
+      localisedVocabTitle: filterCategoryName,
+      localisedTerm: filterValueText,
       verboseName: filterCategoryName + ": " + filterValueText
     }
     EventBus.Map.addFilter.pub(filterData);
@@ -170,13 +172,13 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       );
     }
 
-    //filter
-    this.parent.contentStack.push(
-      new SearchResults(data.results, data.text,
-                        this.parent.mapui.filter.getFiltersVerbose(),
-                        this.parent.mapui.filter.getFilterIds(),
-                        this.parent.mapui.labels)
-    );
+    // (SearchFilter is a subset of MapFilter)
+    const searchFilters: SearchFilter[] = this.parent.mapui.filter.getFiltersFull()
+    const searchResults = new SearchResults(data.results, data.text,
+                                            searchFilters,
+                                            this.parent.mapui.labels);
+    this.parent.contentStack.push(searchResults);
+
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them
