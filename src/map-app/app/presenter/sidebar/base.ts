@@ -1,10 +1,9 @@
-import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { SearchResults } from '../../../search-results';
-import { MapFilter } from '../../map-ui';
+import { MapFilter, MapSearch } from '../../map-ui';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -53,7 +52,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
         });
       }
 
-      const data: MapFilter = { result: newContent.initiatives };
+      const data: MapSearch = { result: newContent.initiatives };
       EventBus.Map.addSearchFilter.pub(data);
 
       this.historyButtonsUsed();
@@ -83,7 +82,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
           });
         }
 
-        const data: MapFilter = { result: newContent.initiatives };
+        const data: MapSearch = { result: newContent.initiatives };
         EventBus.Map.addSearchFilter.pub(data);
       }
       else{

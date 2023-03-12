@@ -92,7 +92,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
         filter && filter.verboseName.split(":")[0] === filterCategoryName
       })
       
-      if (oldFilter?.filterName) {
+      if (oldFilter) {
         EventBus.Map.removeFilter.pub(oldFilter.filterName);
       }
     }

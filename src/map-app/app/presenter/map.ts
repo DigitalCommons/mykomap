@@ -216,9 +216,6 @@ export class MapPresenter extends BasePresenter {
   }
 
   addFilter(data: MapFilter) {
-    if (data.filterName === undefined)
-      return;
-    
     // add filter
     this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
 

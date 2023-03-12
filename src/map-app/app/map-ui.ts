@@ -13,7 +13,7 @@ import { compactArray, toString as _toString } from '../utils';
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
-  filterName?: string;
+  filterName: string;
   verboseName: string;
   result: I[];
 }
