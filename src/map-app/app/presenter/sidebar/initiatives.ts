@@ -89,7 +89,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
-        filter && filter.verboseName?.split(":")[0] === filterCategoryName
+        filter && filter.verboseName.split(":")[0] === filterCategoryName
       })
       
       if (oldFilter?.filterName) {

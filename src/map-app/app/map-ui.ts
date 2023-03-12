@@ -14,7 +14,7 @@ import { toString as _toString } from '../utils';
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
   filterName?: string;
-  verboseName?: string;
+  verboseName: string;
   result: I[];
 }
 
@@ -96,7 +96,7 @@ export class FilterService<I> {
     return !!this.filter[id];
   }
 
-  addFilter(name: string, items: I[], verboseName?: string): void {
+  addFilter(name: string, items: I[], verboseName: string): void {
     // if filter already exists don't do anything
     if (this.isFilterId(name))
       return;
