@@ -20,6 +20,11 @@ export interface SparqlVocabMeta {
   }[];
 }
 
+/// Describes vocabs and their prefixes.
+///
+/// prefixes - maps long vocab URIs to their abbreviations (without colons)
+/// vocabs - maps short vocab URIs (appreviation followed by colon) to
+/// LocalisedVocab objects, which index language codes to definitions for that language.
 export interface VocabIndex {
   prefixes: Dictionary;
   vocabs: Record<string, LocalisedVocab>;
@@ -347,8 +352,11 @@ export class VocabServiceImpl implements VocabServices {
     return vocabTitlesAndVocabIDs;
   }
 
-  getLocalisedVocabs(language: string): LocalisedVocab {
-    let verboseValues: LocalisedVocab = {};
+  /// Removes all language definitions not equal to the parameter.
+  ///
+  /// Returns a dictionary of Vocabs
+  getLocalisedVocabs(language: string): Dictionary<Vocab> {
+    let verboseValues: Dictionary<Vocab> = {};
 
     for (const id in this.vocabs.vocabs) {
       const vocab = this.vocabs.vocabs[id];
