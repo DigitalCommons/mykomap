@@ -12,7 +12,7 @@ export class MarkerManager {
   
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
-  markerForInitiative: Dictionary<MapMarkerPresenter> = {};
+  private readonly markerForInitiative = new Map<Initiative, MapMarkerPresenter>();
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
   hiddenClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
@@ -24,36 +24,32 @@ export class MarkerManager {
   }
 
   setSelected(initiative: Initiative) {
-    const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.view.setSelected(initiative);
+    this.markerForInitiative.get(initiative)?.view.setSelected(initiative);
   }
   setUnselected(initiative: Initiative) {
-    const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.view.setUnselected(initiative);
+    this.markerForInitiative.get(initiative)?.view.setUnselected(initiative);
   }
 
   destroyAll() {
-    let initiatives = Object.keys(this.markerForInitiative);
-    initiatives.forEach(initiative => {
-      this.markerForInitiative[initiative]?.view.destroy();
+    this.markerForInitiative.forEach((_, initiative) => {
+      this.markerForInitiative.get(initiative)?.view.destroy();
     });
-    this.markerForInitiative = {};
+    this.markerForInitiative.clear();
   }
 
-  showMarkers(initiativeUris: string[]) {
+  showMarkers(initiatives: Initiative[]) {
     //show markers only if it is not currently vissible
-    initiativeUris.forEach(uri => {
-      const marker = this.markerForInitiative[uri];
+    initiatives.forEach(initiative => {
+      const marker = this.markerForInitiative.get(initiative);
       if (marker && !marker.view.isVisible())
         marker.view.show();
     });
 
   }
 
-  hideMarkers(initiativeUris: string[]) {
-    initiativeUris.forEach(uri => {
-      if (this.markerForInitiative[uri])
-        this.markerForInitiative[uri]?.view.destroy();
+  hideMarkers(initiatives: Initiative[]) {
+    initiatives.forEach(initiative => {
+      this.markerForInitiative.get(initiative)?.view.destroy();
     });
   }
 
@@ -62,22 +58,14 @@ export class MarkerManager {
     if (uri === null)
       throw new Error(`initiative is missing the mandatory uri property: ${initiative}`);
     const presenter = new MapMarkerPresenter(this.mapUI, initiative, this.popup);
-    this.markerForInitiative[uri] = presenter;
+    this.markerForInitiative.set(initiative, presenter);
     return presenter;
   }
 
   refreshMarker(initiative: Initiative) {
-    const uri = _toString(initiative.uri);
-    if (!this.markerForInitiative[uri])
-      return;
-
-    const marker = this.markerForInitiative[uri];
-    if (!marker) {
-      console.error("no marker for initiative", initiative);
-      return;
-    }
-    
-    marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
+    const marker = this.markerForInitiative.get(initiative);
+    if (marker)
+      marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
   }
 
   setSelectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
@@ -90,23 +78,20 @@ export class MarkerManager {
   }
 
   showTooltip(initiative: Initiative) {
-    const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.view.showTooltip(initiative);
+    this.markerForInitiative.get(initiative)?.view.showTooltip(initiative);
   }
   
   hideTooltip(initiative: Initiative) {
-    const uri = _toString(initiative.uri);
-    this.markerForInitiative[uri]?.view.hideTooltip(initiative);
+    this.markerForInitiative.get(initiative)?.view.hideTooltip(initiative);
   }
 
   getInitiativeContent(initiative: Initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    const uri = _toString(initiative.uri);
-    if (this.markerForInitiative[uri])
-      return this.markerForInitiative[uri]?.getInitiativeContent(
-        initiative
-      );
-    else return undefined;
+    const marker = this.markerForInitiative.get(initiative);
+    if (marker)
+      return marker.getInitiativeContent(initiative);
+    else
+      return undefined;
   }
 
   getClusterGroup() {
@@ -114,7 +99,7 @@ export class MarkerManager {
   }
   
   withPhysicalLocation(): leaflet.Marker[] {
-    return Object.values(this.markerForInitiative)
+    return Array.from(this.markerForInitiative.values())
       .map((mp) => mp?.hasPhysicalLocation? mp.view.marker : undefined)
       .filter((marker): marker is leaflet.Marker => marker !== undefined)
   }

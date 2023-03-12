@@ -172,8 +172,8 @@ export class MapPresenter extends BasePresenter {
     const filters = this.mapUI.filter.getFilterIds();
     if (filters.length > 0) {
       // display only filtered initiatives, the rest should be hidden
-      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.getUnfiltered()));
-      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.getFiltered()));
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());
+      this.mapUI.markers.showMarkers(this.mapUI.filter.getFiltered());
     } else // if no filters available show everything
       this.removeFilters();
   }
@@ -190,8 +190,7 @@ export class MapPresenter extends BasePresenter {
     this.mapUI.filter.reset(this.mapUI.loadedInitiatives);
 
     // Show all the markers. FIXME why not the same .initiativesByUid as above?
-    const uris = initiativeUris(this.mapUI.loadedInitiatives);
-    this.mapUI.markers.showMarkers(uris);
+    this.mapUI.markers.showMarkers(this.mapUI.loadedInitiatives);
   }
 
   private removeFilter(filterName: string) {
@@ -218,7 +217,7 @@ export class MapPresenter extends BasePresenter {
       console.log("no results, hide everything");
       // hide all 
       this.mapUI.filter.hidden = this.mapUI.loadedInitiatives;
-      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.hidden));
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
       return;
     }
 
@@ -239,9 +238,9 @@ export class MapPresenter extends BasePresenter {
     this.mapUI.filter.hidden = notFiltered;
 
     //hide all unneeded markers
-    this.mapUI.markers.hideMarkers(initiativeUris(notFiltered));
+    this.mapUI.markers.hideMarkers(notFiltered);
     //make sure the markers you need to highlight are shown
-    this.mapUI.markers.showMarkers(initiativeUris(data.result));
+    this.mapUI.markers.showMarkers(data.result);
 
     //zoom and pan
 
@@ -283,17 +282,17 @@ export class MapPresenter extends BasePresenter {
     // FIXME why do what seems to be more or less the same as applyFilter does here?
     if (this.mapUI.filter.getFilterIds().length > 0) {
       //hide the initiatives that were outside of the filter
-      this.mapUI.markers.hideMarkers(initiativeUris(this.mapUI.filter.getUnfiltered()));
+      this.mapUI.markers.hideMarkers(this.mapUI.filter.getUnfiltered());
       // this can be sped up
       // you can speed up the above statement by replacing this.getUnfiltered() 
       // with the difference between getFiltered() and data.initiatives
       // i.e. getting the initiatives that are outside of the filter but still shown
 
       //show the ones inside the filter that you just hid
-      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.hidden));
+      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
     }
     else // if no filters available then the search was under global (only hidden ones need to be shown)
-      this.mapUI.markers.showMarkers(initiativeUris(this.mapUI.filter.hidden));
+      this.mapUI.markers.showMarkers(this.mapUI.filter.hidden);
 
     //reset the hidden array
     this.mapUI.filter.hidden = [];
