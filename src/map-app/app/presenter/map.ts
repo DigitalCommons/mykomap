@@ -6,7 +6,7 @@ import { Dictionary } from '../../common-types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { initiativeUris, toString as _toString } from '../../utils';
-import { MapFilter, MapUI } from '../map-ui';
+import { MapFilter, MapSearch, MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
@@ -248,7 +248,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //highlights markers, hides markers not in the current selection
-  addSearchFilter(data: MapFilter) {
+  addSearchFilter(data: MapSearch) {
     
     //if no results remove the filter, currently commented out
     if (data.result.length == 0) {

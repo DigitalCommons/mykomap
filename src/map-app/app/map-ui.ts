@@ -18,7 +18,12 @@ export interface Filter<I> {
   result: I[];
 }
 
+export interface Search<I> {
+  result: I[];
+}
+
 export type MapFilter = Filter<Initiative>;
+export type MapSearch = Search<Initiative>;
 
 /// Manages a set of filtered/unfiltered items of type I
 export class FilterService<I> {
