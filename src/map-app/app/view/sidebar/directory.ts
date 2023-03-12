@@ -208,11 +208,13 @@ export class DirectorySidebarView extends BaseSidebarView {
       title = selectionLabel;
     }
 
-    EventBus.Map.addFilter.pub({
-      result: initiatives,
-      filterName: selectionKey ?? '',
-      verboseName: (directoryField + ": " + title)
-    });
+    if (selectionKey) { // if not selectionKey set, we are not filtering
+      EventBus.Map.addFilter.pub({
+        result: initiatives,
+        filterName: selectionKey,
+        verboseName: (directoryField + ": " + title)
+      });
+    }
 
     //setup sidebar buttons in initiative list
     const sidebarBtnHolder = selection.append("div").attr("class", "initiative-list-sidebar-btn-wrapper");
