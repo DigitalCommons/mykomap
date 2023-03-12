@@ -184,7 +184,6 @@ export class FilterService<I> {
 
 
 export class MapUI {
-  public loadedInitiatives: Initiative[] = [];
   public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
@@ -219,8 +218,8 @@ export class MapUI {
   
   
   onNewInitiatives() {
-    this.loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
-    this.filter.reset(this.loadedInitiatives);
+    const loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
+    this.filter.reset(loadedInitiatives);
   }
   
   createPresenter(): MapPresenter {
