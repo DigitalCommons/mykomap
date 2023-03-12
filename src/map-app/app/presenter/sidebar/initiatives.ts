@@ -38,57 +38,33 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       EventBus.Markers.needToShowLatestSelection.pub(newContent);
   }
 
-  /// - filterCategoryName is the title of the filter option's vocab FIXME should be ID
+  /// - propName  is the title of the property being filtered
   /// - filterValue is the value of the selected drop-down value (typically an abbreviated vocab URI,
   ///   but could also be "any"
   /// - filterValueText is the display text for the selecte drop-down value
-  changeFilters(filterCategoryName: string, filterValue: string, filterValueText: string, searchText: string) {
+  /// - searchText the current value of the text search, or an empty string.
+  changeFilters(propName: string, filterValue: string, filterValueText: string, searchText: string) {
     const mapui = this.parent.mapui;
     
-    // Get the vocab URI from a map of vocab titles to abbreviated vocab URIs
-    // FIXME if titles of vocabs match, this map will be incomplete!
-    const vocabTitlesAndVocabIDs =  mapui.dataServices.getVocabTitlesAndVocabIDs(); 
-    const vocabID = vocabTitlesAndVocabIDs[filterCategoryName];
-    if (vocabID === undefined || vocabID === null)
-      throw new Error(`Unknown title used to identify this vocab: '${filterCategoryName}'`);
-
-    // Find the first matching property definition which uses this
-    // vocab.  This obviously doesn't find cases when there are two
-    // properties and we need a later definition, but the previous
-    // implementation did not allow for that anyway, suing a simple
-    // single-value look up map. We drop that map, and use the
-    // propDefs, which is more typesafe, and FIXME can later be
-    // modified to allow for this latter case, when suitable
-    // information is provided. Currently the title field of the vocab
-    // is used, which isn't sufficient to identify the property
-    // uniquely.
-    const propDefs = mapui.config.fields();
-    let propName: string|undefined;
-    let propDef: VocabPropDef | MultiPropDef | undefined;
-    for(propName in propDefs) {
-      const def = propDefs[propName];
-      if (!def) continue;
-      if (def.type === 'vocab' && def.uri === vocabID) {
-        propDef = def;
-        break;
-      }
-      if (def.type === 'multi' && def.of.type === 'vocab' && def.of.uri === vocabID) {
-        propDef = def;
-        break;
-      }
-    }
-    
-    if (!propName)
-      throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
+    // Get the property definition for propName
+    const vocabProps = mapui.dataServices.getVocabPropDefs();
+    const propDef = vocabProps[propName];
     if (!propDef)
-      throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
+      throw new Error(`filterable field ${propName} is not a vocab field, which is not currently supported`);
+    // FIXME implement support for this later
+
+    // Get the vocab for this property
+    const vocabs = mapui.dataServices.getLocalisedVocabs();
+    const vocab = vocabs[propDef.uri];
+    if (!vocab)
+      throw new Error(`filterable field ${propName} does not use a known vocab: ${propDef.uri}`);
 
     //remove old filter 
     const currentFilters = mapui.filter.getFiltersFull();
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
-        filter && filter.localisedVocabTitle === filterCategoryName
+        filter && filter.localisedVocabTitle === vocab.title // FIXME ideally use propDef.uri
       })
       
       if (oldFilter) {
@@ -111,9 +87,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     let filterData: MapFilter = {
       filterName: filterValue,
       result: filteredInitiatives,
-      localisedVocabTitle: filterCategoryName,
+      localisedVocabTitle: vocab.title,
       localisedTerm: filterValueText,
-      verboseName: filterCategoryName + ": " + filterValueText
+      verboseName: vocab.title + ": " + filterValueText
     }
     EventBus.Map.addFilter.pub(filterData);
     EventBus.Map.addSearchFilter.pub(filterData);
