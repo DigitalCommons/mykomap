@@ -2,16 +2,13 @@ import type { Dictionary } from '../../common-types';
 import { PropDefs, PropDef, DataServicesImpl } from './data-services';
 import { Initiative } from './initiative';
 import type { DataConsumer } from './data-loader';
-import { promoteToArray } from '../../utils';
 
 export interface Vocab {
   title: string;
   terms: Dictionary;
 }
 
-export interface LocalisedVocab {
-  [lang: string]: Vocab;
-}
+export type LocalisedVocab = Dictionary<Vocab>;
 
 export interface SparqlVocabMeta {
   languages: string[];
@@ -150,10 +147,14 @@ export class VocabServiceImpl implements VocabServices {
       .map(([vocabUri, vocab]) => {
         let vocabLang = vocab[language];
         if (!vocabLang && language !== this.fallBackLanguage) {
-          console.warn(`No localisations for language ${language}, ` +
+          console.warn(`No localisations of vocab ${vocabUri} for language ${language}, ` +
             `falling back to ${this.fallBackLanguage}`);
           vocabLang = vocab[this.fallBackLanguage];
         }
+        if (!vocabLang)
+          throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
+            `and no localisations for the fallback ${this.fallBackLanguage} either!`);
+
         return [vocabLang.title, vocabLang.terms];
       });
 
@@ -219,17 +220,23 @@ export class VocabServiceImpl implements VocabServices {
           console.warn(`initiative has unknown VocabPropDef type for property ${propName} -  ignoring property`, initiative);
           continue;
         }
-            
-        const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-        const vocabTitle = this.vocabs.vocabs[vocabID][vocabLang].title;
+
+        const vocab = this.vocabs.vocabs[vocabID];
+        const localisedVocab = vocab[language] ?? vocab[this.fallBackLanguage];
+
+        if (!localisedVocab)
+          throw new Error(`No localisations of vocab ${vocabID}'s title for `+
+            `language ${language} or the fallback language ${this.fallBackLanguage}`);
+
+        const vocabTitle = localisedVocab.title;
         
         // Currently still keeping the output data structure the same, so use uri not term
         const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
         uris.forEach(uri => {
           if (uri == null) return;
           const key = this.abbrevUri(String(uri));
-            if (key in temp) return;
-          temp[key] = this.vocabs.vocabs[vocabID][vocabLang].terms[key];
+          if (key in temp) return;
+          temp[key] = localisedVocab.terms[key];
         });
       }
     }
@@ -327,9 +334,14 @@ export class VocabServiceImpl implements VocabServices {
   getVocabTitlesAndVocabIDs(language: string): Dictionary {
     const vocabTitlesAndVocabIDs: Dictionary = {}
 
-    for (const vocabID in this.vocabs.vocabs) {
-      const vocabLang = this.vocabs.vocabs[vocabID][language] ? language : this.fallBackLanguage;
-      vocabTitlesAndVocabIDs[this.vocabs.vocabs[vocabID][vocabLang].title] = vocabID;
+    for (const vocabUri in this.vocabs.vocabs) {
+      const vocab = this.vocabs.vocabs[vocabUri];
+      const localVocab = vocab[language] ?? vocab[this.fallBackLanguage];
+      if (!localVocab)
+        throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
+          `and no localisations for the fallback ${this.fallBackLanguage} either!`);
+
+      vocabTitlesAndVocabIDs[localVocab.title] = vocabUri;
     }
 
     return vocabTitlesAndVocabIDs;
