@@ -7,6 +7,8 @@ import { Stack } from "./stack";
 export interface SearchFilter {
   filterName: string;
   verboseName: string;
+  propName: string;
+  propValue: unknown;
   localisedVocabTitle: string;
   localisedTerm: string;
 }
@@ -55,6 +57,8 @@ export class StateStack extends Stack<SearchResults> {
           filterName: filter.filterName,
           result: newContent.initiatives,
           verboseName: filter.verboseName,
+          propName: filter.propName,
+          propValue: filter.propValue,
           localisedVocabTitle: filter.localisedVocabTitle,
           localisedTerm: filter.localisedTerm,
         };
@@ -83,6 +87,8 @@ export class StateStack extends Stack<SearchResults> {
             filterName: filter.filterName,
             result: newContent.initiatives,
             verboseName: filter.verboseName,
+            propName: filter.propName,
+            propValue: filter.propValue,
             localisedVocabTitle: filter.localisedVocabTitle,
             localisedTerm: filter.localisedTerm,
           };

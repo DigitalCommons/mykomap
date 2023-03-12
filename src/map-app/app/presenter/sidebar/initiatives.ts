@@ -89,7 +89,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       result: filteredInitiatives,
       localisedVocabTitle: vocab.title,
       localisedTerm: filterValueText,
-      verboseName: vocab.title + ": " + filterValueText
+      verboseName: vocab.title + ": " + filterValueText,
+      propName: propName,
+      propValue: filterValue,
     }
     EventBus.Map.addFilter.pub(filterData);
     EventBus.Map.addSearchFilter.pub(filterData);

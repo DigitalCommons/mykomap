@@ -16,6 +16,8 @@ export interface Filter<I> {
   filterName: string;
   verboseName: string;
   result: I[];
+  propName: string;
+  propValue: unknown;
   localisedVocabTitle: string;
   localisedTerm: string;
 }
@@ -34,6 +36,8 @@ export type MapSearch = Search<Initiative>;
 interface FilterDef<I> {
   verboseName: string;
   items: Set<I>;
+  propName: string;
+  propValue: unknown;
   localisedTerm: string;
   localisedVocabTitle: string;
 }
@@ -92,6 +96,8 @@ export class FilterService<I> {
       filterArray.push({
         filterName: filterId,
         verboseName: filter.verboseName,
+        propName: filter.propName,
+        propValue: filter.propValue,
         result: Array.from(filter.items),
         localisedTerm: filter.localisedTerm,
         localisedVocabTitle: filter.localisedVocabTitle,
@@ -117,6 +123,8 @@ export class FilterService<I> {
     const newFilter: FilterDef<I> = {
       items: new Set(filter.result),
       verboseName: filter.verboseName,
+      propName: filter.propName,
+      propValue: filter.propValue,
       localisedVocabTitle: filter.localisedVocabTitle,
       localisedTerm: filter.localisedTerm,
     };
