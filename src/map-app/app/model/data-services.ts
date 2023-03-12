@@ -215,7 +215,6 @@ export interface DataServices {
   getVocabTitlesAndVocabIDs(): Dictionary;
   
   getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined;
-  
 
   //// Wraps both dataAggregator and vocabs
   
@@ -658,8 +657,21 @@ export class DataServicesImpl implements DataServices {
     return results;
   }
 
-  getVocabPropDefs(): VocabPropDefs {
-    return this.vocabPropDefs;
+  getVocabPropDefs(vocabId?: string): VocabPropDefs {
+    if (!vocabId)
+      return this.vocabPropDefs; // Return them all
+
+    // Filter the property defs by vocab URI
+    const shortVocabId = this.vocabs?.abbrevUri(vocabId);
+    
+    const vocabPropDefs: VocabPropDefs = {};
+    for(const propName in this.vocabPropDefs) {
+      const propDef = this.vocabPropDefs[propName];
+      if (shortVocabId === propDef?.uri)
+        vocabPropDefs[propName] = propDef;
+    }
+    
+    return vocabPropDefs;
   }
   
   getSidebarButtonColour(): string {
