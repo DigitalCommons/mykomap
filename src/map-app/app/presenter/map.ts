@@ -206,7 +206,7 @@ export class MapPresenter extends BasePresenter {
   //FILTERS
   applyFilter() {
     //if there are currently any filters 
-    if (this.mapUI.getFiltered().length > 0) {
+    if (this.mapUI.getFilters().length > 0) {
       //display only filtered initiatives, the rest should be hidden
       this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());
       this.mapUI.markers.showMarkers(this.mapUI.getFiltered());
@@ -414,7 +414,7 @@ export class MapPresenter extends BasePresenter {
     //this.mapUI.markers.showMarkers(hidden);
     this.applyFilter();
 
-    if (this.mapUI.getFiltered().length > 0) {
+    if (this.mapUI.getFilters().length > 0) {
       //hide the initiatives that were outside of the filter
       this.mapUI.markers.hideMarkers(this.getInitiativesOutsideOfFilter());// this can be sped up
       //you can speed up the above statement by replacing this.getInitiativesOutsideOfFilter() 
