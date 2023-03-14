@@ -5,7 +5,7 @@ import { BaseSidebarPresenter } from './base';
 import { StackItem } from '../../../stack';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
-import { toString as _toString } from '../../../utils';
+import { initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
@@ -82,7 +82,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       throw new Error(`Vocab titled '${vocabID}' is not used as any initiative properties`);
 
     //remove old filter 
-    const currentFilters = mapui.getFiltersFull();
+    const currentFilters = mapui.filter.getFiltersFull();
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
@@ -155,7 +155,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
     //get the uniquids of the applied filters
-    const filterKeys = Object.keys(this.parent.mapui.getFilteredMap());
+    const filterKeys = initiativeUris(this.parent.mapui.filter.getFiltered());
 
     //go in if there are any filters
     if (filterKeys.length != 0) {
@@ -170,7 +170,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //filter
     this.parent.contentStack.append(
       new SearchResults(data.results, data.text,
-                        this.parent.mapui.getFiltersVerbose(), this.parent.mapui.getFilters(), this.parent.mapui.labels)
+                        this.parent.mapui.filter.getFiltersVerbose(),
+                        this.parent.mapui.filter.getFilterIds(),
+                        this.parent.mapui.labels)
     );
 
     //highlight markers on search results 
@@ -195,7 +197,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   getFilterNames() {
-    return this.parent.mapui.getFiltersVerbose();
+    return this.parent.mapui.filter.getFiltersVerbose();
   }
 
   initClicked(initiative: Initiative) {

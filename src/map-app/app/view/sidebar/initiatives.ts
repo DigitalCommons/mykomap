@@ -207,7 +207,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
-		const currentFilters = this.presenter.parent.mapui.getFilters();
+		const currentFilters = this.presenter.parent.mapui.filter.getFilterIds();
 		const lastSearchResults = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
@@ -237,8 +237,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 
     const mapui = this.presenter.parent.mapui;
-		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.getFiltered());
-		const activeFilterCategories = mapui.getFiltersFull()
+		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
+		const activeFilterCategories = mapui.filter.getFiltersFull()
       .map(filter => filter.verboseName)
       .filter((name): name is string => name != undefined)
       .map(name => name.split(":")[0]);
@@ -273,10 +273,12 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 			//find alternative possible filters for an active filter
 			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && activeFilterCategories.includes(field))
+			if (currentFilters.length > 0 && activeFilterCategories.includes(field)) {
+        const filters = mapui.filter.getFiltersFull();
 				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
-					mapui.getFiltersFull(), field);
-
+					filters, field
+        );
+      }
 			entryArray.forEach(entry => {
 				const [id, label] = entry;
 				const option = dropDown
