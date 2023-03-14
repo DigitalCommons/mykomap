@@ -226,18 +226,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			const filterValue = target.value;
 			const filterValueText = target.selectedOptions[0].text;
 
-			this.presenter.changeFilters(filterCategoryName, filterValue, filterValueText);
+      const searchText = this.getSearchText();
+			this.presenter.changeFilters(filterCategoryName, filterValue, filterValueText, searchText);
 
 			// After changing the filter, we need to repeat the last text
 			// search on top of that, if there is one.
 			if (lastSearchResults instanceof SearchResults) {
-				if (lastSearchResults.searchedFor == "")
-					this.presenter.performSearchNoText(); 
-				else
-					this.presenter.performSearch(lastSearchResults.searchedFor);
+				this.presenter.performSearch(lastSearchResults.searchedFor);
       }
-			else
-      	this.presenter.performSearchNoText();
 		}
 
     const mapui = this.presenter.parent.mapui;
@@ -329,10 +325,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.on("click", () => {
 						//redo search
 						this.presenter.removeFilters();
-						if (lastSearchResults.searchedFor)
-							this.presenter.performSearch(lastSearchResults.searchedFor);
-						else
-							this.presenter.performSearchNoText();
+						this.presenter.performSearch(lastSearchResults.searchedFor);
 					});
 			}
 
@@ -376,7 +369,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
 						this.presenter.removeFilters();
-						this.presenter.performSearchNoText();
+						this.presenter.performSearch('');
 						selection.select("#searchTooltipId").text(noFilterTxt);
 						selection.select("#clearSearchFilterBtn").remove();
 					});

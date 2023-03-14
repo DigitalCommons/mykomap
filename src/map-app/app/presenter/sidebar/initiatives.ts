@@ -42,7 +42,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   /// - filterValue is the value of the selected drop-down value (typically an abbreviated vocab URI,
   ///   but could also be "any"
   /// - filterValueText is the display text for the selecte drop-down value
-  changeFilters(filterCategoryName: string, filterValue: string, filterValueText: string) {
+  changeFilters(filterCategoryName: string, filterValue: string, filterValueText: string, searchText: string) {
     const mapui = this.parent.mapui;
     
     // Get the vocab URI from a map of vocab titles to abbreviated vocab URIs
@@ -100,11 +100,14 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     // Get initiatives for new filter
     const allInitiatives = Object.values(mapui.dataServices.getAggregatedData().initiativesByUid);
-    const filteredInitiatives = allInitiatives.filter((i): i is Initiative =>
-      !!i && i[propName] == filterValue
-    )
+    let filteredInitiatives = allInitiatives.filter(
+      (i): i is Initiative => !!i && i[propName] == filterValue
+    );
 
-    //create new filter
+    // Apply the text search on top
+    filteredInitiatives = Initiative.textSearch(filteredInitiatives, searchText);
+
+    // create new filter
     let filterData: EventBus.Map.Filter = {
       filterName: filterValue,
       initiatives: filteredInitiatives,
