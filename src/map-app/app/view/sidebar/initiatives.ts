@@ -161,6 +161,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		});
 	}
 
+  getSearchText(): string {
+    return d3.select("#search-box").property("value");
+  }
+  
 	changeSearchText(txt: string) {
 		d3.select("#search-box").property("value", txt);
 	}
@@ -178,7 +182,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				event.preventDefault();
 				//event.stopPropagation();
 
-				var searchText = d3.select("#search-box").property("value");
+				var searchText = this.getSearchText()
 				this.presenter.performSearch(searchText);
 			})
 			.append("div")
