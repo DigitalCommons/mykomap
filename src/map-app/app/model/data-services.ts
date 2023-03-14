@@ -4,7 +4,7 @@ import { toString as _toString } from '../../utils';
 import type { Dictionary, Box2d } from '../../common-types';
 import type { Config } from './config';
 import { EventBus } from '../../eventbus';
-import { compactArray, toNumber, toString } from '../../utils';
+import { toNumber } from '../../utils';
 import type {
   DialogueSize,
 } from './config-schema';
@@ -103,10 +103,6 @@ export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
 // A dictory of AnyVocabPropDefs
 export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
 
-export function sortInitiatives(a: Initiative, b: Initiative) {
-  return toString(a.name).localeCompare(toString(b.name));
-}
-
 // Inserts an element into a sorted array
 export function sortedInsert(element: any, array: any[]) {
   array.splice(locationOf(element, array), 0, element);
@@ -115,18 +111,18 @@ export function sortedInsert(element: any, array: any[]) {
   // Internal helper function
   function locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
     var pivot = Math.floor(start + (end - start) / 2);
-    if (end - start <= 1 || sortInitiatives(array[pivot], element) == 0) {
+    if (end - start <= 1 || Initiative.compare(array[pivot], element) == 0) {
       //SPECIAL CASE FOR ARRAY WITH LEN = 1
       if (array.length == 1) {
-        return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+        return Initiative.compare(array[0], element) == 1 ? 0 : 1;
       }
       else if
-        (array.length > 1 && pivot == 0) return sortInitiatives(array[0], element) == 1 ? 0 : 1;
+        (array.length > 1 && pivot == 0) return Initiative.compare(array[0], element) == 1 ? 0 : 1;
       else
         return pivot + 1;
     }
     
-    if (sortInitiatives(array[pivot], element) > 0) {
+    if (Initiative.compare(array[pivot], element) > 0) {
       return locationOf(element, array, start, pivot);
     } else {
       return locationOf(element, array, pivot, end);

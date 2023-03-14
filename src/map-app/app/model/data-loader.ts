@@ -6,10 +6,6 @@ import type {
   Initiative,
 } from './initiative';
 
-import {
-  sortInitiatives,
-} from './data-services';
-
 
 // For loading data incrementally
 //
@@ -36,17 +32,6 @@ export class AggregatedData {
 
   /// An list of all initiatives
   readonly loadedInitiatives: Initiative[] = [];
-
-  // Searches loadedInitiatives for objects whose searchstr fields include the search text
-  //
-  // @return a list sorted by the name field.
-  search(text: string): Initiative[] {
-    // returns an array of sse objects whose name contains the search text
-    var up = text.toUpperCase();
-    return this.loadedInitiatives.filter(
-      (i: Initiative) => typeof i.searchstr === 'string' && i.searchstr.includes(up)
-    ).sort((a: Initiative, b: Initiative) => sortInitiatives(a, b));
-  }  
 }
 
 // For loading Datsets using a DataConsumer

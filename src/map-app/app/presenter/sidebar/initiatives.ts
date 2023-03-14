@@ -272,7 +272,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       EventBus.Markers.needToShowLatestSelection.pub([]);
 
       //should be async
-      var results = this.parent.mapui.dataServices.getAggregatedData().search(text);
+      var results = Initiative.textSearch(this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives, text);
       EventBus.Search.initiativeResults.pub({ text: text, results: results });
     }
 

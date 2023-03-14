@@ -1,6 +1,7 @@
 import { PropDef, PropDefs } from './data-services';
 import { ParamBuilder } from './data-aggregator';
 import { Dictionary } from '../../common-types';
+import { toString as _toString } from '../../utils';
 
 /// This represents an initiative represented as bare JSON
 export interface InitiativeObj {
@@ -64,6 +65,27 @@ export class Initiative {
     }
   }
 
+  /// Compares two initiatives by their name properties
+  ///
+  /// If none, the empty string is used.
+  static compare(a: Initiative, b: Initiative) {
+    return _toString(a.name).localeCompare(_toString(b.name));
+  }
+  
+  /// Searches initiatives for objects whose searchstr fields include the search text
+  ///
+  /// @return a list sorted by the name field.
+  static textSearch(initiatives: Initiative[], text: string): Initiative[] {
+    if (text === '') {
+      return [ ...initiatives ].sort(Initiative.compare);
+    }
+      
+    const up = text.toUpperCase();
+    return initiatives.filter(
+      i => typeof i.searchstr === 'string' && i.searchstr.includes(up)
+    ).sort(Initiative.compare);
+  }
+  
   //  This is used for associating internal data, like map markers
   __internal: Dictionary<unknown> = {};
 
