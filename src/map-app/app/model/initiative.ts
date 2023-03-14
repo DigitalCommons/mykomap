@@ -34,25 +34,25 @@ export class Initiative {
   static mkFactory(propDefs: PropDefs,
                    paramBuilder: ParamBuilder<PropDef>,
                    searchedFields: string[]) {
-      return (props: InitiativeObj) => {
-        const initiative = new Initiative();
-        
-        // Define and initialise the instance properties.
-        Object.entries(propDefs).forEach(entry => {
-          const [propName, propDef] = entry;
-          if (propDef) {
-            Object.defineProperty(initiative, propName, {
-              value: paramBuilder(propName, propDef, props),
-              enumerable: true,
-              writable: false,
-            });
-            if (searchedFields.includes(propName))
-              appendSearchableValue(initiative, String(initiative[propName]));
-          }
-        });
+    return (props: InitiativeObj) => {
+      const initiative = new Initiative();
 
-        return initiative;
-      }
+      // Define and initialise the instance properties.
+      Object.entries(propDefs).forEach(entry => {
+        const [propName, propDef] = entry;
+        if (propDef) {
+          Object.defineProperty(initiative, propName, {
+            value: paramBuilder(propName, propDef, props),
+            enumerable: true,
+            writable: false,
+          });
+          if (searchedFields.includes(propName))
+            appendSearchableValue(initiative, String(initiative[propName]));
+        }
+      });
+
+      return initiative;
+    }
 
     /// Appends a searchable value to the `searchstr` property, creating it if not present.
     /// Uppercasses the value first.
@@ -63,7 +63,7 @@ export class Initiative {
         initiative.searchstr += ' '+ value.toUpperCase();
     }
   }
-  
+
   //  This is used for associating internal data, like map markers
   __internal: Dictionary<unknown> = {};
 
@@ -73,5 +73,5 @@ export class Initiative {
   /// Checks if the initiative has truthy lat and lng properties.
   hasLocation(): boolean {
     return !!(this.lat && this.lng);
-  }  
+  }
 }
