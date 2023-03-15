@@ -1,4 +1,3 @@
-import { Box2d, Dictionary } from "../../common-types";
 import { MapPresenter } from "../presenter/map";
 import { BaseView } from './base';
 import { Map } from '../map';
@@ -9,6 +8,7 @@ import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
 import { PhraseBook } from "../../localisations";
+import { Box2d } from "../../common-types";
 
 export class MapView extends BaseView {
   map?: Map;
@@ -19,7 +19,7 @@ export class MapView extends BaseView {
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  private selectedClusterGroup?: leaflet.MarkerClusterGroup;
+  selectedClusterGroup?: leaflet.MarkerClusterGroup;
   unselectedClusterGroup?: leaflet.MarkerClusterGroup;
 
   // Used to initialise the map for the "loading" spinner
@@ -37,6 +37,55 @@ export class MapView extends BaseView {
       e.layer.off('data:loading');
     }, this);
   }
+
+  private static copyTextToClipboard(text: string) {
+    const body = d3.select(document.body)
+    const textArea = body.append("textarea")
+      .attr(
+        "style",
+        // Place in top-left corner of screen regardless of scroll position.
+        "position: fixed; top: 0; left: 0; "+
+          // Ensure it has a small width and height. Setting to 1px / 1em
+          // doesn't work as this gives a negative w/h on some browsers.
+          "width: 2em; height: 2em; "+
+          // We don't need padding, reducing the size if it does flash render.
+          "padding: 0; "+
+          // Clean up any borders.          
+          "border: none; outline: none; box-shadow: none; "+
+          // Avoid flash of white box if rendered for any reason.
+          "background: transparent"
+           )
+      .attr("value", text)
+    
+    // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
+    //
+    // *** This styling is an extra step which is likely not required. ***
+    //
+    // Why is it here? To ensure:
+    // 1. the element is able to have focus and selection.
+    // 2. if element was to flash render it has minimal visual impact.
+    // 3. less flakyness with selection and copying which **might** occur if
+    //    the textarea element is not visible.
+    //
+    // The likelihood is the element won't even render, not even a
+    // flash, so some of these are just precautions. However in
+    // Internet Explorer the element is visible whilst the popup
+    // box asking the user for permission for the web page to
+    // copy to the clipboard.
+    //
+
+    textArea.node()?.focus();
+    textArea.node()?.select();
+
+    try {
+      document.execCommand('copy'); // FIXME this method has been deprecated!
+    } catch (err) {
+      console.log('Oops, unable to copy', err);
+    }
+
+    textArea.remove()
+  }
+
   
   /// Initialises the view, but does not create the map yet.
   ///
@@ -74,7 +123,26 @@ export class MapView extends BaseView {
 
   }
 
-  createMap() {
+  private onInitiativeClicked(me: leaflet.LeafletMouseEvent): void {
+    // Deselect any selected markers        
+    if (me.originalEvent.ctrlKey && me.latlng) {
+      MapView.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
+    }
+    this.presenter.onInitiativeClicked();
+  }
+  
+  private onLoad(_: leaflet.LeafletEvent) {
+    this.presenter.onLoad();
+  }
+  
+  private onResize(_: leaflet.ResizeEvent) {
+    this.map?.invalidateSize();
+    console.log("Map resize", window.outerWidth);
+  }
+
+
+
+  createMap(mapAttribution: string, disableClusteringAtZoom: number|false, tileUrl?: string): Map {
     document.body.appendChild(this.dialogueSizeStyles);
     
     // setup map (could potentially add this to the map initialization instead)
@@ -84,17 +152,15 @@ export class MapView extends BaseView {
       worldBounds = leaflet.latLngBounds(corner1, corner2);
 
     const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    console.log(this.presenter.getTileUrl())
-    const tileMapURL = this.presenter.getTileUrl() ?? osmURL;
+    console.log(tileUrl)
+    const tileMapURL = tileUrl ?? osmURL;
 
-    let mapAttribution = this.presenter.getMapAttribution();
     mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
     mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
     mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
     mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
     const osmAttrib = mapAttribution;
 
-    var eventHandlers = this.presenter.getMapEventHandlers();
 
     // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
     this.map = leaflet.map("map-app-leaflet-map", {
@@ -110,19 +176,16 @@ export class MapView extends BaseView {
     
     this.map.zoomControl.setPosition("bottomright");
 
-    for (const key in eventHandlers) {
-      const eventHandler = eventHandlers[key];
-      if (eventHandler)
-        this.map.on(key, eventHandler);
-    }
-
-
+    this.map.on('click', (e) => this.onInitiativeClicked(e));
+    this.map.on('load', (e) => this.onLoad(e));
+    this.map.on('resize', (e) => this.onResize(e));
+    
     leaflet
       .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
       .addTo(this.map);
 
     const options: leaflet.MarkerClusterGroupOptions = {};
-    const disableClusteringAtZoom = this.presenter.getDisableClusteringAtZoomFromConfig();
+
     if (disableClusteringAtZoom)
       options.disableClusteringAtZoom = disableClusteringAtZoom;
 
@@ -150,36 +213,7 @@ export class MapView extends BaseView {
         .classed("logo", true);
     }
 
-    this.markers.setSelectedClusterGroup(this.selectedClusterGroup);
-    this.markers.setUnselectedClusterGroup(this.unselectedClusterGroup);
-  }
-
-  removeAllMarkers() {
-    this.markers.destroyAll();
-  }
-
-  addMarker(initiative: Initiative) {
-    return this.markers.createMarker(initiative);
-  }
-
-  refreshMarker(initiative: Initiative) {
-    this.markers.refreshMarker(initiative);
-  }
-
-  setSelected(initiative: Initiative) {
-    this.markers.setSelected(initiative);
-  }
-
-  setUnselected(initiative: Initiative) {
-    this.markers.setUnselected(initiative);
-  }
-
-  showTooltip(initiative: Initiative) {
-    this.markers.showTooltip(initiative);
-  }
-
-  hideTooltip(initiative: Initiative) {
-    this.markers.hideTooltip(initiative);
+    return this.map;
   }
 
   setZoom(zoom: number) {

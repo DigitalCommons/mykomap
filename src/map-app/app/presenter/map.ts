@@ -1,126 +1,95 @@
 import { BasePresenter } from './base';
-import * as d3 from 'd3';
 import { EventBus } from '../../eventbus';
-import * as leaflet from 'leaflet';
-import { Dictionary } from '../../common-types';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
 import { initiativeUris, toString as _toString } from '../../utils';
 import { MapFilter, MapSearch, MapUI } from '../map-ui';
+import { Map } from '../map';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
-  previouslySelected: Initiative[] = [];
+  private previouslySelected: Initiative[] = [];
   
   constructor(readonly mapUI: MapUI) {
     super();
     this.view = new MapView(this);
+
+    EventBus.Initiatives.datasetLoaded.sub(() => {
+      this.mapUI.onNewInitiatives();
+      this.onInitiativeDatasetLoaded();
+    });
+    EventBus.Initiative.created.sub(initiative => this.mapUI.markers.createMarker(initiative));
+    EventBus.Initiative.refreshed.sub(initiative => {
+      this.mapUI.onNewInitiatives();
+      this.mapUI.markers.refreshMarker(initiative);
+    });
+    EventBus.Initiatives.reset.sub(() => {
+        this.mapUI.onNewInitiatives();
+        this.onInitiativeReset();
+    });
+    EventBus.Initiatives.loadComplete.sub(() => {
+      this.mapUI.onNewInitiatives();
+      this.onInitiativeLoadComplete();
+      this.onInitiativeComplete();
+    });
+    EventBus.Initiatives.loadStarted.sub(() => this.onInitiativeLoadMessage());
+    EventBus.Initiatives.loadFailed.sub(error => this.onInitiativeLoadMessage(error));
+    
+    EventBus.Markers.needToShowLatestSelection.sub(initiative => this.onMarkersNeedToShowLatestSelection(initiative));
+    EventBus.Map.needsToBeZoomedAndPanned.sub(data => this.onMapNeedsToBeZoomedAndPanned(data));
+    EventBus.Map.needToShowInitiativeTooltip.sub(initiative => this.onNeedToShowInitiativeTooltip(initiative));
+    EventBus.Map.needToHideInitiativeTooltip.sub(initiative => this.onNeedToHideInitiativeTooltip(initiative));
+    EventBus.Map.setZoom.sub(zoom => this.setZoom(zoom));
+    EventBus.Map.setActiveArea.sub(area => this.setActiveArea(area.offset));
+    EventBus.Map.fitBounds.sub(bounds => this.onBoundsRequested(bounds));
+    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));
+    EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
+    EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
+    EventBus.Map.removeFilters.sub(() => this.removeFilters());
+    EventBus.Map.addSearchFilter.sub(filter => this.addSearchFilter(filter));
+    EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
   }
     
-  static copyTextToClipboard(text: string) {
-    const body = d3.select(document.body)
-    const textArea = body.append("textarea")
-      .attr(
-        "style",
-        // Place in top-left corner of screen regardless of scroll position.
-        "position: fixed; top: 0; left: 0; "+
-          // Ensure it has a small width and height. Setting to 1px / 1em
-          // doesn't work as this gives a negative w/h on some browsers.
-          "width: 2em; height: 2em; "+
-          // We don't need padding, reducing the size if it does flash render.
-          "padding: 0; "+
-          // Clean up any borders.          
-          "border: none; outline: none; box-shadow: none; "+
-          // Avoid flash of white box if rendered for any reason.
-          "background: transparent"
-           )
-      .attr("value", text)
+  createMap(): Map {
+    const map = this.view.createMap(
+      this.mapUI.config.getMapAttribution(),
+      this.mapUI.config.getDisableClusteringAtZoom(),
+      this.mapUI.config.getTileUrl()
+    );
+
+    // Now the view's (un)selectedClusterGroup should have been updated
+    if (this.view.selectedClusterGroup)
+      this.mapUI.markers.setSelectedClusterGroup(this.view.selectedClusterGroup);
+    if (this.view.unselectedClusterGroup)
+      this.mapUI.markers.setUnselectedClusterGroup(this.view.unselectedClusterGroup);
+
+    return map;
+  }
+
+  onInitiativeClicked() {
+    EventBus.Directory.initiativeClicked.pub(undefined);
+  }
+
+  onLoad() {
+    console.log("Map loaded");
     
-    // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
-    //
-    // *** This styling is an extra step which is likely not required. ***
-    //
-    // Why is it here? To ensure:
-    // 1. the element is able to have focus and selection.
-    // 2. if element was to flash render it has minimal visual impact.
-    // 3. less flakyness with selection and copying which **might** occur if
-    //    the textarea element is not visible.
-    //
-    // The likelihood is the element won't even render, not even a
-    // flash, so some of these are just precautions. However in
-    // Internet Explorer the element is visible whilst the popup
-    // box asking the user for permission for the web page to
-    // copy to the clipboard.
-    //
-
-    textArea.node()?.focus();
-    textArea.node()?.select();
-
-    try {
-      document.execCommand('copy'); // FIXME this method has been deprecated!
-    } catch (err) {
-      console.log('Oops, unable to copy', err);
-    }
-
-    textArea.remove()
-  }
-
-  getTileUrl() {
-    return this.mapUI.config.getTileUrl();
+    let defaultOpenSidebar = this.mapUI.config.getDefaultOpenSidebar();
+    
+    // Trigger loading of the sidebar, the deps should all be in place now.
+    this.mapUI.getSidebarPresenter(this.mapUI).then(sidebar => {
+      if (defaultOpenSidebar)
+        sidebar.showSidebar()
+    });
   }
   
-  getMapAttribution() {
-    return this.mapUI.config.getMapAttribution();
-  }
-  
-  getMapEventHandlers(): Dictionary<leaflet.LeafletEventHandlerFn> {
-    return {
-      click: (e: leaflet.LeafletEvent) => {
-        const me = e as leaflet.LeafletMouseEvent; // Coersion seems to be unavoidable?
-        // Deselect any selected markers        
-        if (me?.originalEvent?.ctrlKey && me?.latlng) {
-          MapPresenter.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
-        }
-
-        EventBus.Directory.initiativeClicked.pub(undefined);
-      },
-      load: (_: leaflet.LeafletEvent) => {
-        console.log("Map loaded");
-
-        let defaultOpenSidebar = this.mapUI.config.getDefaultOpenSidebar();
-
-        // Trigger loading of the sidebar, the deps should all be in place now.
-        this.mapUI.getSidebarPresenter(this.mapUI).then(sidebar => {
-          if (defaultOpenSidebar)
-            sidebar.showSidebar()
-        });
-
-      },
-      resize: (_: leaflet.LeafletEvent) => {
-        this.view.map?.invalidateSize();
-        console.log("Map resize", window.outerWidth);
-      }
-    };
-  }
-
-  onInitiativeNew(initiative: Initiative) {
-    this.view.addMarker(initiative);
-  }
-  
-  refreshInitiative(initiative: Initiative) {
-    this.view.refreshMarker(initiative);
-  }
-
-
-  onInitiativeReset() {
-
-    this.view.removeAllMarkers();
+  private onInitiativeReset() {
+    this.mapUI.markers.destroyAll();
     this.mapUI.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
   }
 
-  onInitiativeComplete() {
+  private onInitiativeComplete() {
     // Load the markers into the clustergroup
     const bounds = this.getInitialBounds();
     if (bounds)
@@ -130,14 +99,14 @@ export class MapPresenter extends BasePresenter {
   }
 
 
-  onInitiativeDatasetLoaded() {
+  private onInitiativeDatasetLoaded() {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
     //console.log(data.latLngBounds());
     // this.view.fitBounds([[-45.87859, -162.60022], [76.47861, 176.84446]]);
   }
 
-  onInitiativeLoadComplete() {
+  private onInitiativeLoadComplete() {
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
@@ -145,66 +114,60 @@ export class MapPresenter extends BasePresenter {
 
   }
   
-  onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {
+  private onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {
     this.view.startLoading(error);
   }
 
   onMarkersNeedToShowLatestSelection(selected: Initiative[]) {
-    this.previouslySelected.forEach((e) => {
-      this.view.setUnselected(e);
+    this.previouslySelected.forEach((initiative) => {
+      this.mapUI.markers.setUnselected(initiative);
     });
 
     this.previouslySelected = selected;
     
     //zoom in and then select 
-    selected.forEach((e) => {
-      this.view.setSelected(e);
+    selected.forEach((initiative) => {
+      this.mapUI.markers.setSelected(initiative);
     });
   }
 
-  onNeedToShowInitiativeTooltip(data: Initiative) {
-    this.view.showTooltip(data);
+  private onNeedToShowInitiativeTooltip(initiative: Initiative) {
+    this.mapUI.markers.showTooltip(initiative);
   }
   
-  onNeedToHideInitiativeTooltip(data: Initiative) {
-    this.view.hideTooltip(data);
+  private onNeedToHideInitiativeTooltip(initiative: Initiative) {
+    this.mapUI.markers.hideTooltip(initiative);
   }
   
-  onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
+  private onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
     console.log("onMapNeedsToBeZoomedAndPanned ", latLngBounds);
     this.view.flyToBounds(latLngBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
   }
 
-  onBoundsRequested(data: EventBus.Map.BoundsData) {
+  private onBoundsRequested(data: EventBus.Map.BoundsData) {
     this.view.fitBounds(data);
   }
 
-  setZoom(zoom: number) {
+  private setZoom(zoom: number) {
     console.log("Zooming to ", zoom);
     this.view.setZoom(zoom);
   }
 
-  getInitialBounds() {
+  private getInitialBounds() {
     return this.mapUI.config.getInitialBounds() == undefined ?
            this.mapUI.dataServices.latLngBounds() : this.mapUI.config.getInitialBounds();
   }
 
-  getInitialZoom() { }
-
-  setActiveArea(offset: number) {
+  private setActiveArea(offset: number) {
     this.view.setActiveArea(offset);
-  }
-
-  getDisableClusteringAtZoomFromConfig() {
-    return this.mapUI.config.getDisableClusteringAtZoom() || false;
   }
 
 
 
   //FILTERS
-  applyFilter() {
+  private applyFilter() {
     // if there are currently any filters
     const filters = this.mapUI.filter.getFilterIds();
     if (filters.length > 0) {
@@ -215,7 +178,7 @@ export class MapPresenter extends BasePresenter {
       this.removeFilters();
   }
 
-  addFilter(data: MapFilter) {
+  private addFilter(data: MapFilter) {
     // add filter
     this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
 
@@ -223,7 +186,7 @@ export class MapPresenter extends BasePresenter {
     this.applyFilter();
   }
 
-  removeFilters(): void {
+  private removeFilters(): void {
     this.mapUI.filter.reset(this.mapUI.loadedInitiatives);
 
     // Show all the markers. FIXME why not the same .initiativesByUid as above?
@@ -231,7 +194,7 @@ export class MapPresenter extends BasePresenter {
     this.mapUI.markers.showMarkers(uris);
   }
 
-  removeFilter(filterName: string) {
+  private removeFilter(filterName: string) {
     this.mapUI.filter.removeFilter(filterName);
 
     //apply filters
@@ -245,7 +208,7 @@ export class MapPresenter extends BasePresenter {
 
 
   //highlights markers, hides markers not in the current selection
-  addSearchFilter(data: MapSearch) {
+  private addSearchFilter(data: MapSearch) {
     
     //if no results remove the filter, currently commented out
     if (data.result.length == 0) {
@@ -302,12 +265,12 @@ export class MapPresenter extends BasePresenter {
     return this.mapUI.config.logo();
   }
 
-  selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
+  private selectAndZoomOnInitiative(data: EventBus.Map.SelectAndZoomData) {
     this.view.selectAndZoomOnInitiative(data);
   }
 
   //this can get called multiple times make sure it doesn't crash
-  removeSearchFilter() {
+  private removeSearchFilter() {
 
     //if no search filter to remove just return
     if (this.mapUI.filter.hidden.length === 0)
