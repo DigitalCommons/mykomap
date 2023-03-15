@@ -6,7 +6,7 @@ import { Initiative } from "../../model/initiative";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
 import { BaseSidebarView } from "./base";
-import { toString as _toString } from "../../../utils";
+import { titleIsCountries, toString as _toString } from "../../../utils";
 
 function uriToTag(uri: string) {
   return uri.toLowerCase().replace(/^.*[:\/]/, "");
@@ -97,21 +97,14 @@ export class DirectorySidebarView extends BaseSidebarView {
       .classed("colours", this.presenter.parent.mapui.config.doesDirectoryHaveColours());
 
     // key may be null, for the special 'Every item' case
-    const addItem = (field: string, key?: string)  => {
-      let valuesByName = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[field];
+    const addItem = (title: string, propName: string, key?: string)  => {
+      let valuesByName = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[title];
       let label = key;
       let tag = key;
 
-      const fieldIsCountries =
-        (field: string) =>
-        field == "Countries" ||
-        field == "Des Pays" ||
-        field == "Países" ||
-        field == "국가" // FIXME this should not be hardwired!
-
       if (key == null) {
         tag = 'all-entries';
-        label = fieldIsCountries(field) ? this.presenter.parent.mapui.labels.allCountries : this.presenter.parent.mapui.labels.allEntries;
+        label = titleIsCountries(title) ? this.presenter.parent.mapui.labels.allCountries : this.presenter.parent.mapui.labels.allEntries;
       }
       else {
         tag = uriToTag(key);
@@ -126,52 +119,51 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed("sea-directory-field", true)
         .on("click", (event) => {
           EventBus.Map.removeFilters.pub();
-          this.listInitiativesForSelection(field, key); // key may be null
+          this.listInitiativesForSelection(title, propName, key); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
           d3.select(event.currentTarget).classed("sea-field-active", true);
         });
     }
 
-    function addItems(field: string, values: Dictionary<Initiative[]>) {
+    function addItems(title: string, propName: string, values: Dictionary<Initiative[]>) {
       Object.keys(values)
       // Any sorting should have been done as the initiatives were loaded
-        .forEach(key => addItem(field, key));
+        .forEach(key => addItem(title, propName, key));
     }
 
-    const registeredValues = this.presenter.parent.mapui.dataServices.getAggregatedData().registeredValues;
-    // Just run om the first property for now
+    const mapui = this.presenter.parent.mapui;
+    const registeredValues = mapui.dataServices.getAggregatedData().registeredValues;
+    const filteableFields = mapui.config.getFilterableFields();
+    const directoryPropName: string|undefined = filteableFields[0];
+    if (directoryPropName === undefined)
+      throw new Error(`filterableFields is empty - so no directory can be rendered. Shouldn't happen!`);
+      
+    // Just run on the first property for now
     // TODO: Support user selectable fields
-    for (let field in registeredValues) {
+    for (const title in registeredValues) {
       // Deal with the special 'All' item first
-      addItem(field);
+      addItem(title, directoryPropName);
 
-      const values = registeredValues[field]
+      const values = registeredValues[title]
       if (values)
-        addItems(field, values);
+        addItems(title, directoryPropName, values);
       break;
     }
   }
 
 
   // selectionKey may be null, for the special 'Every item' case
-  listInitiativesForSelection(directoryField: string, selectionKey?: string) {
+  listInitiativesForSelection(directoryTitle: string, propName: string, selectionKey?: string) {
     const labels = this.presenter.parent.mapui.labels;
     const initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
-      directoryField,
+      directoryTitle,
       selectionKey
     );
 
-    const fieldIsCountries =
-      (field: string) =>
-      field == "Countries" ||
-      field == "Des Pays" ||
-      field == "Países" ||
-      field == "국가" // FIXME this should not be hardwired
-
     let selectionLabel = selectionKey;
     if (selectionLabel == null) {
-      if (fieldIsCountries(directoryField))
+      if (titleIsCountries(directoryTitle))
         selectionLabel = this.presenter.parent.mapui.labels.allCountries;
       else
         selectionLabel = this.presenter.parent.mapui.labels.allEntries;
@@ -187,7 +179,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     d3.select(".w3-btn").attr("title", labels.hideDirectory);
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
-    const values = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[directoryField];
+    const values = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[directoryTitle];
     
     if (!initiativeListSidebar.empty() && !sidebarButton.empty()) {
       initiativeListSidebar.insert(() => sidebarButton.node(),
@@ -212,7 +204,11 @@ export class DirectorySidebarView extends BaseSidebarView {
       EventBus.Map.addFilter.pub({
         result: initiatives,
         filterName: selectionKey,
-        verboseName: (directoryField + ": " + title)
+        verboseName: (directoryTitle + ": " + title),
+        propName: propName,
+        propValue: selectionKey,
+        localisedVocabTitle: directoryTitle,
+        localisedTerm: title,
       });
     }
 
@@ -271,7 +267,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", labels.close + title)
       .on("click", () => {
-        this.presenter.removeFilters(directoryField + selectionKey);
+        this.presenter.removeFilters(directoryTitle + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
@@ -283,7 +279,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
       .attr("title", labels.close + title)
       .on("click", () => {
-        this.presenter.removeFilters(directoryField + selectionKey);
+        this.presenter.removeFilters(directoryTitle + selectionKey);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");

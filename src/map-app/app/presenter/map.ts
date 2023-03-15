@@ -84,7 +84,6 @@ export class MapPresenter extends BasePresenter {
   
   private onInitiativeReset() {
     this.mapUI.markers.destroyAll();
-    this.mapUI.loadedInitiatives = [];
     console.log("removing all");
     //rm markers 
   }
@@ -180,17 +179,16 @@ export class MapPresenter extends BasePresenter {
 
   private addFilter(data: MapFilter) {
     // add filter
-    this.mapUI.filter.addFilter(data.filterName, data.result, data.verboseName);
+    this.mapUI.filter.addFilter(data);
 
     // apply filters
     this.applyFilter();
   }
 
   private removeFilters(): void {
-    this.mapUI.filter.reset(this.mapUI.loadedInitiatives);
-
-    // Show all the markers. FIXME why not the same .initiativesByUid as above?
-    this.mapUI.markers.showMarkers(this.mapUI.loadedInitiatives);
+    const initiatives = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
+    this.mapUI.filter.reset(initiatives);
+    this.mapUI.markers.showMarkers(initiatives);
   }
 
   private removeFilter(filterName: string) {
@@ -216,7 +214,7 @@ export class MapPresenter extends BasePresenter {
       // return;
       console.log("no results, hide everything");
       // hide all 
-      this.mapUI.filter.hidden = this.mapUI.loadedInitiatives;
+      this.mapUI.filter.hidden = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
       this.mapUI.markers.hideMarkers(this.mapUI.filter.hidden);
       return;
     }
@@ -234,7 +232,8 @@ export class MapPresenter extends BasePresenter {
 
     //get the ids from the passed data
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    const notFiltered = data.result.filter(it => !this.mapUI.loadedInitiatives.includes(it));
+    const initiatives = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
+    const notFiltered = data.result.filter(it => !initiatives.includes(it));
     this.mapUI.filter.hidden = notFiltered;
 
     //hide all unneeded markers

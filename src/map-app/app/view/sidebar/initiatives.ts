@@ -48,9 +48,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			.append("div")
 
 
-		const terms = this.presenter.parent.mapui.dataServices.getTerms();
-
-		this.createAdvancedSearch(advancedSearchContainer, terms);
+		this.createAdvancedSearch(advancedSearchContainer);
 	}
 
 	geekZoneContentAtD3Selection(selection: d3DivSelection, initiative: Initiative) {
@@ -210,7 +208,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		document.getElementById("search-box")?.focus();
 	}
 
-	createAdvancedSearch(container: d3DivSelection, vocabDict: Dictionary<Dictionary>) {
+	private createAdvancedSearch(container: d3DivSelection) {
 		const currentFilters = this.presenter.parent.mapui.filter.getFilterIds();
 		const lastSearchResults = this.presenter.currentItem();
 
@@ -222,12 +220,12 @@ export class InitiativesSidebarView extends BaseSidebarView {
       if (!(target instanceof HTMLSelectElement))
         return;
 			//create the filter from the event of selecting the option
-			const filterCategoryName = target.id.split("-dropdown")[0];
+			const propName = target.id.split("-dropdown")[0];
 			const filterValue = target.value;
 			const filterValueText = target.selectedOptions[0].text;
 
       const searchText = this.getSearchText();
-			this.presenter.changeFilters(filterCategoryName, filterValue, filterValueText, searchText);
+			this.presenter.changeFilters(propName, filterValue, filterValueText, searchText);
 
 			// After changing the filter, we need to repeat the last text
 			// search on top of that, if there is one.
@@ -239,20 +237,33 @@ export class InitiativesSidebarView extends BaseSidebarView {
     const mapui = this.presenter.parent.mapui;
 		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
 		const activeFilterCategories = mapui.filter.getFiltersFull()
-      .map(filter => filter.verboseName)
-      .map(name => name.split(":")[0]);
+      .map(filter => filter.localisedVocabTitle);
 
-		for (const field in vocabDict) {
+    const propNames = mapui.config.getFilterableFields();
+    const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
+    const vocabs = mapui.dataServices.getLocalisedVocabs();
+    for(const propName of propNames) {
+      const propDef = vocabPropDefs[propName];
+      if (!propDef)
+        throw new Error(`filterableFields contains ${propName}, which is not a valid vocab field`);
+
+      const vocab = vocabs[propDef.uri];
+      if (!vocab)
+        throw new Error(`filterableFields contains ${propName}, `+
+          `whose vocab ${propDef.uri} is not defined in the current language`);
+
+      const propTitle = propName; // FIXME currently no localised way to get property titles!
+      
 			container
 				.append("p")
-				.attr("id", field + "dropdown-label")
+				.attr("id", propName + "-dropdown-label")
 				.attr("class", "advanced-label")
-				.text(field)
+				.text(propTitle)
 
 			const dropDown = container
 				.append("div")
 				.append("select")
-				.attr("id", field + "-dropdown")
+				.attr("id", propName + "-dropdown")
 				.attr("class", "w3-input w3-border-0 w3-round w3-mobile advanced-select")
 				.on("change", (event) => changeFilter(event));
 
@@ -262,20 +273,19 @@ export class InitiativesSidebarView extends BaseSidebarView {
 				.attr("value", "any")
 				.attr("class", "advanced-option")
 
-      const vocabTerms = vocabDict[field]
-      if (!vocabTerms)
-        continue;
       
-			const entryArray = Object.entries(vocabTerms);
+			const entryArray = Object.entries(vocab.terms);
 			// Sort entries alphabetically by value (the human-readable labels)
 			entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 
 			//find alternative possible filters for an active filter
+      // FIXME Would ideally be using propName, not propTitle as it isn't unique.
+      // But this is a legacy we need to refactor later...
 			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && activeFilterCategories.includes(field)) {
+			if (currentFilters.length > 0 && activeFilterCategories.includes(propTitle)) {
         const filters = mapui.filter.getFiltersFull();
 				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
-					filters, field
+					filters, propTitle 
         );
       }
 			entryArray.forEach(entry => {
@@ -291,7 +301,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					if (currentFilters.includes(id))
 						option.attr("selected", true);
 
-					if (activeFilterCategories.includes(field)) {
+					if (activeFilterCategories.includes(propTitle)) {
 						if (currentFilters.length > 1 && !alternatePossibleFilterValues.includes(id))
 							option.attr("disabled", true);
 					}

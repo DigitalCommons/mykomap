@@ -6,26 +6,29 @@ import { Stack } from "./stack";
 
 export interface SearchFilter {
   filterName: string;
-  verboseName: string;  
+  verboseName: string;
+  propName: string;
+  propValue: unknown;
+  localisedVocabTitle: string;
+  localisedTerm: string;
 }
 
 /// Represents a search result on the sidebar contentStack
 export class SearchResults { 
   readonly searchString: string;
-  readonly filters: SearchFilter[];
   
   constructor(readonly initiatives: Initiative[],
               readonly searchedFor: string,
-              filterVerboseNames: string[],
-              filterNames: string[],
+              readonly filters: SearchFilter[],
               labels: PhraseBook) {
-    this.searchString = filterVerboseNames.length > 0 ?
-      `"${searchedFor}" ${labels.in} ${filterVerboseNames.join(' '+labels.and+' ')}` :
-      `"${searchedFor}"`;
-    this.filters = filterNames.map((filterName, index) => ({
-      filterName,
-      verboseName: filterVerboseNames[index]
-    }));
+    if (filters.length > 0) {
+      const filterVerboseNames = filters.map(f => f.verboseName);
+      this.searchString =
+        `"${searchedFor}" ${labels.in} ${filterVerboseNames.join(' '+labels.and+' ')}`;
+    }
+    else {
+      this.searchString = `"${searchedFor}"`;
+    }
   }
 }
 
@@ -53,7 +56,11 @@ export class StateStack extends Stack<SearchResults> {
         let filterData: MapFilter = {
           filterName: filter.filterName,
           result: newContent.initiatives,
-          verboseName: filter.verboseName
+          verboseName: filter.verboseName,
+          propName: filter.propName,
+          propValue: filter.propValue,
+          localisedVocabTitle: filter.localisedVocabTitle,
+          localisedTerm: filter.localisedTerm,
         };
         EventBus.Map.addFilter.pub(filterData);
       });
@@ -79,7 +86,11 @@ export class StateStack extends Stack<SearchResults> {
           let filterData: MapFilter = {
             filterName: filter.filterName,
             result: newContent.initiatives,
-            verboseName: filter.verboseName
+            verboseName: filter.verboseName,
+            propName: filter.propName,
+            propValue: filter.propValue,
+            localisedVocabTitle: filter.localisedVocabTitle,
+            localisedTerm: filter.localisedTerm,
           };
           EventBus.Map.addFilter.pub(filterData);
         });
