@@ -159,7 +159,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
   onSearchHistory() {
     this.parent.mapui.contentStack.gotoEnd();
-    EventBus.Map.removeSearchFilter.pub();
+    this.parent.mapui.removeSearchFilter();
   }
 
   searchedInitiativeClicked(uri?: string) {

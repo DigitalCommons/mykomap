@@ -220,7 +220,6 @@ export class MapUI {
       });
     };
 
-    EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
     EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
     
@@ -320,7 +319,7 @@ export class MapUI {
     }
   }
 
-  private removeSearchFilter() {
+  removeSearchFilter() {
 
     //if no search filter to remove just return
     if (this.filter.hidden.length === 0)
@@ -485,7 +484,7 @@ export class MapUI {
       this.addSearchFilter(newContent.initiatives);
     }
     else {
-      EventBus.Map.removeSearchFilter.pub();
+      this.removeSearchFilter();
     }
   }
 }
