@@ -35,12 +35,12 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
   }
 
   onBackButtonClick(): void {
-    this.parent.mapui.contentStack.back();
+    this.parent.mapui.back();
     this.historyButtonsUsed();
   }
 
   onForwardButtonClick(): void {
-    this.parent.mapui.contentStack.forward();
+    this.parent.mapui.forward();
     this.historyButtonsUsed();
   }
 
