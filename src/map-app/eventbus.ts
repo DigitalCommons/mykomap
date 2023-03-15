@@ -94,7 +94,6 @@ export namespace EventBus {
   export namespace Search {
     export interface Results { text: string; results: Initiative[]; }
 	  export const changeSearchText = new PostalTopic<string>("Search.changeSearchText");
-	  export const initiativeResults = new PostalTopic<Results>("Search.initiativeResults");
   }
   export namespace Sidebar {
 	  export const hideInitiative = new PostalTopic("Sidebar.hideInitiative");

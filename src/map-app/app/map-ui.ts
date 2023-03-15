@@ -220,7 +220,6 @@ export class MapUI {
       });
     };
 
-    EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
     
   }
@@ -346,7 +345,7 @@ export class MapUI {
     this.getSidebarPresenter(this).then((presenter) => presenter.changeSidebar());
   }
 
-  private onInitiativeResults(data: EventBus.Search.Results) {
+  onInitiativeResults(data: EventBus.Search.Results) {
     // TODO - handle better when data.results is empty
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.

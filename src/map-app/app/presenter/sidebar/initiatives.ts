@@ -175,7 +175,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
       //should be async
       const results = Initiative.textSearch(text, this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives);      
-      EventBus.Search.initiativeResults.pub({ text: text, results: Initiative.textSort(results) });
+      this.parent.mapui.onInitiativeResults({ text: text, results: Initiative.textSort(results) });
     }
 
     else {
@@ -191,7 +191,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     //should be async
     var results = Object.values(this.parent.mapui.dataServices.getAggregatedData().initiativesByUid)
       .filter((i): i is Initiative => !!i);
-    EventBus.Search.initiativeResults.pub({ text: "", results: results });
+    this.parent.mapui.onInitiativeResults({ text: "", results: results });
   }
 
   changeSearchText(txt: string) {
