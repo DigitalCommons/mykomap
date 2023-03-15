@@ -1,10 +1,9 @@
 import { EventBus } from '../../../eventbus';
-import { MultiPropDef, VocabPropDef } from '../../model/data-services';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { BaseSidebarPresenter } from './base';
-import { SearchFilter, SearchResults } from '../../../search-results';
+import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
-import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
+import { compactArray, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
 import { MapFilter } from '../../map-ui';
 
@@ -12,10 +11,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly view: InitiativesSidebarView;
   
   _eventbusRegister(): void {
-    EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
     EventBus.Marker.selectionToggled.sub(initiative => this.onMarkerSelectionToggled(initiative));
     EventBus.Marker.selectionSet.sub(initiative => this.onMarkerSelectionSet(initiative));
-    EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
     EventBus.Initiatives.showSearchHistory.sub(() => this.onSearchHistory())
     EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(_toString(initiative.uri, undefined)));
     EventBus.Search.changeSearchText.sub(text => this.changeSearchText(text));
@@ -101,18 +98,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.pub(undefined);
   }
 
-  notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
-    const data = EventBus.Map.mkSelectAndZoomData([initiative]);
-    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
-  }
-
-  notifyMapNeedsToNeedsToBeZoomedAndPanned() {
-    const initiatives = this.parent.mapui.contentStack.current()?.initiatives;
-    if (!initiatives || initiatives.length <= 0)
-      return;
-    const data = EventBus.Map.mkSelectAndZoomData(initiatives);
-    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
-  }
 
   notifyShowInitiativeTooltip(initiative: Initiative) {
     EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
@@ -122,10 +107,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Map.needToHideInitiativeTooltip.pub(initiative);
   }
 
-  notifySidebarNeedsToShowInitiatives() {
-    EventBus.Sidebar.showInitiatives.pub();
-  }
-  
   historyButtonsUsed() {
     //console.log("sidebar/initiatives historyButtonsUsed");
     //console.log(lastContent);
@@ -133,74 +114,11 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this.view.refresh();
   }
 
-  onInitiativeResults(data: EventBus.Search.Results) {
-    // TODO - handle better when data.results is empty
-    //        Prob don't want to put them on the stack?
-    //        But still need to show the fact that there are no results.
-    //get the uniquids of the applied filters
-    const filterKeys = initiativeUris(this.parent.mapui.filter.getFiltered());
-
-    //go in if there are any filters
-    let results = [ ...data.results ];
-    if (filterKeys.length != 0) {
-      //get the intersection of the filtered content and the search data
-      //search results should be a subset of filtered
-
-      results = results.filter(initiative =>
-        filterKeys.includes(_toString(initiative.uri))
-                              );
-    }
-
-    // (SearchFilter is a subset of MapFilter)
-    const searchFilters: SearchFilter[] = this.parent.mapui.filter.getFiltersFull()
-    const searchResults = new SearchResults(results, data.text,
-                                            searchFilters,
-                                            this.parent.mapui.labels);
-    this.parent.mapui.contentStack.push(searchResults);
-
-
-    //highlight markers on search results 
-    //reveal all potentially hidden markers before zooming in on them
-    EventBus.Map.addSearchFilter.pub({ result: results });
-
-    if (data.results.length == 1) {
-      this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(results[0]);
-    }
-    else if (results.length == 0) {
-      //do nothing on failed search
-      console.log("no results");
-    }
-    else {
-      //this.notifyMarkersNeedToShowNewSelection(lastContent);
-      //deselect all
-      this.notifyMapNeedsToNeedsToBeZoomedAndPanned(); //does not do anything?
-    }
-
-    this.notifySidebarNeedsToShowInitiatives();
-    this.view.refresh();
-  }
-
-  getFilterNames() {
-    return this.parent.mapui.filter.getFiltersVerbose();
-  }
-
   initClicked(initiative: Initiative) {
     EventBus.Directory.initiativeClicked.pub(initiative);
     if (window.outerWidth <= 800) {
       EventBus.Directory.initiativeClickedHideSidebar.pub(initiative);
     }
-  }
-
-  onInitiativeClickedInSidebar(initiative?: Initiative) {
-    if (!initiative)
-      return;
-    
-    //this.parent.mapui.contentStack.append(new SearchResults([initiative]));
-    //console.log(this.parent.mapui.contentStack.current());
-
-    this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
-    this.view.refresh();
-    EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
   }
   
   onInitiativeMouseoverInSidebar(initiative: Initiative) {

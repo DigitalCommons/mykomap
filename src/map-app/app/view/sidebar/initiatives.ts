@@ -317,13 +317,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	populateScrollableSelection(selection: d3Selection) {
     const labels = this.presenter.parent.mapui.labels;
 		const noFilterTxt = labels.whenSearch;
-		const freshSearchText = this.presenter.getFilterNames().length > 0 ?
-			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
+    const filterNames = this.presenter.parent.mapui.filter.getFiltersVerbose()
+		const freshSearchText = filterNames.length > 0 ?
+			" Searching in " + filterNames.join(", ") : noFilterTxt;
 
     const lastSearchResults = this.presenter.currentItem();
 		if (lastSearchResults instanceof SearchResults) {
 			// add clear button
-			if (this.presenter.getFilterNames().length > 0) {
+			if (filterNames.length > 0) {
 				selection
 					.append("div")
 					.attr("class", "w3-container w3-center sidebar-button-container")
@@ -367,7 +368,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					freshSearchText
 				);
 			// add clear button
-			if (this.presenter.getFilterNames().length > 0) {
+			if (filterNames.length > 0) {
 				selection
 					.append("div")
 					.attr("class", "w3-container w3-center")

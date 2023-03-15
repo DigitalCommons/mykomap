@@ -9,8 +9,8 @@ import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
-import { compactArray, toString as _toString } from '../utils';
-import { StateStack } from '../search-results';
+import { compactArray, initiativeUris, toString as _toString } from '../utils';
+import { SearchFilter, SearchResults, StateStack } from '../search-results';
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
@@ -234,6 +234,8 @@ export class MapUI {
     EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
     EventBus.Map.removeFilters.sub(() => this.removeFilters());
     EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
+    EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
+    EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
     
   }
 
@@ -352,6 +354,85 @@ export class MapUI {
     this.filter.hidden = [];
 
     EventBus.Markers.needToShowLatestSelection.pub([]);
+  }
+
+  private refreshSidebar() {
+    this.getSidebarPresenter(this).then((presenter) => presenter.changeSidebar());
+  }
+
+  private onInitiativeResults(data: EventBus.Search.Results) {
+    // TODO - handle better when data.results is empty
+    //        Prob don't want to put them on the stack?
+    //        But still need to show the fact that there are no results.
+    //get the uniquids of the applied filters
+    const filterKeys = initiativeUris(this.filter.getFiltered());
+
+    //go in if there are any filters
+    let results = [ ...data.results ];
+    if (filterKeys.length != 0) {
+      //get the intersection of the filtered content and the search data
+      //search results should be a subset of filtered
+
+      results = results.filter(initiative =>
+        filterKeys.includes(_toString(initiative.uri))
+                              );
+    }
+
+    // (SearchFilter is a subset of MapFilter)
+    const searchFilters: SearchFilter[] = this.filter.getFiltersFull()
+    const searchResults = new SearchResults(results, data.text,
+                                            searchFilters,
+                                            this.labels);
+    this.contentStack.push(searchResults);
+
+
+    //highlight markers on search results 
+    //reveal all potentially hidden markers before zooming in on them
+    EventBus.Map.addSearchFilter.pub({ result: results });
+
+    if (data.results.length == 1) {
+      this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(results[0]);
+    }
+    else if (results.length == 0) {
+      //do nothing on failed search
+      console.log("no results");
+    }
+    else {
+      //this.notifyMarkersNeedToShowNewSelection(lastContent);
+      //deselect all
+      this.notifyMapNeedsToNeedsToBeZoomedAndPanned(); //does not do anything?
+    }
+
+    this.notifySidebarNeedsToShowInitiatives();
+  }
+
+  private notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
+    const data = EventBus.Map.mkSelectAndZoomData([initiative]);
+    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
+  }
+  
+  private notifyMapNeedsToNeedsToBeZoomedAndPanned() {
+    const initiatives = this.contentStack.current()?.initiatives;
+    if (!initiatives || initiatives.length <= 0)
+      return;
+    const data = EventBus.Map.mkSelectAndZoomData(initiatives);
+    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
+  }
+
+  private notifySidebarNeedsToShowInitiatives() {
+    EventBus.Sidebar.showInitiatives.pub();
+  }
+  
+  private onInitiativeClickedInSidebar(initiative?: Initiative) {
+    if (!initiative)
+      return;
+    
+    //this.parent.mapui.contentStack.append(new SearchResults([initiative]));
+    //console.log(this.parent.mapui.contentStack.current());
+
+    this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
+    this.refreshSidebar();
+    EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
   }
 }
 
