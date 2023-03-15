@@ -60,19 +60,24 @@ export class SidebarPresenter extends BasePresenter {
       }
     }
 
-    if (name === undefined) {
-      // By default, use the first sidebar defined (JS key order is that of first definition)
-      const names = Object.keys(this.children);
-      
-      if (names.length === 0)
-        return; // Except in this case, there is nothing we can do!
-
-      name = names[0];
+    if (name !== undefined) {
+      // If name is set, change the current sidebar and then refresh
+      this.sidebarName = name;
+      this.children[this.sidebarName]?.refreshView();
     }
-    
-    // Change the current sidebar
-    this.sidebarName = name;
-    this.children[this.sidebarName]?.refreshView();
+    else {
+      // Just refresh the currently showing sidebar.
+      // If nothing is showing, show the first. Or nothing, if none.
+      if (!this.sidebarName) {
+        const names = Object.keys(this.children);
+        if (names.length > 0)
+          this.sidebarName = names[0];
+        else
+          return; // No sidebars? Can't do anything.
+      }
+        
+      this.children[this.sidebarName]?.refreshView();
+    }
   }
 
   showSidebar() {
