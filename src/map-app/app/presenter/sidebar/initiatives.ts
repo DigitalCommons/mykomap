@@ -141,18 +141,19 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     const filterKeys = initiativeUris(this.parent.mapui.filter.getFiltered());
 
     //go in if there are any filters
+    let results = [ ...data.results ];
     if (filterKeys.length != 0) {
       //get the intersection of the filtered content and the search data
       //search results should be a subset of filtered
 
-      data.results = data.results.filter(initiative =>
+      results = results.filter(initiative =>
         filterKeys.includes(_toString(initiative.uri))
-      );
+                              );
     }
 
     // (SearchFilter is a subset of MapFilter)
     const searchFilters: SearchFilter[] = this.parent.mapui.filter.getFiltersFull()
-    const searchResults = new SearchResults(data.results, data.text,
+    const searchResults = new SearchResults(results, data.text,
                                             searchFilters,
                                             this.parent.mapui.labels);
     this.parent.mapui.contentStack.push(searchResults);
@@ -160,12 +161,12 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them
-    EventBus.Map.addSearchFilter.pub({ result: data.results });
+    EventBus.Map.addSearchFilter.pub({ result: results });
 
     if (data.results.length == 1) {
-      this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);
+      this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(results[0]);
     }
-    else if (data.results.length == 0) {
+    else if (results.length == 0) {
       //do nothing on failed search
       console.log("no results");
     }
