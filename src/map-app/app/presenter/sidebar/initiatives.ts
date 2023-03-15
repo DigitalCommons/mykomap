@@ -65,7 +65,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       })
       
       if (oldFilter) {
-        EventBus.Map.removeFilter.pub(oldFilter.filterName);
+        this.parent.mapui.removeFilter(oldFilter.filterName);
       }
     }
 

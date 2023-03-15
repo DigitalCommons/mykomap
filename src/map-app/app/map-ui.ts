@@ -220,8 +220,6 @@ export class MapUI {
       });
     };
 
-    EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
-    EventBus.Map.removeFilters.sub(() => this.removeFilters());
     EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
     EventBus.Search.initiativeResults.sub(results => this.onInitiativeResults(results));
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
@@ -257,13 +255,13 @@ export class MapUI {
     this.applyFilter();
   }
 
-  private removeFilters(): void {
+  removeFilters(): void {
     const initiatives = this.dataServices.getAggregatedData().loadedInitiatives;
     this.filter.reset(initiatives);
     this.markers.updateVisibility(new Set(initiatives));
   }
 
-  private removeFilter(filterName: string) {
+  removeFilter(filterName: string) {
     this.filter.removeFilter(filterName);
 
     //apply filters
@@ -438,7 +436,7 @@ export class MapUI {
     //       (e.g. where it affects which initiatives are selected)
     //this.view.refresh();
 
-    EventBus.Map.removeFilters.pub();
+    this.removeFilters();
 
     if (newContent instanceof SearchResults && newContent.filters[0]) {
       newContent.filters.forEach(filter=>{
@@ -467,7 +465,7 @@ export class MapUI {
       return;
     //this.view.refresh();
     if (newContent && newContent instanceof SearchResults) {
-      EventBus.Map.removeFilters.pub();
+      this.removeFilters();
 
       if (newContent.filters[0]) {
         newContent.filters.forEach(filter=>{
