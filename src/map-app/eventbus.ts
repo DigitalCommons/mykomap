@@ -1,6 +1,5 @@
 import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
-import { MapFilter } from './app/map-ui';
 import { Initiative } from './app/model/initiative';
 import { Box2d, Point2d } from './common-types';
 import { arrays2Box2d, yesANumber } from './utils';
