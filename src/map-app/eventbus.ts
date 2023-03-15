@@ -75,7 +75,6 @@ export namespace EventBus {
       };
     }
 
-	  export const addFilter = new PostalTopic<MapFilter>("Map.addFilter");
 	  export const fitBounds = new PostalTopic<BoundsData>("Map.fitBounds");
 	  export const needToHideInitiativeTooltip = new PostalTopic<Initiative>("Map.needToHideInitiativeTooltip");
 	  export const needToShowInitiativeTooltip = new PostalTopic<Initiative>("Map.needToShowInitiativeTooltip");

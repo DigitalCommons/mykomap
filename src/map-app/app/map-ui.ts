@@ -220,7 +220,6 @@ export class MapUI {
       });
     };
 
-    EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
     EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
     EventBus.Map.removeFilters.sub(() => this.removeFilters());
     EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
@@ -250,7 +249,7 @@ export class MapUI {
     this.markers.updateVisibility(new Set(this.filter.getFiltered()));
   }
 
-  private addFilter(data: MapFilter) {
+  addFilter(data: MapFilter) {
     // add filter
     this.filter.addFilter(data);
 
@@ -452,7 +451,7 @@ export class MapUI {
           localisedVocabTitle: filter.localisedVocabTitle,
           localisedTerm: filter.localisedTerm,
         };
-        EventBus.Map.addFilter.pub(filterData);
+        this.addFilter(filterData);
       });
     }
 
@@ -481,7 +480,7 @@ export class MapUI {
             localisedVocabTitle: filter.localisedVocabTitle,
             localisedTerm: filter.localisedTerm,
           };
-          EventBus.Map.addFilter.pub(filterData);
+          this.addFilter(filterData);
         });
       }
 
