@@ -1,6 +1,5 @@
 import { Dictionary } from '../../common-types';
 import { EventBus } from '../../eventbus';
-import { StateStack } from '../../search-results';
 import { MapUI } from '../map-ui';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
@@ -12,7 +11,6 @@ import { InitiativesSidebarPresenter } from './sidebar/initiatives';
 
 export class SidebarPresenter extends BasePresenter {
   readonly view: SidebarView;
-  readonly contentStack = new StateStack();
   readonly showDirectoryPanel: boolean;
   readonly showSearchPanel: boolean;
   readonly showAboutPanel: boolean;

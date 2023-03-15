@@ -28,12 +28,12 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   currentItem (): SearchResults | undefined {
-    return this.parent.contentStack.current();
+    return this.parent.mapui.contentStack.current();
   }
 
   notifyMarkersNeedToShowNewSelection(lastContent: SearchResults, newContent?: Initiative[]) {
     if (!newContent)
-      newContent = this.parent.contentStack.current()?.initiatives
+      newContent = this.parent.mapui.contentStack.current()?.initiatives
     if (newContent)
       EventBus.Markers.needToShowLatestSelection.pub(newContent);
   }
@@ -107,7 +107,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned() {
-    const initiatives = this.parent.contentStack.current()?.initiatives;
+    const initiatives = this.parent.mapui.contentStack.current()?.initiatives;
     if (!initiatives || initiatives.length <= 0)
       return;
     const data = EventBus.Map.mkSelectAndZoomData(initiatives);
@@ -155,7 +155,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     const searchResults = new SearchResults(data.results, data.text,
                                             searchFilters,
                                             this.parent.mapui.labels);
-    this.parent.contentStack.push(searchResults);
+    this.parent.mapui.contentStack.push(searchResults);
 
 
     //highlight markers on search results 
@@ -194,8 +194,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     if (!initiative)
       return;
     
-    //this.parent.contentStack.append(new SearchResults([initiative]));
-    //console.log(this.parent.contentStack.current());
+    //this.parent.mapui.contentStack.append(new SearchResults([initiative]));
+    //console.log(this.parent.mapui.contentStack.current());
 
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
     this.view.refresh();
@@ -212,8 +212,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   
   onMarkerSelectionSet(initiative: Initiative) {
     //console.log(initiative);
-    const lastContent = this.parent.contentStack.current();
-    //this.parent.contentStack.append(new SearchResults([initiative]));
+    const lastContent = this.parent.mapui.contentStack.current();
+    //this.parent.mapui.contentStack.append(new SearchResults([initiative]));
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
     // this.notifySidebarNeedsToShowInitiatives();
@@ -221,7 +221,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   onMarkerSelectionToggled(initiative: Initiative) {
-    const lastContent = this.parent.contentStack.current();
+    const lastContent = this.parent.mapui.contentStack.current();
     // Make a clone of the current initiatives:
     const initiatives =
       lastContent !== undefined ? lastContent.initiatives.slice(0) : [];
@@ -239,7 +239,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
 
   onSearchHistory() {
-    this.parent.contentStack.gotoEnd();
+    this.parent.mapui.contentStack.gotoEnd();
     EventBus.Map.removeSearchFilter.pub();
   }
 

@@ -10,6 +10,7 @@ import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
 import { compactArray, toString as _toString } from '../utils';
+import { StateStack } from '../search-results';
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
@@ -210,6 +211,7 @@ export class MapUI {
   readonly markers: MarkerManager;
   readonly labels: PhraseBook;
   readonly filter: FilterService<Initiative>;
+  readonly contentStack = new StateStack();
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {

@@ -296,7 +296,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       let activeClass = "";
       let nongeoClass = "";
       if (
-        this.presenter.parent.contentStack.current()?.initiatives[0] === initiative
+        this.presenter.parent.mapui.contentStack.current()?.initiatives[0] === initiative
       ) {
         activeClass = "sea-initiative-active";
       }

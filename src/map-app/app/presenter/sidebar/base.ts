@@ -2,7 +2,6 @@ import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
-import { MapFilter, MapSearch } from '../../map-ui';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -28,20 +27,20 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
   }
 
   isBackButtonDisabled(): boolean {
-    return this.parent.contentStack.isAtStart();
+    return this.parent.mapui.contentStack.isAtStart();
   }
 
   isForwardButtonDisabled(): boolean {
-    return this.parent.contentStack.isAtEnd();
+    return this.parent.mapui.contentStack.isAtEnd();
   }
 
   onBackButtonClick(): void {
-    this.parent.contentStack.back();
+    this.parent.mapui.contentStack.back();
     this.historyButtonsUsed();
   }
 
   onForwardButtonClick(): void {
-    this.parent.contentStack.forward();
+    this.parent.mapui.contentStack.forward();
     this.historyButtonsUsed();
   }
 

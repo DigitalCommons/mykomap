@@ -24,7 +24,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   }
 
   currentItem(): SearchResults | undefined {
-    return this.parent.contentStack.current();
+    return this.parent.mapui.contentStack.current();
   }
 
   notifyViewToBuildDirectory(): void {
