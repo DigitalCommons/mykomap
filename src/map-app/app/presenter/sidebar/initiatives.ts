@@ -91,7 +91,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       propValue: filterValue,
     }
     EventBus.Map.addFilter.pub(filterData);
-    EventBus.Map.addSearchFilter.pub(filterData);
+    this.parent.mapui.addSearchFilter(filteredInitiatives);
   }
 
   removeFilters() {

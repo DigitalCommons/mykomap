@@ -1,4 +1,4 @@
-import { MapFilter, MapSearch } from "./app/map-ui";
+import { MapFilter } from "./app/map-ui";
 import { Initiative } from "./app/model/initiative";
 import { EventBus } from "./eventbus";
 import { PhraseBook } from "./localisations";

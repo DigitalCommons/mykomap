@@ -23,16 +23,7 @@ export interface Filter<I> {
   localisedTerm: string;
 }
 
-export interface Search<I> {
-  result: I[];
-}
-
-export interface Search<I> {
-  result: I[];
-}
-
 export type MapFilter = Filter<Initiative>;
-export type MapSearch = Search<Initiative>;
 
 interface FilterDef<I> {
   verboseName: string;
@@ -229,7 +220,6 @@ export class MapUI {
       });
     };
 
-    EventBus.Map.addSearchFilter.sub(filter => this.addSearchFilter(filter));
     EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
     EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
     EventBus.Map.removeFilters.sub(() => this.removeFilters());
@@ -281,10 +271,10 @@ export class MapUI {
     this.applyFilter();
   }
 
-  private addSearchFilter(data: MapSearch) {
+  addSearchFilter(initiatives: Initiative[]) {
     
     //if no results remove the filter, currently commented out
-    if (data.result.length == 0) {
+    if (initiatives.length == 0) {
       // uncommenting this will reveal all initiatives on a failed search
       // this.removeSearchFilter();
       // return;
@@ -299,34 +289,34 @@ export class MapUI {
        //this was causing a bug and doesn't seem to do anything useful
 
        //if the results match the previous results don't do anything
-       if (data.initiatives == this.lastRequest)
+       if (initiatives == this.lastRequest)
        return;
 
-       this.lastRequest = data.initiatives; //cache the last request
+       this.lastRequest = initiatives; //cache the last request
      */
 
 
     //get the ids from the passed data
     //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    const initiatives = this.dataServices.getAggregatedData().loadedInitiatives;
-    const notFiltered = data.result.filter(it => !initiatives.includes(it));
+    const allInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
+    const notFiltered = initiatives.filter(it => !allInitiatives.includes(it));
     this.filter.hidden = notFiltered;
 
     //make sure the markers you need to highlight are shown
-    this.markers.updateVisibility(new Set(data.result));
+    this.markers.updateVisibility(new Set(initiatives));
 
     //zoom and pan
 
-    if (data.result.length > 0) {
+    if (initiatives.length > 0) {
       var options: EventBus.Map.ZoomOptions = {
         maxZoom: this.config.getMaxZoomOnSearch()
       } 
       if (options.maxZoom == 0)
         options = {};
 
-      const latlng = this.dataServices.latLngBounds(data.result)
+      const latlng = this.dataServices.latLngBounds(initiatives)
       EventBus.Map.needsToBeZoomedAndPanned.pub({
-          initiatives: data.result,
+          initiatives: initiatives,
           bounds: latlng,
           options: options
       });
@@ -388,7 +378,7 @@ export class MapUI {
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them
-    EventBus.Map.addSearchFilter.pub({ result: results });
+    this.addSearchFilter(results);
 
     if (data.results.length == 1) {
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(results[0]);
@@ -466,8 +456,7 @@ export class MapUI {
       });
     }
 
-    const data: MapSearch = {result: newContent.initiatives};
-    EventBus.Map.addSearchFilter.pub(data);
+    this.addSearchFilter(newContent.initiatives);
   }
   
   forward(): void {
@@ -496,8 +485,7 @@ export class MapUI {
         });
       }
 
-      const data: MapSearch = {result: newContent.initiatives};
-      EventBus.Map.addSearchFilter.pub(data);
+      this.addSearchFilter(newContent.initiatives);
     }
     else {
       EventBus.Map.removeSearchFilter.pub();
