@@ -2,9 +2,9 @@ import { BasePresenter } from './base';
 import { EventBus } from '../../eventbus';
 import { MapView } from '../view/map';
 import { Initiative } from '../model/initiative';
-import { initiativeUris, toString as _toString } from '../../utils';
-import { MapFilter, MapSearch, MapUI } from '../map-ui';
+import { toString as _toString } from '../../utils';
 import { Map } from '../map';
+import { MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
@@ -43,11 +43,6 @@ export class MapPresenter extends BasePresenter {
     EventBus.Map.setActiveArea.sub(area => this.setActiveArea(area.offset));
     EventBus.Map.fitBounds.sub(bounds => this.onBoundsRequested(bounds));
     EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));
-    EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
-    EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
-    EventBus.Map.removeFilters.sub(() => this.removeFilters());
-    EventBus.Map.addSearchFilter.sub(filter => this.addSearchFilter(filter));
-    EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
   }
     
   createMap(): Map {
@@ -163,93 +158,6 @@ export class MapPresenter extends BasePresenter {
     this.view.setActiveArea(offset);
   }
 
-
-
-  //FILTERS
-  private applyFilter() {
-    this.mapUI.markers.updateVisibility(new Set(this.mapUI.filter.getFiltered()));
-  }
-
-  private addFilter(data: MapFilter) {
-    // add filter
-    this.mapUI.filter.addFilter(data);
-
-    // apply filters
-    this.applyFilter();
-  }
-
-  private removeFilters(): void {
-    const initiatives = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
-    this.mapUI.filter.reset(initiatives);
-    this.mapUI.markers.updateVisibility(new Set(initiatives));
-  }
-
-  private removeFilter(filterName: string) {
-    this.mapUI.filter.removeFilter(filterName);
-
-    //apply filters
-    this.applyFilter();
-  }
-
-  //FILTERS END
-
-
-  //SEARCH HIGHLIGHT
-
-
-  //highlights markers, hides markers not in the current selection
-  private addSearchFilter(data: MapSearch) {
-    
-    //if no results remove the filter, currently commented out
-    if (data.result.length == 0) {
-      // uncommenting this will reveal all initiatives on a failed search
-      // this.removeSearchFilter();
-      // return;
-      console.log("no results, hide everything");
-      // hide all 
-      this.mapUI.filter.hidden = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
-      this.mapUI.markers.updateVisibility(new Set());
-      return;
-    }
-
-    /*
-       //this was causing a bug and doesn't seem to do anything useful
-
-       //if the results match the previous results don't do anything
-       if (data.initiatives == this.mapUI.lastRequest)
-       return;
-
-       this.mapUI.lastRequest = data.initiatives; //cache the last request
-     */
-
-
-    //get the ids from the passed data
-    //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
-    const initiatives = this.mapUI.dataServices.getAggregatedData().loadedInitiatives;
-    const notFiltered = data.result.filter(it => !initiatives.includes(it));
-    this.mapUI.filter.hidden = notFiltered;
-
-    //make sure the markers you need to highlight are shown
-    this.mapUI.markers.updateVisibility(new Set(data.result));
-
-    //zoom and pan
-
-    if (data.result.length > 0) {
-      var options: EventBus.Map.ZoomOptions = {
-        maxZoom: this.mapUI.config.getMaxZoomOnSearch()
-      } 
-      if (options.maxZoom == 0)
-        options = {};
-
-      const latlng = this.mapUI.dataServices.latLngBounds(data.result)
-      EventBus.Map.needsToBeZoomedAndPanned.pub({
-          initiatives: data.result,
-          bounds: latlng,
-          options: options
-      });
-    }
-  }
-
   getLogo() {
     return this.mapUI.config.logo();
   }
@@ -258,28 +166,4 @@ export class MapPresenter extends BasePresenter {
     this.view.selectAndZoomOnInitiative(data);
   }
 
-  //this can get called multiple times make sure it doesn't crash
-  private removeSearchFilter() {
-
-    //if no search filter to remove just return
-    if (this.mapUI.filter.hidden.length === 0)
-      return;
-
-    this.applyFilter();
-
-    // FIXME why do what seems to be more or less the same as applyFilter does here?
-
-    //hide the initiatives that were outside of the filter
-    this.mapUI.markers.updateVisibility(new Set(this.mapUI.filter.getFiltered()));
-    // this can be sped up
-    // you can speed up the above statement by replacing this.getUnfiltered() 
-    // with the difference between getFiltered() and data.initiatives
-    // i.e. getting the initiatives that are outside of the filter but still shown
-
-    //reset the hidden array
-    this.mapUI.filter.hidden = [];
-
-    EventBus.Markers.needToShowLatestSelection.pub([]);
-  }
-  //END SEARCH HIGHLIGHT
 }

@@ -226,6 +226,13 @@ export class MapUI {
         resolve(sidebarPresenter);
       });
     };
+
+    EventBus.Map.addSearchFilter.sub(filter => this.addSearchFilter(filter));
+    EventBus.Map.addFilter.sub(filter => this.addFilter(filter));
+    EventBus.Map.removeFilter.sub(filter => this.removeFilter(filter));
+    EventBus.Map.removeFilters.sub(() => this.removeFilters());
+    EventBus.Map.removeSearchFilter.sub(() => this.removeSearchFilter());
+    
   }
 
   createMap() {
@@ -243,6 +250,106 @@ export class MapUI {
   
   createPresenter(): MapPresenter {
     return new MapPresenter(this);
-  }  
+  }
+
+  private applyFilter() {
+    this.markers.updateVisibility(new Set(this.filter.getFiltered()));
+  }
+
+  private addFilter(data: MapFilter) {
+    // add filter
+    this.filter.addFilter(data);
+
+    // apply filters
+    this.applyFilter();
+  }
+
+  private removeFilters(): void {
+    const initiatives = this.dataServices.getAggregatedData().loadedInitiatives;
+    this.filter.reset(initiatives);
+    this.markers.updateVisibility(new Set(initiatives));
+  }
+
+  private removeFilter(filterName: string) {
+    this.filter.removeFilter(filterName);
+
+    //apply filters
+    this.applyFilter();
+  }
+
+  private addSearchFilter(data: MapSearch) {
+    
+    //if no results remove the filter, currently commented out
+    if (data.result.length == 0) {
+      // uncommenting this will reveal all initiatives on a failed search
+      // this.removeSearchFilter();
+      // return;
+      console.log("no results, hide everything");
+      // hide all 
+      this.filter.hidden = this.dataServices.getAggregatedData().loadedInitiatives;
+      this.markers.updateVisibility(new Set());
+      return;
+    }
+
+    /*
+       //this was causing a bug and doesn't seem to do anything useful
+
+       //if the results match the previous results don't do anything
+       if (data.initiatives == this.lastRequest)
+       return;
+
+       this.lastRequest = data.initiatives; //cache the last request
+     */
+
+
+    //get the ids from the passed data
+    //hide the ones you need to  hide, i.e. difference between ALL and initiativesMap
+    const initiatives = this.dataServices.getAggregatedData().loadedInitiatives;
+    const notFiltered = data.result.filter(it => !initiatives.includes(it));
+    this.filter.hidden = notFiltered;
+
+    //make sure the markers you need to highlight are shown
+    this.markers.updateVisibility(new Set(data.result));
+
+    //zoom and pan
+
+    if (data.result.length > 0) {
+      var options: EventBus.Map.ZoomOptions = {
+        maxZoom: this.config.getMaxZoomOnSearch()
+      } 
+      if (options.maxZoom == 0)
+        options = {};
+
+      const latlng = this.dataServices.latLngBounds(data.result)
+      EventBus.Map.needsToBeZoomedAndPanned.pub({
+          initiatives: data.result,
+          bounds: latlng,
+          options: options
+      });
+    }
+  }
+
+  private removeSearchFilter() {
+
+    //if no search filter to remove just return
+    if (this.filter.hidden.length === 0)
+      return;
+
+    this.applyFilter();
+
+    // FIXME why do what seems to be more or less the same as applyFilter does here?
+
+    //hide the initiatives that were outside of the filter
+    this.markers.updateVisibility(new Set(this.filter.getFiltered()));
+    // this can be sped up
+    // you can speed up the above statement by replacing this.getUnfiltered() 
+    // with the difference between getFiltered() and data.initiatives
+    // i.e. getting the initiatives that are outside of the filter but still shown
+
+    //reset the hidden array
+    this.filter.hidden = [];
+
+    EventBus.Markers.needToShowLatestSelection.pub([]);
+  }
 }
 
