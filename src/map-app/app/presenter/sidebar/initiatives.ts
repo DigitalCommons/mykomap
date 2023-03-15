@@ -2,7 +2,6 @@ import { EventBus } from '../../../eventbus';
 import { MultiPropDef, VocabPropDef } from '../../model/data-services';
 import { InitiativesSidebarView } from '../../view/sidebar/initiatives';
 import { BaseSidebarPresenter } from './base';
-import { StackItem } from '../../../stack';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
@@ -28,11 +27,11 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this._eventbusRegister();
   }
 
-  currentItem (): StackItem | undefined {
+  currentItem (): SearchResults | undefined {
     return this.parent.contentStack.current();
   }
 
-  notifyMarkersNeedToShowNewSelection(lastContent: StackItem, newContent?: Initiative[]) {
+  notifyMarkersNeedToShowNewSelection(lastContent: SearchResults, newContent?: Initiative[]) {
     if (!newContent)
       newContent = this.parent.contentStack.current()?.initiatives
     if (newContent)
@@ -172,7 +171,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     }
 
     //filter
-    this.parent.contentStack.append(
+    this.parent.contentStack.push(
       new SearchResults(data.results, data.text,
                         this.parent.mapui.filter.getFiltersVerbose(),
                         this.parent.mapui.filter.getFilterIds(),
@@ -215,7 +214,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     if (!initiative)
       return;
     
-    //this.parent.contentStack.append(new StackItem([initiative]));
+    //this.parent.contentStack.append(new SearchResults([initiative]));
     //console.log(this.parent.contentStack.current());
 
     this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
@@ -234,7 +233,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   onMarkerSelectionSet(initiative: Initiative) {
     //console.log(initiative);
     const lastContent = this.parent.contentStack.current();
-    //this.parent.contentStack.append(new StackItem([initiative]));
+    //this.parent.contentStack.append(new SearchResults([initiative]));
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
     // this.notifySidebarNeedsToShowInitiatives();
@@ -253,7 +252,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       // remove elment form array (sigh - is this really the best array method for this?)
       initiatives.splice(index, 1);
     }
-    //this.contentStack.append(new StackItem(initiatives));
+    //this.contentStack.append(new SearchResults(initiatives));
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
     this.view.refresh();

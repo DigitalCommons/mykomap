@@ -1,9 +1,9 @@
-import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
 import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
 import { Initiative } from '../../model/initiative';
 import { SidebarPresenter } from '../sidebar';
+import { SearchResults } from '../../../search-results';
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   readonly view: DirectorySidebarView;
@@ -23,7 +23,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
 
-  currentItem(): StackItem | undefined {
+  currentItem(): SearchResults | undefined {
     return this.parent.contentStack.current();
   }
 
@@ -87,7 +87,7 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
 
   initiativeClicked(initiative?: Initiative): void {
     if (initiative) {
-      //this.parent.contentStack.append(new StackItem([initiative]));
+      //this.parent.contentStack.append(new SearchResults([initiative]));
       // Move the window to the right position first
       this.notifyMapNeedsToNeedsToSelectInitiative([initiative]);
 
