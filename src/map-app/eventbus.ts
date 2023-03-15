@@ -1,5 +1,6 @@
 import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
+import { MapFilter, MapSearch } from './app/map-ui';
 import { Initiative } from './app/model/initiative';
 import { Box2d, Point2d } from './common-types';
 import { arrays2Box2d, yesANumber } from './utils';
@@ -51,11 +52,6 @@ export namespace EventBus {
       bounds?: Box2d;
       options: ZoomOptions;
     }
-    export interface Filter {
-      filterName?: string;
-      verboseName?: string;
-      initiatives: Initiative[];
-    }
     export interface BoundsData {
       bounds: LatLngBoundsExpression;
       options?: ZoomOptions;
@@ -79,8 +75,8 @@ export namespace EventBus {
       };
     }
 
-	  export const addFilter = new PostalTopic<Filter>("Map.addFilter");
-	  export const addSearchFilter = new PostalTopic<Filter>("Map.addSearchFilter");
+	  export const addFilter = new PostalTopic<MapFilter>("Map.addFilter");
+	  export const addSearchFilter = new PostalTopic<MapSearch>("Map.addSearchFilter");
 	  export const fitBounds = new PostalTopic<BoundsData>("Map.fitBounds");
 	  export const needToHideInitiativeTooltip = new PostalTopic<Initiative>("Map.needToHideInitiativeTooltip");
 	  export const needToShowInitiativeTooltip = new PostalTopic<Initiative>("Map.needToShowInitiativeTooltip");

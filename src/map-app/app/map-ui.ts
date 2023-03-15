@@ -9,13 +9,25 @@ import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
-import { toString as _toString } from '../utils';
+import { compactArray, toString as _toString } from '../utils';
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
-  filterName?: string;
-  verboseName?: string;
-  initiatives: I[];
+  filterName: string;
+  verboseName: string;
+  result: I[];
+}
+
+export interface Search<I> {
+  result: I[];
+}
+
+export type MapFilter = Filter<Initiative>;
+export type MapSearch = Search<Initiative>;
+
+interface FilterDef<I> {
+  verboseName: string;
+  items: Set<I>;
 }
 
 /// Manages a set of filtered/unfiltered items of type I
@@ -23,12 +35,14 @@ export class FilterService<I> {
   // The set of all items. Should be unchanged.
   private allItems: I[] = [];
   
+  /// The set of items included for the last filter added
   private filteredIndex: Set<I> = new Set();
+  /// set of items excluded for the last filter added
   private unfilteredIndex: Set<I> = new Set();
 
   /// An index of filter names to a list of items matched by that filter
-  private filtered: Dictionary<Set<I>> = {};
-  private verboseNamesMap: Dictionary = {};
+  private filters: Dictionary<FilterDef<I>> = {};
+
   hidden: I[] = [];
 
   constructor() {
@@ -40,9 +54,8 @@ export class FilterService<I> {
   reset(items?: I[]) {
     if (items)
       this.allItems = items;
-    this.filtered = {};
+    this.filters = {};
     this.filteredIndex = new Set();
-    this.verboseNamesMap = {};
     this.unfilteredIndex = this.allItems
       .reduce<Set<I>>((ix, it) => { ix.add(it); return ix; }, new Set());
   }
@@ -58,20 +71,20 @@ export class FilterService<I> {
   }
 
   getFilterIds(): string[] {
-    return Object.keys(this.filtered);
+    return Object.keys(this.filters);
   }
 
   getFiltersFull(): Filter<I>[] {
     const filterArray: Filter<I>[] = []
     
-    for(let filterId in this.verboseNamesMap){
-      const filtered = this.filtered[filterId];
+    for(let filterId in this.filters){
+      const filtered = this.filters[filterId];
       if (!filtered)
         continue;
       filterArray.push({
         filterName: filterId,
-        verboseName: this.verboseNamesMap[filterId] ?? '',
-        initiatives: Array.from(filtered),
+        verboseName: filtered.verboseName,
+        result: Array.from(filtered.items),
       })
     }
     
@@ -79,38 +92,52 @@ export class FilterService<I> {
   }
 
   getFiltersVerbose(): string[] {
-    return Object.values(this.verboseNamesMap)
-      .filter((i): i is string => i !== undefined);
+    return compactArray(Object.values(this.filters).map(f => f?.verboseName));
   }
 
   isFilterId(id: string): boolean {
-    return !!this.filtered[id];
+    return !!this.filters[id];
   }
-  
-  addFilter(name: string, items: I[], verboseName?: string): void {
+
+  addFilter(name: string, items: I[], verboseName: string): void {
     // if filter already exists don't do anything
-    if (this.isFilterId(name))
+    const filter = this.filters[name];
+    if (filter)
       return;
 
-    const itemSet = this.filtered[name] = new Set(items);
-    this.verboseNamesMap[name] = verboseName;
+    const newFilter = {
+      items: new Set(items),
+      verboseName: verboseName,
+    };
+    this.filters[name] = newFilter;
     
-    // if this is the first filter, add items to the filteredInitiativesUIDMap
-    if (Object.keys(this.filtered).length <= 1) {
+    // filteredIndex should contain the union of all filters added so far.
+    // At all times, filteredIndex + unfilteredIndex should equal allItems
+    if (Object.keys(this.filters).length <= 1) {
+      // if this is the first filter, add items to the filteredInitiativesUIDMap
+
+      // In boolean set logic:
+      // filteredIndex := items
+      // unfilteredIndex := allItems ∪ ¬items [union of allItems and not items]
+      
       this.unfilteredIndex = new Set(this.allItems);
       
-      // add to array only new unique entries
       for(const item of items) {
-        // rm entry from outside map
         this.unfilteredIndex.delete(item);
         this.filteredIndex.add(item);
       }
     }
     else {      
-      // if this is the second or more filter, remove items from the 
-      // filteredIndex if they don't appear in the new filter's set of initiatives
+      // if this is the second or more filter, remove items from the
+      // filteredIndex if they don't appear in the new filter's set of
+      // initiatives.
+
+      // In boolean set logic:
+      // filteredIndex := filteredIndex ∩ items
+      // unfilteredIndex := (filteredIndex ∩ ¬items) ∪ unfilteredIndex 
+
       this.filteredIndex.forEach(item => {
-        if(!itemSet.has(item)){
+        if(!newFilter.items.has(item)){
           this.unfilteredIndex.add(item);
           this.filteredIndex.delete(item);
         }
@@ -126,11 +153,12 @@ export class FilterService<I> {
       return;
 
     // remove the filter
-    const oldFilterItems = this.filtered[filterId] ?? new Set();
-    delete this.filtered[filterId];
+    const oldFilter = this.filters[filterId];
+    const oldFilterItems = oldFilter?.items ?? new Set();
+    delete this.filters[filterId];
 
     // if no filters left call remove all and stop
-    if (Object.keys(this.filtered).length <= 0) {
+    if (Object.keys(this.filters).length <= 0) {
       this.reset();
       return;
     }
@@ -140,20 +168,17 @@ export class FilterService<I> {
 
     // remove filter initatives 
     // TODO: CAN YOU OPTIMISE THIS ? (currently running at o(n) )
-    for(const filterId2 in this.filtered) {
-      const items = this.filtered[filterId2];
-      if (!items) continue;
+    for(const filterId2 in this.filters) {
+      const filter = this.filters[filterId2];
+      if (!filter) continue;
 
-      items.forEach(item => {
+      filter.items.forEach(item => {
         // add in unique ones
         this.filteredIndex.add(item);
         // remove the ones you added
         this.unfilteredIndex.delete(item);
       });
     }
-
-    // remove filter from verbose name
-    delete this.verboseNamesMap[filterId];
   }
 }
 

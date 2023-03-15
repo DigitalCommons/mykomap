@@ -1,6 +1,6 @@
-import { StackItem } from "./stack";
 import { Initiative } from "./app/model/initiative";
 import { PhraseBook } from "./localisations";
+import { StackItem } from "./stack";
 
 export interface SearchFilter {
   filterName: string;
@@ -29,4 +29,3 @@ export class SearchResults extends StackItem {
     }));
   }
 }
-

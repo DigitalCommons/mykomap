@@ -1,9 +1,9 @@
-import { StackItem } from '../../../stack';
 import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { SearchResults } from '../../../search-results';
+import { MapFilter, MapSearch } from '../../map-ui';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -43,16 +43,16 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
       if(newContent instanceof SearchResults && newContent.filters[0]){    
         newContent.filters.forEach(filter=>{
-          let filterData: EventBus.Map.Filter = {
+          let filterData: MapFilter = {
             filterName: filter.filterName,
-            initiatives: newContent.initiatives,
+            result: newContent.initiatives,
             verboseName: filter.verboseName
           };
           EventBus.Map.addFilter.pub(filterData);
         });
       }
 
-      const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+      const data: MapSearch = { result: newContent.initiatives };
       EventBus.Map.addSearchFilter.pub(data);
 
       this.historyButtonsUsed();
@@ -73,16 +73,16 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
 
         if(newContent.filters[0]){     
           newContent.filters.forEach(filter=>{
-            let filterData: EventBus.Map.Filter = {
+            let filterData: MapFilter = {
               filterName: filter.filterName,
-              initiatives: newContent.initiatives,
+              result: newContent.initiatives,
               verboseName: filter.verboseName
             };
             EventBus.Map.addFilter.pub(filterData);
           });
         }
 
-        const data: EventBus.Map.Filter = {initiatives: newContent.initiatives};
+        const data: MapSearch = { result: newContent.initiatives };
         EventBus.Map.addSearchFilter.pub(data);
       }
       else{

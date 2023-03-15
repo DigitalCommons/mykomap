@@ -7,6 +7,7 @@ import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { compactArray, initiativeUris, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
+import { MapFilter } from '../../map-ui';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly view: InitiativesSidebarView;
@@ -88,10 +89,10 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
-        filter && filter.verboseName?.split(":")[0] === filterCategoryName
+        filter && filter.verboseName.split(":")[0] === filterCategoryName
       })
       
-      if (oldFilter?.filterName) {
+      if (oldFilter) {
         EventBus.Map.removeFilter.pub(oldFilter.filterName);
       }
     }
@@ -108,9 +109,9 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     filteredInitiatives = Initiative.textSearch(searchText, filteredInitiatives);
 
     // create new filter
-    let filterData: EventBus.Map.Filter = {
+    let filterData: MapFilter = {
       filterName: filterValue,
-      initiatives: filteredInitiatives,
+      result: filteredInitiatives,
       verboseName: filterCategoryName + ": " + filterValueText
     }
     EventBus.Map.addFilter.pub(filterData);
@@ -180,7 +181,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
     //highlight markers on search results 
     //reveal all potentially hidden markers before zooming in on them
-    EventBus.Map.addSearchFilter.pub({ initiatives: data.results });
+    EventBus.Map.addSearchFilter.pub({ result: data.results });
 
     if (data.results.length == 1) {
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(data.results[0]);

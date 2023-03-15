@@ -50,6 +50,7 @@ import {
 
 import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
+import { MapFilter } from '../map-ui';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
@@ -224,7 +225,7 @@ export interface DataServices {
   //// non-proxies
 
   /// Returns a list of property values matching the given filter
-  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[];
+  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[];
 
   // Get the current dataset, or true
   //
@@ -504,11 +505,11 @@ export class DataServicesImpl implements DataServices {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: EventBus.Map.Filter[], field: string): unknown[] { // FIXME move to FilterService
+  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[] { // FIXME move to FilterService
     //construct an array of the filters that aren't the one matching the field
-    let otherFilters: EventBus.Map.Filter[] = [];
+    let otherFilters: MapFilter[] = [];
     filters.forEach(filter => {
-      if (filter.verboseName?.split(":")[0] !== field)
+      if (filter.verboseName.split(":")[0] !== field)
         otherFilters.push(filter);
     });
 
@@ -516,11 +517,11 @@ export class DataServicesImpl implements DataServices {
     let sharedInitiatives: Initiative[] = [];
     otherFilters.forEach((filter, i) => {
       if (i < 1)
-        sharedInitiatives = filter.initiatives;
+        sharedInitiatives = filter.result;
       else
         //loop through sharedInitiatives and remove ones without a match in filter.initiatives
         sharedInitiatives = sharedInitiatives.filter(initiative =>
-          filter.initiatives.includes(initiative)
+          filter.result.includes(initiative)
         );
     });
 
