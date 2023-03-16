@@ -4,12 +4,8 @@ import { PhraseBook } from "./localisations";
 import { Stack } from "./stack";
 
 export interface SearchFilter {
-  filterName: string;
-  verboseName: string;
   propName: string;
   propValue: unknown;
-  localisedVocabTitle: string;
-  localisedTerm: string;
 }
 
 /// Represents a search result on the sidebar contentStack
@@ -21,7 +17,7 @@ export class SearchResults {
               readonly filters: SearchFilter[],
               labels: PhraseBook) {
     if (filters.length > 0) {
-      const filterVerboseNames = filters.map(f => f.verboseName);
+      const filterVerboseNames = filters.map(f => `${f.propName}: ${f.propValue}`); // FIXME temporarily not localised!
       this.searchString =
         `"${searchedFor}" ${labels.in} ${filterVerboseNames.join(' '+labels.and+' ')}`;
     }

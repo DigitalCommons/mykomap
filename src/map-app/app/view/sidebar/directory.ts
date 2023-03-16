@@ -203,12 +203,8 @@ export class DirectorySidebarView extends BaseSidebarView {
     if (selectionKey) { // if not selectionKey set, we are not filtering
       this.presenter.parent.mapui.addFilter({
         result: initiatives,
-        filterName: selectionKey,
-        verboseName: (directoryTitle + ": " + title),
         propName: propName,
         propValue: selectionKey,
-        localisedVocabTitle: directoryTitle,
-        localisedTerm: title,
       });
     }
 

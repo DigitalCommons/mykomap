@@ -14,24 +14,17 @@ import { SearchFilter, SearchResults, StateStack } from '../search-results';
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
-  filterName: string;
-  verboseName: string;
   result: I[];
   propName: string;
   propValue: unknown;
-  localisedVocabTitle: string;
-  localisedTerm: string;
 }
 
 export type MapFilter = Filter<Initiative>;
 
 interface FilterDef<I> {
-  verboseName: string;
   items: Set<I>;
   propName: string;
   propValue: unknown;
-  localisedTerm: string;
-  localisedVocabTitle: string;
 }
 
 /// Manages a set of filtered/unfiltered items of type I
@@ -86,13 +79,9 @@ export class FilterService<I> {
       if (!filter)
         continue;
       filterArray.push({
-        filterName: filterId,
-        verboseName: filter.verboseName,
         propName: filter.propName,
         propValue: filter.propValue,
         result: Array.from(filter.items),
-        localisedTerm: filter.localisedTerm,
-        localisedVocabTitle: filter.localisedVocabTitle,
       })
     }
     
@@ -100,7 +89,8 @@ export class FilterService<I> {
   }
 
   getFiltersVerbose(): string[] {
-    return compactArray(Object.values(this.filters).map(f => f?.verboseName));
+    const filters = compactArray(Object.values(this.filters));
+    return filters.map(f => `${f.propName}: ${f.propValue}`); // FIXME temporarily not localised!
   }
 
   isFilterId(id: string): boolean {
@@ -109,18 +99,15 @@ export class FilterService<I> {
 
   addFilter(filter: Filter<I>): void {
     // if filter already exists don't do anything
-    if (filter.filterName && this.filters[filter.filterName])
+    if (filter.propName && this.filters[filter.propName])
       return;
 
     const newFilter: FilterDef<I> = {
       items: new Set(filter.result),
-      verboseName: filter.verboseName,
       propName: filter.propName,
       propValue: filter.propValue,
-      localisedVocabTitle: filter.localisedVocabTitle,
-      localisedTerm: filter.localisedTerm,
     };
-    this.filters[filter.filterName] = newFilter;
+    this.filters[filter.propName] = newFilter;
     
     // filteredIndex should contain the union of all filters added so far.
     // At all times, filteredIndex + unfilteredIndex should equal allItems
@@ -263,11 +250,11 @@ export class MapUI {
   }
 
   /// Returns a list of property values matching the given filter
-  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[] {
+  getAlternatePossibleFilterValues(filters: MapFilter[], propName: string): unknown[] {
     //construct an array of the filters that aren't the one matching the field
     let otherFilters: MapFilter[] = [];
     filters.forEach(filter => {
-      if (filter.localisedVocabTitle !== field)
+      if (filter.propName !== propName)
         otherFilters.push(filter);
     });
 
@@ -285,7 +272,7 @@ export class MapUI {
 
     //find the initiative variable associated with the field
     const alternatePossibleFilterValues: unknown[] = [];
-    const vocabID = this.dataServices.getVocabTitlesAndVocabIDs()[field];
+    const vocabID = this.dataServices.getVocabTitlesAndVocabIDs()[propName];
     if (vocabID) {
       // Find the first propdef which uses this vocabID. This may not
       // be the only one!  However, this is how it was implemented
@@ -406,11 +393,11 @@ export class MapUI {
 
     if (currentFilters && currentFilters.length > 0) {
       const oldFilter = currentFilters.find(filter => {
-        filter && filter.localisedVocabTitle === vocab.title // FIXME ideally use propDef.uri
+        filter && filter.propName === propName
       })
       
       if (oldFilter) {
-        this.removeFilter(oldFilter.filterName);
+        this.removeFilter(oldFilter.propName);
       }
     }
 
@@ -427,11 +414,7 @@ export class MapUI {
 
     // create new filter
     let filterData: MapFilter = {
-      filterName: filterValue,
       result: filteredInitiatives,
-      localisedVocabTitle: vocab.title,
-      localisedTerm: filterValueText,
-      verboseName: vocab.title + ": " + filterValueText,
       propName: propName,
       propValue: filterValue,
     }
@@ -555,13 +538,9 @@ export class MapUI {
     if (newContent instanceof SearchResults && newContent.filters[0]) {
       newContent.filters.forEach(filter=>{
         let filterData: MapFilter = {
-          filterName: filter.filterName,
           result: newContent.initiatives,
-          verboseName: filter.verboseName,
           propName: filter.propName,
           propValue: filter.propValue,
-          localisedVocabTitle: filter.localisedVocabTitle,
-          localisedTerm: filter.localisedTerm,
         };
         this.addFilter(filterData);
       });
@@ -584,13 +563,9 @@ export class MapUI {
       if (newContent.filters[0]) {
         newContent.filters.forEach(filter=>{
           let filterData: MapFilter = {
-            filterName: filter.filterName,
             result: newContent.initiatives,
-            verboseName: filter.verboseName,
             propName: filter.propName,
             propValue: filter.propValue,
-            localisedVocabTitle: filter.localisedVocabTitle,
-            localisedTerm: filter.localisedTerm,
           };
           this.addFilter(filterData);
         });

@@ -236,9 +236,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
     const mapui = this.presenter.parent.mapui;
 		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
-		const activeFilterCategories = mapui.filter.getFiltersFull()
-      .map(filter => filter.localisedVocabTitle);
-
     const propNames = mapui.config.getFilterableFields();
     const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
     const vocabs = mapui.dataServices.getLocalisedVocabs();
@@ -282,10 +279,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
       // FIXME Would ideally be using propName, not propTitle as it isn't unique.
       // But this is a legacy we need to refactor later...
 			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && activeFilterCategories.includes(propTitle)) {
+			if (currentFilters.length > 0 && this.presenter.parent.mapui.filter.isFilterId(propName)) {
         const filters = mapui.filter.getFiltersFull();
 				alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(
-					filters, propTitle 
+					filters, propName 
         );
       }
 			entryArray.forEach(entry => {
@@ -301,7 +298,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					if (currentFilters.includes(id))
 						option.attr("selected", true);
 
-					if (activeFilterCategories.includes(propTitle)) {
+					if (this.presenter.parent.mapui.filter.isFilterId(propName)) {
 						if (currentFilters.length > 1 && !alternatePossibleFilterValues.includes(id))
 							option.attr("disabled", true);
 					}
