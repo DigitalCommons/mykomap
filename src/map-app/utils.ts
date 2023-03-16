@@ -94,6 +94,16 @@ export function isBox2d(x: unknown): x is Box2d {
   return true;
 }
 
+/// Checks thast the box has all finite numbers
+export function isFiniteBox2d(x: Box2d): boolean {
+  return (
+    Number.isFinite(x[0][0])
+      && Number.isFinite(x[0][1])
+      && Number.isFinite(x[1][0])
+      && Number.isFinite(x[1][1])
+  );
+}
+
 /// Converts anything not an actual (or approximate) Box2d into the default value y (which itself defaults to [0,0])
 ///
 /// We assume most inputs will be valid, and attempt to return valid values unchanged, as fast as possible.
