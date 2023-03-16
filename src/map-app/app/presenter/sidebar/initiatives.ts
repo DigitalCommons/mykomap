@@ -5,7 +5,6 @@ import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { compactArray, toString as _toString } from '../../../utils';
 import { SidebarPresenter } from '../sidebar';
-import { MapFilter } from '../../map-ui';
 
 export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   readonly view: InitiativesSidebarView;

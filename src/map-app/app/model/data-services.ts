@@ -50,7 +50,6 @@ import {
 
 import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
-import { MapFilter } from '../map-ui';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
