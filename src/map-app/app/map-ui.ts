@@ -19,7 +19,7 @@ export interface Filter<I> {
   propValue: unknown;
 }
 
-export type MapFilter = Filter<Initiative>;
+type MapFilter = Filter<Initiative>;
 
 interface FilterDef<I> {
   items: Set<I>;
