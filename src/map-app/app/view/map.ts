@@ -9,6 +9,7 @@ import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
 import { PhraseBook } from "../../localisations";
 import { Box2d } from "../../common-types";
+import { isFiniteBox2d } from "../../utils";
 
 export class MapView extends BaseView {
   map?: Map;
@@ -306,6 +307,11 @@ export class MapView extends BaseView {
     //2. Multiple markers - Markers are visisible (no clusters) - pan to markers if you can without zoom, else just do the usual and zoom
     //3. Clusters within clusters
     if (data.bounds) {
+      if (!isFiniteBox2d(data.bounds)) {
+        console.log("ignoring non-finite bounds", data.bounds);
+        return;
+      }
+      
       if (data.initiatives && this.isVisible(data.initiatives)
         && this.boundsWithinCurrentBounds(data.bounds)) {// all are visible
         //case 1 and 2
