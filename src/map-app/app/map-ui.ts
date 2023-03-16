@@ -241,10 +241,6 @@ export class MapUI {
     return new MapPresenter(this);
   }
 
-  private applyFilter() {
-    this.markers.updateVisibility(new Set(this.filter.getFiltered()));
-  }
-
   addFilter(data: MapFilter) {
     // add filter
     this.filter.addFilter(data);
@@ -341,10 +337,6 @@ export class MapUI {
     EventBus.Markers.needToShowLatestSelection.pub([]);
   }
 
-  private refreshSidebar() {
-    this.getSidebarPresenter(this).then((presenter) => presenter.changeSidebar());
-  }
-
   onInitiativeResults(data: EventBus.Search.Results) {
     // TODO - handle better when data.results is empty
     //        Prob don't want to put them on the stack?
@@ -389,6 +381,14 @@ export class MapUI {
     }
 
     this.notifySidebarNeedsToShowInitiatives();
+  }
+
+  private refreshSidebar() {
+    this.getSidebarPresenter(this).then((presenter) => presenter.changeSidebar());
+  }
+
+  private applyFilter() {
+    this.markers.updateVisibility(new Set(this.filter.getFiltered()));
   }
 
   private notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
