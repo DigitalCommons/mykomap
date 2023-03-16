@@ -337,7 +337,65 @@ export class MapUI {
     EventBus.Markers.needToShowLatestSelection.pub([]);
   }
 
-  onInitiativeResults(data: EventBus.Search.Results) {
+  /// - propName  is the title of the property being filtered
+  /// - filterValue is the value of the selected drop-down value (typically an abbreviated vocab URI,
+  ///   but could also be "any"
+  /// - filterValueText is the display text for the selecte drop-down value
+  /// - searchText the current value of the text search, or an empty string.
+  changeFilters(propName: string, filterValue: string, filterValueText: string, searchText: string) {
+    
+    // Get the property definition for propName
+    const vocabProps = this.dataServices.getVocabPropDefs();
+    const propDef = vocabProps[propName];
+    if (!propDef)
+      throw new Error(`filterable field ${propName} is not a vocab field, which is not currently supported`);
+    // FIXME implement support for this later
+
+    // Get the vocab for this property
+    const vocabs = this.dataServices.getLocalisedVocabs();
+    const vocab = vocabs[propDef.uri];
+    if (!vocab)
+      throw new Error(`filterable field ${propName} does not use a known vocab: ${propDef.uri}`);
+
+    //remove old filter 
+    const currentFilters = this.filter.getFiltersFull();
+
+    if (currentFilters && currentFilters.length > 0) {
+      const oldFilter = currentFilters.find(filter => {
+        filter && filter.localisedVocabTitle === vocab.title // FIXME ideally use propDef.uri
+      })
+      
+      if (oldFilter) {
+        this.removeFilter(oldFilter.filterName);
+      }
+    }
+
+    //if filter is any, don't add a new filter
+    if (filterValue === "any")
+      return;
+
+    // Get initiatives for new filter
+    const allInitiatives = compactArray(Object.values(this.dataServices.getAggregatedData().initiativesByUid));
+    let filteredInitiatives = Initiative.filter(allInitiatives, propName, filterValue);
+
+    // Apply the text search on top
+    filteredInitiatives = Initiative.textSearch(searchText, filteredInitiatives);
+
+    // create new filter
+    let filterData: MapFilter = {
+      filterName: filterValue,
+      result: filteredInitiatives,
+      localisedVocabTitle: vocab.title,
+      localisedTerm: filterValueText,
+      verboseName: vocab.title + ": " + filterValueText,
+      propName: propName,
+      propValue: filterValue,
+    }
+    this.addFilter(filterData);
+    this.addSearchFilter(filteredInitiatives);
+  }
+
+  private onInitiativeResults(data: EventBus.Search.Results) {
     // TODO - handle better when data.results is empty
     //        Prob don't want to put them on the stack?
     //        But still need to show the fact that there are no results.
@@ -383,6 +441,35 @@ export class MapUI {
     this.notifySidebarNeedsToShowInitiatives();
   }
 
+  performSearch(text: string) {
+    console.log("Search submitted: [" + text + "]");
+    // We need to make sure that the search sidebar is loaded
+    if (text.length > 0) {
+      EventBus.Sidebar.hideInitiativeList.pub();
+      EventBus.Markers.needToShowLatestSelection.pub([]);
+
+      //should be async
+      const results = Initiative.textSearch(text, this.dataServices.getAggregatedData().loadedInitiatives);      
+      this.onInitiativeResults({ text: text, results: Initiative.textSort(results) });
+    }
+
+    else {
+      this.performSearchNoText();
+    }
+  }
+
+  private performSearchNoText() {
+    console.log("perform search no text")
+    EventBus.Sidebar.hideInitiativeList.pub();
+    EventBus.Markers.needToShowLatestSelection.pub([]);
+
+    //should be async
+    var results = Object.values(this.dataServices.getAggregatedData().initiativesByUid)
+      .filter((i): i is Initiative => !!i);
+    this.onInitiativeResults({ text: "", results: results });
+  }
+
+  
   onLoad() {
     console.log("Map loaded");
     
