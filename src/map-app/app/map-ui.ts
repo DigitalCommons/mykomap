@@ -198,7 +198,7 @@ export class MapUI {
   public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
-  readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
+  private readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
   readonly markers: MarkerManager;
   readonly labels: PhraseBook;
   readonly filter: FilterService<Initiative>;
@@ -381,6 +381,17 @@ export class MapUI {
     }
 
     this.notifySidebarNeedsToShowInitiatives();
+  }
+
+  onLoad() {
+    console.log("Map loaded");
+    
+    // Trigger loading of the sidebar, the deps should all be in place now.
+    this.getSidebarPresenter(this).then(sidebar => {
+      const defaultOpenSidebar = this.config.getDefaultOpenSidebar();
+      if (defaultOpenSidebar)
+        sidebar.showSidebar()
+    });
   }
 
   private refreshSidebar() {

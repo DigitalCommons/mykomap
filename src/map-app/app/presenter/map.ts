@@ -66,15 +66,7 @@ export class MapPresenter extends BasePresenter {
   }
 
   onLoad() {
-    console.log("Map loaded");
-    
-    let defaultOpenSidebar = this.mapUI.config.getDefaultOpenSidebar();
-    
-    // Trigger loading of the sidebar, the deps should all be in place now.
-    this.mapUI.getSidebarPresenter(this.mapUI).then(sidebar => {
-      if (defaultOpenSidebar)
-        sidebar.showSidebar()
-    });
+    this.mapUI.onLoad();
   }
   
   private onInitiativeReset() {
