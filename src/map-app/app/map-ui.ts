@@ -395,15 +395,24 @@ export class MapUI {
     this.addSearchFilter(filteredInitiatives);
   }
 
-  private onInitiativeResults(data: EventBus.Search.Results) {
-    // TODO - handle better when data.results is empty
-    //        Prob don't want to put them on the stack?
-    //        But still need to show the fact that there are no results.
-    //get the uniquids of the applied filters
+  performSearch(text: string) {
+    console.log("Search submitted: [" + text + "]");
+    // We need to make sure that the search sidebar is loaded
+    EventBus.Sidebar.hideInitiativeList.pub();
+    EventBus.Markers.needToShowLatestSelection.pub([]);
+    let results = this.dataServices.getAggregatedData().loadedInitiatives;
+    if (text.length > 0) {
+      //should be async
+      results = Initiative.textSearch(text, results);
+    }
+    else {
+      results = Initiative.textSort(results); // Make a sorted copy
+    }
+    
+    // Get the uniquids of the applied filters
     const filterKeys = initiativeUris(this.filter.getFiltered());
 
-    //go in if there are any filters
-    let results = [ ...data.results ];
+    // Go in if there are any filters
     if (filterKeys.length != 0) {
       //get the intersection of the filtered content and the search data
       //search results should be a subset of filtered
@@ -415,7 +424,7 @@ export class MapUI {
 
     // (SearchFilter is a subset of MapFilter)
     const searchFilters: SearchFilter[] = this.filter.getFiltersFull()
-    const searchResults = new SearchResults(results, data.text,
+    const searchResults = new SearchResults(results, text,
                                             searchFilters,
                                             this.labels);
     this.contentStack.push(searchResults);
@@ -425,7 +434,7 @@ export class MapUI {
     //reveal all potentially hidden markers before zooming in on them
     this.addSearchFilter(results);
 
-    if (data.results.length == 1) {
+    if (results.length == 1) {
       this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(results[0]);
     }
     else if (results.length == 0) {
@@ -439,19 +448,6 @@ export class MapUI {
     }
 
     this.notifySidebarNeedsToShowInitiatives();
-  }
-
-  performSearch(text: string) {
-    console.log("Search submitted: [" + text + "]");
-    // We need to make sure that the search sidebar is loaded
-    EventBus.Sidebar.hideInitiativeList.pub();
-    EventBus.Markers.needToShowLatestSelection.pub([]);
-    let results = this.dataServices.getAggregatedData().loadedInitiatives;
-    if (text.length > 0) {
-      //should be async
-      results = Initiative.textSearch(text, this.dataServices.getAggregatedData().loadedInitiatives);     }
-    
-    this.onInitiativeResults({ text: text, results: Initiative.textSort(results) });
   }
 
   
