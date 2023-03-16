@@ -444,29 +444,14 @@ export class MapUI {
   performSearch(text: string) {
     console.log("Search submitted: [" + text + "]");
     // We need to make sure that the search sidebar is loaded
-    if (text.length > 0) {
-      EventBus.Sidebar.hideInitiativeList.pub();
-      EventBus.Markers.needToShowLatestSelection.pub([]);
-
-      //should be async
-      const results = Initiative.textSearch(text, this.dataServices.getAggregatedData().loadedInitiatives);      
-      this.onInitiativeResults({ text: text, results: Initiative.textSort(results) });
-    }
-
-    else {
-      this.performSearchNoText();
-    }
-  }
-
-  private performSearchNoText() {
-    console.log("perform search no text")
     EventBus.Sidebar.hideInitiativeList.pub();
     EventBus.Markers.needToShowLatestSelection.pub([]);
-
-    //should be async
-    var results = Object.values(this.dataServices.getAggregatedData().initiativesByUid)
-      .filter((i): i is Initiative => !!i);
-    this.onInitiativeResults({ text: "", results: results });
+    let results = this.dataServices.getAggregatedData().loadedInitiatives;
+    if (text.length > 0) {
+      //should be async
+      results = Initiative.textSearch(text, this.dataServices.getAggregatedData().loadedInitiatives);     }
+    
+    this.onInitiativeResults({ text: text, results: Initiative.textSort(results) });
   }
 
   
