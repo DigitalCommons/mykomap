@@ -14,7 +14,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     EventBus.Marker.selectionSet.sub(initiative => this.onMarkerSelectionSet(initiative));
     EventBus.Initiatives.showSearchHistory.sub(() => this.onSearchHistory())
     EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(_toString(initiative.uri, undefined)));
-    EventBus.Search.changeSearchText.sub(text => this.changeSearchText(text));
   }
 
   constructor(readonly parent: SidebarPresenter) {

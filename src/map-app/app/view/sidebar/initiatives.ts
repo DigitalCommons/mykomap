@@ -35,7 +35,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			textContent = labels.search + ": " + lastSearchResults.searchString;
 
 			//change the text in the search bar
-      EventBus.Search.changeSearchText.pub(lastSearchResults.searchedFor);
+      this.changeSearchText(lastSearchResults.searchedFor);
 		}
 
 		container

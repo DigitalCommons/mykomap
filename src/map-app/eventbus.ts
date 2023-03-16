@@ -91,10 +91,6 @@ export namespace EventBus {
 	  //export const completed = new PostalTopic<Data>("Markers.completed");
 	  export const needToShowLatestSelection = new PostalTopic<Initiative[]>("Markers.needToShowLatestSelection");
   }
-  export namespace Search {
-    export interface Results { text: string; results: Initiative[]; }
-	  export const changeSearchText = new PostalTopic<string>("Search.changeSearchText");
-  }
   export namespace Sidebar {
 	  export const hideInitiative = new PostalTopic("Sidebar.hideInitiative");
 	  export const hideInitiativeList = new PostalTopic("Sidebar.hideInitiativeList");
