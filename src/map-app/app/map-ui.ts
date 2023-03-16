@@ -262,7 +262,7 @@ export class MapUI {
     this.applyFilter();
   }
 
-  addSearchFilter(initiatives: Initiative[]) {
+  private addSearchFilter(initiatives: Initiative[]) {
     
     //if no results remove the filter, currently commented out
     if (initiatives.length == 0) {
@@ -444,10 +444,15 @@ export class MapUI {
     else {
       //this.notifyMarkersNeedToShowNewSelection(lastContent);
       //deselect all
-      this.notifyMapNeedsToNeedsToBeZoomedAndPanned(); //does not do anything?
+      // notifyMapNeedsToNeedsToBeZoomedAndPanned
+      const initiatives = this.contentStack.current()?.initiatives;
+      if (!initiatives || initiatives.length <= 0)
+        return;
+      const data = EventBus.Map.mkSelectAndZoomData(initiatives);
+      EventBus.Map.needsToBeZoomedAndPanned.pub(data);
     }
 
-    this.notifySidebarNeedsToShowInitiatives();
+    EventBus.Sidebar.showInitiatives.pub();
   }
 
   
@@ -473,18 +478,6 @@ export class MapUI {
   private notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
     const data = EventBus.Map.mkSelectAndZoomData([initiative]);
     EventBus.Map.needsToBeZoomedAndPanned.pub(data);
-  }
-  
-  private notifyMapNeedsToNeedsToBeZoomedAndPanned() {
-    const initiatives = this.contentStack.current()?.initiatives;
-    if (!initiatives || initiatives.length <= 0)
-      return;
-    const data = EventBus.Map.mkSelectAndZoomData(initiatives);
-    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
-  }
-
-  private notifySidebarNeedsToShowInitiatives() {
-    EventBus.Sidebar.showInitiatives.pub();
   }
   
   private onInitiativeClickedInSidebar(initiative?: Initiative) {
