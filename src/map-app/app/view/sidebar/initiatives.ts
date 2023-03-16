@@ -284,7 +284,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			let alternatePossibleFilterValues: unknown[] = [];
 			if (currentFilters.length > 0 && activeFilterCategories.includes(propTitle)) {
         const filters = mapui.filter.getFiltersFull();
-				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
+				alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(
 					filters, propTitle 
         );
       }

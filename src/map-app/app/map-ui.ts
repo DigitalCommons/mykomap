@@ -4,7 +4,7 @@ import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
 import { MarkerManager } from "./marker-manager";
 import { Config } from "./model/config";
-import { DataServices } from "./model/data-services";
+import { AnyVocabPropDef, DataServices } from "./model/data-services";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
@@ -262,6 +262,50 @@ export class MapUI {
     this.applyFilter();
   }
 
+  /// Returns a list of property values matching the given filter
+  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[] {
+    //construct an array of the filters that aren't the one matching the field
+    let otherFilters: MapFilter[] = [];
+    filters.forEach(filter => {
+      if (filter.localisedVocabTitle !== field)
+        otherFilters.push(filter);
+    });
+
+    //find the set of shared initiatives from the other filters
+    let sharedInitiatives: Initiative[] = [];
+    otherFilters.forEach((filter, i) => {
+      if (i < 1)
+        sharedInitiatives = filter.result;
+      else
+        //loop through sharedInitiatives and remove ones without a match in filter.initiatives
+        sharedInitiatives = sharedInitiatives.filter(initiative =>
+          filter.result.includes(initiative)
+        );
+    });
+
+    //find the initiative variable associated with the field
+    const alternatePossibleFilterValues: unknown[] = [];
+    const vocabID = this.dataServices.getVocabTitlesAndVocabIDs()[field];
+    if (vocabID) {
+      // Find the first propdef which uses this vocabID. This may not
+      // be the only one!  However, this is how it was implemented
+      // before, and we're only taking the first step to fixing that
+      // here.
+      const propEnt = Object.entries(this.dataServices.getVocabPropDefs())
+        .find((ent): ent is [string, AnyVocabPropDef] => ent[1]?.uri === vocabID);
+      if (propEnt) {
+        //loop through the initiatives and get the possible values for the initiative variable
+        sharedInitiatives.forEach(initiative => {
+          const prop = initiative[propEnt[0]]
+          if (prop !== undefined)
+            alternatePossibleFilterValues.push(prop);
+        })
+      }
+    }
+
+    return alternatePossibleFilterValues;
+  }
+    
   private addSearchFilter(initiatives: Initiative[]) {
     
     //if no results remove the filter, currently commented out
