@@ -80,7 +80,6 @@ export namespace EventBus {
 	  export const needsToBeZoomedAndPanned = new PostalTopic<SelectAndZoomData>("Map.needsToBeZoomedAndPanned");
 	  export const selectAndZoomOnInitiative = new PostalTopic<SelectAndZoomData>("Map.selectAndZoomOnInitiative");
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
-	  export const setZoom = new PostalTopic<number>("Map.setZoom");
   }
   export namespace Marker {
 	  export const selectionSet = new PostalTopic<Initiative>("Marker.SelectionSet");

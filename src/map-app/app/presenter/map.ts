@@ -39,7 +39,6 @@ export class MapPresenter extends BasePresenter {
     EventBus.Map.needsToBeZoomedAndPanned.sub(data => this.onMapNeedsToBeZoomedAndPanned(data));
     EventBus.Map.needToShowInitiativeTooltip.sub(initiative => this.onNeedToShowInitiativeTooltip(initiative));
     EventBus.Map.needToHideInitiativeTooltip.sub(initiative => this.onNeedToHideInitiativeTooltip(initiative));
-    EventBus.Map.setZoom.sub(zoom => this.setZoom(zoom));
     EventBus.Map.setActiveArea.sub(area => this.setActiveArea(area.offset));
     EventBus.Map.fitBounds.sub(bounds => this.onBoundsRequested(bounds));
     EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));
@@ -134,11 +133,6 @@ export class MapPresenter extends BasePresenter {
 
   private onBoundsRequested(data: EventBus.Map.BoundsData) {
     this.view.fitBounds(data);
-  }
-
-  private setZoom(zoom: number) {
-    console.log("Zooming to ", zoom);
-    this.view.setZoom(zoom);
   }
 
   private getInitialBounds() {

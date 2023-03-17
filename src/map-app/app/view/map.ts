@@ -217,10 +217,6 @@ export class MapView extends BaseView {
     return this.map;
   }
 
-  setZoom(zoom: number) {
-    this.map?.setZoom(zoom);
-  }
-
   fitBounds(data: EventBus.Map.BoundsData) {
     this.map?.fitBounds(data.bounds, data.options);
   }
