@@ -64,22 +64,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
   
   onMarkerSelectionToggled(initiative: Initiative) {
-    const lastContent = this.parent.mapui.contentStack.current();
-    // Make a clone of the current initiatives:
-    const initiatives =
-      lastContent !== undefined ? lastContent.initiatives.slice(0) : [];
-    const index = initiatives.indexOf(initiative);
-    if (index == -1) {
-      initiatives.push(initiative);
-    } else {
-      // remove elment form array (sigh - is this really the best array method for this?)
-      initiatives.splice(index, 1);
-    }
-    //this.contentStack.append(new SearchResults(initiatives));
-    if (lastContent) {
-      EventBus.Markers.needToShowLatestSelection.pub(lastContent.initiatives);
-    }      
-
+    this.parent.mapui.toggleSelectInitiative(initiative);
     this.view.refresh();
   }
 
