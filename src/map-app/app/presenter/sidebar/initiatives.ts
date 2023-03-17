@@ -12,7 +12,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   _eventbusRegister(): void {
     EventBus.Marker.selectionToggled.sub(initiative => this.onMarkerSelectionToggled(initiative));
     EventBus.Marker.selectionSet.sub(initiative => this.onMarkerSelectionSet(initiative));
-    EventBus.Initiatives.showSearchHistory.sub(() => this.onSearchHistory())
     EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(_toString(initiative.uri, undefined)));
   }
 
@@ -98,11 +97,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     if (lastContent)
       this.notifyMarkersNeedToShowNewSelection(lastContent);
     this.view.refresh();
-  }
-
-  onSearchHistory() {
-    this.parent.mapui.contentStack.gotoEnd();
-    this.parent.mapui.removeSearchFilter();
   }
 
   searchedInitiativeClicked(uri?: string) {
