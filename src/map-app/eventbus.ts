@@ -78,7 +78,6 @@ export namespace EventBus {
 	  export const needToHideInitiativeTooltip = new PostalTopic<Initiative>("Map.needToHideInitiativeTooltip");
 	  export const needToShowInitiativeTooltip = new PostalTopic<Initiative>("Map.needToShowInitiativeTooltip");
 	  export const needsToBeZoomedAndPanned = new PostalTopic<SelectAndZoomData>("Map.needsToBeZoomedAndPanned");
-	  export const refresh = new PostalTopic("Map.refresh");
 	  export const selectAndZoomOnInitiative = new PostalTopic<SelectAndZoomData>("Map.selectAndZoomOnInitiative");
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
 	  export const setZoom = new PostalTopic<number>("Map.setZoom");
