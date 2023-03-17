@@ -24,13 +24,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     return this.parent.mapui.contentStack.current();
   }
 
-  notifyMarkersNeedToShowNewSelection(lastContent: SearchResults, newContent?: Initiative[]) {
-    if (!newContent)
-      newContent = this.parent.mapui.contentStack.current()?.initiatives
-    if (newContent)
-      EventBus.Markers.needToShowLatestSelection.pub(newContent);
-  }
-
   changeFilters(propName: string, filterValue: string|undefined, filterValueText: string, searchText: string) {
     this.parent.mapui.changeFilters(propName, filterValue, filterValueText, searchText);
   }
@@ -83,8 +76,10 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       initiatives.splice(index, 1);
     }
     //this.contentStack.append(new SearchResults(initiatives));
-    if (lastContent)
-      this.notifyMarkersNeedToShowNewSelection(lastContent);
+    if (lastContent) {
+      EventBus.Markers.needToShowLatestSelection.pub(lastContent.initiatives);
+    }      
+
     this.view.refresh();
   }
 
