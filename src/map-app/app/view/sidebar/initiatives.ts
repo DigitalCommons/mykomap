@@ -8,6 +8,7 @@ import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { promoteToArray, toString as _toString } from '../../../utils';
+import { SentryValues } from '../base';
 
 
 
@@ -213,7 +214,9 @@ export class InitiativesSidebarView extends BaseSidebarView {
         return;
 			//create the filter from the event of selecting the option
 			const propName = target.id.split("-dropdown")[0];
-			const filterValue = target.value;
+			let filterValue: string|undefined = target.value;
+      if (filterValue === SentryValues.OPTION_UNSELECTED)
+        filterValue = undefined;
 			const filterValueText = target.selectedOptions[0].text;
       const searchText = this.getSearchText();
 			this.presenter.changeFilters(propName, filterValue, filterValueText, searchText);
@@ -252,7 +255,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			dropDown
 				.append("option")
 				.text(`- ${mapui.labels.any} -`)
-				.attr("value", "any")
+				.attr("value", SentryValues.OPTION_UNSELECTED)
 				.attr("class", "advanced-option")
 
       

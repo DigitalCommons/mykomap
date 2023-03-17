@@ -11,6 +11,7 @@ import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
 import { compactArray, initiativeUris, toString as _toString } from '../utils';
 import { SearchFilter, SearchResults, StateStack } from '../search-results';
+import { SentryValues } from "./view/base";
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
@@ -370,10 +371,10 @@ export class MapUI {
 
   /// - propName  is the title of the property being filtered
   /// - filterValue is the value of the selected drop-down value (typically an abbreviated vocab URI,
-  ///   but could also be "any"
+  ///   but could also be undefined to indicate all/any value
   /// - filterValueText is the display text for the selecte drop-down value
   /// - searchText the current value of the text search, or an empty string.
-  changeFilters(propName: string, filterValue: string, filterValueText: string, searchText: string) {
+  changeFilters(propName: string, filterValue: string|undefined, filterValueText: string, searchText: string) {
     
     // Get the property definition for propName
     const vocabProps = this.dataServices.getVocabPropDefs();
@@ -401,8 +402,8 @@ export class MapUI {
       }
     }
 
-    //if filter is any, don't add a new filter
-    if (filterValue !== "any") {
+    //if filterValueText is undefined, don't add a new filter
+    if (filterValue !== undefined) {
 
     // Get initiatives for new filter
     const allInitiatives = compactArray(Object.values(this.dataServices.getAggregatedData().initiativesByUid));

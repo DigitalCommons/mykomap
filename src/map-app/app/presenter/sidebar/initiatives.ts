@@ -32,7 +32,7 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
       EventBus.Markers.needToShowLatestSelection.pub(newContent);
   }
 
-  changeFilters(propName: string, filterValue: string, filterValueText: string, searchText: string) {
+  changeFilters(propName: string, filterValue: string|undefined, filterValueText: string, searchText: string) {
     this.parent.mapui.changeFilters(propName, filterValue, filterValueText, searchText);
   }
   
