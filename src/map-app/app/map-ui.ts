@@ -585,6 +585,10 @@ export class MapUI {
     EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
   }
 
+  currentItem() {
+    return this.contentStack.current();
+  }
+
   isAtStart() {
     return this.contentStack.isAtStart();
   }

@@ -20,8 +20,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this._eventbusRegister();
   }
 
-  currentItem (): SearchResults | undefined {
-    return this.parent.mapui.contentStack.current();
+  currentItem() {
+    return this.parent.mapui.currentItem();
   }
 
   changeFilters(propName: string, filterValue: string|undefined, filterValueText: string, searchText: string) {
