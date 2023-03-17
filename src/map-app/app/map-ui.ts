@@ -482,6 +482,26 @@ export class MapUI {
     EventBus.Sidebar.showInitiatives.pub();
   }
 
+  // Text to show in the search box
+  //
+  // Basically, the text of the last search, or the empty string if none.
+  getSearchText(): string {
+    const lastSearchResults = this.contentStack.current();
+    if (lastSearchResults instanceof SearchResults)
+      return lastSearchResults.searchedFor;
+    return "";
+  }
+
+  // A localised, human readable description of the current search state
+  //
+  // Includes text and filtering.
+  getSearchDescription(): string {
+    const lastSearchResults = this.contentStack.current();
+    if (lastSearchResults instanceof SearchResults)
+    	return `${this.labels.search}: ${lastSearchResults.searchString}`;
+    return "";
+  }
+
   private onSearchHistory() {
     this.contentStack.gotoEnd();
     this.removeSearchFilter();

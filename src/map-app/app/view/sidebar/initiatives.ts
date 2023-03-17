@@ -26,22 +26,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		container
 			.append("h1")
 			.text(labels.search);
-
+    
 		this.createSearchBox(container);
 
-		let textContent = ""; // default content, if no initiatives to show
-    const lastSearchResults = this.presenter.currentItem();
-		if (lastSearchResults instanceof SearchResults) {
-			textContent = labels.search + ": " + lastSearchResults.searchString;
-
-			//change the text in the search bar
-      this.changeSearchText(lastSearchResults.searchedFor);
-		}
-
+    this.changeSearchText(this.presenter.parent.mapui.getSearchText());
+    
 		container
 			.append("p")
 			.attr("id", "searchTooltipText")
-			.text(textContent);
+			.text(this.presenter.parent.mapui.getSearchDescription());
 
 		//advanced search    
 		const advancedSearchContainer = container
