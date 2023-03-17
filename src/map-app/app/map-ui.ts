@@ -422,6 +422,20 @@ export class MapUI {
     this.addSearchFilter(filteredInitiatives);
   }
 
+  isSelected(initiative: Initiative): boolean {
+    // Currently unimplemented - I can see an sea-initiative-active class
+    // being applied if a test was true, but it makes no sense in the current
+    // context AFAICT. The test was:
+    // initiative === this.contextStack.current()?.initiatives[0]
+
+    // The main thing is seemed to do is highlight an initiative (or
+    // initiatives) in the directory pop-out list of initiatives in a
+    // category.
+    
+    // For now, just return false always. We may re-implement this later.
+    return false; 
+  }
+
   performSearch(text: string) {
     console.log("Search submitted: [" + text + "]");
     // We need to make sure that the search sidebar is loaded

@@ -291,9 +291,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     for (let initiative of initiatives) {
       let activeClass = "";
       let nongeoClass = "";
-      if (
-        this.presenter.parent.mapui.contentStack.current()?.initiatives[0] === initiative
-      ) {
+      if (this.presenter.parent.mapui.isSelected(initiative)) {
         activeClass = "sea-initiative-active";
       }
 
