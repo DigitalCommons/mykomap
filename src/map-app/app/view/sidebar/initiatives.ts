@@ -203,7 +203,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 	private createAdvancedSearch(container: d3DivSelection) {
 		const currentFilters = this.presenter.parent.mapui.filter.getFilterIds();
-		const lastSearchResults = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
 		const changeFilter = (event: Event) => {
@@ -216,15 +215,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			const propName = target.id.split("-dropdown")[0];
 			const filterValue = target.value;
 			const filterValueText = target.selectedOptions[0].text;
-
       const searchText = this.getSearchText();
 			this.presenter.changeFilters(propName, filterValue, filterValueText, searchText);
-
-			// After changing the filter, we need to repeat the last text
-			// search on top of that, if there is one.
-			if (lastSearchResults instanceof SearchResults) {
-				this.presenter.performSearch(lastSearchResults.searchedFor);
-      }
 		}
 
     const mapui = this.presenter.parent.mapui;

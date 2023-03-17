@@ -402,8 +402,7 @@ export class MapUI {
     }
 
     //if filter is any, don't add a new filter
-    if (filterValue === "any")
-      return;
+    if (filterValue !== "any") {
 
     // Get initiatives for new filter
     const allInitiatives = compactArray(Object.values(this.dataServices.getAggregatedData().initiativesByUid));
@@ -419,7 +418,15 @@ export class MapUI {
       propValue: filterValue,
     }
     this.addFilter(filterData);
-    this.addSearchFilter(filteredInitiatives);
+      this.addSearchFilter(filteredInitiatives);
+    }
+    
+    // After changing the filter, we need to repeat the last text
+		// search on top of that, if there is one.
+    const lastSearchResults = this.contentStack.current();
+		if (lastSearchResults instanceof SearchResults) {
+			this.performSearch(lastSearchResults.searchedFor);
+    }
   }
 
   isSelected(initiative: Initiative): boolean {

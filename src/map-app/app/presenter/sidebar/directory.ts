@@ -23,10 +23,6 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
 
-  currentItem(): SearchResults | undefined {
-    return this.parent.mapui.contentStack.current();
-  }
-
   notifyViewToBuildDirectory(): void {
     this.view.refresh();
   }
