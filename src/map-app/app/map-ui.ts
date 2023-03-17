@@ -190,7 +190,7 @@ export class MapUI {
   readonly markers: MarkerManager;
   readonly labels: PhraseBook;
   readonly filter: FilterService<Initiative>;
-  readonly contentStack = new StateStack();
+  private readonly contentStack = new StateStack();
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
