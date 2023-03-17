@@ -27,11 +27,11 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
   }
 
   isBackButtonDisabled(): boolean {
-    return this.parent.mapui.contentStack.isAtStart();
+    return this.parent.mapui.isAtStart();
   }
 
   isForwardButtonDisabled(): boolean {
-    return this.parent.mapui.contentStack.isAtEnd();
+    return this.parent.mapui.isAtEnd();
   }
 
   onBackButtonClick(): void {

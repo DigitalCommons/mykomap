@@ -585,6 +585,14 @@ export class MapUI {
     EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
   }
 
+  isAtStart() {
+    return this.contentStack.isAtStart();
+  }
+
+  isAtEnd() {
+    return this.contentStack.isAtEnd();
+  }
+
   back(): void {
     //console.log("backButtonClicked");
     //console.log(this);
