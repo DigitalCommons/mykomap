@@ -22,10 +22,6 @@ export class MapMarkerPresenter extends BasePresenter {
     EventBus.Marker.selectionToggled.pub(initiative);
   }
 
-  notifySelectionSet(initiative: Initiative): void {
-    EventBus.Marker.selectionSet.pub(initiative);
-  }
-
   getLatLng(initiative: Initiative): Point2d|undefined {
     return toPoint2d([initiative.lat, initiative.lng]);
   }

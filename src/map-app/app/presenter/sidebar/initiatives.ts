@@ -11,7 +11,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   
   _eventbusRegister(): void {
     EventBus.Marker.selectionToggled.sub(initiative => this.onMarkerSelectionToggled(initiative));
-    EventBus.Marker.selectionSet.sub(initiative => this.onMarkerSelectionSet(initiative));
     EventBus.Initiative.searchedInitiativeClicked.sub(initiative => this.searchedInitiativeClicked(_toString(initiative.uri, undefined)));
   }
 
@@ -71,16 +70,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this.notifyHideInitiativeTooltip(initiative);
   }
   
-  onMarkerSelectionSet(initiative: Initiative) {
-    //console.log(initiative);
-    const lastContent = this.parent.mapui.contentStack.current();
-    //this.parent.mapui.contentStack.append(new SearchResults([initiative]));
-    if (lastContent)
-      this.notifyMarkersNeedToShowNewSelection(lastContent);
-    // this.notifySidebarNeedsToShowInitiatives();
-    this.view.refresh();
-  }
-
   onMarkerSelectionToggled(initiative: Initiative) {
     const lastContent = this.parent.mapui.contentStack.current();
     // Make a clone of the current initiatives:

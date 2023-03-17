@@ -82,7 +82,6 @@ export namespace EventBus {
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
   }
   export namespace Marker {
-	  export const selectionSet = new PostalTopic<Initiative>("Marker.SelectionSet");
 	  export const selectionToggled = new PostalTopic<Initiative>("Marker.SelectionToggled");
   }
   export namespace Markers {
