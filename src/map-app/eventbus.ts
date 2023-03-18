@@ -1,6 +1,5 @@
 import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
-import { MapFilter, MapSearch } from './app/map-ui';
 import { Initiative } from './app/model/initiative';
 import { Box2d, Point2d } from './common-types';
 import { arrays2Box2d, yesANumber } from './utils';
@@ -75,32 +74,19 @@ export namespace EventBus {
       };
     }
 
-	  export const addFilter = new PostalTopic<MapFilter>("Map.addFilter");
-	  export const addSearchFilter = new PostalTopic<MapSearch>("Map.addSearchFilter");
 	  export const fitBounds = new PostalTopic<BoundsData>("Map.fitBounds");
 	  export const needToHideInitiativeTooltip = new PostalTopic<Initiative>("Map.needToHideInitiativeTooltip");
 	  export const needToShowInitiativeTooltip = new PostalTopic<Initiative>("Map.needToShowInitiativeTooltip");
 	  export const needsToBeZoomedAndPanned = new PostalTopic<SelectAndZoomData>("Map.needsToBeZoomedAndPanned");
-	  export const refresh = new PostalTopic("Map.refresh");
-	  export const removeFilter = new PostalTopic<string>("Map.removeFilter");
-	  export const removeFilters = new PostalTopic("Map.removeFilters");
-	  export const removeSearchFilter = new PostalTopic("Map.removeSearchFilter");
 	  export const selectAndZoomOnInitiative = new PostalTopic<SelectAndZoomData>("Map.selectAndZoomOnInitiative");
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
-	  export const setZoom = new PostalTopic<number>("Map.setZoom");
   }
   export namespace Marker {
-	  export const selectionSet = new PostalTopic<Initiative>("Marker.SelectionSet");
 	  export const selectionToggled = new PostalTopic<Initiative>("Marker.SelectionToggled");
   }
   export namespace Markers {
 	  //export const completed = new PostalTopic<Data>("Markers.completed");
 	  export const needToShowLatestSelection = new PostalTopic<Initiative[]>("Markers.needToShowLatestSelection");
-  }
-  export namespace Search {
-    export interface Results { text: string; results: Initiative[]; }
-	  export const changeSearchText = new PostalTopic<string>("Search.changeSearchText");
-	  export const initiativeResults = new PostalTopic<Results>("Search.initiativeResults");
   }
   export namespace Sidebar {
 	  export const hideInitiative = new PostalTopic("Sidebar.hideInitiative");

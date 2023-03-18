@@ -8,6 +8,7 @@ import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { promoteToArray, toString as _toString } from '../../../utils';
+import { SentryValues } from '../base';
 
 
 
@@ -26,22 +27,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		container
 			.append("h1")
 			.text(labels.search);
-
+    
 		this.createSearchBox(container);
 
-		let textContent = ""; // default content, if no initiatives to show
-    const lastSearchResults = this.presenter.currentItem();
-		if (lastSearchResults instanceof SearchResults) {
-			textContent = labels.search + ": " + lastSearchResults.searchString;
-
-			//change the text in the search bar
-      EventBus.Search.changeSearchText.pub(lastSearchResults.searchedFor);
-		}
-
+    this.changeSearchText(this.presenter.parent.mapui.getSearchText());
+    
 		container
 			.append("p")
 			.attr("id", "searchTooltipText")
-			.text(textContent);
+			.text(this.presenter.parent.mapui.getSearchDescription());
 
 		//advanced search    
 		const advancedSearchContainer = container
@@ -210,7 +204,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
 	private createAdvancedSearch(container: d3DivSelection) {
 		const currentFilters = this.presenter.parent.mapui.filter.getFilterIds();
-		const lastSearchResults = this.presenter.currentItem();
 
 		//function used in the dropdown to change the filter
 		const changeFilter = (event: Event) => {
@@ -221,24 +214,16 @@ export class InitiativesSidebarView extends BaseSidebarView {
         return;
 			//create the filter from the event of selecting the option
 			const propName = target.id.split("-dropdown")[0];
-			const filterValue = target.value;
+			let filterValue: string|undefined = target.value;
+      if (filterValue === SentryValues.OPTION_UNSELECTED)
+        filterValue = undefined;
 			const filterValueText = target.selectedOptions[0].text;
-
       const searchText = this.getSearchText();
 			this.presenter.changeFilters(propName, filterValue, filterValueText, searchText);
-
-			// After changing the filter, we need to repeat the last text
-			// search on top of that, if there is one.
-			if (lastSearchResults instanceof SearchResults) {
-				this.presenter.performSearch(lastSearchResults.searchedFor);
-      }
 		}
 
     const mapui = this.presenter.parent.mapui;
 		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
-		const activeFilterCategories = mapui.filter.getFiltersFull()
-      .map(filter => filter.localisedVocabTitle);
-
     const propNames = mapui.config.getFilterableFields();
     const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
     const vocabs = mapui.dataServices.getLocalisedVocabs();
@@ -270,7 +255,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			dropDown
 				.append("option")
 				.text(`- ${mapui.labels.any} -`)
-				.attr("value", "any")
+				.attr("value", SentryValues.OPTION_UNSELECTED)
 				.attr("class", "advanced-option")
 
       
@@ -282,10 +267,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
       // FIXME Would ideally be using propName, not propTitle as it isn't unique.
       // But this is a legacy we need to refactor later...
 			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && activeFilterCategories.includes(propTitle)) {
+			if (currentFilters.length > 0 && this.presenter.parent.mapui.filter.isFilterId(propName)) {
         const filters = mapui.filter.getFiltersFull();
-				alternatePossibleFilterValues = mapui.dataServices.getAlternatePossibleFilterValues(
-					filters, propTitle 
+				alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(
+					filters, propName 
         );
       }
 			entryArray.forEach(entry => {
@@ -301,7 +286,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					if (currentFilters.includes(id))
 						option.attr("selected", true);
 
-					if (activeFilterCategories.includes(propTitle)) {
+					if (this.presenter.parent.mapui.filter.isFilterId(propName)) {
 						if (currentFilters.length > 1 && !alternatePossibleFilterValues.includes(id))
 							option.attr("disabled", true);
 					}
@@ -317,13 +302,14 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	populateScrollableSelection(selection: d3Selection) {
     const labels = this.presenter.parent.mapui.labels;
 		const noFilterTxt = labels.whenSearch;
-		const freshSearchText = this.presenter.getFilterNames().length > 0 ?
-			" Searching in " + this.presenter.getFilterNames().join(", ") : noFilterTxt;
+    const filterNames = this.presenter.parent.mapui.filter.getFiltersVerbose()
+		const freshSearchText = filterNames.length > 0 ?
+			" Searching in " + filterNames.join(", ") : noFilterTxt;
 
     const lastSearchResults = this.presenter.currentItem();
 		if (lastSearchResults instanceof SearchResults) {
 			// add clear button
-			if (this.presenter.getFilterNames().length > 0) {
+			if (filterNames.length > 0) {
 				selection
 					.append("div")
 					.attr("class", "w3-container w3-center sidebar-button-container")
@@ -367,7 +353,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					freshSearchText
 				);
 			// add clear button
-			if (this.presenter.getFilterNames().length > 0) {
+			if (filterNames.length > 0) {
 				selection
 					.append("div")
 					.attr("class", "w3-container w3-center")

@@ -1,4 +1,3 @@
-import { Dictionary } from '../common-types';
 import * as leaflet from 'leaflet';
 import { InitiativeRenderFunction } from './model/config-schema';
 import { Initiative } from './model/initiative';
@@ -37,20 +36,17 @@ export class MarkerManager {
     this.markerForInitiative.clear();
   }
 
-  showMarkers(initiatives: Initiative[]) {
-    //show markers only if it is not currently vissible
-    initiatives.forEach(initiative => {
-      const marker = this.markerForInitiative.get(initiative);
-      if (marker && !marker.view.isVisible())
-        marker.view.show();
-    });
-
-  }
-
-  hideMarkers(initiatives: Initiative[]) {
-    initiatives.forEach(initiative => {
-      this.markerForInitiative.get(initiative)?.view.destroy();
-    });
+  updateVisibility(visibleInitiatives: Set<Initiative>) {
+    this.markerForInitiative.forEach((marker, initiative) => {
+      if (visibleInitiatives.has(initiative)) {
+        if (!marker.view.isVisible())
+          marker.view.show();
+      }
+      else {
+        if (marker.view.isVisible())
+          marker.view.destroy();
+      }
+    })
   }
 
   createMarker(initiative: Initiative) {

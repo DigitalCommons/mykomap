@@ -74,16 +74,16 @@ export class Initiative {
 
   /// Searches initiatives for objects whose searchstr fields include the search text
   ///
-  /// @return a new list of initiatives sorted by the `name` field.
+  /// @return a new list of initiatives
   static textSearch(text: string, initiatives: Initiative[]): Initiative[] {
     if (text === '') {
-      return [ ...initiatives ].sort(Initiative.compare);
+      return [ ...initiatives ];
     }
       
     const up = text.toUpperCase();
     return initiatives.filter(
       i => typeof i.searchstr === 'string' && i.searchstr.includes(up)
-    ).sort(Initiative.compare);
+    );
   }
 
   // Sorts initiatives by the named field, if text

@@ -118,7 +118,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed("sea-field-" + tag, true)
         .classed("sea-directory-field", true)
         .on("click", (event) => {
-          EventBus.Map.removeFilters.pub();
+          this.presenter.parent.mapui.removeFilters();
           this.listInitiativesForSelection(title, propName, key); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
@@ -201,14 +201,10 @@ export class DirectorySidebarView extends BaseSidebarView {
     }
 
     if (selectionKey) { // if not selectionKey set, we are not filtering
-      EventBus.Map.addFilter.pub({
+      this.presenter.parent.mapui.addFilter({
         result: initiatives,
-        filterName: selectionKey,
-        verboseName: (directoryTitle + ": " + title),
         propName: propName,
         propValue: selectionKey,
-        localisedVocabTitle: directoryTitle,
-        localisedTerm: title,
       });
     }
 
@@ -295,9 +291,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     for (let initiative of initiatives) {
       let activeClass = "";
       let nongeoClass = "";
-      if (
-        this.presenter.parent.contentStack.current()?.initiatives[0] === initiative
-      ) {
+      if (this.presenter.parent.mapui.isSelected(initiative)) {
         activeClass = "sea-initiative-active";
       }
 

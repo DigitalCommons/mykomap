@@ -50,7 +50,6 @@ import {
 
 import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
-import { MapFilter } from '../map-ui';
 
 const getDatasetPhp = require("../../../services/get_dataset.php");
 const getVocabsPhp  = require("../../../services/get_vocabs.php");
@@ -222,9 +221,6 @@ export interface DataServices {
 
 
   //// non-proxies
-
-  /// Returns a list of property values matching the given filter
-  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[];
 
   // Get the current dataset, or true
   //
@@ -504,49 +500,6 @@ export class DataServicesImpl implements DataServices {
     return this.aggregatedData;
   }
 
-  getAlternatePossibleFilterValues(filters: MapFilter[], field: string): unknown[] { // FIXME move to FilterService
-    //construct an array of the filters that aren't the one matching the field
-    let otherFilters: MapFilter[] = [];
-    filters.forEach(filter => {
-      if (filter.localisedVocabTitle !== field)
-        otherFilters.push(filter);
-    });
-
-    //find the set of shared initiatives from the other filters
-    let sharedInitiatives: Initiative[] = [];
-    otherFilters.forEach((filter, i) => {
-      if (i < 1)
-        sharedInitiatives = filter.result;
-      else
-        //loop through sharedInitiatives and remove ones without a match in filter.initiatives
-        sharedInitiatives = sharedInitiatives.filter(initiative =>
-          filter.result.includes(initiative)
-        );
-    });
-
-    //find the initiative variable associated with the field
-    const alternatePossibleFilterValues: unknown[] = [];
-    const vocabID = this.getVocabTitlesAndVocabIDs()[field];
-    if (vocabID) {
-      // Find the first propdef which uses this vocabID. This may not
-      // be the only one!  However, this is how it was implemented
-      // before, and we're only taking the first step to fixing that
-      // here.
-      const propEnt = Object.entries(this.vocabPropDefs)
-        .find((ent): ent is [string, AnyVocabPropDef] => ent[1]?.uri === vocabID);
-      if (propEnt) {
-        //loop through the initiatives and get the possible values for the initiative variable
-        sharedInitiatives.forEach(initiative => {
-          const prop = initiative[propEnt[0]]
-          if (prop !== undefined)
-            alternatePossibleFilterValues.push(prop);
-        })
-      }
-    }
-
-    return alternatePossibleFilterValues;
-  }
-  
   getCurrentDatasets(): string | true {
     return this.currentDatasets;
   }

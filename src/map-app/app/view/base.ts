@@ -1,6 +1,10 @@
 import * as d3 from 'd3';
 import { d3Selection, d3DivSelection } from './d3-utils';
 
+export const SentryValues = {
+  OPTION_UNSELECTED: "--unselected--" // For drop-downs' unselected cases
+} as const;
+
 // 'Base class' for all views:
 //
 // Prior to the conversion to an ES/TypeScript class, a note on this

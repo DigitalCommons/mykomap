@@ -23,10 +23,6 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
 
-  currentItem(): SearchResults | undefined {
-    return this.parent.contentStack.current();
-  }
-
   notifyViewToBuildDirectory(): void {
     this.view.refresh();
   }
@@ -71,11 +67,11 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   removeFilters(filterName?: string) {
     //remove specific filter
     if (filterName) {
-      EventBus.Map.removeFilter.pub(filterName);
+      this.parent.mapui.removeFilter(filterName);
     }
     else {
       //remove all filters
-      EventBus.Map.removeFilters.pub();
+      this.parent.mapui.removeFilters();
     }
     this.view.d3selectAndClear(
       "#sea-initiatives-list-sidebar-content"
