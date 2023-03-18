@@ -11,7 +11,6 @@ import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
 import { compactArray, initiativeUris, toString as _toString } from '../utils';
 import { SearchFilter, SearchResults, StateStack } from '../search-results';
-import { SentryValues } from "./view/base";
 
 /// Expresses a filtering operation on a FilterService<I>
 export interface Filter<I> {
