@@ -20,8 +20,6 @@ export interface Filter<I> {
   propValue: unknown;
 }
 
-type MapFilter = Filter<Initiative>;
-
 interface FilterDef<I> {
   items: Set<I>;
   propName: string;
