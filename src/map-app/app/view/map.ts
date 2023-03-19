@@ -225,20 +225,6 @@ export class MapView extends BaseView {
     return this.markers.getClusterGroup();
   }
 
-  setView(data: EventBus.Map.ZoomData) {
-    const map = this.map;
-    if (!map)
-      return;
-    
-    const options = {
-      duration: 0.25
-      // maxZoom: this.map.getZoom()
-    };
-    
-    // center: LatLngExpression, zoom?: number, options?: ZoomPanOptions): this;
-    map.setView(data.latlng, data.zoom, Object.assign(options, data.options));
-  }
-
   isVisible(initiatives: Initiative[]): boolean {
     //check if whether the passed initiatives are currently visible or not
     //for each marker check if the marker is directly visible 
@@ -416,11 +402,6 @@ export class MapView extends BaseView {
     // map.invalidateSize();
 
 
-  }
-
-  zoomAndPanTo(latLng: leaflet.LatLngExpression) {
-    console.log("zoomAndPanTo");
-    this.map?.setView(latLng, 16, { animate: true });
   }
 
   startLoading(error?: EventBus.Initiatives.DatasetError) {
