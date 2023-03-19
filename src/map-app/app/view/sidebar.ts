@@ -64,7 +64,6 @@ export class SidebarView extends BaseView {
         this.hideInitiativeList();
         //deselect
         EventBus.Markers.needToShowLatestSelection.pub([]);
-        EventBus.Initiatives.showSearchHistory.pub();
         this.presenter.changeSidebar("initiatives");
       })
       .append("i")

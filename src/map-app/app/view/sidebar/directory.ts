@@ -220,7 +220,6 @@ export class DirectorySidebarView extends BaseSidebarView {
 
         EventBus.Sidebar.hideInitiativeList.pub();
         EventBus.Markers.needToShowLatestSelection.pub([]);
-        EventBus.Initiatives.showSearchHistory.pub();
         EventBus.Sidebar.showInitiatives.pub();
       })
       .append("i")

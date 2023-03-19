@@ -208,7 +208,6 @@ export class MapUI {
     };
 
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
-    EventBus.Initiatives.showSearchHistory.sub(() => this.onSearchHistory());
   }
 
   createMap() {
@@ -542,12 +541,6 @@ export class MapUI {
     return "";
   }
 
-  private onSearchHistory() {
-    this.contentStack.gotoEnd();
-    this.removeSearchFilter();
-  }
-
-  
   onLoad() {
     console.log("Map loaded");
     

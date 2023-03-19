@@ -29,7 +29,6 @@ export namespace EventBus {
 	  export const loadFailed = new PostalTopic<DatasetError>("Initiatives.loadFailed");
 	  export const reset = new PostalTopic("Initiatives.reset");
 	  export const loadStarted = new PostalTopic("Initiatives.loadStarted");
-	  export const showSearchHistory = new PostalTopic("Initiatives.showSearchHistory");
   }
   export namespace Initiative {
     export const created = new PostalTopic<Initiative>("Initiative.created");
