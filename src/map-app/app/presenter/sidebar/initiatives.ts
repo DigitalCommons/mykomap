@@ -24,8 +24,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     return this.parent.mapui.currentItem();
   }
 
-  changeFilters(propName: string, filterValue: string|undefined, filterValueText: string, searchText: string) {
-    this.parent.mapui.changeFilters(propName, filterValue, filterValueText, searchText);
+  changeFilters(propName: string, value?: string) {
+    this.parent.mapui.changeFilters(propName, value);
   }
   
   removeFilters() {
@@ -74,6 +74,10 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
 
   performSearch(text: string) {
     this.parent.mapui.performSearch(text);
+  }
+
+  resetSearch() {
+    this.parent.mapui.resetSearch();
   }
 
   changeSearchText(txt: string) {

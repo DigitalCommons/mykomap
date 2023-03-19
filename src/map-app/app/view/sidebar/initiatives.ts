@@ -1,11 +1,8 @@
 // The view aspects of the Main Menu sidebar
 import * as d3 from 'd3';
-import { EventBus } from '../../../eventbus';
 import {  BaseSidebarView  } from './base';
 import {  InitiativesSidebarPresenter  } from '../../presenter/sidebar/initiatives';
-import { Dictionary } from '../../../common-types';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
-import { SearchResults } from '../../../search-results';
 import { Initiative } from '../../model/initiative';
 import { promoteToArray, toString as _toString } from '../../../utils';
 import { SentryValues } from '../base';
@@ -133,7 +130,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	}
 
 	private createAdvancedSearch(container: d3DivSelection) {
-		const currentFilters = this.presenter.parent.mapui.filter.getFilterIds();
+		const initatives = this.presenter.parent.mapui.currentItem().visibleInitiatives;
 
 		//function used in the dropdown to change the filter
 		const changeFilter = (event: Event) => {
@@ -147,13 +144,11 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			let filterValue: string|undefined = target.value;
       if (filterValue === SentryValues.OPTION_UNSELECTED)
         filterValue = undefined;
-			const filterValueText = target.selectedOptions[0].text;
-      const searchText = this.getSearchText();
-			this.presenter.changeFilters(propName, filterValue, filterValueText, searchText);
+			this.presenter.changeFilters(propName, filterValue);
 		}
 
     const mapui = this.presenter.parent.mapui;
-		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(mapui.filter.getFiltered());
+		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(Array.from(mapui.currentItem().visibleInitiatives)); // FIXME review
     const propNames = mapui.config.getFilterableFields();
     const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
     const vocabs = mapui.dataServices.getLocalisedVocabs();
@@ -193,38 +188,26 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			// Sort entries alphabetically by value (the human-readable labels)
 			entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 
-			//find alternative possible filters for an active filter
-      // FIXME Would ideally be using propName, not propTitle as it isn't unique.
-      // But this is a legacy we need to refactor later...
-			let alternatePossibleFilterValues: unknown[] = [];
-			if (currentFilters.length > 0 && this.presenter.parent.mapui.filter.isFilterId(propName)) {
-        const filters = mapui.filter.getFiltersFull();
-				alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(
-					filters, propName 
-        );
-      }
+
+			const  alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(propName);
+      const filters = mapui.currentItem().propFilters;
+      const filter = filters[propName];
+      
 			entryArray.forEach(entry => {
-				const [id, label] = entry;
+				const [value, label] = entry;
 				const option = dropDown
 					.append("option")
 					.text(label ?? '')
-					.attr("value", id)
+					.attr("value", value)
 					.attr("class", "advanced-option")
 
-				//if there are active filters, make them selected and disable empty choices
-				if (currentFilters.length > 0) {
-					if (currentFilters.includes(id))
-						option.attr("selected", true);
-
-					if (this.presenter.parent.mapui.filter.isFilterId(propName)) {
-						if (currentFilters.length > 1 && !alternatePossibleFilterValues.includes(id))
-							option.attr("disabled", true);
-					}
-					else
-						if (!possibleFilterValues.includes(id)) {
-							option.attr("disabled", true);
-						}
-				}
+				// if there are active filters, label the one currently selected and disable empty choices
+        if (filter && filter.valueRequired === value) {
+					option.attr("selected", true);
+        }
+        if (!alternatePossibleFilterValues.has(value)) {
+          option.attr("disabled", true);
+        }
 			})
 		}
 	}
@@ -232,30 +215,24 @@ export class InitiativesSidebarView extends BaseSidebarView {
 	populateScrollableSelection(selection: d3Selection) {
     const labels = this.presenter.parent.mapui.labels;
 		const noFilterTxt = labels.whenSearch;
-    const filterNames = this.presenter.parent.mapui.filter.getFiltersVerbose()
-		const freshSearchText = filterNames.length > 0 ?
-			" Searching in " + filterNames.join(", ") : noFilterTxt;
+    const freshSearchText = this.presenter.parent.mapui.getSearchDescription();
 
-    const lastSearchResults = this.presenter.currentItem();
-		if (lastSearchResults instanceof SearchResults) {
+    const appState = this.presenter.parent.mapui.currentItem();
+    if (appState.hasPropFilters) {
 			// add clear button
-			if (filterNames.length > 0) {
-				selection
-					.append("div")
-					.attr("class", "w3-container w3-center sidebar-button-container")
-					.attr("id", "clearSearchFilterBtn")
-					.append("button")
-					.attr("class", "w3-button w3-black")
-					.text(labels.clearFilters)
-					.on("click", () => {
-						//redo search
-						this.presenter.removeFilters();
-						this.presenter.performSearch(lastSearchResults.searchedFor);
+			selection
+				.append("div")
+				.attr("class", "w3-container w3-center sidebar-button-container")
+				.attr("id", "clearSearchFilterBtn")
+				.append("button")
+				.attr("class", "w3-button w3-black")
+				.text(labels.clearFilters)
+				.on("click", () => {
+					//redo search
+					this.presenter.removeFilters();
 					});
-			}
 
-			const initiatives = lastSearchResults == null ? [] : lastSearchResults.initiatives;
-			switch (initiatives.length) {
+			switch (appState.visibleInitiatives.size) {
 				case 0:
 					selection
 							.append("div")
@@ -266,10 +243,10 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					break;
 				case 1:
 					//this.populateSelectionWithO neInitiative(selection, initiatives[0]);
-					this.populateSelectionWithListOfInitiatives(selection, initiatives);
+					this.populateSelectionWithListOfInitiatives(selection, Array.from(appState.visibleInitiatives));
 					break;
 				default:
-					this.populateSelectionWithListOfInitiatives(selection, initiatives);
+					this.populateSelectionWithListOfInitiatives(selection, Array.from(appState.visibleInitiatives));
 			}
 
 		}
@@ -283,7 +260,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					freshSearchText
 				);
 			// add clear button
-			if (filterNames.length > 0) {
+			if (appState.hasPropFilters) {
 				selection
 					.append("div")
 					.attr("class", "w3-container w3-center")
@@ -293,8 +270,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 					.text(labels.clearFilters)
 					.on("click", () => {
 						// only remove filters and and reset text, no re-search needed
-						this.presenter.removeFilters();
-						this.presenter.performSearch('');
+						this.presenter.resetSearch();
 						selection.select("#searchTooltipId").text(noFilterTxt);
 						selection.select("#clearSearchFilterBtn").remove();
 					});

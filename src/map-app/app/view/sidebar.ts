@@ -43,7 +43,7 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", labels.showDirectory)
       .on("click", () => {
-        this.presenter.mapui.removeSearchFilter();
+        this.presenter.mapui.removeFilters();
         //notify zoom
         this.presenter.changeSidebar("directory");
         this.showInitiativeList();

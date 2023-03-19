@@ -154,14 +154,14 @@ export class DirectorySidebarView extends BaseSidebarView {
 
 
   // selectionKey may be null, for the special 'Every item' case
-  listInitiativesForSelection(directoryTitle: string, propName: string, selectionKey?: string) {
+  listInitiativesForSelection(directoryTitle: string, propName: string, propValue?: string) {
     const labels = this.presenter.parent.mapui.labels;
     const initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
       directoryTitle,
-      selectionKey
+      propValue
     );
 
-    let selectionLabel = selectionKey;
+    let selectionLabel = propValue;
     if (selectionLabel == null) {
       if (titleIsCountries(directoryTitle))
         selectionLabel = this.presenter.parent.mapui.labels.allCountries;
@@ -200,13 +200,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       title = selectionLabel;
     }
 
-    if (selectionKey) { // if not selectionKey set, we are not filtering
-      this.presenter.parent.mapui.addFilter({
-        result: initiatives,
-        propName: propName,
-        propValue: selectionKey,
-      });
-    }
+    this.presenter.parent.mapui.changeFilters(propName, propValue);
 
     //setup sidebar buttons in initiative list
     const sidebarBtnHolder = selection.append("div").attr("class", "initiative-list-sidebar-btn-wrapper");
@@ -262,7 +256,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", labels.close + title)
       .on("click", () => {
-        this.presenter.removeFilters(directoryTitle + selectionKey);
+        this.presenter.removeFilters(propName);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
@@ -274,7 +268,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
       .attr("title", labels.close + title)
       .on("click", () => {
-        this.presenter.removeFilters(directoryTitle + selectionKey);
+        this.presenter.removeFilters(propName);
       })
       .append("i")
       .attr("class", "fa " + "fa-times");
