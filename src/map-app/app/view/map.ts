@@ -353,13 +353,15 @@ export class MapView extends BaseView {
 
 
 
-    //zoom to layer if needed and unspiderify
-    this.unselectedClusterGroup?.zoomToShowLayer(
-      marker,
-      () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
-    );
-    this.unselectedClusterGroup?.refreshClusters(marker);
-
+    // zoom to layer if needed and unspiderify
+    // FIXME guard against missing __parent - which means not part of a group?
+    if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
+      this.unselectedClusterGroup?.zoomToShowLayer(
+        marker,
+        () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
+      );
+      this.unselectedClusterGroup?.refreshClusters(marker);
+    }
 
     //code for not destroying pop-up when zooming out
     //only execute zoom to bounds if initiatives in data.initiatives are not currently vissible
