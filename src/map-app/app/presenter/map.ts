@@ -28,9 +28,7 @@ export class MapPresenter extends BasePresenter {
         this.onInitiativeReset();
     });
     EventBus.Initiatives.loadComplete.sub(() => {
-      this.mapUI.onNewInitiatives();
       this.onInitiativeLoadComplete();
-      this.onInitiativeComplete();
     });
     EventBus.Initiatives.loadStarted.sub(() => this.onInitiativeLoadMessage());
     EventBus.Initiatives.loadFailed.sub(error => this.onInitiativeLoadMessage(error));
@@ -74,16 +72,6 @@ export class MapPresenter extends BasePresenter {
     //rm markers 
   }
 
-  private onInitiativeComplete() {
-    // Load the markers into the clustergroup
-    const bounds = this.getInitialBounds();
-    if (bounds)
-      this.view.fitBounds({bounds: bounds});
-    this.view.unselectedClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
-    console.log("onInitiativeComplete");
-  }
-
-
   private onInitiativeDatasetLoaded() {
     console.log("onInitiativeDatasetLoaded");
     //console.log(data);
@@ -97,6 +85,20 @@ export class MapPresenter extends BasePresenter {
     // TODO - hook this up to a log?
     this.view.stopLoading();
 
+    // Load the markers into the clustergroup and set the bounds (an
+    // essential step before the map can be used).
+    const bounds = this.getInitialBounds();
+    if (!bounds)
+      throw new Error(
+        "No bounds can be computed for the map, which means "+
+          "both that there are no defaults configured and no visible initiatives");
+    
+    this.view.fitBounds({bounds: bounds});
+    this.view.unselectedClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
+    console.log("onInitiativeComplete");
+
+    // Call this last so map will have bounds set (else error!) 
+    this.mapUI.onNewInitiatives(); 
   }
   
   private onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {

@@ -214,6 +214,10 @@ export class MapView extends BaseView {
         .classed("logo", true);
     }
 
+    const initialBounds = this.presenter.mapUI.config.getInitialBounds();
+    if (initialBounds)
+      this.map.fitBounds(initialBounds);
+    
     return this.map;
   }
 
