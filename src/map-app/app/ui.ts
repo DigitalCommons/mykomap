@@ -49,7 +49,7 @@ function insertPageTitle(config: Config): void {
 }
 
 
-export function initUI(config: Config, dataServices: DataServices) {
+export function initUI(config: Config, dataServices: DataServices): MapUI {
   insertPageTitle(config);
   
   const mapui = new MapUI(
@@ -58,4 +58,6 @@ export function initUI(config: Config, dataServices: DataServices) {
   );
 
   mapui.createMap();
+
+  return mapui;
 }

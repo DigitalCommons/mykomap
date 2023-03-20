@@ -180,9 +180,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
   
   // Expose the data for debugging
   /// @ts-ignore
-  window.dataServices = dataServices
-
-  initUI(config, dataServices);
+  window.mapUI = initUI(config, dataServices);
 
   // Ask the model to load the data for the initiatives:
   dataServices.loadData();
