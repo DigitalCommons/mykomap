@@ -8,7 +8,7 @@ export interface InitiativeObj {
   [name: string]: unknown;
 }
 
-export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => unknown;
+export type ParamBuilder<P> = (id: string, params: InitiativeObj, def: P) => unknown;
 
 
 /// This class represents an initiative, AKA a pin on the map.
@@ -45,7 +45,7 @@ export class Initiative {
         const [propName, propDef] = entry;
         if (propDef) {
           Object.defineProperty(initiative, propName, {
-            value: paramBuilder(propName, propDef, props),
+            value: paramBuilder(propName, props, propDef),
             enumerable: true,
             writable: false,
           });

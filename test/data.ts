@@ -175,7 +175,7 @@ export const lettersPropDefs: PropDefs = {
 };
 
 // About the simplest paramBuilder possible - just looks up the parameter.
-function superSimpleParamBuilder(id: string, defs: PropDef, params: InitiativeObj): any {
+function superSimpleParamBuilder(id: string, params: InitiativeObj, defs: PropDef): any {
   return params[id];
 }
 
