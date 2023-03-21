@@ -20,7 +20,6 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       EventBus.Sidebar.hideInitiativeList.pub();
     });
     EventBus.Directory.initiativeClicked.sub(initiative => this.initiativeClicked(initiative));
-    EventBus.Directory.removeFilters.sub(filters => this.removeFilters(filters));
   }
 
   notifyViewToBuildDirectory(): void {

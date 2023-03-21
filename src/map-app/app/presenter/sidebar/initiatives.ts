@@ -29,9 +29,8 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
   }
   
   removeFilters() {
-    EventBus.Directory.removeFilters.pub(undefined);
+    this.parent.mapui.removeFilters();
   }
-
 
   notifyShowInitiativeTooltip(initiative: Initiative) {
     EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
