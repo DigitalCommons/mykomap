@@ -249,9 +249,6 @@ export interface DataServices {
   // Gets the current language set in the config (or the fallback language if unset)
   getLanguage(): Iso6391Code;
   
-  //get an array of possible filters from  a list of initiatives
-  getPossibleFilterValues(initiatives: Initiative[]): string[];
-
   getPropertySchema(propName: string): PropDef | undefined;
 
   /// Returns a VocabPropDefs index of the property schema definitions
@@ -542,28 +539,6 @@ export class DataServicesImpl implements DataServices {
     if (this.vocabs)
       return this.vocabs.getLocalisedVocabs(this.getLanguage());
     return {};
-  }
-
-  //get an array of possible filters from  a list of initiatives
-  getPossibleFilterValues(initiatives: Initiative[]): string[] {
-    const possibleFilterValues: string[] = [];
-
-    // Need to call this method to ensure the result is computed
-    initiatives.forEach(initiative => {
-      for(const name in this.config.getFilterableFields()) {    
-        const id = initiative[name];
-          
-        // Add the value - if it is a vocab field and isn't already there
-        if (typeof id !== 'string')
-          continue;
-        if (!DataServicesImpl.isVocabPropDef(this.propertySchema[id]))
-          continue;
-        if (!possibleFilterValues.includes(id))
-          possibleFilterValues.push(id);
-      }
-    });
-
-    return possibleFilterValues;
   }
 
   getPropertySchema(propName: string): PropDef | undefined {

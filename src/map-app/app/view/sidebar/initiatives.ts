@@ -148,7 +148,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 
     const mapui = this.presenter.parent.mapui;
-		const possibleFilterValues = mapui.dataServices.getPossibleFilterValues(Array.from(mapui.currentItem().visibleInitiatives)); // FIXME review
     const propNames = mapui.config.getFilterableFields();
     const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
     const vocabs = mapui.dataServices.getLocalisedVocabs();
