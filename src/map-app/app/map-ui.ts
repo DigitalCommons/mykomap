@@ -188,6 +188,7 @@ export class MapUI {
   readonly markers: MarkerManager;
   readonly labels: PhraseBook;
   private readonly stateManager: StateManager;
+  private sidebarPresenter: SidebarPresenter|undefined;
   
   constructor(readonly config: Config,
               readonly dataServices: DataServices) {
@@ -203,8 +204,9 @@ export class MapUI {
     // Maybe later the code can be untangled further so there is no loop.
     this.getSidebarPresenter = (mapUI: MapUI) => {
       return new Promise<SidebarPresenter>((resolve) => {
-        const sidebarPresenter = new SidebarPresenter(mapUI);
-        resolve(sidebarPresenter);
+        if (!this.sidebarPresenter)
+          this.sidebarPresenter = new SidebarPresenter(mapUI);
+        resolve(this.sidebarPresenter);
       });
     };
 
