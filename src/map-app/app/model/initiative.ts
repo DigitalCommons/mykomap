@@ -10,6 +10,7 @@ export interface InitiativeObj {
 
 export type ParamBuilder<P> = (id: string, params: InitiativeObj, def: P) => unknown;
 
+export const trivialParamBuilder: ParamBuilder<PropDef> = (id, params, _) => params[id];
 
 /// This class represents an initiative, AKA a pin on the map.
 ///
@@ -35,8 +36,8 @@ export class Initiative {
   /// in propDefs (which defines the fields) and paramBuilder (which defines
   /// how to construct values for these fields).
   static mkFactory(propDefs: PropDefs,
-                   paramBuilder: ParamBuilder<PropDef>,
-                   searchedFields: string[]) {
+                   paramBuilder: ParamBuilder<PropDef> = trivialParamBuilder,
+                   searchedFields: string[] = []) {
     return (props: InitiativeObj) => {
       const initiative = new Initiative();
 
