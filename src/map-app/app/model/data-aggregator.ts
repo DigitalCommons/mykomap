@@ -36,12 +36,10 @@ import {
 
 import {
   Initiative,
-  InitiativeObj
+    InitiativeObj,
+    ParamBuilder
 } from './initiative';
 import { promoteToArray } from '../../utils';
-
-export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => unknown;
-
 
 export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;

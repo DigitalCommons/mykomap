@@ -1,5 +1,4 @@
 import { PropDef, PropDefs } from './data-services';
-import { ParamBuilder } from './data-aggregator';
 import { Dictionary } from '../../common-types';
 import { toString as _toString } from '../../utils';
 
@@ -8,6 +7,9 @@ export interface InitiativeObj {
   uri: string;
   [name: string]: unknown;
 }
+
+export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => unknown;
+
 
 /// This class represents an initiative, AKA a pin on the map.
 ///
