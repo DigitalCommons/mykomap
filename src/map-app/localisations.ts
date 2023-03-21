@@ -1,3 +1,4 @@
+
 import type { Assoc } from './common-types';
 
 /// A list of the ISO639-1 2 character international country
@@ -40,9 +41,12 @@ export interface PhraseBook {
   and: string;
   any: string;
   clearFilters: string;
+  clickToSearch: string;
+  clickForDetailsHereAndMap: string;
   close: string;
   contact: string;
   contributers: string;
+  countries: string;
   datasets: string;
   directory: string;
   errorLoading: string;
@@ -74,6 +78,7 @@ export interface PhraseBook {
 
 export type PhraseBooks = Assoc<Iso6391Code, PhraseBook>;
 
+// FIXME add ticket about UI languages
 export const phraseBooks: PhraseBooks = {
   EN: {
     aboutTitle: "About",
@@ -81,10 +86,13 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "All Entries",
     and: "AND",
     any: "Any",
+    clickToSearch: "Click to search",
+    clickForDetailsHereAndMap: "Click to see details here and on map",
     clearFilters: "Clear Filters",
     close: "Close ",
     contact: "Contact",
     contributers: "contributers",
+    countries: "Countries",
     datasets: "Datasets",
     directory: "Directory",
     errorLoading: "Error loading",
@@ -120,9 +128,12 @@ export const phraseBooks: PhraseBooks = {
     and: "ET",
     any: "Tout afficher",
     clearFilters: "Réinitialiser les filtres",
+    clickToSearch: "Cliquez pour rechercher",
+    clickForDetailsHereAndMap: "Cliquez pour voir les détails ici et sur la carte",
     close: "Fermer ",
     contact: "Contact",
     contributers: "Contributeurs",
+    countries: "Des pays",
     datasets: "Ensembles de données",
     directory: "Annuaire",
     errorLoading: "FIXME",
@@ -158,9 +169,12 @@ export const phraseBooks: PhraseBooks = {
     and: "Y",
     any: "Qualquiera",
     clearFilters: "Borrar filtros",
+    clickToSearch: "Haga clic para buscar",
+    clickForDetailsHereAndMap: "Haga clic para ver detalles aquí y en el mapa",
     close: "Cerrar ",
     contact: "Contacto",
     contributers: "Colaboradores",
+    countries: "Países",
     datasets: "Conjuntos de datos",
     directory: "Directorio",
     errorLoading: "FIXME",
@@ -196,9 +210,12 @@ export const phraseBooks: PhraseBooks = {
     and: "그리고",
     any: "아무거나",
     clearFilters: "필터 지우기",
+    clickToSearch: "클릭하여 검색",
+    clickForDetailsHereAndMap: "여기와 지도에서 세부정보를 보려면 클릭하세요.",
     close: "닫기",
     contact: "연락",
     contributers: "기여자",
+    countries: "국가",
     datasets: "데자료",
     directory: "디렉토리",
     errorLoading: "FIXME",

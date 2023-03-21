@@ -80,7 +80,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
     selection2
       .append("div")
       .attr("class", "w3-col")
-      .attr("title", "Click to search")
+      .attr("title", this.presenter.parent.mapui.labels.clickToSearch)
       .style("width", "50px")
       .append("button")
       .attr("type", "submit")
@@ -229,7 +229,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
         .attr("class", initiativeClass)
         .classed("sea-initiative-non-geo", !initiative.hasLocation())
         .attr("data-uid", uri)
-        .attr("title", "Click to see details here and on map")
+        .attr("title", this.presenter.parent.mapui.labels.clickForDetailsHereAndMap)
         .on("click", () => this.presenter.initClicked(initiative))
         .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative) )
         .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative) )
