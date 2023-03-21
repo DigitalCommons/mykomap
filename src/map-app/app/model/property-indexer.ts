@@ -48,7 +48,7 @@ export class PropertyIndexer {
       const propDef = this.propDefs.getDef(propName);
       if (propDef.type === 'multi')
         // Loop over the inferred array and insert
-        (value as any[]).forEach(v => this.insertVal(title, v, initiative));
+        (value as unknown[]).forEach(v => this.insertVal(title, v, initiative));
       else
         // Just insert the one value
         this.insertVal(title, value, initiative);
@@ -88,7 +88,7 @@ export class PropertyIndexer {
       return;
       
       // Sort entries as strings
-      function sortAsString(a: [string, any], b: [string, any]): number {
+      function sortAsString(a: [string, unknown], b: [string, unknown]): number {
         return String(a[0]).localeCompare(String(b[0]));
       }
       // Sort entries by the vocab title for the ID used as the key

@@ -79,7 +79,7 @@ export interface VocabPropDef {
 export interface CustomPropDef {
   type: 'custom'
   from?: string;
-  builder: (id: string, def: CustomPropDef, params: InitiativeObj) => any;
+  builder: (id: string, def: CustomPropDef, params: InitiativeObj) => unknown;
 }
 export interface MultiPropDef {
   type: 'multi';
@@ -104,7 +104,7 @@ export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
 export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
 
 // Inserts an element into a sorted array
-export function sortedInsert(element: any, array: any[]) {
+export function sortedInsert(element: unknown, array: unknown[]) {
   array.splice(locationOf(element, array), 0, element);
   return array;
 

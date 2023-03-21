@@ -36,13 +36,13 @@ export type SparqlVocabResponse = VocabIndex & {
 
 export type VocabLookup = (url: string) => Vocab;
 
-export function isSparqlVocabResponse(value: any): value is SparqlVocabResponse {
+export function isSparqlVocabResponse(value: unknown): value is SparqlVocabResponse {
   if (typeof(value) !== 'object')
     return false;
   return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 
 }
 
-export function isVocabIndex(value: any): value is VocabIndex {
+export function isVocabIndex(value: unknown): value is VocabIndex {
   if (typeof(value) !== 'object')
     return false;
   return true; // FIXME this is a temporary hack until I get some more heavyweight typechecking 

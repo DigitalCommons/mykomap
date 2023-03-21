@@ -26,7 +26,7 @@ export class CsvDataLoader<R extends object = string[]> implements DataLoader<In
   constructor(readonly id: string, readonly url: string, readonly rowTransform: ObjTransformFunc<R,InitiativeObj>) {}
   
   load(dataConsumer: DataConsumer<InitiativeObj>): Promise<this> {
-	  const executor = (resolve: (v: this | PromiseLike<this>) => void , reject: (r?: any) => void) => {
+	  const executor = (resolve: (v: this | PromiseLike<this>) => void , reject: (r?: unknown) => void) => {
 	    const onStep = (result: ParseStepResult<R>, _: PapaParser) => {
 		    if (result.errors.length == 0) {
 		      // console.debug("CsvDataLoader step", results.data);

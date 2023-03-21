@@ -26,7 +26,7 @@ interface SparqlDatasetResponse {
   status?: "success";
 }
 
-function isSparqlDatasetResponse(value: any): value is SparqlDatasetResponse {
+function isSparqlDatasetResponse(value: unknown): value is SparqlDatasetResponse {
   if (typeof value === 'object')
     return true; // FIXME this is a hack until we have more heavyweight type validation tools
   return false;

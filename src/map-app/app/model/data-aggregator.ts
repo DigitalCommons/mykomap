@@ -142,7 +142,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     function buildCustom(id: string, def: CustomPropDef, params: InitiativeObj) {
       return def.builder(id, def, params);
     }
-    function buildMulti(id: string, def: MultiPropDef, params: InitiativeObj): any[] {
+    function buildMulti(id: string, def: MultiPropDef, params: InitiativeObj): unknown[] {
       // Re-use other builders (which expect an InitiativeObj) by
       // substiting the InitiativeObj's array containing the multiple
       // values with each of its elements in turn. This is partly
@@ -217,7 +217,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
   }
   
   // Get a searchable value which can be added to an initiative's searchstr field
-  private mkSearchableValue(value: any, propDef: PropDef, language: string) {
+  private mkSearchableValue(value: unknown, propDef: PropDef, language: string) {
     if (value === undefined || value === null)
       return '';
 

@@ -888,7 +888,7 @@ ${def.descr}
         
         if (def.setter && def.type.parseString) {
           const val = def.type.parseString(str);
-          const setter = this[def.setter] as (val: any) => void; // FIXME this was frigged
+          const setter = this[def.setter] as (val: unknown) => void; // FIXME this was frigged
           setter.call(this, val);
         }
         else {
