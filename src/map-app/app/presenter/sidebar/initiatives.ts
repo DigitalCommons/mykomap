@@ -28,10 +28,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this.parent.mapui.changeFilters(propName, value);
   }
   
-  removeFilters() {
-    this.parent.mapui.removeFilters();
-  }
-
   notifyShowInitiativeTooltip(initiative: Initiative) {
     EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
   }

@@ -194,7 +194,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
       .property("disabled", this.presenter.isBackButtonDisabled() || undefined)
       .text(labels.clearFilters)
       .on("click", () => {
-        this.presenter.removeFilters();
+        this.presenter.resetSearch();
       });
 
     switch (appState.visibleInitiatives.size) {
