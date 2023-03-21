@@ -45,40 +45,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		this.createAdvancedSearch(advancedSearchContainer);
 	}
 
-	geekZoneContentAtD3Selection(selection: d3DivSelection, initiative: Initiative) {
-		const s = selection.append("div").attr("class", "w3-bar-block");
-		if (initiative.lat) {
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses)
-				.text("Latitude: " + initiative.lat);
-		}
-		if (initiative.lng) {
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses)
-				.text("Longitude: " + initiative.lng);
-		}
-    const uri = initiative.uri;
-		if (typeof uri === 'string') {
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
-				.text("Detailed data for this initiative")
-				.style("cursor", "pointer")
-				.on("click", () => {
-				 	this.openInNewTabOrWindow(uri);
-				});
-		}
-    const within = initiative.within;
-		if (typeof within === 'string') { // FIXME don't assume this property exists!
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
-				.text("Ordnance Survey postcode information")
-				.style("cursor", "pointer")
-				.on("click", () => {
-					this.openInNewTabOrWindow(within);
-				});
-		}
-	}
-  
 	onInitiativeClicked(id: string) {
 		d3.select(".sea-search-initiative-active")
 			.classed("sea-search-initiative-active", false);
