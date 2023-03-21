@@ -53,7 +53,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 			);
 	}
 
-	populateSelectionWithListOfInitiatives(
+	private populateSelectionWithListOfInitiatives(
 		selection: d3Selection,
 		initiatives: Initiative[]
 	) {
