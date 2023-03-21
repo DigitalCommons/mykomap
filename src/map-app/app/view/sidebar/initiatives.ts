@@ -79,42 +79,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 		}
 	}
   
-	populateSelectionWithOneInitiative(selection: d3Selection, initiative: Initiative) {
-		const s = selection.append("div").attr("class", "w3-bar-block");
-    const www = promoteToArray(initiative.www);
-    // FIXME don't assume this property exists! Also, may be multi-valued
-		if (www.length) {
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionHeadingClasses)
-				.text("website");
-			s.append("div")
-				.attr("class", BaseSidebarView.sectionClasses + BaseSidebarView.hoverColour)
-				.text(_toString(www[0]))
-				.style("cursor", "pointer")
-				.on("click", () => {
-					this.openInNewTabOrWindow(_toString(www[0]));
-				});
-		}
-    const desc = _toString(initiative.desc, null);
-		s.append("div")
-			.attr("class", BaseSidebarView.sectionHeadingClasses)
-			.text("description");
-		s.append("div")
-			.attr("class", BaseSidebarView.sectionClasses)
-			.text(desc || "No description available");
-    
-		// Make an accordion for opening up the geek zone
-		this.makeAccordionAtD3Selection({
-			selection: s,
-			heading: "Geek zone",
-			headingClasses: BaseSidebarView.accordionClasses,
-			makeContentAtD3Selection: (contentD3Selection: d3DivSelection) => {
-				this.geekZoneContentAtD3Selection(contentD3Selection, initiative);
-			},
-			hideContent: true
-		});
-	}
-
 	onInitiativeClicked(id: string) {
 		d3.select(".sea-search-initiative-active")
 			.classed("sea-search-initiative-active", false);
