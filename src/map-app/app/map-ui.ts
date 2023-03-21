@@ -223,6 +223,8 @@ export class MapUI {
   private onStateChange(change: StateChange<AppState, Action|undefined>) {
     const visibleInitiatives = change.result.visibleInitiatives;
     this.markers.updateVisibility(visibleInitiatives);
+
+    this.refreshSidebar();
     
     const data = EventBus.Map.mkSelectAndZoomData(Array.from(visibleInitiatives));
     EventBus.Map.needsToBeZoomedAndPanned.pub(data);
