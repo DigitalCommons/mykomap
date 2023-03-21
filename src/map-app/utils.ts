@@ -245,3 +245,5 @@ export function titleIsCountries(title: string): boolean {
     title == "Países" ||
     title == "국가" // FIXME this should not be hardwired!
 }
+
+export type Predicate<T> = (it: T) => boolean;
