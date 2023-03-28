@@ -209,6 +209,8 @@ export interface DataServices {
   
   getVerboseValuesForFields(): Dictionary<Dictionary>;
 
+  getVocabs(): VocabServices|undefined;
+  
   getVocabTerm(vocabUri: string, termUri: string): string | undefined;
 
   getVocabTitlesAndVocabIDs(): Dictionary;
@@ -583,6 +585,10 @@ export class DataServicesImpl implements DataServices {
       }
     }
     return results;
+  }
+
+  getVocabs(): VocabServices|undefined {
+    return this.vocabs;
   }
 
   getVocabPropDefs(vocabId?: string): VocabPropDefs {
