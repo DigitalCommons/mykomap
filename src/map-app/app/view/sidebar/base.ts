@@ -20,7 +20,7 @@ export abstract class BaseSidebarView extends BaseView {
   hasHistoryNavigation: boolean = true; 
   hasCloseButton: boolean = true;
 
-  readonly title: string = 'Untitled'
+  abstract readonly title: string;
 
   constructor() {
     super();

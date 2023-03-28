@@ -8,10 +8,11 @@ import { toString as _toString } from '../../../utils';
 import { SentryValues } from '../base';
 
 export class InitiativesSidebarView extends BaseSidebarView {
-  readonly title: string = 'Initiatives';
+  readonly title: string;
 
   constructor(readonly presenter: InitiativesSidebarPresenter) {
     super();
+    this.title = presenter.parent.mapui.labels.search;
   }
 
   populateFixedSelection(selection: d3Selection) {

@@ -20,9 +20,11 @@ export class DirectorySidebarView extends BaseSidebarView {
   
   hasHistoryNavigation: boolean = false;
   dissapear?: number;
+  readonly title: string;
 
   constructor(readonly presenter: DirectorySidebarPresenter) {
     super();
+    this.title = presenter.parent.mapui.labels.directory;
   }
 
 

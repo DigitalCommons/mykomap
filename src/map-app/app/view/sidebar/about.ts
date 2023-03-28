@@ -6,11 +6,12 @@ import { AboutSidebarPresenter } from '../../presenter/sidebar/about';
 export class AboutSidebarView extends BaseSidebarView {
   
   // And adds some overrides and new properties of it's own:
-  readonly title = "about";
+  readonly title: string;
   hasHistoryNavigation = false; // No forward/back buttons for this sidebar
 
   constructor(readonly presenter: AboutSidebarPresenter) {
     super();
+    this.title = presenter.parent.mapui.labels.aboutTitle;
   }
 
   populateFixedSelection(selection: d3Selection) {

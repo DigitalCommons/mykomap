@@ -4,12 +4,13 @@ import { d3Selection } from "../d3-utils";
 import { BaseSidebarView } from "./base";
 
 export class DatasetsSidebarView extends BaseSidebarView {
-  // And adds some overrides and new properties of it's own:
-  readonly title: string = "datasets";
+  // And adds some overrides and new properties of its own:
+  readonly title: string;
   hasHistoryNavigation: boolean = false; // No forward/back buttons for this sidebar
   
   constructor(readonly presenter: DatasetsSidebarPresenter) {
     super();
+    this.title = presenter.parent.mapui.labels.datasets;
   }
 
   populateFixedSelection(selection: d3Selection): void {
