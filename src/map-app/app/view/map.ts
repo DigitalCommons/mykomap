@@ -20,8 +20,8 @@ export class MapView extends BaseView {
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  selectedClusterGroup?: leaflet.MarkerClusterGroup;
-  unselectedClusterGroup?: leaflet.MarkerClusterGroup;
+  nonGeoClusterGroup?: leaflet.MarkerClusterGroup;
+  geoClusterGroup?: leaflet.MarkerClusterGroup;
 
   // Used to initialise the map for the "loading" spinner
   private static readonly spinMapInitHook: (this: leaflet.Map) => void = function() {
@@ -190,19 +190,19 @@ export class MapView extends BaseView {
     if (disableClusteringAtZoom)
       options.disableClusteringAtZoom = disableClusteringAtZoom;
 
-    this.unselectedClusterGroup = leaflet.markerClusterGroup(
+    this.geoClusterGroup = leaflet.markerClusterGroup(
       Object.assign(options, {
         chunkedLoading: true
       })
     );
     // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
-    this.map.addLayer(this.unselectedClusterGroup);
+    this.map.addLayer(this.geoClusterGroup);
 
     // Disable clustering on this cluster - which contains the location-less initiatives.
-    this.selectedClusterGroup = leaflet.markerClusterGroup({
+    this.nonGeoClusterGroup = leaflet.markerClusterGroup({
       spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
     });
-    this.map.addLayer(this.selectedClusterGroup);
+    this.map.addLayer(this.nonGeoClusterGroup);
 
     leaflet.Map.addInitHook(MapView.spinMapInitHook);
 
@@ -238,7 +238,7 @@ export class MapView extends BaseView {
     //for each marker check if the marker is directly visible 
     //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
     //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
-    const group = this.unselectedClusterGroup;
+    const group = this.geoClusterGroup;
     if (group)
       return initiatives.every(initiative => {
         const marker = initiative.__internal?.marker;
@@ -360,11 +360,11 @@ export class MapView extends BaseView {
     // zoom to layer if needed and unspiderify
     // FIXME guard against missing __parent - which means not part of a group?
     if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
-      this.unselectedClusterGroup?.zoomToShowLayer(
+      this.geoClusterGroup?.zoomToShowLayer(
         marker,
         () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
       );
-      this.unselectedClusterGroup?.refreshClusters(marker);
+      this.geoClusterGroup?.refreshClusters(marker);
     }
 
     //code for not destroying pop-up when zooming out

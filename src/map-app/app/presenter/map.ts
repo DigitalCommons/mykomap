@@ -50,10 +50,10 @@ export class MapPresenter extends BasePresenter {
     );
 
     // Now the view's (un)selectedClusterGroup should have been updated
-    if (this.view.selectedClusterGroup)
-      this.mapUI.markers.setSelectedClusterGroup(this.view.selectedClusterGroup);
-    if (this.view.unselectedClusterGroup)
-      this.mapUI.markers.setUnselectedClusterGroup(this.view.unselectedClusterGroup);
+    if (this.view.nonGeoClusterGroup)
+      this.mapUI.markers.setNonGeoClusterGroup(this.view.nonGeoClusterGroup);
+    if (this.view.geoClusterGroup)
+      this.mapUI.markers.setGeoClusterGroup(this.view.geoClusterGroup);
 
     return map;
   }
@@ -94,7 +94,7 @@ export class MapPresenter extends BasePresenter {
           "both that there are no defaults configured and no visible initiatives");
     
     this.view.fitBounds({bounds: bounds});
-    this.view.unselectedClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
+    this.view.geoClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
 
     // Call this last so map will have bounds set (else error!) 

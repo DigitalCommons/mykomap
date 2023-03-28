@@ -14,8 +14,8 @@ export class MarkerManager {
   private readonly markerForInitiative = new Map<Initiative, MapMarkerPresenter>();
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
-  hiddenClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
-  unselectedClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  nonGeoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  geoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
 
   constructor(readonly mapUI: MapUI) {
@@ -64,13 +64,13 @@ export class MarkerManager {
       marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
   }
 
-  setSelectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
+  setNonGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
     // CAUTION: this may be either a ClusterGroup, or the map itself
-    this.hiddenClusterGroup = clusterGroup;
+    this.nonGeoClusterGroup = clusterGroup;
   }
 
-  setUnselectedClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
-    this.unselectedClusterGroup = clusterGroup;
+  setGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
+    this.geoClusterGroup = clusterGroup;
   }
 
   showTooltip(initiative: Initiative) {
@@ -91,7 +91,7 @@ export class MarkerManager {
   }
 
   getClusterGroup() {
-    return this.unselectedClusterGroup;
+    return this.geoClusterGroup;
   }
   
   withPhysicalLocation(): leaflet.Marker[] {
