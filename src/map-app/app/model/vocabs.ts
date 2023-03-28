@@ -58,6 +58,10 @@ export interface VocabServices {
   // Keeps trying until all abbreviations applied.
   abbrevUri(uri: string): string;
 
+  
+  // Expands a URI using the prefixes/abbreviations defined in vocabs
+  expandUri(uri: string): string;
+  
   // Gets a vocab for the given URI / language
   // Throws an exception if the URI can't be found.
   // Uses the value of getFallBackLanguage() if the language can't be found.
