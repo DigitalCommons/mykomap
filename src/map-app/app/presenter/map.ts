@@ -13,6 +13,8 @@ export class MapPresenter extends BasePresenter {
   constructor(readonly mapUI: MapUI) {
     super();
     this.view = new MapView(this);
+    this.mapUI.markers.setNonGeoClusterGroup(this.view.nonGeoClusterGroup);
+    this.mapUI.markers.setGeoClusterGroup(this.view.geoClusterGroup);
 
     EventBus.Initiatives.datasetLoaded.sub(() => {
       this.mapUI.onNewInitiatives();
@@ -39,25 +41,13 @@ export class MapPresenter extends BasePresenter {
     EventBus.Map.needToHideInitiativeTooltip.sub(initiative => this.onNeedToHideInitiativeTooltip(initiative));
     EventBus.Map.setActiveArea.sub(area => this.setActiveArea(area.offset));
     EventBus.Map.fitBounds.sub(bounds => this.onBoundsRequested(bounds));
-    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));
+    EventBus.Map.selectAndZoomOnInitiative.sub(zoom => this.selectAndZoomOnInitiative(zoom));    
+  }
+
+  get map(): Map {
+    return this.view.map;
   }
     
-  createMap(): Map {
-    const map = this.view.createMap(
-      this.mapUI.config.getMapAttribution(),
-      this.mapUI.config.getDisableClusteringAtZoom(),
-      this.mapUI.config.getTileUrl()
-    );
-
-    // Now the view's (un)selectedClusterGroup should have been updated
-    if (this.view.nonGeoClusterGroup)
-      this.mapUI.markers.setNonGeoClusterGroup(this.view.nonGeoClusterGroup);
-    if (this.view.geoClusterGroup)
-      this.mapUI.markers.setGeoClusterGroup(this.view.geoClusterGroup);
-
-    return map;
-  }
-
   onInitiativeClicked() {
     EventBus.Directory.initiativeClicked.pub(undefined);
   }
@@ -94,7 +84,7 @@ export class MapPresenter extends BasePresenter {
           "both that there are no defaults configured and no visible initiatives");
     
     this.view.fitBounds({bounds: bounds});
-    this.view.geoClusterGroup?.addLayers(this.mapUI.markers.withPhysicalLocation());
+    this.view.geoClusterGroup.addLayers(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
 
     // Call this last so map will have bounds set (else error!) 

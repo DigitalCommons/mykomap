@@ -49,7 +49,6 @@ export class MapUI {
     if (this.mapPresenter) return;
     
     this.mapPresenter = this.createPresenter();
-    this.map = this.mapPresenter.createMap(); // Link this back for views to access
   }
   
   private onStateChange(change: StateChange<AppState, Action|undefined>) {
