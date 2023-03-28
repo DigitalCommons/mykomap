@@ -239,11 +239,4 @@ export function assert(expr: unknown, msg?: string): asserts expr {
   if (!expr) throw new Error(msg);
 }
 
-export function titleIsCountries(title: string): boolean {
-  return title == "Countries" ||
-    title == "Des Pays" ||
-    title == "Países" ||
-    title == "국가" // FIXME this should not be hardwired!
-}
-
 export type Predicate<T> = (it: T) => boolean;
