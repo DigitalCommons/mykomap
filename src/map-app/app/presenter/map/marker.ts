@@ -23,7 +23,7 @@ export class MapMarkerPresenter extends BasePresenter {
   }
 
   getLatLng(initiative: Initiative): Point2d|undefined {
-    return toPoint2d([initiative.lat, initiative.lng]);
+    return toPoint2d([initiative.lat, initiative.lng], null) ?? undefined;
   }
 
   getHoverText(initiative: Initiative): string {
