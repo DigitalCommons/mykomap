@@ -197,7 +197,11 @@ export class MapView extends BaseView {
     );
     // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
     this.map.addLayer(this.unselectedClusterGroup);
-    this.selectedClusterGroup = leaflet.markerClusterGroup();
+
+    // Disable clustering on this cluster - which contains the location-less initiatives.
+    this.selectedClusterGroup = leaflet.markerClusterGroup({
+      spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
+    });
     this.map.addLayer(this.selectedClusterGroup);
 
     leaflet.Map.addInitHook(MapView.spinMapInitHook);
