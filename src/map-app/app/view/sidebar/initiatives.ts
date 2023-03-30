@@ -27,11 +27,6 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
     this.changeSearchText(this.presenter.parent.mapui.getSearchText());
 
-    container
-      .append("p")
-      .attr("id", "searchTooltipText")
-      .text(this.presenter.parent.mapui.getSearchDescription());
-
     //advanced search
     const advancedSearchContainer = container
       .append("div")

@@ -304,33 +304,6 @@ export class MapUI {
     return this.stateManager.currentState.textSearch.searchText;
   }
 
-  // A localised, human readable description of the current search state
-  //
-  // Includes text and filtering.
-  getSearchDescription(): string {
-    const state = this.currentItem();
-    const descr: string[] = [];
-    if (state.hasTextSearch) {
-      // FIXME use a better label, like "Searching for text"
-      descr.push(`${this.labels.search} "${state.textSearch.searchText}"`);
-    }
-
-    if (state.hasPropFilters) {
-      // FIXME use localised field names
-      const names = Object.keys(state.propFilters).sort();
-      const filterNames = names.map(name => {
-        const filter = state.propFilters[name];
-        if (filter)
-          return `${name}: ${filter.valueRequired}`;
-        return undefined;
-      });
-      descr.push(...compactArray(filterNames));
-    }
-
-    return descr.join(` ${this.labels.and} `);
-  }
-
-  
   onLoad() {
     console.log("Map loaded");
     
