@@ -36,12 +36,10 @@ import {
 
 import {
   Initiative,
-  InitiativeObj
+    InitiativeObj,
+    ParamBuilder
 } from './initiative';
 import { promoteToArray } from '../../utils';
-
-export type ParamBuilder<P> = (id: string, def: P, params: InitiativeObj) => unknown;
-
 
 export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
@@ -161,11 +159,11 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       const ary = promoteToArray(params[paramName]);
       return ary.map(param => {
         paramsCopy[paramName] = param;
-        return buildAny(id, def.of, paramsCopy);
+        return buildAny(id, paramsCopy, def.of);
       });
     }
 
-    function buildAny(id: string, def: PropDef, params: InitiativeObj): any {
+    function buildAny(id: string, params: InitiativeObj, def: PropDef): any {
       switch(def.type) {
         case 'value': return buildValue(id, def, params);
         case 'vocab': return buildVocab(id, def, params);

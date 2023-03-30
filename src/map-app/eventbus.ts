@@ -20,7 +20,6 @@ export namespace EventBus {
   export namespace Directory {
 	  export const initiativeClicked = new PostalTopic<Initiative|undefined>("Directory.initiativeClicked"); // deselected if undefined
 	  export const initiativeClickedHideSidebar = new PostalTopic<Initiative>("Directory.InitiativeClickedSidebar.hideSidebar");
-	  export const removeFilters = new PostalTopic<string|undefined>("Directory.removeFilters");
   }
   export namespace Initiatives {
     export interface DatasetError { error: Error; dataset?: string; }

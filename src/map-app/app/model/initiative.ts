@@ -1,5 +1,4 @@
 import { PropDef, PropDefs } from './data-services';
-import { ParamBuilder } from './data-aggregator';
 import { Dictionary } from '../../common-types';
 import { toString as _toString } from '../../utils';
 
@@ -8,6 +7,10 @@ export interface InitiativeObj {
   uri: string;
   [name: string]: unknown;
 }
+
+export type ParamBuilder<P> = (id: string, params: InitiativeObj, def: P) => unknown;
+
+export const trivialParamBuilder: ParamBuilder<PropDef> = (id, params, _) => params[id];
 
 /// This class represents an initiative, AKA a pin on the map.
 ///
@@ -33,8 +36,8 @@ export class Initiative {
   /// in propDefs (which defines the fields) and paramBuilder (which defines
   /// how to construct values for these fields).
   static mkFactory(propDefs: PropDefs,
-                   paramBuilder: ParamBuilder<PropDef>,
-                   searchedFields: string[]) {
+                   paramBuilder: ParamBuilder<PropDef> = trivialParamBuilder,
+                   searchedFields: string[] = []) {
     return (props: InitiativeObj) => {
       const initiative = new Initiative();
 
@@ -43,7 +46,7 @@ export class Initiative {
         const [propName, propDef] = entry;
         if (propDef) {
           Object.defineProperty(initiative, propName, {
-            value: paramBuilder(propName, propDef, props),
+            value: paramBuilder(propName, props, propDef),
             enumerable: true,
             writable: false,
           });
