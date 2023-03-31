@@ -3,8 +3,6 @@ import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
 import { Initiative } from '../../model/initiative';
 import { SidebarPresenter } from '../sidebar';
-import { SearchResults } from '../../../search-results';
-import { VocabServices } from '../../model/vocabs';
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   readonly view: DirectorySidebarView;
