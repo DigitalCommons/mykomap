@@ -105,20 +105,12 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
     }
   }
 
-  // This gets the localised 'allEntries' label in most cases.
-  // Special case: the propName is a vocab field with uri matching
-  // '^https?://.*/countries-iso/?$' - in which case it returns the
-  // 'allCountries' label.
+  // This gets the localised 'allEntries' label in all cases.
   //
-  // FIXME this is (still) a hack - we shouldn't hardwire in vocab domain knowhow like this.
+  // It used to facilitate a hack as per issue #177. Leaving here as a
+  // stub in case we want to localise this case in some case-specific
+  // way in the future.
   getAllEntriesLabel(propName: string): string {
-    const vocabPropDefs = this.parent.mapui.dataServices.getVocabPropDefs();
-    const propDef = vocabPropDefs[propName];
-    if (propDef) {
-      const vocabs = this.parent.mapui.dataServices.getVocabs();
-      if (vocabs && vocabs.expandUri(propDef.uri).match('^https?://.*/countries-iso/?$'))
-        return this.parent.mapui.labels.allCountries;
-    }
     return this.parent.mapui.labels.allEntries;
   }
 }
