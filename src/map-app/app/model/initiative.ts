@@ -1,6 +1,7 @@
 import { PropDef, PropDefs } from './data-services';
 import { Dictionary } from '../../common-types';
 import { toString as _toString } from '../../utils';
+import { TextSearch } from '../state-manager';
 
 /// This represents an initiative represented as bare JSON
 export interface InitiativeObj {
@@ -62,9 +63,9 @@ export class Initiative {
     /// Uppercasses the value first.
     function appendSearchableValue(initiative: Initiative, value: string) {
       if (initiative.searchstr === undefined)
-        initiative.searchstr = value.toUpperCase();
+        initiative.searchstr = TextSearch.normalise(value);
       else
-        initiative.searchstr += ' '+ value.toUpperCase();
+        initiative.searchstr += ' '+ TextSearch.normalise(value);
     }
   }
 
