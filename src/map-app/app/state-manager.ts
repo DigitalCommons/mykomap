@@ -171,12 +171,23 @@ export class TextSearch {
     /// What was searched for
     readonly searchText: string,
   ) {
-    this.normSearchText = searchText
-      .toUpperCase()
-      .replace(/['`]/, '') // eliminate non word-breaking punctuation
+    this.normSearchText = TextSearch.normalise(searchText);
+  }
+
+  /// Normalises a text string into an indexable form.
+  ///
+  /// Performs these steps:
+  /// - Upper-cases it
+  /// - Eliminates non word-breaking punctuation (`\`'`)
+  /// - Converts all other punctuation to space characters.
+  /// - Deduplicates whitespace
+  /// - Trims whitespace from front and back of the string.
+  static normalise(text: string): string {
+    return text.toUpperCase()
+      .replace(/['`]/, '')      // eliminate non word-breaking punctuation
       .replace(/[^\w ]+/g, ' ') // all other punctuation to space
-      .replace(/\s+/g, ' ') // deduplicate whitespace
-      .trim(); // trim whitespace from front and back
+      .replace(/\s+/g, ' ')     // deduplicate whitespace
+      .trim();                  // trim whitespace from front and back
   }
 
   willMatch() {
