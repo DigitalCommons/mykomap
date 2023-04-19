@@ -636,7 +636,7 @@ export class DataServicesImpl implements DataServices {
   getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined {
     return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
   }
-  
+
   latLngBounds(initiatives?: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east

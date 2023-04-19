@@ -1,4 +1,5 @@
 import type { Dictionary } from '../../common-types';
+import { toString as _toString } from '../../utils';
 
 import type {
   DataConsumer
@@ -65,11 +66,34 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
                        labels),
       (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
     );
+    const getText = (value: unknown, propDef: PropDef) =>
+      this.getTextForProperty(value, propDef);
     this.mkInitiative = Initiative.mkFactory(this.propDefs,
-                                                  this.paramBuilder,
-                                                  config.getSearchedFields());
+                                             this.paramBuilder,
+                                             getText,
+                                             config.getSearchedFields());
   }
 
+
+  getTextForProperty(value: unknown, propDef: PropDef): string | string[] | undefined {
+    switch(propDef.type) {
+      case 'value':
+      case 'custom':
+        // If custom, we assume it isn't a vocab or a multi
+        // - FIXME custom needs refinement to clarify this, or replacement!
+        return value === undefined? undefined : _toString(value);
+        
+      case 'vocab':
+        return this?.vocabs?.getVocabTerm(propDef.uri, _toString(value), this.config.getLanguage());
+
+      case 'multi':
+        const innerPropDef = propDef.of;
+        if (value instanceof Array)
+          return value.map(v => _toString(this.getTextForProperty(v, innerPropDef)));
+        return [];
+    }
+  }  
+  
   addBatch(datasetId: string, initiatives: InitiativeObj[]): void {
     initiatives
       .forEach(elem => this.onData(elem, datasetId));
