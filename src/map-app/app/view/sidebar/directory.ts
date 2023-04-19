@@ -6,7 +6,7 @@ import { Initiative } from "../../model/initiative";
 import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
 import { BaseSidebarView } from "./base";
-import { titleIsCountries, toString as _toString } from "../../../utils";
+import { toString as _toString } from "../../../utils";
 
 function uriToTag(uri: string) {
   return uri.toLowerCase().replace(/^.*[:\/]/, "");
@@ -106,7 +106,7 @@ export class DirectorySidebarView extends BaseSidebarView {
 
       if (key == null) {
         tag = 'all-entries';
-        label = titleIsCountries(title) ? this.presenter.parent.mapui.labels.allCountries : this.presenter.parent.mapui.labels.allEntries;
+        label = this.presenter.getAllEntriesLabel(propName);
       }
       else {
         tag = uriToTag(key);
@@ -163,13 +163,8 @@ export class DirectorySidebarView extends BaseSidebarView {
       propValue
     );
 
-    let selectionLabel = propValue;
-    if (selectionLabel == null) {
-      if (titleIsCountries(directoryTitle))
-        selectionLabel = this.presenter.parent.mapui.labels.allCountries;
-      else
-        selectionLabel = this.presenter.parent.mapui.labels.allEntries;
-    }
+    const selectionLabel = propValue == null?
+      this.presenter.getAllEntriesLabel(propName) : propValue;
 
     //deselect all
     this.presenter.clearLatestSelection();

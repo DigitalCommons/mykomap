@@ -3,7 +3,6 @@ import { DirectorySidebarView } from '../../view/sidebar/directory';
 import { BaseSidebarPresenter } from './base';
 import { Initiative } from '../../model/initiative';
 import { SidebarPresenter } from '../sidebar';
-import { SearchResults } from '../../../search-results';
 
 export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   readonly view: DirectorySidebarView;
@@ -103,5 +102,13 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
       //doesn't do much?
     }
   }
-  
+
+  // This gets the localised 'allEntries' label in all cases.
+  //
+  // It used to facilitate a hack as per issue #177. Leaving here as a
+  // stub in case we want to localise this case in some case-specific
+  // way in the future.
+  getAllEntriesLabel(propName: string): string {
+    return this.parent.mapui.labels.allEntries;
+  }
 }
