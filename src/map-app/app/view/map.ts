@@ -12,7 +12,7 @@ import { Box2d } from "../../common-types";
 import { isFiniteBox2d } from "../../utils";
 
 export class MapView extends BaseView {
-  map?: Map;
+  readonly map: Map;
   private _settingActiveArea: boolean = false;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
@@ -20,8 +20,8 @@ export class MapView extends BaseView {
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  selectedClusterGroup?: leaflet.MarkerClusterGroup;
-  unselectedClusterGroup?: leaflet.MarkerClusterGroup;
+  readonly nonGeoClusterGroup: leaflet.MarkerClusterGroup;
+  readonly geoClusterGroup: leaflet.MarkerClusterGroup;
 
   // Used to initialise the map for the "loading" spinner
   private static readonly spinMapInitHook: (this: leaflet.Map) => void = function() {
@@ -88,9 +88,7 @@ export class MapView extends BaseView {
   }
 
   
-  /// Initialises the view, but does not create the map yet.
-  ///
-  /// To do that, call #createMap
+  /// Initialises the view, and creates the map.
   constructor(readonly presenter: MapPresenter) {
     super();
 
@@ -122,6 +120,104 @@ export class MapView extends BaseView {
     left: calc(-${this.dialogueWidth} / 2)!important;
   }`;
 
+    // We have to deliberately frig the typing here - I am not
+    // entirely sure why I didn't have to do this right when I started
+    // using typescript for this file... but the leaflet types for
+    // MarkerClusterGroup specify disableClusteringAtZoom to be a
+    // number - so no null value. And yet the docs say it can be
+    // unset. But if you set it to a number, and especially 0, it is
+    // set, and enabled, which changes the behaviour of the clustering.
+    // So, here we create it unset, and coerce the type to be MarkerClusterGroupOptions.
+    const options = {} as leaflet.MarkerClusterGroupOptions;
+
+    const disableClusteringAtZoom = this.presenter.mapUI.config.getDisableClusteringAtZoom()
+    // Preserve the old config behaviour: zero means unset, so
+    // clustering happens. Whereas zero actually means clustering is
+    // disabled at all zoom levels. This may be a FIXME... later.
+    if (disableClusteringAtZoom !== 0) 
+      options.disableClusteringAtZoom = disableClusteringAtZoom;
+
+
+    this.geoClusterGroup = leaflet.markerClusterGroup(
+      Object.assign(options, {
+        chunkedLoading: true
+      })
+    );
+
+    // Disable clustering on this cluster - which contains the location-less initiatives.
+    this.nonGeoClusterGroup = leaflet.markerClusterGroup({
+      spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
+    });
+
+    
+    {
+      let mapAttribution = this.presenter.mapUI.config.getMapAttribution();
+      const tileUrl = this.presenter.mapUI.config.getTileUrl();
+
+      document.body.appendChild(this.dialogueSizeStyles);
+      
+      // setup map (could potentially add this to the map initialization instead)
+      //world ends corners
+      var corner1 = leaflet.latLng(-90, -180),
+      corner2 = leaflet.latLng(90, 180),
+      worldBounds = leaflet.latLngBounds(corner1, corner2);
+      
+      const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      console.log(tileUrl)
+      const tileMapURL = tileUrl ?? osmURL;
+      
+      mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
+      mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
+      mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
+      mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
+      const osmAttrib = mapAttribution;
+
+
+      // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
+      this.map = leaflet.map("map-app-leaflet-map", {
+        // set to true to re-enable context menu.
+        // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
+        // contextmenu: false,
+        // noWrap: true, // FIXME this is commented as not supported? 
+        minZoom: 2,
+        //set max bounds - will bounce back if user attempts to cross them
+        maxBounds: worldBounds
+        // contextmenuWidth: 140,
+      }) as Map; // Need to coerce the type to include our loaded extension methods
+      
+      this.map.zoomControl.setPosition("bottomright");
+
+      this.map.on('click', (e) => this.onInitiativeClicked(e));
+      this.map.on('load', (e) => this.onLoad(e));
+      this.map.on('resize', (e) => this.onResize(e));
+      
+      leaflet
+        .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
+        .addTo(this.map);
+
+
+      // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
+      this.map.addLayer(this.geoClusterGroup);
+      this.map.addLayer(this.nonGeoClusterGroup);
+
+      leaflet.Map.addInitHook(MapView.spinMapInitHook);
+
+
+      var logo = this.presenter.getLogo();
+      if (logo) {
+        d3.select(".leaflet-top.leaflet-right")
+          .append("div")
+          .attr("id", "logo-holder")
+          .append("img")
+          .attr("src", logo)
+          .attr("alt", "company logo")
+          .classed("logo", true);
+      }
+
+      const initialBounds = this.presenter.mapUI.config.getInitialBounds();
+      if (initialBounds)
+        this.map.fitBounds(initialBounds);
+    }
   }
 
   private onInitiativeClicked(me: leaflet.LeafletMouseEvent): void {
@@ -137,92 +233,12 @@ export class MapView extends BaseView {
   }
   
   private onResize(_: leaflet.ResizeEvent) {
-    this.map?.invalidateSize();
+    this.map.invalidateSize();
     console.log("Map resize", window.outerWidth);
   }
 
-
-
-  createMap(mapAttribution: string, disableClusteringAtZoom: number|false, tileUrl?: string): Map {
-    document.body.appendChild(this.dialogueSizeStyles);
-    
-    // setup map (could potentially add this to the map initialization instead)
-    //world ends corners
-    var corner1 = leaflet.latLng(-90, -180),
-      corner2 = leaflet.latLng(90, 180),
-      worldBounds = leaflet.latLngBounds(corner1, corner2);
-
-    const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    console.log(tileUrl)
-    const tileMapURL = tileUrl ?? osmURL;
-
-    mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
-    mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
-    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
-    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
-    const osmAttrib = mapAttribution;
-
-
-    // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
-    this.map = leaflet.map("map-app-leaflet-map", {
-      // set to true to re-enable context menu.
-      // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
-      // contextmenu: false,
-      // noWrap: true, // FIXME this is commented as not supported? 
-      minZoom: 2,
-      //set max bounds - will bounce back if user attempts to cross them
-      maxBounds: worldBounds
-      // contextmenuWidth: 140,
-    }) as Map; // Need to coerce the type to include our loaded extension methods
-    
-    this.map.zoomControl.setPosition("bottomright");
-
-    this.map.on('click', (e) => this.onInitiativeClicked(e));
-    this.map.on('load', (e) => this.onLoad(e));
-    this.map.on('resize', (e) => this.onResize(e));
-    
-    leaflet
-      .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
-      .addTo(this.map);
-
-    const options: leaflet.MarkerClusterGroupOptions = {};
-
-    if (disableClusteringAtZoom)
-      options.disableClusteringAtZoom = disableClusteringAtZoom;
-
-    this.unselectedClusterGroup = leaflet.markerClusterGroup(
-      Object.assign(options, {
-        chunkedLoading: true
-      })
-    );
-    // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
-    this.map.addLayer(this.unselectedClusterGroup);
-    this.selectedClusterGroup = leaflet.markerClusterGroup();
-    this.map.addLayer(this.selectedClusterGroup);
-
-    leaflet.Map.addInitHook(MapView.spinMapInitHook);
-
-
-    var logo = this.presenter.getLogo();
-    if (logo) {
-      d3.select(".leaflet-top.leaflet-right")
-        .append("div")
-        .attr("id", "logo-holder")
-        .append("img")
-        .attr("src", logo)
-        .attr("alt", "company logo")
-        .classed("logo", true);
-    }
-
-    const initialBounds = this.presenter.mapUI.config.getInitialBounds();
-    if (initialBounds)
-      this.map.fitBounds(initialBounds);
-    
-    return this.map;
-  }
-
   fitBounds(data: EventBus.Map.BoundsData) {
-    this.map?.fitBounds(data.bounds, data.options);
+    this.map.fitBounds(data.bounds, data.options);
   }
 
   getClusterGroup() {
@@ -234,7 +250,7 @@ export class MapView extends BaseView {
     //for each marker check if the marker is directly visible 
     //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
     //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
-    const group = this.unselectedClusterGroup;
+    const group = this.geoClusterGroup;
     if (group)
       return initiatives.every(initiative => {
         const marker = initiative.__internal?.marker;
@@ -322,7 +338,7 @@ export class MapView extends BaseView {
     if (!data.bounds)
       return;
     
-    //const options = Object.assign({ duration: 0.25, maxZoom: this.map?.getZoom() }, data.options);
+    //const options = Object.assign({ duration: 0.25, maxZoom: this.map.getZoom() }, data.options);
     let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
     
     //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
@@ -356,11 +372,11 @@ export class MapView extends BaseView {
     // zoom to layer if needed and unspiderify
     // FIXME guard against missing __parent - which means not part of a group?
     if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
-      this.unselectedClusterGroup?.zoomToShowLayer(
+      this.geoClusterGroup.zoomToShowLayer(
         marker,
         () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
       );
-      this.unselectedClusterGroup?.refreshClusters(marker);
+      this.geoClusterGroup.refreshClusters(marker);
     }
 
     //code for not destroying pop-up when zooming out
@@ -451,7 +467,7 @@ export class MapView extends BaseView {
   
   setActiveArea(offset: number) {
     if (this._settingActiveArea) return;
-    this.map?.once("moveend", () => {
+    this.map.once("moveend", () => {
       this._settingActiveArea = false;
     });
     this._settingActiveArea = true;
@@ -468,7 +484,7 @@ export class MapView extends BaseView {
     
     const refocusMap = true;
     const animateRefocus = true;
-    this.map?.setActiveArea(css, refocusMap, animateRefocus);
+    this.map.setActiveArea(css, refocusMap, animateRefocus);
   }
 
 }

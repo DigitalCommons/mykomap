@@ -55,7 +55,7 @@ export class MapMarkerView extends BaseView {
         className: "sea-initiative-popup sea-non-geo-initiative"
       });
 
-      this.cluster = this.presenter.mapUI.markers.hiddenClusterGroup;
+      this.cluster = this.presenter.mapUI.markers.nonGeoClusterGroup;
       //this.cluster.addLayer(this.marker);
       this.presenter.hasPhysicalLocation = false;
     }
@@ -94,7 +94,7 @@ export class MapMarkerView extends BaseView {
       this.marker.on("click", (e) => {
         this.onClick(e);
       });
-      this.cluster = this.presenter.mapUI.markers.unselectedClusterGroup;
+      this.cluster = this.presenter.mapUI.markers.geoClusterGroup;
       this.cluster.addLayer(this.marker);
       this.presenter.hasPhysicalLocation = true;
     }
@@ -183,22 +183,22 @@ export class MapMarkerView extends BaseView {
     
     // If the marker is in a clustergroup that's currently animating then wait until the animation has ended
     // @ts-ignore the sneaky access of a private member
-    else if (factory.unselectedClusterGroup._inZoomAnimation) {
-      factory.unselectedClusterGroup.on("animationend", _ => {
+    else if (factory.geoClusterGroup._inZoomAnimation) {
+      factory.geoClusterGroup.on("animationend", _ => {
         //if the initiative is not visible (it's parent is a cluster instaed of the initiative itself )
-        if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker
+        if (factory.geoClusterGroup.getVisibleParent(marker) !== marker
         ) {
           if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
             marker.__parent.spiderfy();
           }
         }
         marker.openPopup();
-        factory.unselectedClusterGroup.off("animationend");
+        factory.geoClusterGroup.off("animationend");
       });
     }
     // Otherwise the marker is in a clustergroup so it'll need to be spiderfied
     else {
-      if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
+      if (factory.geoClusterGroup.getVisibleParent(marker) !== marker) {
         if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
           marker.__parent.spiderfy();
         }
@@ -208,14 +208,14 @@ export class MapMarkerView extends BaseView {
 
     //deselect initiative when it becomes clustered. i.e. when it has a parent other than itself 
     let deselectInitiative = (e: leaflet.LeafletEvent) => {
-      if (factory.unselectedClusterGroup.getVisibleParent(marker) !== marker) {
+      if (factory.geoClusterGroup.getVisibleParent(marker) !== marker) {
         this.setUnselected(initiative);
         EventBus.Directory.initiativeClicked.pub(undefined); // deselects
-        factory.unselectedClusterGroup.off("animationend", deselectInitiative);
+        factory.geoClusterGroup.off("animationend", deselectInitiative);
       }
     }
     //check for clustering at each animation of the layer
-   factory.unselectedClusterGroup.on("animationend", deselectInitiative);
+   factory.geoClusterGroup.on("animationend", deselectInitiative);
 
   }
 
