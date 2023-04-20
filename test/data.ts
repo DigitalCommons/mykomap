@@ -182,7 +182,7 @@ function superSimpleParamBuilder(id: string, params: InitiativeObj, defs: PropDe
 
 // This is an initiative constructor, which uses the above propDefs
 // and paramBuilder
-export const lettersMkInitiative = Initiative.mkFactory(lettersPropDefs, superSimpleParamBuilder, []);
+export const lettersMkInitiative = Initiative.mkFactory(lettersPropDefs, superSimpleParamBuilder);
 
 // Construct some initiatives. Use some simple rules to set a
 // representative collection of fields types from a string
