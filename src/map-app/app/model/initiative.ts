@@ -1,6 +1,6 @@
 import { PropDef, PropDefs } from './data-services';
 import { Dictionary } from '../../common-types';
-import { promoteToArray, toString as _toString } from '../../utils';
+import { compactArray, promoteToArray, toString as _toString } from '../../utils';
 import { TextSearch } from '../state-manager';
 
 /// This represents an initiative represented as bare JSON
@@ -38,8 +38,7 @@ export class Initiative {
   /// how to construct values for these fields).
   static mkFactory(propDefs: PropDefs,
                    paramBuilder: ParamBuilder<PropDef> = trivialParamBuilder,
-                   getText: (value: unknown, propDef: PropDef) => string | string[] | undefined,
-                   searchedFields: string[] = []) {
+                   searchIndexer?: (value: unknown, propName: string, propDef: PropDef) => string|undefined) {
     return (props: InitiativeObj) => {
       const initiative = new Initiative();
 
@@ -52,33 +51,24 @@ export class Initiative {
             enumerable: true,
             writable: false,
           });
-
-          if (searchedFields.includes(propName)) {
-            const value = getText(props[propName], propDef);
-            if (typeof value === 'string') {
-              appendSearchableValue(initiative, value);
-            }
-            else if (value instanceof Array) {
-              value.forEach(v => appendSearchableValue(initiative, v));
-            }
-            else {
-              appendSearchableValue(initiative, String(initiative[propName]));
-            }
-          }
         }
       });
 
+      if (searchIndexer) {
+        const searchIndex = Object.entries(propDefs).map(entry => {
+          const [propName, propDef] = entry;
+          if (propDef) {
+            return searchIndexer(props[propName], propName, propDef);
+          }
+          else {
+            return undefined;
+          }
+        });
+        initiative.searchstr = compactArray(searchIndex).join(' ');
+      }
+      
       return initiative;
-    }
-
-    /// Appends a searchable value to the `searchstr` property, creating it if not present.
-    /// Uppercasses the value first.
-    function appendSearchableValue(initiative: Initiative, value: string) {
-      if (initiative.searchstr === undefined)
-        initiative.searchstr = TextSearch.normalise(value);
-      else
-        initiative.searchstr += ' '+ TextSearch.normalise(value);
-    }
+    };
   }
 
   /// Compares two initiatives by a given property as a string (name, by default)

@@ -41,6 +41,7 @@ import {
     ParamBuilder
 } from './initiative';
 import { promoteToArray } from '../../utils';
+import { TextSearch } from '../state-manager';
 
 export class DataAggregator extends AggregatedData implements DataConsumer<InitiativeObj> {  
   private readonly paramBuilder: ParamBuilder<PropDef>;
@@ -66,14 +67,32 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
                        labels),
       (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
     );
-    const getText = (value: unknown, propDef: PropDef) =>
-      this.getTextForProperty(value, propDef);
+    const searchIndexer = this.mkSearchIndexer(config.getSearchedFields());
     this.mkInitiative = Initiative.mkFactory(this.propDefs,
                                              this.paramBuilder,
-                                             getText,
-                                             config.getSearchedFields());
+                                             searchIndexer);
   }
 
+  mkSearchIndexer(searchedFields: string[]) {
+    const getText = (value: unknown, propDef: PropDef) =>
+      this.getTextForProperty(value, propDef);
+
+    return (value: unknown, propName: string, propDef: PropDef): string|undefined => {
+      if (searchedFields.includes(propName)) {
+        const text = getText(value, propDef);
+        if (typeof text === 'string') {
+          return TextSearch.normalise(text);
+        }
+        else if (text instanceof Array) {
+          return text.map(v => TextSearch.normalise(v)).join(' ');
+        }
+        else {
+          return TextSearch.normalise(_toString(text));
+        }
+      }      
+    };
+  }
+  
 
   getTextForProperty(value: unknown, propDef: PropDef): string | string[] | undefined {
     switch(propDef.type) {
@@ -239,7 +258,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
   }
   
   // Get a searchable value which can be added to an initiative's searchstr field
-  private mkSearchableValue(value: unknown, propDef: PropDef, language: string) {
+  private mkSearchableValuex(value: unknown, propDef: PropDef, language: string) {
     if (value === undefined || value === null)
       return '';
 
