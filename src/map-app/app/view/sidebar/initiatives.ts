@@ -56,6 +56,13 @@ export class InitiativesSidebarView extends BaseSidebarView {
   }
 
   createSearchBox(selection: d3DivSelection) {
+
+    const submitCallback = (event: Event) => {
+      event.preventDefault(); // prevent page reloads on submit
+      const searchText = this.getSearchText()
+      this.presenter.performSearch(searchText);
+    };
+
     const selection2 = selection
       .append("form")
       .attr("id", "map-app-search-form")
@@ -63,14 +70,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
         "class",
         "w3-card-2 w3-round map-app-search-form"
       )
-      .on("submit", (event) => {
-        // By default, submitting the form will cause a page reload!
-        event.preventDefault();
-        //event.stopPropagation();
-
-        var searchText = this.getSearchText()
-        this.presenter.performSearch(searchText);
-      })
+      .on("submit", submitCallback)
       .append("div")
       .attr("class", "w3-border-0");
     selection2
@@ -91,7 +91,11 @@ export class InitiativesSidebarView extends BaseSidebarView {
       .attr("class", "w3-input w3-border-0 w3-round w3-mobile")
       .attr("type", "search")
       .attr("placeholder", this.presenter.parent.mapui.labels.searchInitiatives)
-      .attr("autocomplete", "off");
+      .attr("autocomplete", "off")
+    // If we don't submit the search on blur, selecting another filter will reset the search text
+    // https://github.com/digitalcommons/mykomap/issues/197
+      .on("blur", submitCallback);
+
 
     document.getElementById("search-box")?.focus();
   }
