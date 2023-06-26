@@ -369,9 +369,19 @@ const types = {
   dialogueSize: new TypeDef<DialogueSize>({
     name: '{DialogueSize}',
     descr: 'An object containing only string values.',
-    stringDescr: 'A comma-delimited list of name-value pairs, each delimited by a colon. '+
-                 'Therefore no commas or colons can exist in either names or values. '+
-                 'Spaces are not trimmed, and later key duplicates will overwrite earlier ones.',
+    stringDescr: 'When used in an URL, this is a comma-delimited list of name-value pairs, '+
+      'each delimited by a colon. For example, to set the width to 35% of '+
+      'the viewport width, and the height to 12% of the width, and the ratio of the '+
+      'description pane to the contact pane to be 2 to 1, use: '+
+      '`dialogueSize=width:35vw,height:12vw,descriptionRatio:2`. '+
+      'The `width` and `height` parameters are verbatim CSS distance values with units, '+
+      'defining the dialogue width and height. '+
+      'The default dialog has two halves separated vertically. The `descriptionRatio` '+
+      'parameter sets the number of times wider the left one (the description) should '+
+      'be to the right one (the contact details). '+
+      'Note: commas or colons are interpreted as delimiters, so do not put them in either '+
+      'names or values. Spaces are not trimmed. Parameter names besides those documented are '+
+      'ignored',
     parseString: (val: string): DialogueSize => {
       const obj = Object.fromEntries(val.split(/,/).map(el => el.split(/:/, 2)));
       return {
@@ -522,10 +532,10 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       dialogueSize: {
         id: 'dialogueSize',
-        descr: 'Set the dimensions of the dialogue box. Height and width are raw css values ' + 
+        descr: 'Set the dimensions of the dialogue box. Height and width are raw CSS values ' + 
           'descriptionRatio is how many times larger the description section is than the ' +
           'contact section. These values are used in view/map.js',
-        defaultDescr: "```\n"+JSON.stringify(defaultConfig.dialogueSize, null, 2)+"\n```",
+        defaultDescr: "`"+JSON.stringify(defaultConfig.dialogueSize, null, 2)+"`",
         getter: 'getDialogueSize',
         setter: 'setDialogueSize',
         type: types.dialogueSize,
@@ -609,7 +619,7 @@ export class Config implements ReadableConfig, WritableConfig {
           'Any other language code used will be replaced with the first in this list. '+
           'A phrases for the first code will also used as a fallback if an individual '+
           'phrase is missing.',
-        defaultDescr: "```\n"+JSON.stringify(defaultConfig.languages, null, 2)+"\n```",
+        defaultDescr: "`"+JSON.stringify(defaultConfig.languages, null, 2)+"`",
         getter: 'getLanguages',
         type: types.arrayOfIso6391Code,
       },
