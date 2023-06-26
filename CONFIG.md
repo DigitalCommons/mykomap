@@ -100,17 +100,15 @@ Set whether the sidebar is by default open on starting the app.
 ### `dialogueSize`
 
 - *type:* `{DialogueSize}` An object containing only string values.
-- *in string context:* A comma-delimited list of name-value pairs, each delimited by a colon. Therefore no commas or colons can exist in either names or values. Spaces are not trimmed, and later key duplicates will overwrite earlier ones.
-- *default:* ```
-{
+- *in string context:* When used in an URL, this is a comma-delimited list of name-value pairs, each delimited by a colon. For example, to set the width to 35% of the viewport width, and the height to 12% of the width, and the ratio of the description pane to the contact pane to be 2 to 1, use: `dialogueSize=width:35vw,height:12vw,descriptionRatio:2`. The `width` and `height` parameters are verbatim CSS distance values with units, defining the dialogue width and height. The default dialog has two halves separated vertically. The `descriptionRatio` parameter sets the number of times wider the left one (the description) should be to the right one (the contact details). Note: commas or colons are interpreted as delimiters, so do not put them in either names or values. Spaces are not trimmed. Parameter names besides those documented are ignored
+- *default:* `{
   "width": "35vw",
   "height": "225px",
   "descriptionRatio": 2.5
-}
-```
+}`
 - *settable?:* yes
 
-Set the dimensions of the dialogue box. Height and width are raw css values descriptionRatio is how many times larger the description section is than the contact section. These values are used in view/map.js
+Set the dimensions of the dialogue box. Height and width are raw CSS values descriptionRatio is how many times larger the description section is than the contact section. These values are used in view/map.js
 
 
 
@@ -213,7 +211,7 @@ The initial bounds of the map as an array: [[n1,e1],[n2,e2]]; these are chosen a
 
 ### `language`
 
-- *type:* `{string}` 
+- *type:* `{ISO639-1 Code}` 
 - *in string context:* parsed as-is
 - *default:* `EN`
 - *settable?:* yes
@@ -225,13 +223,11 @@ The language to use for internationalised text. Must be one of those listed in `
 
 ### `languages`
 
-- *type:* `{string[]}` An array of strings.
-- *in string context:* A comma-delimited list of strings. No escaping is used, so no commas can exist in the strings. Spaces are not trimmed.
-- *default:* ```
-[
+- *type:* `{Array<ISO639-1 code>}` An array of ISO639-1 two-character country codes.
+- *in string context:* A comma-delimited list of valid ISO639-1 codes. Spaces are trimmed, and the case will be normalised so does not matter, but invalid codes are errors
+- *default:* `[
   "EN"
-]
-```
+]`
 - *settable?:* no
 
 An array of supported languages which can be used for internationalised text. Should not be empty, and all codes should be upper case. Any other language code used will be replaced with the first in this list. A phrases for the first code will also used as a fallback if an individual phrase is missing.
