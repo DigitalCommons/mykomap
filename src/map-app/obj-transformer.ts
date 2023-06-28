@@ -509,8 +509,9 @@ export class StrictDateTransform extends CommonValTransform<Date> {
 // A DataVal -> Array transform
 export class StrictMultiTransform<O> extends CommonValTransform<O[]> {
   readonly of: ValTransform<O>;
-  readonly splitRx: RegExp;
   readonly unescapeRx: RegExp;
+  readonly delim: string;
+  readonly escape: string;
   readonly omit: O[];
 
   constructor(params: {
@@ -522,10 +523,9 @@ export class StrictMultiTransform<O> extends CommonValTransform<O[]> {
   }) {
     super(params.default ?? []);
     this.of = params.of;
-    const escape = params.escape ?? '\\';
-    const delim = params.delim ?? ';';
-    this.splitRx = new RegExp(`(?<!${escape.replace('\\', '\\\\')})${delim.replace('\\', '\\\\')}`);
-    this.unescapeRx = new RegExp(`${escape.replace('\\', '\\\\')}(.)`, 'g');
+    this.escape = params.escape ?? '\\';
+    this.delim = params.delim ?? ';';
+    this.unescapeRx = new RegExp(`${this.escape.replace('\\', '\\\\')}(.)`, 'g');
     this.omit =
       params.omit == null? [] :
       params.omit instanceof Array ? params.omit :
@@ -538,8 +538,7 @@ export class StrictMultiTransform<O> extends CommonValTransform<O[]> {
     }
 
     // Value is a string. Split it and unescape the pieces
-    const properties = input
-      .split(this.splitRx)
+    const properties = this.splitField(input)
       .map(f => f.replace(this.unescapeRx, (_, m1) => m1));
 
     const result = properties
@@ -547,6 +546,37 @@ export class StrictMultiTransform<O> extends CommonValTransform<O[]> {
       .filter(f => !this.omit.includes(f));
 
     return result;
+  }
+
+
+  // Split a field into subfields, using the delimiter and the escape
+  // configured.  Note, if the delimiter and the escape character are
+  // the same, the delimiter function wins, and nothing will be
+  // escaped.
+  private splitField(field: string): string[] {
+    let buffer = '';
+    const subfields: string[] = [];
+    let escaped = false; // if true, we are skipping an escaped delim
+    for(var ch of field) { // Loop through Unicode glyphs (not code points or surrogate pairs)
+      if (escaped) {
+        buffer += ch;
+        escaped = false;
+        continue;
+      }
+      switch(ch) {
+        case this.delim:
+          subfields.push(buffer);
+          buffer = '';
+          break;
+        case this.escape:
+          escaped = true;
+          break;
+        default:
+          buffer += ch;
+      }
+    }
+    subfields.push(buffer);
+    return subfields;
   }
 }
 
