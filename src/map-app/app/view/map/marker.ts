@@ -66,8 +66,8 @@ export class MapMarkerView extends BaseView {
       const icon = leaflet.AwesomeMarkers.icon({
         prefix: "fa",
         markerColor: primaryActivity !== null
-                   ? primaryActivity.toLowerCase().replace(/\W/g, '_')
-                   : "ALL",
+          ? primaryActivity.toLowerCase().replace(/^.*:/, '').replace(/\W/g, '_')
+          : "ALL",
         iconColor: "white",
         icon: "certificate",
         className: "awesome-marker sea-marker",
@@ -141,7 +141,7 @@ export class MapMarkerView extends BaseView {
           prefix: "fa",
           markerColor: primaryActivity !== null
                      ? primaryActivity.toLowerCase()
-                     : "AM00", // FIXME this should not be hardwired!
+                     : "am00", // FIXME this should not be hardwired!
           iconColor: "white",
           icon: "certificate",
           className: "awesome-marker sea-marker",
