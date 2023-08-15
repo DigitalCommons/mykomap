@@ -125,6 +125,7 @@ export interface ReadableConfig {
   getMaxZoomOnGroup(): number;
   getMaxZoomOnOne(): number;
   getMaxZoomOnSearch(): number;
+  getMinZoom(): number;
   getNoLodCache(): boolean;
   getSearchedFields(): string[];
   getServicesPath(): string;
@@ -156,6 +157,7 @@ export interface WritableConfig {
   setMaxZoomOnGroup(val: number): void;
   setMaxZoomOnOne(val: number): void;
   setMaxZoomOnSearch(val: number): void;
+  setMinZoom(val: number): void;
   setNoLodCache(val: boolean): void;
   setSearchedFields(val: string[]): void;
   setShowAboutPanel(val: boolean): void;
@@ -221,6 +223,7 @@ export class ConfigData {
   maxZoomOnGroup: number = 18;
   maxZoomOnOne: number = 18;
   maxZoomOnSearch: number = 18;
+  minZoom: number = 2;
   noLodCache: boolean = true;
   mykoMapVersion: string = '0';
   searchedFields: string[] = ['name'];
@@ -657,6 +660,13 @@ export class Config implements ReadableConfig, WritableConfig {
         setter: 'setMaxZoomOnSearch',
         type: types.int,
       },
+      minZoom: {
+        id: 'minZoom',
+        descr: 'The minimum zoom-in that the map can be zoomed too. AKA the maximum zoom-out. 0 does no zooming, 18 is the maximum. Defaults to 2, for backward compatibility with then this was hardwired.',
+        getter: 'getMinZoom',
+        setter: 'setMinZoom',
+        type: types.int,
+      },
       noLodCache: {
         id: 'noLodCache',
         descr: `Responses to SPARQL queries will normally be cached in /services/locCache.txt `+
@@ -976,6 +986,9 @@ ${def.descr}
   getMaxZoomOnSearch(): number {
     return this.data.maxZoomOnSearch;
   }
+  getMinZoom(): number {
+    return this.data.minZoom;
+  }
   getNoLodCache(): boolean {
     return this.data.noLodCache;
   }
@@ -1060,6 +1073,9 @@ ${def.descr}
   }
   setMaxZoomOnSearch(val: number): void {
     this.data.maxZoomOnSearch = val;
+  }
+  setMinZoom(val: number): void {
+    this.data.minZoom = val;
   }
   setNoLodCache(val: boolean): void {
     this.data.noLodCache = val;
