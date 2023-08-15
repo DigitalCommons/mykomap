@@ -295,6 +295,18 @@ The maximum zoom in that can happen when searching any particular group, if 0 do
 
 
 
+### `minZoom`
+
+- *type:* `{number}` 
+- *in string context:* parsed as-is
+- *default:* `2`
+- *settable?:* yes
+
+The minimum zoom-in that the map can be zoomed too. AKA the maximum zoom-out. 0 does no zooming, 18 is the maximum. Defaults to 2, for backward compatibility with then this was hardwired.
+
+
+
+
 ### `mykoMapVersion`
 
 - *type:* `{string}` 
