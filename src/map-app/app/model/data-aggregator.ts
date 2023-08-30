@@ -191,7 +191,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       // values using multiple records, and we used to consume
       // multiple records like this.
       const paramsCopy = { ...params };
-      const paramName = def.of.from ?? id;
+      const paramName = def.from ?? id;
 
       // Enusre we are dealing with an array. Promote non-arrays into an array
       //

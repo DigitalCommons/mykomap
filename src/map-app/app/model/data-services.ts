@@ -74,6 +74,30 @@ export interface CommonPropDef {
   from?: string;
 }
 
+// InnerDefs define value constraints, but not PropDef-related fields.
+// This is so that a MultiPropDef can wrap the value constrains without
+// duplicating the PropDef fields redundantly.
+export type InnerDef = InnerValueDef | InnerVocabDef | InnerCustomDef | InnerMultiDef ;
+export type InnerValueDef = {
+  type: 'value';
+  as?: 'string'|'boolean'|'number';
+  strict?: boolean;
+}
+export type InnerVocabDef = {
+  type: 'vocab';
+  uri: string;
+}
+export type InnerCustomDef = {
+  type: 'custom'
+  builder: (id: string, def: CustomPropDef, params: InitiativeObj) => unknown;
+}
+export type InnerMultiDef = {
+  type: 'multi';
+  of: InnerDef;
+}
+
+// PropDefs define properties of Initiatives and how they map from InitiativeObj
+export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;
 export type ValuePropDef = CommonPropDef & {
   type: 'value';
   as?: 'string'|'boolean'|'number';
@@ -89,10 +113,9 @@ export type CustomPropDef = CommonPropDef & {
 }
 export type MultiPropDef = CommonPropDef & {
   type: 'multi';
-  of: PropDef;
+  of: InnerDef;
 }
 
-export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;
 export type PropDefs = Dictionary<PropDef>;
 
 // A convenience variation of PropDefs used in ConfigData
