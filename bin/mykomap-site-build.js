@@ -316,6 +316,7 @@ const build = async () => {
     // Gets the map metadata in a form we can access from the build
     fs.writeFileSync(metaEntry, `
 const fs = require('fs');
+fs.mkdirSync('${configPath}', {recursive: true});
 const outfile = '${configJson}';
 const mapMeta = require('${mapConfigModule}').config;
 fs.writeFileSync(outfile, JSON.stringify(mapMeta));
