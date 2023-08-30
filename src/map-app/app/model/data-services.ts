@@ -67,31 +67,32 @@ export type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
 
 export type PropSourceId = string;
 
+// Shared properties of all PropDefs.
+export interface CommonPropDef {
+  // Which InitiativeObj property to initialise this Initiative property from.
+  // If not set, defaults to the one with the same name.
+  from?: string;
+}
 
-export interface ValuePropDef {
+export type ValuePropDef = CommonPropDef & {
   type: 'value';
   as?: 'string'|'boolean'|'number';
   strict?: boolean;
-  from?: string;
 }
-export interface VocabPropDef {
+export type VocabPropDef = CommonPropDef & {
   type: 'vocab';
   uri: string;
-  from?: string;
 }
-export interface CustomPropDef {
+export type CustomPropDef = CommonPropDef & {
   type: 'custom'
-  from?: string;
   builder: (id: string, def: CustomPropDef, params: InitiativeObj) => unknown;
 }
-export interface MultiPropDef {
+export type MultiPropDef = CommonPropDef & {
   type: 'multi';
   of: PropDef;
-  from?: string;
 }
 
 export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;
-
 export type PropDefs = Dictionary<PropDef>;
 
 // A convenience variation of PropDefs used in ConfigData
