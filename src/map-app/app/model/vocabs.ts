@@ -86,11 +86,6 @@ export interface VocabServices {
   // vocab IDs to vocab terms - in the target langugage, where
   // available, or the fallBackLanguage if not.
   getVerboseValuesForFields(language: string): Dictionary<Dictionary>;
-
-  // Gets a localised map of vocab titles to the relevant vocab
-  // prefixes (in the given language). (May be empty or only partially
-  // populated!)
-  getVocabTitlesAndVocabIDs(language: string): Dictionary;
 }
 
 // Supplies query functions for a VocabIndex
@@ -275,22 +270,6 @@ export class VocabServiceImpl implements VocabServices {
     throw new Error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
   }
   
-  getVocabTitlesAndVocabIDs(language: string): Dictionary {
-    const vocabTitlesAndVocabIDs: Dictionary = {}
-
-    for (const vocabUri in this.vocabs.vocabs) {
-      const vocab = this.vocabs.vocabs[vocabUri];
-      const localVocab = vocab[language] ?? vocab[this.fallBackLanguage];
-      if (!localVocab)
-        throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
-          `and no localisations for the fallback ${this.fallBackLanguage} either!`);
-
-      vocabTitlesAndVocabIDs[localVocab.title] = vocabUri;
-    }
-
-    return vocabTitlesAndVocabIDs;
-  }
-
   // Expands a URI using the prefixes/abbreviations defined in vocabs
   //
   // Keeps trying until all expansions applied.

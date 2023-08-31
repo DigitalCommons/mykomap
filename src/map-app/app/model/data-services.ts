@@ -248,8 +248,6 @@ export interface DataServices {
 
   getVocabs(): VocabServices;
   
-  getVocabTitlesAndVocabIDs(): Dictionary;
-  
   //// Wraps both dataAggregator and vocabs
   
   getTerms(): Dictionary<Dictionary>;
@@ -653,10 +651,6 @@ export class DataServicesImpl implements DataServices {
   
   getVerboseValuesForFields(): Dictionary<Dictionary> {
     return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
-  }
-  
-  getVocabTitlesAndVocabIDs(): Dictionary {
-    return this?.vocabs?.getVocabTitlesAndVocabIDs(this.getLanguage()) ?? {};
   }
   
   latLngBounds(initiatives?: Initiative[]): Box2d {
