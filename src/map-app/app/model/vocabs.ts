@@ -85,6 +85,8 @@ export interface VocabServices {
   getLocalisedVocabs(language: string): LocalisedVocab;
 
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
+  //
+  // Throws an exception if there is no such term.
   getTerm(termUri: string, language: string): string;
   
   // Construct the object of terms for advanced search
@@ -293,7 +295,9 @@ export class VocabServiceImpl implements VocabServices {
   }
   
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
-  getTerm(termUri: string, language: string) {
+  //
+  // Throws an exception if there is no such term.  
+  getTerm(termUri: string, language: string): string {
     termUri = this.abbrevUri(termUri);
     
     const [prefix, _] = termUri.split(':', 2);
@@ -309,8 +313,7 @@ export class VocabServiceImpl implements VocabServices {
       return term;
 
     // Even the fallback failed! 
-    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
-    return '?';
+    throw new Error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
   }
   
   // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
