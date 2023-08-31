@@ -72,6 +72,18 @@ export interface CommonPropDef {
   // Which InitiativeObj property to initialise this Initiative property from.
   // If not set, defaults to the one with the same name.
   from?: string;
+
+  // What to call this property in the UI.
+  //
+  // Should be an existing (possibly abbreviated) vocab URI - the
+  // corresponding localised term will be used as the title.
+  //
+  // If undefined, the title defaults to the property's localised
+  // vocab title (if the property *is* a vocab field). Otherwise, the
+  // property ID is used verbatim, as a fallback. Note that a vocab
+  // title is *not* a good choice if more than one field shares the
+  // same vocab!
+  titleUri?: string;
 }
 
 // InnerDefs define value constraints, but not PropDef-related fields.
