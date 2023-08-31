@@ -236,7 +236,7 @@ export interface DataServices {
   
   getVerboseValuesForFields(): Dictionary<Dictionary>;
 
-  getVocabs(): VocabServices|undefined;
+  getVocabs(): VocabServices;
   
   getVocabTerm(vocabUri: string, termUri: string): string | undefined;
 
@@ -614,7 +614,9 @@ export class DataServicesImpl implements DataServices {
     return results;
   }
 
-  getVocabs(): VocabServices|undefined {
+  getVocabs(): VocabServices {
+    if (!this.vocabs)
+      throw new Error(`DataServices.getVocabs() used but vocabs not yet set!`);
     return this.vocabs;
   }
 
