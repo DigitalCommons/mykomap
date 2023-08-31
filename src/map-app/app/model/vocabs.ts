@@ -301,7 +301,7 @@ export class VocabServiceImpl implements VocabServices {
     language ??= this.fallBackLanguage;
     termUri = this.abbrevUri(termUri);
     
-    const [prefix, id] = termUri.split(':', 2);
+    const [prefix, _] = termUri.split(':', 2);
     const vocab = this.vocabs.vocabs[prefix+':']?.[language]; // FIXME that colon is a bit ugly.
     
     let term = vocab?.terms?.[termUri];
