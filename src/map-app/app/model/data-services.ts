@@ -369,6 +369,20 @@ export async function loadDatasets<D, T extends DataConsumer<D>>(dataLoaders: Da
   return consumer;
 }
 
+/// Returns a vocab URI, given a PropDef which has one, or undefined
+export function propDefToVocabUri(propDef?: PropDef): string|undefined {
+  if (propDef === undefined) return undefined;
+  if (propDef.type === 'vocab') return propDef.uri;
+  if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
+  return undefined;
+}
+
+/// Predicate for testing if a PropDef has a vocab URI
+export function isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
+  return !!propDefToVocabUri(propDef);
+}
+
+
 
 // Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
@@ -574,19 +588,6 @@ export class DataServicesImpl implements DataServices {
     return this.propertySchema[propName];
   }
 
-  /// Returns a vocab URI, given a PropDef which has one, or undefined
-  static propDefToVocabUri(propDef?: PropDef): string|undefined {
-    if (propDef === undefined) return undefined;
-    if (propDef.type === 'vocab') return propDef.uri;
-    if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
-    return undefined;
-  }
-
-  /// Predicate for testing if a PropDef has a vocab URI
-  static isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
-    return !!this.propDefToVocabUri(propDef);
-  }
-  
   /// Returns a VocabPropDefs index of propdefs using vocabs, keyed by their names.
   ///
   /// The values include both the propDef, and a guaranteed URI field
