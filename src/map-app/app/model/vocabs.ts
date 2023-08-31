@@ -68,10 +68,6 @@ export interface VocabServices {
   // Returns the Vocab found.
   getVocabForUri(uri: string, language: string): Vocab;
   
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  // Returns '?' if there is no value found
-  getVocabTerm(vocabUri: string, termUri: string, language: string): string;
-
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   //
   // Throws an exception if there is no such term.
@@ -277,28 +273,6 @@ export class VocabServiceImpl implements VocabServices {
 
     // Even the fallback failed! 
     throw new Error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
-  }
-  
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  // Returns '?' if there is no value found
-  getVocabTerm(vocabUri: string, termUri: string, language: string): string {
-    termUri = this.abbrevUri(termUri);
-    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    const prefix = this.abbrevUri(vocabUri);
-    const vocab = this.vocabs.vocabs[prefix][language];
-
-    let term = vocab?.terms?.[termUri];
-    if (term !== undefined)
-      return term;
-
-    // Fall back if there are no terms.
-    term = this.vocabs.vocabs[vocabUri]?.[this.fallBackLanguage]?.terms?.[termUri];
-    if (term !== undefined)
-      return term;
-
-    // Even the fallback failed! 
-    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
-    return '?';
   }
   
   getVocabTitlesAndVocabIDs(language: string): Dictionary {

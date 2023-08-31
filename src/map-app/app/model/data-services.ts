@@ -248,8 +248,6 @@ export interface DataServices {
 
   getVocabs(): VocabServices;
   
-  getVocabTerm(vocabUri: string, termUri: string): string | undefined;
-
   getVocabTitlesAndVocabIDs(): Dictionary;
   
   //// Wraps both dataAggregator and vocabs
@@ -657,10 +655,6 @@ export class DataServicesImpl implements DataServices {
     return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
   }
   
-  getVocabTerm(vocabUri: string, termUri: string): string | undefined {
-    return this?.vocabs?.getVocabTerm(vocabUri, termUri, this.getLanguage());
-  }
-
   getVocabTitlesAndVocabIDs(): Dictionary {
     return this?.vocabs?.getVocabTitlesAndVocabIDs(this.getLanguage()) ?? {};
   }

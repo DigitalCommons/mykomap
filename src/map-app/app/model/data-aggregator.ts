@@ -103,7 +103,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
         return value === undefined? undefined : _toString(value);
         
       case 'vocab':
-        return this?.vocabs?.getVocabTerm(propDef.uri, _toString(value), this.config.getLanguage());
+        return this?.vocabs?.getTerm(_toString(value), this.config.getLanguage());
 
       case 'multi':
         const innerPropDef = propDef.of;
@@ -256,23 +256,6 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     // Report the completion
     this.onItemComplete?.(initiative);
   }
-  
-  // Get a searchable value which can be added to an initiative's searchstr field
-  private mkSearchableValuex(value: unknown, propDef: PropDef, language: string) {
-    if (value === undefined || value === null)
-      return '';
-
-    const stringValue = String(value);
-    if (propDef.type !== 'vocab')
-      return stringValue;
-
-    const term = this.vocabs.getVocabTerm(propDef.uri, stringValue, language);
-    if (term === '?')
-      return ''; // No term found
-
-    return term;
-  }
-  
   
   // Returns an array of sse objects whose dataset is the same as dbSource.
   // If boolean all is set to true returns all instead.
