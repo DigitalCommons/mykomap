@@ -28,11 +28,9 @@ import {
 } from './json-vocab-loader';
 
 import {
-  Vocab,
   VocabIndex,
   VocabServices,
   VocabAggregator,
-  LocalisedVocab,
 } from './vocabs';
 
 import {
@@ -49,7 +47,7 @@ import {
 } from './initiative';
 
 import { CsvDataLoader } from './csv-data-loader';
-import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
+import { isIso6391Code, Iso6391Code, PhraseBook, PhraseBooks } from '../../localisations';
 
 // These used to be require()s of the relevant PHP files, but that was
 // intermittently causing webpack/typescript building issues. So it
