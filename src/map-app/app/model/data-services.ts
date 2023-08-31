@@ -244,8 +244,6 @@ export interface DataServices {
   getAggregatedData(): AggregatedData;
   
   //// vocab proxies
-  getLocalisedVocabs(): LocalisedVocab;
-  
   getVerboseValuesForFields(): Dictionary<Dictionary>;
 
   getVocabs(): VocabServices;
@@ -254,8 +252,6 @@ export interface DataServices {
 
   getVocabTitlesAndVocabIDs(): Dictionary;
   
-  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined;
-
   //// Wraps both dataAggregator and vocabs
   
   getTerms(): Dictionary<Dictionary>;
@@ -590,12 +586,6 @@ export class DataServicesImpl implements DataServices {
     return this.config.getLanguage();
   }
   
-  getLocalisedVocabs(): LocalisedVocab {
-    if (this.vocabs)
-      return this.vocabs.getLocalisedVocabs(this.getLanguage());
-    return {};
-  }
-
   getPropertySchema(propName: string): PropDef | undefined {
     return this.propertySchema[propName];
   }
@@ -675,10 +665,6 @@ export class DataServicesImpl implements DataServices {
     return this?.vocabs?.getVocabTitlesAndVocabIDs(this.getLanguage()) ?? {};
   }
   
-  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined {
-    return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
-  }
-
   latLngBounds(initiatives?: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east

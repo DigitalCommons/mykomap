@@ -72,18 +72,6 @@ export interface VocabServices {
   // Returns '?' if there is no value found
   getVocabTerm(vocabUri: string, termUri: string, language: string): string;
 
-  // Gets the vocab for a property, given the property schema
-  //
-  // Returns a vocab index (for the currently set language).
-  //
-  // Throws an exception if there is some reason this fails. The
-  // exception will have a short description indicating the problem.
-  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab;
-
-  // Gets a LocalisedVocab for the given language (which may be empty
-  // or only partially populated!)
-  getLocalisedVocabs(language: string): LocalisedVocab;
-
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   //
   // Throws an exception if there is no such term.
@@ -253,31 +241,6 @@ export class VocabServiceImpl implements VocabServices {
     return usedTerms;
   }
 
-  // Gets the vocab for a property, given the property schema
-  //
-  // Returns a vocab index (for the currently set language).
-  //
-  // Throws an exception if there is some reason this fails. The
-  // exception will have a short description indicating the problem.
-  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab {
-
-    if (propDef.type !== 'vocab')
-      throw new Error(`property ${id} is not a vocab property`);
-
-    try {
-      return this.getVocabForUri(propDef.uri, language);
-    }
-    catch(e) {
-      if (e instanceof Error) {
-        e.message += `, for property ${id}`;
-        throw(e);
-      }
-      else {
-        throw new Error(`${e}. for property ${id}`);
-      }
-    }
-  }
-
   getVocabForUri(uri: string, language: string): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
@@ -352,21 +315,6 @@ export class VocabServiceImpl implements VocabServices {
     }
 
     return vocabTitlesAndVocabIDs;
-  }
-
-  /// Removes all language definitions not equal to the parameter.
-  ///
-  /// Returns a dictionary of Vocabs
-  getLocalisedVocabs(language: string): Dictionary<Vocab> {
-    let verboseValues: Dictionary<Vocab> = {};
-
-    for (const id in this.vocabs.vocabs) {
-      const vocab = this.vocabs.vocabs[id];
-      if (vocab)
-        verboseValues[id] = vocab[language] ?? vocab[this.fallBackLanguage];
-    }
-
-    return verboseValues;
   }
 
   // Expands a URI using the prefixes/abbreviations defined in vocabs
