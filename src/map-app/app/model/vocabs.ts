@@ -302,14 +302,14 @@ export class VocabServiceImpl implements VocabServices {
     termUri = this.abbrevUri(termUri);
     
     const [prefix, id] = termUri.split(':', 2);
-    const vocab = this.vocabs.vocabs[prefix]?.[language];
+    const vocab = this.vocabs.vocabs[prefix+':']?.[language]; // FIXME that colon is a bit ugly.
     
     let term = vocab?.terms?.[termUri];
     if (term !== undefined)
       return term;
 
     // Fall back to the default language if none found in the target language
-    term = this.vocabs.vocabs[prefix]?.[this.fallBackLanguage]?.terms?.[termUri];
+    term = this.vocabs.vocabs[prefix+':']?.[this.fallBackLanguage]?.terms?.[termUri];
     if (term !== undefined)
       return term;
 
