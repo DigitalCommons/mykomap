@@ -248,11 +248,6 @@ export interface DataServices {
 
   getVocabs(): VocabServices;
   
-  //// Wraps both dataAggregator and vocabs
-  
-  getTerms(): Dictionary<Dictionary>;
-
-
   //// non-proxies
 
   // Get the current dataset, or true
@@ -640,15 +635,6 @@ export class DataServicesImpl implements DataServices {
     return this.config.getSidebarButtonColour();
   }
 
-  getTerms(): Dictionary<Dictionary> {
-    if (!this.vocabs)
-      return {};
-
-    return this.vocabs.getTerms(this.getLanguage(),
-                                this.aggregatedData.initiativesByUid,
-                                this.propertySchema); 
-  }
-  
   getVerboseValuesForFields(): Dictionary<Dictionary> {
     return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
   }

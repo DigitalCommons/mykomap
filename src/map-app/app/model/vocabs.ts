@@ -73,15 +73,6 @@ export interface VocabServices {
   // Throws an exception if there is no such term.
   getTerm(termUri: string, language: string): string;
   
-  // Construct the object of terms for advanced search
-  //
-  // Returns a Dictionary of localised vocab titles, to Dictionaries
-  // of vocab ID to term label (in the given language, if available,
-  // else the fallBackLanguage)
-  getTerms(language: string,
-           initiativesByUid: Dictionary<Initiative>,
-           propertySchema: PropDefs): Dictionary<Dictionary>;
-
   // Returns a localised Dictionary of vocab titles to Dictionaries of
   // vocab IDs to vocab terms - in the target langugage, where
   // available, or the fallBackLanguage if not.
@@ -149,89 +140,6 @@ export class VocabServiceImpl implements VocabServices {
     return Object.fromEntries(entries);
   }
   
-  /// Construct the object of terms for advanced search
-  ///
-  /// For each initiative in initiativesByUid, this iterates over the
-  /// properties in propertySchema, finds those properties which are
-  /// vocabs, and constructs an index of:
-  ///
-  /// - vocab titles (in the specified language, if present in the
-  ///   vocab), to
-  /// - vocab term IDs seen in the initiatives, to
-  /// - the corresponding vocab term names (again, in the specified
-  ///   language, if present in the vocab)
-  ///
-  /// (See test-vocab-services.ts for test case examples of this)
-  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs): Dictionary<Dictionary> {
-
-    let usedTerms: Dictionary<Dictionary> = {};
-    const vocabProps = DataServicesImpl.vocabPropDefs(propertySchema);
-    
-    for (const initiativeUid in initiativesByUid) {
-      const initiative = initiativesByUid[initiativeUid];
-      if (!initiative)
-        continue;
-
-      for(const propName in propertySchema) {
-        const vocabPropDef = vocabProps[propName];
-        if (!vocabPropDef)
-          continue;
-        
-        let vocabID = vocabPropDef.uri;
-
-        // If a MultiPropDef, initiative[propName] should be an array already, but could be null/undefined. Convert to an array.
-        // If a VocabPropDef, it should *not* be an array, but equally could be null/undefined. Convert to an array of zero/one value.
-        let uris: unknown[] | undefined;
-        const val = initiative[propName];
-        if (vocabPropDef.type === 'multi') {
-          if (val instanceof Array)
-            uris = val;
-          else if (val == null) // or undef
-            uris = [];
-          else {
-            console.warn(`initiative has non-array value in MultiPropDef property ${propName} -  ignoring property`, initiative);
-            continue;
-          }
-        }
-        else if (vocabPropDef.type === 'vocab') {
-          if (typeof val === 'string')
-            uris = [val]
-          else if (val == null) // or undef
-            uris = [];
-          else { 
-            console.warn(`initiative has non-string value in VocabPropDef property ${propName} -  ignoring property`, initiative);
-            continue;
-          }
-        }
-        else {
-          // Shouldn't ever get here, but it keeps the compiler happy
-          console.warn(`initiative has unknown VocabPropDef type for property ${propName} -  ignoring property`, initiative);
-          continue;
-        }
-
-        const vocab = this.vocabs.vocabs[vocabID];
-        const localisedVocab = vocab[language] ?? vocab[this.fallBackLanguage];
-
-        if (!localisedVocab)
-          throw new Error(`No localisations of vocab ${vocabID}'s title for `+
-            `language ${language} or the fallback language ${this.fallBackLanguage}`);
-
-        const vocabTitle = localisedVocab.title;
-        
-        // Currently still keeping the output data structure the same, so use uri not term
-        const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-        uris.forEach(uri => {
-          if (uri == null) return;
-          const key = this.abbrevUri(String(uri));
-          if (key in temp) return;
-          temp[key] = localisedVocab.terms[key];
-        });
-      }
-    }
-
-    return usedTerms;
-  }
-
   getVocabForUri(uri: string, language: string): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
