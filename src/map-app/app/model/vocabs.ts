@@ -64,7 +64,7 @@ export interface VocabServices {
   
   // Gets a vocab for the given URI / language
   // Throws an exception if the URI can't be found.
-  // Uses the value of getFallBackLanguage() if the language can't be found.
+  //
   // Returns the Vocab found.
   getVocabForUri(uri: string, language: string): Vocab;
   
@@ -85,9 +85,7 @@ export interface VocabServices {
   getLocalisedVocabs(language: string): LocalisedVocab;
 
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
-  // Falls back to the default fall-back language if no language given, or
-  // the term is not localised in that language
-  getTerm(termUri: string, language?: string): string;
+  getTerm(termUri: string, language: string): string;
   
   // Construct the object of terms for advanced search
   //
@@ -278,7 +276,7 @@ export class VocabServiceImpl implements VocabServices {
     }
   }
 
-  getVocabForUri(uri: string, language: string = this.fallBackLanguage): Vocab {
+  getVocabForUri(uri: string, language: string): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
     const vocab = this.vocabs.vocabs[this.abbrevUri(uri)];
@@ -295,10 +293,7 @@ export class VocabServiceImpl implements VocabServices {
   }
   
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
-  // Falls back to the default fall-back language if no language given, or
-  // the term is not localised in that language
-  getTerm(termUri: string, language?: string) {
-    language ??= this.fallBackLanguage;
+  getTerm(termUri: string, language: string) {
     termUri = this.abbrevUri(termUri);
     
     const [prefix, _] = termUri.split(':', 2);
