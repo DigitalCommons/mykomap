@@ -136,7 +136,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
       if (propDef.titleUri === undefined) {
         // Use the fields' vocab's title
         try {
-          const vocab = vocabs.getVocabForUri(uri, lang);
+          const vocab = vocabs.getVocab(uri, lang);
           propTitle = vocab.title;
         }
         catch(e) {
@@ -175,7 +175,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
         .attr("class", "advanced-option")
 
 
-      const vocab = vocabs.getVocabForUri(uri, lang);
+      const vocab = vocabs.getVocab(uri, lang);
       const entryArray = Object.entries(vocab.terms);
       // Sort entries alphabetically by value (the human-readable labels)
       entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));

@@ -63,9 +63,9 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       this.registeredValues,
       config.getFilterableFields(),
       new PropDefIndex(this.propDefs,
-                       (uri) => vocabs.getVocabForUri(uri, config.getLanguage()),
+                       (uri) => vocabs.getVocab(uri, config.getLanguage()),
                        labels),
-      (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
+      (uri: string) => this.vocabs.getVocab(uri, config.getLanguage())
     );
     const searchIndexer = this.mkSearchIndexer(config.getSearchedFields());
     this.mkInitiative = Initiative.mkFactory(this.propDefs,

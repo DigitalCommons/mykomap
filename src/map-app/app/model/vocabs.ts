@@ -66,7 +66,7 @@ export interface VocabServices {
   // Throws an exception if the URI can't be found.
   //
   // Returns the Vocab found.
-  getVocabForUri(uri: string, language: string): Vocab;
+  getVocab(uri: string, language: string): Vocab;
   
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   //
@@ -140,7 +140,7 @@ export class VocabServiceImpl implements VocabServices {
     return Object.fromEntries(entries);
   }
   
-  getVocabForUri(uri: string, language: string): Vocab {
+  getVocab(uri: string, language: string): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
     const vocab = this.vocabs.vocabs[this.abbrevUri(uri)];
