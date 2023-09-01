@@ -152,7 +152,7 @@ export class VocabServiceImpl implements VocabServices {
     const vocabLang = vocab[language]? language : this.fallBackLanguage;
     const localVocab = vocab[vocabLang];
     if (!localVocab)
-      throw new Error(`no title in lang ${language} for uri ${uri}'`);
+      throw new Error(`no localisation for language code ${language} in vocab ${uri}'`);
 
     return localVocab;
   }
