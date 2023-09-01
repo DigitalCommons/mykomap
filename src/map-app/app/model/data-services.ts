@@ -238,9 +238,6 @@ export interface DataServices {
   // the data isn't ready yet.
   getAggregatedData(): AggregatedData;
   
-  //// vocab proxies
-  getVerboseValuesForFields(): Dictionary<Dictionary>;
-
   getVocabs(): VocabServices;
   
   //// non-proxies
@@ -570,10 +567,6 @@ export class DataServicesImpl implements DataServices {
     return this.config.getSidebarButtonColour();
   }
 
-  getVerboseValuesForFields(): Dictionary<Dictionary> {
-    return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
-  }
-  
   latLngBounds(initiatives?: Initiative[]): Box2d {
     // @returns an a pair of lat-long pairs that define the bounding box of all the initiatives,
     // The first element is south-west, the second north east

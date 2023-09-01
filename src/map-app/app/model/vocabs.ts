@@ -73,11 +73,6 @@ export interface VocabServices {
   // If there is no such term, and defaultResult is set, that is returned.
   // Otherwise an throws exception is thrown.
   getTerm(termUri: string, language: string, defaultResult?: string): string;
-  
-  // Returns a localised Dictionary of vocab titles to Dictionaries of
-  // vocab IDs to vocab terms - in the target langugage, where
-  // available, or the fallBackLanguage if not.
-  getVerboseValuesForFields(language: string): Dictionary<Dictionary>;
 }
 
 // Supplies query functions for a VocabIndex
@@ -115,30 +110,6 @@ export class VocabServiceImpl implements VocabServices {
 
   getFallBackLanguage(): string {
     return this.fallBackLanguage;
-  }
-  
-  // Returns a localised Dictionary of vocab titles to Dictionaries of
-  // vocab IDs to vocab terms - in the target langugage, where
-  // available, or the fallBackLanguage if not.
-  getVerboseValuesForFields(language: string): Dictionary<Dictionary> {
-
-    const entries = Object
-      .entries(this.vocabs.vocabs)
-      .map(([vocabUri, vocab]) => {
-        let vocabLang = vocab[language];
-        if (!vocabLang && language !== this.fallBackLanguage) {
-          console.warn(`No localisations of vocab ${vocabUri} for language ${language}, ` +
-            `falling back to ${this.fallBackLanguage}`);
-          vocabLang = vocab[this.fallBackLanguage];
-        }
-        if (!vocabLang)
-          throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
-            `and no localisations for the fallback ${this.fallBackLanguage} either!`);
-
-        return [vocabLang.title, vocabLang.terms];
-      });
-
-    return Object.fromEntries(entries);
   }
   
   getVocab(uri: string, language: string): Vocab {
