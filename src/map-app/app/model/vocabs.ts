@@ -70,8 +70,9 @@ export interface VocabServices {
   
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   //
-  // Throws an exception if there is no such term.
-  getTerm(termUri: string, language: string): string;
+  // If there is no such term, and defaultResult is set, that is returned.
+  // Otherwise an throws exception is thrown.
+  getTerm(termUri: string, language: string, defaultResult?: string): string;
   
   // Returns a localised Dictionary of vocab titles to Dictionaries of
   // vocab IDs to vocab terms - in the target langugage, where
@@ -159,7 +160,7 @@ export class VocabServiceImpl implements VocabServices {
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
   //
   // Throws an exception if there is no such term.  
-  getTerm(termUri: string, language: string): string {
+  getTerm(termUri: string, language: string, defaultResult?: string): string {
     termUri = this.abbrevUri(termUri);
     
     const [prefix, _] = termUri.split(':', 2);
@@ -174,7 +175,10 @@ export class VocabServiceImpl implements VocabServices {
     if (term !== undefined)
       return term;
 
-    // Even the fallback failed! 
+    // Even the fallback failed!
+    if (defaultResult !== undefined)
+      return defaultResult;
+    
     throw new Error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
   }
   
