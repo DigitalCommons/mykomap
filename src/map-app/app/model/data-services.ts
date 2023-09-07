@@ -51,8 +51,11 @@ import {
 import { CsvDataLoader } from './csv-data-loader';
 import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
 
-const getDatasetPhp = require("../../../services/get_dataset.php");
-const getVocabsPhp  = require("../../../services/get_vocabs.php");
+// These used to be require()s of the relevant PHP files, but that was
+// intermittently causing webpack/typescript building issues. So it
+// seems simpler and more direct to just insert the string manually!
+const getDatasetPhp = './services/get_dataset.php';
+const getVocabsPhp  = './services/get_vocabs.php';
 
 
 export interface DataLoaderMeta<T> {
