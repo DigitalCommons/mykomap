@@ -143,7 +143,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
         .append("select")
         .attr("id", propName + "-dropdown")
         .attr("class", "w3-input w3-border-0 w3-round w3-mobile advanced-select")
-        .on("change", event => this.onChangeFilter(event));
+        .on("change", (event: Event) => this.onChangeFilter(event));
 
       dropDown
         .append("option")
