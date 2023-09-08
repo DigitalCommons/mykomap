@@ -6,6 +6,7 @@ import type { d3Selection, d3DivSelection } from '../d3-utils';
 import { Initiative } from '../../model/initiative';
 import { toString as _toString } from '../../../utils';
 import { SentryValues } from '../base';
+import { propDefToVocabUri } from '../../model/data-services';
 
 export class InitiativesSidebarView extends BaseSidebarView {
   readonly title: string;
@@ -118,19 +119,41 @@ export class InitiativesSidebarView extends BaseSidebarView {
   private createAdvancedSearch(container: d3DivSelection) {
     const mapui = this.presenter.parent.mapui;
     const propNames = mapui.config.getFilterableFields();
-    const vocabPropDefs = mapui.dataServices.getVocabPropDefs();
-    const vocabs = mapui.dataServices.getLocalisedVocabs();
+    const vocabs = mapui.dataServices.getVocabs();
+    const lang = mapui.config.getLanguage();
+    
     for(const propName of propNames) {
-      const propDef = vocabPropDefs[propName];
-      if (!propDef)
+      const propDef = mapui.config.fields()[propName];
+      if (!propDef) {
+        throw new Error(`filterableFields contains ${propName}, which is not a valid field`);
+      }
+      const uri = propDefToVocabUri(propDef);
+      if (!uri) {
         throw new Error(`filterableFields contains ${propName}, which is not a valid vocab field`);
-
-      const vocab = vocabs[propDef.uri];
-      if (!vocab)
-        throw new Error(`filterableFields contains ${propName}, `+
-          `whose vocab ${propDef.uri} is not defined in the current language`);
-
-      const propTitle = propName; // FIXME currently no localised way to get property titles!
+      }
+      
+      let propTitle = propName;
+      if (propDef.titleUri === undefined) {
+        // Use the fields' vocab's title
+        try {
+          const vocab = vocabs.getVocab(uri, lang);
+          propTitle = vocab.title;
+        }
+        catch(e) {
+          throw new Error(`filterableFields contains ${propName}, `+
+            `which has an unresolvable vocab URI: '${uri}'`);
+        }
+      }
+      else {
+        // Look up the titleUri
+        try {
+          propTitle = vocabs.getTerm(propDef.titleUri, lang);
+        }
+        catch(e) {
+          throw new Error(`filterableFields contains ${propName}, `+
+            `which has an unresolvable URI in 'titleUri': '${propDef.titleUri}'`);
+        }
+      }
 
       container
         .append("p")
@@ -152,6 +175,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
         .attr("class", "advanced-option")
 
 
+      const vocab = vocabs.getVocab(uri, lang);
       const entryArray = Object.entries(vocab.terms);
       // Sort entries alphabetically by value (the human-readable labels)
       entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));

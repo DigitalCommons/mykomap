@@ -7,6 +7,7 @@ import { DirectorySidebarPresenter } from "../../presenter/sidebar/directory";
 import { d3Selection } from "../d3-utils";
 import { BaseSidebarView } from "./base";
 import { toString as _toString } from "../../../utils";
+import { propDefToVocabUri } from "../../model/data-services";
 
 function uriToTag(uri: string) {
   return uri.toLowerCase().replace(/^.*[:\/]/, "");
@@ -93,38 +94,52 @@ export class DirectorySidebarView extends BaseSidebarView {
   }
 
   populateScrollableSelection(selection: d3Selection) {
+    const vocabs = this.presenter.parent.mapui.dataServices.getVocabs();
+    const props = this.presenter.parent.mapui.config.fields();
+    const lang = this.presenter.parent.mapui.config.getLanguage();
     let list = selection
       .append("ul")
       .classed("sea-directory-list", true)
       .classed("colours", this.presenter.parent.mapui.config.doesDirectoryHaveColours());
 
     // key may be null, for the special 'Every item' case
-    const addItem = (title: string, propName: string, key?: string)  => {
-      let valuesByName = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[title];
-      let label = key;
-      let tag = key;
+    const addItem = (title: string, propName: string, propValue?: string)  => {
+      let label = propValue; // default case
+      let classname = 'sea-field-all-entries'; // default case
 
-      if (key == null) {
-        tag = 'all-entries';
+      if (propValue === undefined) {
+        // The "all" case
+        // classname remains at default
         label = this.presenter.getAllEntriesLabel(propName);
       }
       else {
-        tag = uriToTag(key);
-        if (valuesByName)
-          label = valuesByName[key];
+        const propDef = props[propName];
+        const propUri = propDefToVocabUri(propDef);
+        
+        if (propUri) {
+          // This is a vocab field
+          label = vocabs.getTerm(propValue, lang);
+          classname = `sea-field-${uriToTag(propValue)}`;          
+        }
+        else {
+          // The value comes from the data directly
+          // label stays at default.
+          classname = `sea-field-${labelToTag(propValue)}`;
+        }
       }
 
       list
         .append("li")
         .text(label ?? '')
-        .classed("sea-field-" + tag, true)
+        .classed(classname, true)
         .classed("sea-directory-field", true)
-        .on("click", (event) => {
+        .on("click", (event: MouseEvent) => {
           this.presenter.parent.mapui.removeFilters();
-          this.listInitiativesForSelection(title, propName, key); // key may be null
+          this.listInitiativesForSelection(title, propName, propValue); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
-          d3.select(event.currentTarget).classed("sea-field-active", true);
+          if (event.currentTarget instanceof Element)
+            d3.select(event.currentTarget).classed("sea-field-active", true);
         });
     }
 
@@ -158,13 +173,13 @@ export class DirectorySidebarView extends BaseSidebarView {
   // selectionKey may be null, for the special 'Every item' case
   listInitiativesForSelection(directoryTitle: string, propName: string, propValue?: string) {
     const labels = this.presenter.parent.mapui.labels;
+    const vocabs = this.presenter.parent.mapui.dataServices.getVocabs();
+    const props = this.presenter.parent.mapui.config.fields();
+    const lang = this.presenter.parent.mapui.config.getLanguage();
     const initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
       directoryTitle,
       propValue
     );
-
-    const selectionLabel = propValue == null?
-      this.presenter.getAllEntriesLabel(propName) : propValue;
 
     //deselect all
     this.presenter.clearLatestSelection();
@@ -176,27 +191,41 @@ export class DirectorySidebarView extends BaseSidebarView {
     d3.select(".w3-btn").attr("title", labels.hideDirectory);
     const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
     const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
-    const values = this.presenter.parent.mapui.dataServices.getVerboseValuesForFields()[directoryTitle];
     
+    // Add the heading (we need to determine the label as this may be stored in the data or
+    // in the list of values in the presenter)
+    let label = propValue; // default
+    let classname = 'sea-field-all'; // default
+    
+    if (propValue === undefined) {
+      // The "all" case.
+      label = this.presenter.getAllEntriesLabel(propName);
+      // classname remains at default
+    }
+    else {
+      const propDef = props[propName];
+      const propUri = propDefToVocabUri(propDef);
+
+      if (propUri) {
+        // This is a vocab field.
+        label = vocabs.getTerm(propValue, lang);
+        classname = `sea-field-${uriToTag(propValue)}`;
+      } else {
+        // The value comes from the data directly
+        // label stays at default.
+        classname = `sea-field-${labelToTag(propValue)}`;
+      }
+    }
+
     if (!initiativeListSidebar.empty() && !sidebarButton.empty()) {
       initiativeListSidebar.insert(() => sidebarButton.node(),
                                    "#sea-initiatives-list-sidebar-content");
       const seaFieldClasses = initiativeListSidebar.attr("class")
         .split(/\s+/).filter(c => c.match(/^sea-field-/));
       initiativeListSidebar.classed(seaFieldClasses.join(' '), false);
-      initiativeListSidebar.classed(`sea-field-${labelToTag(selectionLabel)}`, true);
+      initiativeListSidebar.classed(classname, true);
     }
-    // Add the heading (we need to determine the title as this may be stored in the data or
-    // in the list of values in the presenter)
-    let title;
-    if (values) {
-      // If values exists and there's nothing in it for this selectionLabel then we're looking at All
-      title = values[selectionLabel] || selectionLabel;
-    } else {
-      // If values doesn't exist then the values are coming from the data directly
-      title = selectionLabel;
-    }
-
+    
     this.presenter.parent.mapui.changeFilters(propName, propValue);
 
     //setup sidebar buttons in initiative list
@@ -251,7 +280,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     sidebarBtnHolder
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", labels.close + title)
+      .attr("title", labels.close + label)
       .on("click", () => {
         this.presenter.removeFilters(propName);
       })
@@ -263,7 +292,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     selection
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button sidebar-normal-size-close-btn")
-      .attr("title", labels.close + title)
+      .attr("title", labels.close + label)
       .on("click", () => {
         this.presenter.removeFilters(propName);
       })
@@ -273,7 +302,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     selection
       .append("h2")
       .classed("sea-field", true)
-      .text(title)
+      .text(label)
       .on("click", () => {
         this.presenter.notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives);
       });

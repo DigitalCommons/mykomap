@@ -63,9 +63,9 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       this.registeredValues,
       config.getFilterableFields(),
       new PropDefIndex(this.propDefs,
-                       (uri) => vocabs.getVocabForUri(uri, config.getLanguage()),
+                       (uri) => vocabs.getVocab(uri, config.getLanguage()),
                        labels),
-      (uri: string) => this.vocabs.getVocabForUri(uri, config.getLanguage())
+      (uri: string) => this.vocabs.getVocab(uri, config.getLanguage())
     );
     const searchIndexer = this.mkSearchIndexer(config.getSearchedFields());
     this.mkInitiative = Initiative.mkFactory(this.propDefs,
@@ -103,7 +103,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
         return value === undefined? undefined : _toString(value);
         
       case 'vocab':
-        return this?.vocabs?.getVocabTerm(propDef.uri, _toString(value), this.config.getLanguage());
+        return this?.vocabs?.getTerm(_toString(value), this.config.getLanguage());
 
       case 'multi':
         const innerPropDef = propDef.of;
@@ -191,7 +191,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
       // values using multiple records, and we used to consume
       // multiple records like this.
       const paramsCopy = { ...params };
-      const paramName = def.of.from ?? id;
+      const paramName = def.from ?? id;
 
       // Enusre we are dealing with an array. Promote non-arrays into an array
       //
@@ -256,23 +256,6 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     // Report the completion
     this.onItemComplete?.(initiative);
   }
-  
-  // Get a searchable value which can be added to an initiative's searchstr field
-  private mkSearchableValuex(value: unknown, propDef: PropDef, language: string) {
-    if (value === undefined || value === null)
-      return '';
-
-    const stringValue = String(value);
-    if (propDef.type !== 'vocab')
-      return stringValue;
-
-    const term = this.vocabs.getVocabTerm(propDef.uri, stringValue, language);
-    if (term === '?')
-      return ''; // No term found
-
-    return term;
-  }
-  
   
   // Returns an array of sse objects whose dataset is the same as dbSource.
   // If boolean all is set to true returns all instead.

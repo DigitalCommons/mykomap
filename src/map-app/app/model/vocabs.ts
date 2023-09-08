@@ -1,6 +1,4 @@
 import type { Dictionary } from '../../common-types';
-import { PropDefs, PropDef, DataServicesImpl } from './data-services';
-import { Initiative } from './initiative';
 import type { DataConsumer } from './data-loader';
 
 export interface Vocab {
@@ -64,49 +62,15 @@ export interface VocabServices {
   
   // Gets a vocab for the given URI / language
   // Throws an exception if the URI can't be found.
-  // Uses the value of getFallBackLanguage() if the language can't be found.
+  //
   // Returns the Vocab found.
-  getVocabForUri(uri: string, language: string): Vocab;
+  getVocab(uri: string, language: string): Vocab;
   
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  // Returns '?' if there is no value found
-  getVocabTerm(vocabUri: string, termUri: string, language: string): string;
-
-  // Gets the vocab for a property, given the property schema
-  //
-  // Returns a vocab index (for the currently set language).
-  //
-  // Throws an exception if there is some reason this fails. The
-  // exception will have a short description indicating the problem.
-  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab;
-
-  // Gets a LocalisedVocab for the given language (which may be empty
-  // or only partially populated!)
-  getLocalisedVocabs(language: string): LocalisedVocab;
-
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
-  // Falls back to the default fall-back language if no language given, or
-  // the term is not localised in that language
-  getTerm(termUri: string, language?: string): string;
-  
-  // Construct the object of terms for advanced search
   //
-  // Returns a Dictionary of localised vocab titles, to Dictionaries
-  // of vocab ID to term label (in the given language, if available,
-  // else the fallBackLanguage)
-  getTerms(language: string,
-           initiativesByUid: Dictionary<Initiative>,
-           propertySchema: PropDefs): Dictionary<Dictionary>;
-
-  // Returns a localised Dictionary of vocab titles to Dictionaries of
-  // vocab IDs to vocab terms - in the target langugage, where
-  // available, or the fallBackLanguage if not.
-  getVerboseValuesForFields(language: string): Dictionary<Dictionary>;
-
-  // Gets a localised map of vocab titles to the relevant vocab
-  // prefixes (in the given language). (May be empty or only partially
-  // populated!)
-  getVocabTitlesAndVocabIDs(language: string): Dictionary;
+  // If there is no such term, and defaultResult is set, that is returned.
+  // Otherwise an throws exception is thrown.
+  getTerm(termUri: string, language: string, defaultResult?: string): string;
 }
 
 // Supplies query functions for a VocabIndex
@@ -146,139 +110,7 @@ export class VocabServiceImpl implements VocabServices {
     return this.fallBackLanguage;
   }
   
-  // Returns a localised Dictionary of vocab titles to Dictionaries of
-  // vocab IDs to vocab terms - in the target langugage, where
-  // available, or the fallBackLanguage if not.
-  getVerboseValuesForFields(language: string): Dictionary<Dictionary> {
-
-    const entries = Object
-      .entries(this.vocabs.vocabs)
-      .map(([vocabUri, vocab]) => {
-        let vocabLang = vocab[language];
-        if (!vocabLang && language !== this.fallBackLanguage) {
-          console.warn(`No localisations of vocab ${vocabUri} for language ${language}, ` +
-            `falling back to ${this.fallBackLanguage}`);
-          vocabLang = vocab[this.fallBackLanguage];
-        }
-        if (!vocabLang)
-          throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
-            `and no localisations for the fallback ${this.fallBackLanguage} either!`);
-
-        return [vocabLang.title, vocabLang.terms];
-      });
-
-    return Object.fromEntries(entries);
-  }
-  
-  /// Construct the object of terms for advanced search
-  ///
-  /// For each initiative in initiativesByUid, this iterates over the
-  /// properties in propertySchema, finds those properties which are
-  /// vocabs, and constructs an index of:
-  ///
-  /// - vocab titles (in the specified language, if present in the
-  ///   vocab), to
-  /// - vocab term IDs seen in the initiatives, to
-  /// - the corresponding vocab term names (again, in the specified
-  ///   language, if present in the vocab)
-  ///
-  /// (See test-vocab-services.ts for test case examples of this)
-  getTerms(language: string, initiativesByUid: Dictionary<Initiative>, propertySchema: PropDefs): Dictionary<Dictionary> {
-
-    let usedTerms: Dictionary<Dictionary> = {};
-    const vocabProps = DataServicesImpl.vocabPropDefs(propertySchema);
-    
-    for (const initiativeUid in initiativesByUid) {
-      const initiative = initiativesByUid[initiativeUid];
-      if (!initiative)
-        continue;
-
-      for(const propName in propertySchema) {
-        const vocabPropDef = vocabProps[propName];
-        if (!vocabPropDef)
-          continue;
-        
-        let vocabID = vocabPropDef.uri;
-
-        // If a MultiPropDef, initiative[propName] should be an array already, but could be null/undefined. Convert to an array.
-        // If a VocabPropDef, it should *not* be an array, but equally could be null/undefined. Convert to an array of zero/one value.
-        let uris: unknown[] | undefined;
-        const val = initiative[propName];
-        if (vocabPropDef.type === 'multi') {
-          if (val instanceof Array)
-            uris = val;
-          else if (val == null) // or undef
-            uris = [];
-          else {
-            console.warn(`initiative has non-array value in MultiPropDef property ${propName} -  ignoring property`, initiative);
-            continue;
-          }
-        }
-        else if (vocabPropDef.type === 'vocab') {
-          if (typeof val === 'string')
-            uris = [val]
-          else if (val == null) // or undef
-            uris = [];
-          else { 
-            console.warn(`initiative has non-string value in VocabPropDef property ${propName} -  ignoring property`, initiative);
-            continue;
-          }
-        }
-        else {
-          // Shouldn't ever get here, but it keeps the compiler happy
-          console.warn(`initiative has unknown VocabPropDef type for property ${propName} -  ignoring property`, initiative);
-          continue;
-        }
-
-        const vocab = this.vocabs.vocabs[vocabID];
-        const localisedVocab = vocab[language] ?? vocab[this.fallBackLanguage];
-
-        if (!localisedVocab)
-          throw new Error(`No localisations of vocab ${vocabID}'s title for `+
-            `language ${language} or the fallback language ${this.fallBackLanguage}`);
-
-        const vocabTitle = localisedVocab.title;
-        
-        // Currently still keeping the output data structure the same, so use uri not term
-        const temp = usedTerms[vocabTitle] ?? (usedTerms[vocabTitle] = {});
-        uris.forEach(uri => {
-          if (uri == null) return;
-          const key = this.abbrevUri(String(uri));
-          if (key in temp) return;
-          temp[key] = localisedVocab.terms[key];
-        });
-      }
-    }
-
-    return usedTerms;
-  }
-
-  // Gets the vocab for a property, given the property schema
-  //
-  // Returns a vocab index (for the currently set language).
-  //
-  // Throws an exception if there is some reason this fails. The
-  // exception will have a short description indicating the problem.
-  getVocabForProperty(id: string, propDef: PropDef, language: string): Vocab {
-
-    if (propDef.type !== 'vocab')
-      throw new Error(`property ${id} is not a vocab property`);
-
-    try {
-      return this.getVocabForUri(propDef.uri, language);
-    }
-    catch(e) {
-      if (e instanceof Error) {
-        e.message += `, for property ${id}`;
-        throw(e);
-      }
-      else {
-        throw new Error(`${e}. for property ${id}`);
-      }
-    }
-  }
-
-  getVocabForUri(uri: string, language: string = this.fallBackLanguage): Vocab {
+  getVocab(uri: string, language: string): Vocab {
     // Assume propertySchema's vocabUris are validated. But language availability can't be
     // checked so easily.
     const vocab = this.vocabs.vocabs[this.abbrevUri(uri)];
@@ -289,16 +121,15 @@ export class VocabServiceImpl implements VocabServices {
     const vocabLang = vocab[language]? language : this.fallBackLanguage;
     const localVocab = vocab[vocabLang];
     if (!localVocab)
-      throw new Error(`no title in lang ${language} for uri ${uri}'`);
+      throw new Error(`no localisation for language code ${language} in vocab ${uri}'`);
 
     return localVocab;
   }
   
   // Gets a vocab term from the (possibly abbreviated) URI in the given language
-  // Falls back to the default fall-back language if no language given, or
-  // the term is not localised in that language
-  getTerm(termUri: string, language?: string) {
-    language ??= this.fallBackLanguage;
+  //
+  // Throws an exception if there is no such term.  
+  getTerm(termUri: string, language: string, defaultResult?: string): string {
     termUri = this.abbrevUri(termUri);
     
     const [prefix, _] = termUri.split(':', 2);
@@ -313,64 +144,13 @@ export class VocabServiceImpl implements VocabServices {
     if (term !== undefined)
       return term;
 
-    // Even the fallback failed! 
-    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
-    return '?';
+    // Even the fallback failed!
+    if (defaultResult !== undefined)
+      return defaultResult;
+    
+    throw new Error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
   }
   
-  // Gets a vocab term value, given an (possibly prefixed) vocab and term uris
-  // Returns '?' if there is no value found
-  getVocabTerm(vocabUri: string, termUri: string, language: string): string {
-    termUri = this.abbrevUri(termUri);
-    // We don't (yet) expand or abbreviate vocabUri. We assume it matches.
-    const prefix = this.abbrevUri(vocabUri);
-    const vocab = this.vocabs.vocabs[prefix][language];
-
-    let term = vocab?.terms?.[termUri];
-    if (term !== undefined)
-      return term;
-
-    // Fall back if there are no terms.
-    term = this.vocabs.vocabs[vocabUri]?.[this.fallBackLanguage]?.terms?.[termUri];
-    if (term !== undefined)
-      return term;
-
-    // Even the fallback failed! 
-    console.error(`No term for ${termUri}, not even in the fallback language ${this.fallBackLanguage}`);
-    return '?';
-  }
-  
-  getVocabTitlesAndVocabIDs(language: string): Dictionary {
-    const vocabTitlesAndVocabIDs: Dictionary = {}
-
-    for (const vocabUri in this.vocabs.vocabs) {
-      const vocab = this.vocabs.vocabs[vocabUri];
-      const localVocab = vocab[language] ?? vocab[this.fallBackLanguage];
-      if (!localVocab)
-        throw new Error(`No localisations of vocab ${vocabUri} for language ${language}, `+
-          `and no localisations for the fallback ${this.fallBackLanguage} either!`);
-
-      vocabTitlesAndVocabIDs[localVocab.title] = vocabUri;
-    }
-
-    return vocabTitlesAndVocabIDs;
-  }
-
-  /// Removes all language definitions not equal to the parameter.
-  ///
-  /// Returns a dictionary of Vocabs
-  getLocalisedVocabs(language: string): Dictionary<Vocab> {
-    let verboseValues: Dictionary<Vocab> = {};
-
-    for (const id in this.vocabs.vocabs) {
-      const vocab = this.vocabs.vocabs[id];
-      if (vocab)
-        verboseValues[id] = vocab[language] ?? vocab[this.fallBackLanguage];
-    }
-
-    return verboseValues;
-  }
-
   // Expands a URI using the prefixes/abbreviations defined in vocabs
   //
   // Keeps trying until all expansions applied.

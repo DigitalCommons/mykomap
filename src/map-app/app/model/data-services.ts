@@ -28,11 +28,9 @@ import {
 } from './json-vocab-loader';
 
 import {
-  Vocab,
   VocabIndex,
   VocabServices,
   VocabAggregator,
-  LocalisedVocab,
 } from './vocabs';
 
 import {
@@ -49,7 +47,7 @@ import {
 } from './initiative';
 
 import { CsvDataLoader } from './csv-data-loader';
-import { isIso6391Code, Iso6391Code, ISO639_1_CODES, PhraseBook, PhraseBooks } from '../../localisations';
+import { isIso6391Code, Iso6391Code, PhraseBook, PhraseBooks } from '../../localisations';
 
 // These used to be require()s of the relevant PHP files, but that was
 // intermittently causing webpack/typescript building issues. So it
@@ -67,30 +65,66 @@ export type DataLoaderMap<T> = Dictionary<DataLoaderMeta<T>>;
 
 export type PropSourceId = string;
 
+// Shared properties of all PropDefs.
+export interface CommonPropDef {
+  // Which InitiativeObj property to initialise this Initiative property from.
+  // If not set, defaults to the one with the same name.
+  from?: string;
 
-export interface ValuePropDef {
+  // What to call this property in the UI.
+  //
+  // Should be an existing (possibly abbreviated) vocab URI - the
+  // corresponding localised term will be used as the title.
+  //
+  // If undefined, the title defaults to the property's localised
+  // vocab title (if the property *is* a vocab field). Otherwise, the
+  // property ID is used verbatim, as a fallback. Note that a vocab
+  // title is *not* a good choice if more than one field shares the
+  // same vocab!
+  titleUri?: string;
+}
+
+// InnerDefs define value constraints, but not PropDef-related fields.
+// This is so that a MultiPropDef can wrap the value constrains without
+// duplicating the PropDef fields redundantly.
+export type InnerDef = InnerValueDef | InnerVocabDef | InnerCustomDef | InnerMultiDef ;
+export type InnerValueDef = {
   type: 'value';
   as?: 'string'|'boolean'|'number';
   strict?: boolean;
-  from?: string;
 }
-export interface VocabPropDef {
+export type InnerVocabDef = {
   type: 'vocab';
   uri: string;
-  from?: string;
 }
-export interface CustomPropDef {
+export type InnerCustomDef = {
   type: 'custom'
-  from?: string;
   builder: (id: string, def: CustomPropDef, params: InitiativeObj) => unknown;
 }
-export interface MultiPropDef {
+export type InnerMultiDef = {
   type: 'multi';
-  of: PropDef;
-  from?: string;
+  of: InnerDef;
 }
 
+// PropDefs define properties of Initiatives and how they map from InitiativeObj
 export type PropDef = ValuePropDef | VocabPropDef | CustomPropDef | MultiPropDef ;
+export type ValuePropDef = CommonPropDef & {
+  type: 'value';
+  as?: 'string'|'boolean'|'number';
+  strict?: boolean;
+}
+export type VocabPropDef = CommonPropDef & {
+  type: 'vocab';
+  uri: string;
+}
+export type CustomPropDef = CommonPropDef & {
+  type: 'custom'
+  builder: (id: string, def: CustomPropDef, params: InitiativeObj) => unknown;
+}
+export type MultiPropDef = CommonPropDef & {
+  type: 'multi';
+  of: InnerDef;
+}
 
 export type PropDefs = Dictionary<PropDef>;
 
@@ -102,9 +136,6 @@ export type FieldDefs = Dictionary<PropDef | PropDef['type']>;
 // or a MultiPropDef with an added uri field - so the uri field is
 // always present at the top level.
 export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
-
-// A dictory of AnyVocabPropDefs
-export type VocabPropDefs = Dictionary<AnyVocabPropDef>;
 
 // Inserts an element into a sorted array
 export function sortedInsert(element: unknown, array: unknown[]) {
@@ -207,24 +238,8 @@ export interface DataServices {
   // the data isn't ready yet.
   getAggregatedData(): AggregatedData;
   
-  //// vocab proxies
-  getLocalisedVocabs(): LocalisedVocab;
+  getVocabs(): VocabServices;
   
-  getVerboseValuesForFields(): Dictionary<Dictionary>;
-
-  getVocabs(): VocabServices|undefined;
-  
-  getVocabTerm(vocabUri: string, termUri: string): string | undefined;
-
-  getVocabTitlesAndVocabIDs(): Dictionary;
-  
-  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined;
-
-  //// Wraps both dataAggregator and vocabs
-  
-  getTerms(): Dictionary<Dictionary>;
-
-
   //// non-proxies
 
   // Get the current dataset, or true
@@ -256,17 +271,6 @@ export interface DataServices {
   
   getPropertySchema(propName: string): PropDef | undefined;
 
-  /// Returns a VocabPropDefs index of the property schema definitions
-  /// which use vocabs, keyed by their names.
-  ///
-  /// The values include both the propDef, and a guaranteed URI field
-  /// (for convenience, since the definition can come in more than one
-  /// form)
-  ///
-  /// If the vocabId parameter is set, these are also filtered to
-  /// those using just this vocab.
-  getVocabPropDefs(vocabId?: string): VocabPropDefs;
-    
   getSidebarButtonColour(): string;
 
   // requires dataAggregator
@@ -345,6 +349,20 @@ export async function loadDatasets<D, T extends DataConsumer<D>>(dataLoaders: Da
   return consumer;
 }
 
+/// Returns a vocab URI, given a PropDef which has one, or undefined
+export function propDefToVocabUri(propDef?: PropDef): string|undefined {
+  if (propDef === undefined) return undefined;
+  if (propDef.type === 'vocab') return propDef.uri;
+  if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
+  return undefined;
+}
+
+/// Predicate for testing if a PropDef has a vocab URI
+export function isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
+  return !!propDefToVocabUri(propDef);
+}
+
+
 
 // Implements the DataServices interface
 export class DataServicesImpl implements DataServices {
@@ -357,9 +375,6 @@ export class DataServicesImpl implements DataServices {
   // The per-instance propert schema, which can be extended by configuration.
   readonly propertySchema: PropDefs = { ...basePropertySchema };
 
-  // The VocabPropDefs index
-  private vocabPropDefs: VocabPropDefs;
-  
   // An index of vocabulary terms in the data, obtained from get_vocabs.php
   vocabs?: VocabServices = undefined;
   aggregatedData: AggregatedData = new AggregatedData();
@@ -479,8 +494,6 @@ export class DataServicesImpl implements DataServices {
       console.info("using language", language);
     }
     
-    this.vocabPropDefs = DataServicesImpl.vocabPropDefs(this.propertySchema);
-
     {
       // Check that all the filterable fields are property names -
       // Something is wrong if not.
@@ -540,104 +553,18 @@ export class DataServicesImpl implements DataServices {
     return this.config.getLanguage();
   }
   
-  getLocalisedVocabs(): LocalisedVocab {
-    if (this.vocabs)
-      return this.vocabs.getLocalisedVocabs(this.getLanguage());
-    return {};
-  }
-
   getPropertySchema(propName: string): PropDef | undefined {
     return this.propertySchema[propName];
   }
 
-  /// Returns a vocab URI, given a PropDef which has one, or undefined
-  static propDefToVocabUri(propDef?: PropDef): string|undefined {
-    if (propDef === undefined) return undefined;
-    if (propDef.type === 'vocab') return propDef.uri;
-    if (propDef.type === 'multi' && propDef.of.type === 'vocab') return propDef.of.uri;
-    return undefined;
-  }
-
-  /// Predicate for testing if a PropDef has a vocab URI
-  static isVocabPropDef(propDef?: PropDef): propDef is VocabPropDef|MultiPropDef {
-    return !!this.propDefToVocabUri(propDef);
-  }
-  
-  /// Returns a VocabPropDefs index of propdefs using vocabs, keyed by their names.
-  ///
-  /// The values include both the propDef, and a guaranteed URI field
-  /// (for convenience, since the definition can come in more than one
-  /// form)
-  ///
-  /// If the vocabId parameter is set, these are also filtered to
-  /// those using just this vocab.
-  static vocabPropDefs(propDefs: PropDefs, vocabId?: string): VocabPropDefs {
-    const results: VocabPropDefs = {};
-    for(const name in propDefs) {
-      const def = propDefs[name];
-      if (!def)
-        continue;
-
-      if (def.type === 'vocab') {
-        if (vocabId === undefined || def.uri === vocabId)
-          results[name] = def;
-      }
-      if (def.type === 'multi' && def.of.type === 'vocab') {
-        if (vocabId === undefined || def.of.uri === vocabId)
-          results[name] = { type: 'multi', uri: def.of.uri, of: def.of };
-      }
-    }
-    return results;
-  }
-
-  getVocabs(): VocabServices|undefined {
+  getVocabs(): VocabServices {
+    if (!this.vocabs)
+      throw new Error(`DataServices.getVocabs() used but vocabs not yet set!`);
     return this.vocabs;
   }
 
-  getVocabPropDefs(vocabId?: string): VocabPropDefs {
-    if (!vocabId)
-      return this.vocabPropDefs; // Return them all
-
-    // Filter the property defs by vocab URI
-    const shortVocabId = this.vocabs?.abbrevUri(vocabId);
-    
-    const vocabPropDefs: VocabPropDefs = {};
-    for(const propName in this.vocabPropDefs) {
-      const propDef = this.vocabPropDefs[propName];
-      if (shortVocabId === propDef?.uri)
-        vocabPropDefs[propName] = propDef;
-    }
-    
-    return vocabPropDefs;
-  }
-  
   getSidebarButtonColour(): string {
     return this.config.getSidebarButtonColour();
-  }
-
-  getTerms(): Dictionary<Dictionary> {
-    if (!this.vocabs)
-      return {};
-
-    return this.vocabs.getTerms(this.getLanguage(),
-                                this.aggregatedData.initiativesByUid,
-                                this.propertySchema); 
-  }
-  
-  getVerboseValuesForFields(): Dictionary<Dictionary> {
-    return this?.vocabs?.getVerboseValuesForFields(this.getLanguage()) ?? {};
-  }
-  
-  getVocabTerm(vocabUri: string, termUri: string): string | undefined {
-    return this?.vocabs?.getVocabTerm(vocabUri, termUri, this.getLanguage());
-  }
-
-  getVocabTitlesAndVocabIDs(): Dictionary {
-    return this?.vocabs?.getVocabTitlesAndVocabIDs(this.getLanguage()) ?? {};
-  }
-  
-  getVocabForProperty(id: string, propDef: PropDef): Vocab | undefined {
-    return this?.vocabs?.getVocabForProperty(id, propDef, this.getLanguage());
   }
 
   latLngBounds(initiatives?: Initiative[]): Box2d {
