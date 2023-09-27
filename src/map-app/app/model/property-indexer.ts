@@ -12,10 +12,10 @@ import { Initiative } from "./initiative";
 export class PropertyIndexer {
  
   constructor(
-    /// An index of property titles to property values to lists of
+    /// An index of property names to property values to lists of
     /// initiatives with that property value. Expected to begin empty,
     /// will be constructed.
-    readonly byTitleThenValue: Dictionary<Dictionary<Initiative[]>>,
+    readonly byPropThenValue: Dictionary<Dictionary<Initiative[]>>,
     
     /// Identifiers of the properties to index
     private readonly propNames: string[],
@@ -63,7 +63,7 @@ export class PropertyIndexer {
     this.propNames.forEach(propName => {
       const title = this.propDefs.getTitle(propName);
       
-      const titleValues = this.byTitleThenValue[title];
+      const titleValues = this.byPropThenValue[title];
       if (!titleValues)
         return; // Nothing to do here... loop to next value
       
@@ -82,7 +82,7 @@ export class PropertyIndexer {
         .sort(sorter);
 
       // Reconstitute ordered elements as an object (which preserves this order in the key order)
-      this.byTitleThenValue[title] = Object.fromEntries(ordered);
+      this.byPropThenValue[title] = Object.fromEntries(ordered);
 
       // Done - helper functions follow.
       return;
@@ -104,7 +104,7 @@ export class PropertyIndexer {
 
   // Insert the initiative in the byTitleThenValue index
   private insertVal(titleKey: string, value: unknown, initiative: Initiative) {
-    const values = this.byTitleThenValue[titleKey];
+    const values = this.byPropThenValue[titleKey];
 
     // Stringify the value.
     const valueKey = value == null? "" : String(value); // defined matches null too
@@ -121,7 +121,7 @@ export class PropertyIndexer {
     else {
       // Create the object that holds the registered values for the current
       // field if it hasn't already been created
-      const values: Dictionary<Initiative[]> = this.byTitleThenValue[titleKey] = {};
+      const values: Dictionary<Initiative[]> = this.byPropThenValue[titleKey] = {};
       values[valueKey] = [initiative];
     }
   }

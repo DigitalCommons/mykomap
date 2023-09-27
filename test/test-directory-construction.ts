@@ -66,11 +66,11 @@ describe('Directory generation', () => {
     // arrays, keyed by the observed property values shared by those
     // initiatives. The arrays can have arbitrary order, but should
     // not contain duplicates. FIXME test this
-    expect(propIndexer.byTitleThenValue)
+    expect(propIndexer.byPropThenValue)
       .to.be.an('object')
       .that.has.all.keys('Name', 'Vowels', 'letters', 'Letters'); 
     
-    expect(propIndexer.byTitleThenValue.Name)
+    expect(propIndexer.byPropThenValue.Name)
       .to.deep.equal({ // shortcut, since arrays are 1-element and can't be unsorted
         foo: [items.foo],
         bar: [items.bar],
@@ -78,30 +78,30 @@ describe('Directory generation', () => {
         bob: [items.bob],
       });
     
-    expect(propIndexer.byTitleThenValue.letters)
+    expect(propIndexer.byPropThenValue.letters)
       .to.be.an('object')
       .that.has.all.keys('f','o','b','a','r','z');
-    expect(propIndexer.byTitleThenValue.letters?.f).to.have.all.members([items.foo])
-    expect(propIndexer.byTitleThenValue.letters?.o).to.have.all.members([items.foo, items.bob])
-    expect(propIndexer.byTitleThenValue.letters?.b).to.have.all.members([items.bar, items.baz, items.bob])
-    expect(propIndexer.byTitleThenValue.letters?.a).to.have.all.members([items.bar, items.baz])
-    expect(propIndexer.byTitleThenValue.letters?.r).to.have.all.members([items.bar])
-    expect(propIndexer.byTitleThenValue.letters?.z).to.have.all.members([items.baz])
+    expect(propIndexer.byPropThenValue.letters?.f).to.have.all.members([items.foo])
+    expect(propIndexer.byPropThenValue.letters?.o).to.have.all.members([items.foo, items.bob])
+    expect(propIndexer.byPropThenValue.letters?.b).to.have.all.members([items.bar, items.baz, items.bob])
+    expect(propIndexer.byPropThenValue.letters?.a).to.have.all.members([items.bar, items.baz])
+    expect(propIndexer.byPropThenValue.letters?.r).to.have.all.members([items.bar])
+    expect(propIndexer.byPropThenValue.letters?.z).to.have.all.members([items.baz])
 
-    expect(propIndexer.byTitleThenValue['Vowels'])
+    expect(propIndexer.byPropThenValue['Vowels'])
       .to.be.an('object')
       .that.has.all.keys('http://vocab.com/vowels/o','http://vocab.com/vowels/a');
-    expect(propIndexer.byTitleThenValue['Vowels']?.['http://vocab.com/vowels/o'])
+    expect(propIndexer.byPropThenValue['Vowels']?.['http://vocab.com/vowels/o'])
       .to.have.all.members([items.foo, items.bob]);
-    expect(propIndexer.byTitleThenValue['Vowels']?.['http://vocab.com/vowels/a'])
+    expect(propIndexer.byPropThenValue['Vowels']?.['http://vocab.com/vowels/a'])
       .to.have.all.members([items.bar, items.baz]);
 
-    expect(propIndexer.byTitleThenValue['Letters'])
+    expect(propIndexer.byPropThenValue['Letters'])
       .to.be.an('object')
       .that.has.all.keys('l:f','l:b');
-    expect(propIndexer.byTitleThenValue['Letters']?.['l:f'])
+    expect(propIndexer.byPropThenValue['Letters']?.['l:f'])
       .to.have.all.members([items.foo]);
-    expect(propIndexer.byTitleThenValue['Letters']?.['l:b'])
+    expect(propIndexer.byPropThenValue['Letters']?.['l:b'])
       .to.have.all.members([items.bar, items.baz, items.bob]);
 
   });
