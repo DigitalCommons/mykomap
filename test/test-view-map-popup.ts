@@ -40,10 +40,10 @@ const fieldSchema: PropDefs = {
   },
   activities: {
     type: 'multi',
+    from: 'activity',
     of: {
       type: 'vocab',
       uri: 'aci:',
-      from: 'activity',
     },
   },
   regorg: {
