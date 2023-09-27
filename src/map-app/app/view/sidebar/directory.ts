@@ -103,7 +103,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       .classed("colours", this.presenter.parent.mapui.config.doesDirectoryHaveColours());
 
     // key may be null, for the special 'Every item' case
-    const addItem = (title: string, propName: string, propValue?: string)  => {
+    const addItem = (propName: string, propValue?: string)  => {
       let label = propValue; // default case
       let classname = 'sea-field-all-entries'; // default case
 
@@ -135,7 +135,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed("sea-directory-field", true)
         .on("click", (event: MouseEvent) => {
           this.presenter.parent.mapui.removeFilters();
-          this.listInitiativesForSelection(title, propName, propValue); // key may be null
+          this.listInitiativesForSelection(propName, propValue); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
           if (event.currentTarget instanceof Element)
@@ -143,41 +143,39 @@ export class DirectorySidebarView extends BaseSidebarView {
         });
     }
 
-    function addItems(title: string, propName: string, values: Dictionary<Initiative[]>) {
+    function addItems(propName: string, values: Dictionary<Initiative[]>) {
       Object.keys(values)
       // Any sorting should have been done as the initiatives were loaded
-        .forEach(key => addItem(title, propName, key));
+        .forEach(key => addItem(propName, key));
     }
 
     const mapui = this.presenter.parent.mapui;
     const registeredValues = mapui.dataServices.getAggregatedData().registeredValues;
-    const filteableFields = mapui.config.getFilterableFields();
-    const directoryPropName: string|undefined = filteableFields[0];
+    const filterableFields = mapui.config.getFilterableFields();
+    const directoryPropName: string|undefined = filterableFields[0];
     if (directoryPropName === undefined)
       throw new Error(`filterableFields is empty - so no directory can be rendered. Shouldn't happen!`);
       
     // Just run on the first property for now
     // TODO: Support user selectable fields
-    for (const title in registeredValues) {
-      // Deal with the special 'All' item first
-      addItem(title, directoryPropName);
+    
+    // Deal with the special 'All' item first
+    addItem(directoryPropName);
 
-      const values = registeredValues[title]
-      if (values)
-        addItems(title, directoryPropName, values);
-      break;
-    }
+    const values = registeredValues[directoryPropName]
+    if (values)
+      addItems(directoryPropName, values);
   }
 
 
   // selectionKey may be null, for the special 'Every item' case
-  listInitiativesForSelection(directoryTitle: string, propName: string, propValue?: string) {
+  listInitiativesForSelection(propName: string, propValue?: string) {
     const labels = this.presenter.parent.mapui.labels;
     const vocabs = this.presenter.parent.mapui.dataServices.getVocabs();
     const props = this.presenter.parent.mapui.config.fields();
     const lang = this.presenter.parent.mapui.config.getLanguage();
     const initiatives = this.presenter.getInitiativesForFieldAndSelectionKey(
-      directoryTitle,
+      propName,
       propValue
     );
 

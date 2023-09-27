@@ -26,11 +26,11 @@ export class DirectorySidebarPresenter extends BaseSidebarPresenter {
   }
 
   // Gets the initiatives with a selection key, or if absent, gets all the initiatives
-  getInitiativesForFieldAndSelectionKey(title: string, key?: string): Initiative[] {
+  getInitiativesForFieldAndSelectionKey(propName: string, key?: string): Initiative[] {
     if (key == null)
       return this.parent.mapui.dataServices.getAggregatedData().loadedInitiatives;
     else
-      return this.parent.mapui.dataServices.getAggregatedData().registeredValues[title]?.[key] ?? [];
+      return this.parent.mapui.dataServices.getAggregatedData().registeredValues[propName]?.[key] ?? [];
   }
 
   notifyMapNeedsToNeedsToBeZoomedAndPanned(initiatives: Initiative[]): void {

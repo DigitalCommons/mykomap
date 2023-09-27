@@ -36,8 +36,6 @@ export class PropertyIndexer {
   onData(initiative: Initiative): void {
 
     this.propNames.forEach(propName => {
-      const title: string = this.propDefs.getTitle(propName);
-
       const value = initiative[propName];
       if (value == null) {
         // This initiative has no value for `propName`, so can't be indexed further.
@@ -48,10 +46,10 @@ export class PropertyIndexer {
       const propDef = this.propDefs.getDef(propName);
       if (propDef.type === 'multi')
         // Loop over the inferred array and insert
-        (value as unknown[]).forEach(v => this.insertVal(title, v, initiative));
+        (value as unknown[]).forEach(v => this.insertVal(propName, v, initiative));
       else
         // Just insert the one value
-        this.insertVal(title, value, initiative);
+        this.insertVal(propName, value, initiative);
     });
   }
 
@@ -61,10 +59,8 @@ export class PropertyIndexer {
   onComplete(): void {
     
     this.propNames.forEach(propName => {
-      const title = this.propDefs.getTitle(propName);
-      
-      const titleValues = this.byPropThenValue[title];
-      if (!titleValues)
+      const propValues = this.byPropThenValue[propName];
+      if (!propValues)
         return; // Nothing to do here... loop to next value
       
       let sorter = sortAsString; // Default for simple case
@@ -78,11 +74,11 @@ export class PropertyIndexer {
       // Now we can sort the value entries.
       // FIXME ideally we'd sort numbers, booleans, etc. appropriately
       const ordered = Object
-        .entries(titleValues)
+        .entries(propValues)
         .sort(sorter);
 
       // Reconstitute ordered elements as an object (which preserves this order in the key order)
-      this.byPropThenValue[title] = Object.fromEntries(ordered);
+      this.byPropThenValue[propName] = Object.fromEntries(ordered);
 
       // Done - helper functions follow.
       return;
@@ -102,9 +98,9 @@ export class PropertyIndexer {
     });
   }
 
-  // Insert the initiative in the byTitleThenValue index
-  private insertVal(titleKey: string, value: unknown, initiative: Initiative) {
-    const values = this.byPropThenValue[titleKey];
+  // Insert the initiative in the byPropThenValue index
+  private insertVal(propName: string, value: unknown, initiative: Initiative) {
+    const values = this.byPropThenValue[propName];
 
     // Stringify the value.
     const valueKey = value == null? "" : String(value); // defined matches null too
@@ -121,7 +117,7 @@ export class PropertyIndexer {
     else {
       // Create the object that holds the registered values for the current
       // field if it hasn't already been created
-      const values: Dictionary<Initiative[]> = this.byPropThenValue[titleKey] = {};
+      const values: Dictionary<Initiative[]> = this.byPropThenValue[propName] = {};
       values[valueKey] = [initiative];
     }
   }

@@ -109,7 +109,7 @@ describe('DataAggregator', () => {
         mkInitiativeObj('A', 'OS10')
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A' ]},
+          'orgStructure': { 'os:OS10': [ 'A' ]},
         });
     });
     
@@ -119,7 +119,7 @@ describe('DataAggregator', () => {
         mkInitiativeObj('B', 'OS10'),
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A', 'B' ]},
+          'orgStructure': { 'os:OS10': [ 'A', 'B' ]},
         });
     });
     
@@ -130,7 +130,7 @@ describe('DataAggregator', () => {
         mkInitiativeObj('A', 'OS10'),
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A', 'B' ]},
+          'orgStructure': { 'os:OS10': [ 'A', 'B' ]},
         });
           });
     
@@ -140,8 +140,8 @@ describe('DataAggregator', () => {
         mkInitiativeObj('B', undefined, 'EA10'),
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A' ]},
-          'EcAc': { 'ea:EA10': [ 'B' ]},
+          'orgStructure': { 'os:OS10': [ 'A' ]},
+          'primaryActivity': { 'ea:EA10': [ 'B' ]},
         });
     });
     
@@ -154,8 +154,8 @@ describe('DataAggregator', () => {
         mkInitiativeObj('E', 'OS10', 'EA10'),        
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A', 'E' ], 'os:OS20': [ 'D' ]},
-          'EcAc': { 'ea:EA10': [ 'B', 'E' ], 'ea:EA20': [ 'D' ]},
+          'orgStructure': { 'os:OS10': [ 'A', 'E' ], 'os:OS20': [ 'D' ]},
+          'primaryActivity': { 'ea:EA10': [ 'B', 'E' ], 'ea:EA20': [ 'D' ]},
         });
     });
 
@@ -165,8 +165,8 @@ describe('DataAggregator', () => {
         mkInitiativeObj('B', undefined, 'OS10'), // Base Membership has no OS10 value
       ]))
         .to.deep.equal({
-          'OrgStruct': { 'os:OS10': [ 'A' ]},
-          'EcAc': { 'ea:OS10': [ 'B' ]}, // Oops, this probably shouldn't happen
+          'orgStructure': { 'os:OS10': [ 'A' ]},
+          'primaryActivity': { 'ea:OS10': [ 'B' ]}, // Oops, this probably shouldn't happen
         });
     });
   });
