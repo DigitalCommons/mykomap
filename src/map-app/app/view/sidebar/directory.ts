@@ -194,7 +194,7 @@ export class DirectorySidebarView extends BaseSidebarView {
     
     // Add the heading (we need to determine the label as this may be stored in the data or
     // in the list of values in the presenter)
-    let label = propValue; // default
+    let label = ''; // will be updated
     let classname = 'sea-field-all'; // default
     
     if (propValue === undefined) {
@@ -212,7 +212,8 @@ export class DirectorySidebarView extends BaseSidebarView {
         classname = `sea-field-${uriToTag(propValue)}`;
       } else {
         // The value comes from the data directly
-        // label stays at default.
+        // label from propValue
+        label = propValue;
         classname = `sea-field-${labelToTag(propValue)}`;
       }
     }
