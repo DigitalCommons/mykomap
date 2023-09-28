@@ -139,7 +139,9 @@ body {
 }
 
 .awesome-marker-icon-am00 {
-  background-position: -648px 0;
+  /* Disable selection making icons black */
+  /* https://github.com/DigitalCommons/mykomap/issues/219 */
+  /* background-position: -648px 0; */ 
 }
 
 .advanced-label {
