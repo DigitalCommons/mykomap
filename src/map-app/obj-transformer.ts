@@ -596,8 +596,16 @@ export function mkObjTransformer<I extends Record<string, DataVal>, O extends ob
     const result: Partial<Record<keyof O, O[keyof O]>> = {};
     for(const okey in objTransform) {
       const trans: PropTransform<I, O[keyof O]> = objTransform[okey];
-      const val = trans.from(input);
-      result[okey] = trans.transform(val);
+      try {
+        const val = trans.from(input);
+        result[okey] = trans.transform(val);
+      }
+      catch(e: unknown) {
+        // Add context
+        if (e instanceof Error)
+          e.message = `transforming data for property '${okey}', ${e.message}`;
+        throw e;
+      }
     }
     return result as O; // FORCED! We can be sure that all the keys of O are present, objTransform guaranteed to have them all
   };
