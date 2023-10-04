@@ -56,6 +56,7 @@ export interface PhraseBook {
   mapDisclaimer: string;
   mixedSources: string;
   noLocation: string;
+  notAvailable: string;
   nothingMatched: string;  
   otherData: string;
   poweredBy: string;
@@ -102,6 +103,7 @@ export const phraseBooks: PhraseBooks = {
     mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
     mixedSources: "Mixed Sources",
     noLocation: "No location available",
+    notAvailable: "N / A",
     nothingMatched: "Nothing matched the search",
     otherData: "Other data",
     poweredBy: "Powered by Geoapify",
@@ -143,6 +145,7 @@ export const phraseBooks: PhraseBooks = {
     mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
     mixedSources: "Sources mixtes",
     noLocation: "Aucun emplacement disponible",
+    notAvailable: "Pas disponible",
     nothingMatched: "Rien ne correspond à la recherche",
     otherData: "Autres données",
     poweredBy: "Créé par Geoapify",
@@ -184,6 +187,7 @@ export const phraseBooks: PhraseBooks = {
     mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
     mixedSources: "Fuentes mixtas",
     noLocation: "No hay ubicación disponible",
+    notAvailable: "No disponible",
     nothingMatched: "Nada coincidió con la búsqueda",
     otherData: "Otros datos",
     poweredBy: "Desarrollado por Geoapify",
@@ -225,6 +229,7 @@ export const phraseBooks: PhraseBooks = {
     mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
     mixedSources: "혼합",
     noLocation: "사용 가능한 위치 없음",
+    notAvailable: "사용 불가",
     nothingMatched: "검색과 일치하는 항목이 없습니다",
     otherData: "다른 자료",
     poweredBy: "Geoapify에 의해 구동됨",
