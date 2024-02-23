@@ -143,7 +143,7 @@ export class MapUI {
       const defaultOpenSidebar = this.config.getDefaultOpenSidebar();
       if (defaultOpenSidebar)
         sidebar.showSidebar()
-    });
+    }, (error) => console.error("Sidebar presenter load failed:", error));
   }
 
   private refreshSidebar() {
