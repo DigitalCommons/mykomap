@@ -133,25 +133,27 @@ export class InitiativesSidebarView extends BaseSidebarView {
       }
       
       let propTitle = propName;
-      if (propDef.titleUri === undefined) {
-        // Use the fields' vocab's title
-        try {
-          const vocab = vocabs.getVocab(uri, lang);
-          propTitle = vocab.title;
+      if (vocabs !== undefined) {
+        if (propDef.titleUri === undefined) {
+          // Use the fields' vocab's title
+          try {
+            const vocab = vocabs.getVocab(uri, lang);
+            propTitle = vocab.title;
+          }
+          catch(e) {
+            throw new Error(`filterableFields contains ${propName}, `+
+              `which has an unresolvable vocab URI: '${uri}'`);
+          }
         }
-        catch(e) {
-          throw new Error(`filterableFields contains ${propName}, `+
-            `which has an unresolvable vocab URI: '${uri}'`);
-        }
-      }
-      else {
-        // Look up the titleUri
-        try {
-          propTitle = vocabs.getTerm(propDef.titleUri, lang);
-        }
-        catch(e) {
-          throw new Error(`filterableFields contains ${propName}, `+
-            `which has an unresolvable URI in 'titleUri': '${propDef.titleUri}'`);
+        else {
+          // Look up the titleUri
+          try {
+            propTitle = vocabs.getTerm(propDef.titleUri, lang);
+          }
+          catch(e) {
+            throw new Error(`filterableFields contains ${propName}, `+
+              `which has an unresolvable URI in 'titleUri': '${propDef.titleUri}'`);
+          }
         }
       }
 

@@ -116,7 +116,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         const propDef = props[propName];
         const propUri = propDefToVocabUri(propDef);
         
-        if (propUri) {
+        if (vocabs !== undefined && propUri) {
           // This is a vocab field
           label = vocabs.getTerm(propValue, lang);
           classname = `sea-field-${uriToTag(propValue)}`;          
@@ -204,7 +204,7 @@ export class DirectorySidebarView extends BaseSidebarView {
       const propDef = props[propName];
       const propUri = propDefToVocabUri(propDef);
 
-      if (propUri) {
+      if (vocabs !== undefined && propUri) {
         // This is a vocab field.
         label = vocabs.getTerm(propValue, lang);
         classname = `sea-field-${uriToTag(propValue)}`;

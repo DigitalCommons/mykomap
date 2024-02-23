@@ -237,8 +237,9 @@ export interface DataServices {
   // Gets an AggregatedData value, which may be empty of data if
   // the data isn't ready yet.
   getAggregatedData(): AggregatedData;
-  
-  getVocabs(): VocabServices;
+
+  // Gets the VocabServices, or undefined if none have been loaded yet.
+  getVocabs(): VocabServices | undefined;
   
   //// non-proxies
 
@@ -557,9 +558,7 @@ export class DataServicesImpl implements DataServices {
     return this.propertySchema[propName];
   }
 
-  getVocabs(): VocabServices {
-    if (!this.vocabs)
-      throw new Error(`DataServices.getVocabs() used but vocabs not yet set!`);
+  getVocabs(): VocabServices | undefined {
     return this.vocabs;
   }
 
