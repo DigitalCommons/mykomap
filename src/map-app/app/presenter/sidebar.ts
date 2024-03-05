@@ -24,11 +24,15 @@ export class SidebarPresenter extends BasePresenter {
     this.showSearchPanel = mapui.config.getShowSearchPanel();
     this.showAboutPanel = mapui.config.getShowAboutPanel();
     this.showDatasetsPanel = mapui.config.getShowDatasetsPanel();
-    this.view = new SidebarView(this, mapui.dataServices.getSidebarButtonColour());
+    const defaultPanel = mapui.config.getDefaultPanel() || undefined;
+    this.view = new SidebarView(
+      this,
+      mapui.dataServices.getSidebarButtonColour()
+    );
     this._eventbusRegister();
 
     this.createSidebars();
-    this.changeSidebar();
+    this.changeSidebar(defaultPanel);
   }
 
   createSidebars() {
