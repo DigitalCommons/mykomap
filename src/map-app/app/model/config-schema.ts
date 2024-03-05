@@ -135,6 +135,7 @@ export interface ReadableConfig {
   getShowDatasetsPanel(): boolean;
   getShowDirectoryPanel(): boolean;
   getShowSearchPanel(): boolean;
+  getDefaultPanel(): string;
   getSidebarButtonColour(): string;
   getSoftwareGitCommit(): string;
   getSoftwareTimestamp(): string;
@@ -166,6 +167,7 @@ export interface WritableConfig {
   setShowDatasetsPanel(val: boolean): void;
   setShowDirectoryPanel(val: boolean): void;
   setShowSearchPanel(val: boolean): void;
+  setDefaultPanel(val: string): void;
 }
 
 export interface ConfigSchema<T> {
@@ -235,6 +237,7 @@ export class ConfigData {
   showDatasetsPanel: boolean = true;
   showDirectoryPanel: boolean = true;
   showSearchPanel: boolean = true;
+  defaultPanel: string = '';
   sidebarButtonColour: string = '#39cccc';
   tileUrl?: string;
   timestamp: string = '2000-01-01T00:00:00.000Z';
@@ -750,6 +753,14 @@ export class Config implements ReadableConfig, WritableConfig {
         setter: 'setShowSearchPanel',
         type: types.boolean,
       },
+      defaultPanel: {
+        id: "defaultPanel",
+        descr: "The string `about`, `directory`, `datasets`, or `initiatives` (i.e. search)",
+        defaultDescr: "the leftmost panel, which is usually the `directory`",
+        getter: "getDefaultPanel",
+        setter: "setDefaultPanel",
+        type: types.string,
+      },
       sidebarButtonColour: {
         id: "sidebarButtonColour",
         descr: 'Set the css background-colour attribute for the open sidebar button. Defaults to teal',
@@ -1150,6 +1161,9 @@ ${def.descr}
   getShowSearchPanel(): boolean {
     return this.data.showSearchPanel;
   }
+  getDefaultPanel(): string {
+    return this.data.defaultPanel;
+  }
   getSidebarButtonColour(): string {
     return this.data.sidebarButtonColour;
   }
@@ -1251,6 +1265,9 @@ ${def.descr}
   setShowSearchPanel(val: boolean): void {
     this.data.showSearchPanel = val;
   }
-
+  setDefaultPanel(val: string): void {
+    this.data.defaultPanel = val;
+  }
+  
   //  [id: string]: Getter | Setter;
 }
