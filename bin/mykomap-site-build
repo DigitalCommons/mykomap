@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 // This is here to allow the actual code to be in a file with a .js
 // extension, which helps my editor figure out the right indentation to
 // use.
