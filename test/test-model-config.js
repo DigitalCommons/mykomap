@@ -12,7 +12,7 @@ const about = `This is a dummy about.html!
 const combinedConfig = { ...rawConfig, ...version, aboutHtml: about };
 
 describe('The config.js module', function () {
-    describe('given a typical config', function () {
+  context('given a typical config', function () {
     var config = configBuilder(combinedConfig);
 
     it('should return the configured values', function () {
