@@ -177,32 +177,34 @@ export class InitiativesSidebarView extends BaseSidebarView {
         .attr("class", "advanced-option")
 
 
-      const vocab = vocabs.getVocab(uri, lang);
-      const entryArray = Object.entries(vocab.terms);
-      // Sort entries alphabetically by value (the human-readable labels)
-      entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
+      if (vocabs !== undefined) {
+        const vocab = vocabs.getVocab(uri, lang);
+        const entryArray = Object.entries(vocab.terms);
+        // Sort entries alphabetically by value (the human-readable labels)
+        entryArray.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 
 
-      const  alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(propName);
-      const filters = mapui.currentItem().propFilters;
-      const filter = filters[propName];
+        const  alternatePossibleFilterValues = mapui.getAlternatePossibleFilterValues(propName);
+        const filters = mapui.currentItem().propFilters;
+        const filter = filters[propName];
 
-      entryArray.forEach(entry => {
-        const [value, label] = entry;
-        const option = dropDown
-          .append("option")
-          .text(label ?? '')
-          .attr("value", value)
-          .attr("class", "advanced-option")
+        entryArray.forEach(entry => {
+          const [value, label] = entry;
+          const option = dropDown
+            .append("option")
+            .text(label ?? '')
+            .attr("value", value)
+            .attr("class", "advanced-option")
 
-        // if there are active filters, label the one currently selected and disable empty choices
-        if (filter && filter.valueRequired === value) {
-          option.attr("selected", true);
-        }
-        if (!alternatePossibleFilterValues.has(value)) {
-          option.attr("disabled", true);
-        }
-      })
+          // if there are active filters, label the one currently selected and disable empty choices
+          if (filter && filter.valueRequired === value) {
+            option.attr("selected", true);
+          }
+          if (!alternatePossibleFilterValues.has(value)) {
+            option.attr("disabled", true);
+          }
+        })
+      }
     }
   }
 
