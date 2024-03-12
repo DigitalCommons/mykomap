@@ -1,5 +1,4 @@
 'use strict';
-//const fs = require('fs');
 import { assert } from 'chai';
 import { init as configBuilder } from '../src/map-app/app/model/config';
 
@@ -8,7 +7,6 @@ import rawConfig from './configs/typical/config.json';
 import version from './configs/typical/version.json';
 const about = `This is a dummy about.html!
 `;
-//fs.readFileSync('test/configs/typical/about.html');
 const combinedConfig = { ...rawConfig, ...version, aboutHtml: about };
 
 describe('The config.js module', function () {
@@ -39,6 +37,8 @@ describe('The config.js module', function () {
       assert.equal(config.getMaxZoomOnOne(), 14);
       assert.equal(config.getMaxZoomOnSearch(), 12);
       assert.equal(config.logo(), undefined);
+      assert.equal(config.getDefaultPanel(), "about");
+      assert.equal(config.getDefaultOpenSidebar(), true);
     });
   });
 });
