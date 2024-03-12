@@ -19,5 +19,7 @@
   "disableClusteringAtZoom": 10,
   "maxZoomOnGroup":12,
   "maxZoomOnOne": 14,
-  "maxZoomOnSearch": 12
+  "maxZoomOnSearch": 12,
+  "defaultPanel": "about",
+  "defaultOpenSidebar": true
 }
