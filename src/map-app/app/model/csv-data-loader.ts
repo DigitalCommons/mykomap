@@ -54,6 +54,7 @@ export class CsvDataLoader<R extends object = string[]> implements DataLoader<In
         step:  onStep,
         complete: onComplete,
         error: onError,
+        skipEmptyLines: true,
       };
       parse(this.url, config);
     };
