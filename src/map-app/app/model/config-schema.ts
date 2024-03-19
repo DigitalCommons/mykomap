@@ -34,6 +34,7 @@ import type {
 
 import { Initiative, InitiativeObj } from './initiative';
 import { isIso6391Code, Iso6391Code } from '../../localisations';
+import { SidebarId } from '../presenter/sidebar';
 
 class TypeDef<T> {
   constructor(params: {
@@ -133,7 +134,7 @@ export interface ReadableConfig {
   getShowDatasetsPanel(): boolean;
   getShowDirectoryPanel(): boolean;
   getShowSearchPanel(): boolean;
-  getDefaultPanel(): string;
+  getDefaultPanel(): SidebarId;
   getSidebarButtonColour(): string;
   getSoftwareGitCommit(): string;
   getSoftwareTimestamp(): string;
@@ -165,7 +166,7 @@ export interface WritableConfig {
   setShowDatasetsPanel(val: boolean): void;
   setShowDirectoryPanel(val: boolean): void;
   setShowSearchPanel(val: boolean): void;
-  setDefaultPanel(val: string): void;
+  setDefaultPanel(val: SidebarId): void;
 }
 
 export interface ConfigSchema<T> {
@@ -234,7 +235,7 @@ export class ConfigData {
   showDatasetsPanel: boolean = true;
   showDirectoryPanel: boolean = true;
   showSearchPanel: boolean = true;
-  defaultPanel: string = '';
+  defaultPanel: SidebarId = 'directory';
   sidebarButtonColour: string = '#39cccc';
   tileUrl?: string;
   timestamp: string = '2000-01-01T00:00:00.000Z';
@@ -405,6 +406,14 @@ const types = {
   initiativeRenderFunction: new TypeDef<InitiativeRenderFunction>({
     name: '{InitiativeRenderFunction}',
     descr: 'A function which accepts an Initiative instance and returns an HTML string',
+  }),
+  sidebarId: new TypeDef<SidebarId>({
+    name: '{SidebarId}',
+    // Would be sensible to generate this from the keys of a `new SidebarPanels()`
+    // - except if we import that we hit ERR_REQUIRE_ESM because d3 is a pure ESM module.
+    // And this module is currently not pure ESM. Argh. And it's not trivial to switch!
+    // See, for example https://commerce.nearform.com/blog/2022/victory-esm/
+    descr: 'One of these strings: "diretory", "initiatives", "about" or "datasets"'
   }),
   vocabSources: new TypeDef<AnyVocabSource[]>({
     name: '{AnyVocabSource[]}',
@@ -745,11 +754,11 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       defaultPanel: {
         id: "defaultPanel",
-        descr: "The string `about`, `directory`, `datasets`, or `initiatives` (i.e. search)",
-        defaultDescr: "the leftmost panel, which is usually the `directory`",
+        descr: "Defines which panel opens by default.",
+        defaultDescr: "If unset, the default is 'directory'",
         getter: "getDefaultPanel",
         setter: "setDefaultPanel",
-        type: types.string,
+        type: types.sidebarId,
       },
       sidebarButtonColour: {
         id: "sidebarButtonColour",
@@ -1021,7 +1030,7 @@ ${def.descr}
   getShowSearchPanel(): boolean {
     return this.data.showSearchPanel;
   }
-  getDefaultPanel(): string {
+  getDefaultPanel(): SidebarId {
     return this.data.defaultPanel;
   }
   getSidebarButtonColour(): string {
@@ -1109,7 +1118,7 @@ ${def.descr}
   setShowSearchPanel(val: boolean): void {
     this.data.showSearchPanel = val;
   }
-  setDefaultPanel(val: string): void {
+  setDefaultPanel(val: SidebarId): void {
     this.data.defaultPanel = val;
   }
   
