@@ -54,7 +54,7 @@ class TypeDef<T> {
   stringDescr?: string;
   // A string-parsing function
   parseString?: (val: string) => T;
-};
+}
 
 
 export interface VocabSource {
@@ -84,7 +84,7 @@ export interface DataSource {
   id: string;
   type: string;
   label: string;
-};
+}
 
 export interface HostSparqlDataSource extends DataSource {
   type: 'hostSparql';
@@ -144,7 +144,7 @@ export interface ReadableConfig {
   htmlTitle(): string;
   logo(): string | undefined;
   vocabularies(): AnyVocabSource[];
-};
+}
 
 export interface WritableConfig {
   setDefaultLatLng(val: Point2d): void;
@@ -166,7 +166,7 @@ export interface WritableConfig {
   setShowDatasetsPanel(val: boolean): void;
   setShowDirectoryPanel(val: boolean): void;
   setShowSearchPanel(val: boolean): void;
-};
+}
 
 export interface ConfigSchema<T> {
   // An identifier string
@@ -187,7 +187,7 @@ export interface DialogueSize {
     width?: string;
     height?: string;
     descriptionRatio?: number;
-};  
+}  
 
 export type InitiativeRenderFunction =
   (initiative: Initiative, model: DataServices) => string;
@@ -247,12 +247,12 @@ export class ConfigData {
   constructor(params: Partial<ConfigData> = {}) {
     Object.assign(this, params);
   }
-};
+}
 
 // This type is constrained to have the same keys as ConfigData, and
 // values which are ConfigSchema of the appropriate type for the
 // ConfigData property in question.
-export type ConfigSchemas = { [K in keyof ConfigData]: ConfigSchema<ConfigData[K]> };
+export type ConfigSchemas = { [K in keyof ConfigData]: ConfigSchema<ConfigData[K]> }
 
 
 // Validates/normalises a language code.
@@ -417,7 +417,7 @@ const types = {
     descr: 'An array of data source definitions, defining the type, ID, and in certain cases '+
       'other source-secific parameters needed for the source type',  
   }),
-};
+}
 
 
 
@@ -1251,8 +1251,6 @@ ${def.descr}
   setShowSearchPanel(val: boolean): void {
     this.data.showSearchPanel = val;
   }
-  
-//  [id: string]: Getter | Setter;
-};
 
-
+  //  [id: string]: Getter | Setter;
+}
