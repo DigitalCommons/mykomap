@@ -714,7 +714,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       showAboutPanel: {
         id: 'showAboutPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the about panel`,
         getter: 'getShowAboutPanel',
         setter: 'setShowAboutPanel',
         type: types.boolean,
@@ -728,14 +728,14 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       showDirectoryPanel: {
         id: 'showDirectoryPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the directory panel`,
         getter: 'getShowDirectoryPanel',
         setter: 'setShowDirectoryPanel',
         type: types.boolean,
       },
       showSearchPanel: {
         id: 'showSearchPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the initiatives (i.e. search) panel`,
         getter: 'getShowSearchPanel',
         setter: 'setShowSearchPanel',
         type: types.boolean,
