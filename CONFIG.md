@@ -99,12 +99,12 @@ Set whether the sidebar is by default open on starting the app.
 
 ### `defaultPanel`
 
-- *type:* `{string}` 
+- *type:* `{SidebarId}` One of these strings: "diretory", "initiatives", "about" or "datasets"
 - *in string context:* parsed as-is
-- *default:* the leftmost panel, which is usually the `directory`
+- *default:* If unset, the default is 'directory'
 - *settable?:* yes
 
-The string `about`, `directory`, `datasets`, or `initiatives` (i.e. search)
+Defines which panel opens by default.
 
 
 
