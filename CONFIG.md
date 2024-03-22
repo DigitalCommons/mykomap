@@ -1,24 +1,119 @@
 
-# `config.json`
+# `ConfigData`
 
-This describes the schema of the `config.json` file consuming projects should supply,
-and valid attributes thereof. It should be an object definition. Valid attributes are
-described here. Valid attributes which are not defined in `config.json` will take a
-default value. Those which are not valid are ignored.
+This describes the schema of the `config` parameter which consuming
+projects should supply to MykoMap via the `webRun(window: Window,
+base_config: ConfigData): void` entry-point function, and valid attributes
+thereof.
 
-Here is an example of what you might put in this file:
+The config parameter should be a valid `ConfigData` class instance. If
+TypeScript is used this will enforce the allowed attributes and their types
+- this is recommended. In Javascript, it is merely an object - and you may 
+get an error if an attribute defined here is given something unexpected.
+However, attributes not listed here will simply be ignored.
+
+The config parameter hard-wires some defaults for the application at the outset.
+However, these can can still be overridden in various ways by URL
+parameters or HTML element attributes in the web page, as described 
+in [README.md](README.md)
+
+The bare minimum config is the default `ConfigData` instance, which 
+is essentially an empty object, but that would result in a totally empty map.
+
+For the sake of illustration, here is an example of what you might put
+in this parameter for a map with pins which have a `size`,
+`description` and `address` field, in addition of the hard-wired
+bare minimum fields of `uri`, `name`, `lat` and `lng`. The
+`size` field can be one of several pre-defined values - a taxonomy,
+also known as a vocabulary.  Because of the `filterableFields`
+attribute, there will be a single drop-down on the search panel for this
+narrowing the displayed pins by values of this field.
 
 ```
- {
-  "htmlTitle": "Solidarity Oxford",
-  "filterableFields": ["countryId", "primaryActivity"],
-  "doesDirectoryHaveColours": true,
-  "disableClusteringAtZoom": 10
+import { ConfigData } from  "mykomap/app/model/config-schema";
+import { mkObjTransformer, DataVal } from "mykomap/obj-transformer";
+import { InitiativeObj } from "mykomap/src/map-app/app/model/initiative";
+
+const config: ConfigData = {
+  htmlTitle: "Outlets",
+  fields: {
+    address: 'value',
+    size: {
+      type: 'vocab',
+      uri: 'sz:',
+    },
+  },
+  filterableFields: ["size"],
+  vocabularies: [
+    {
+      type: 'json',
+      id: 'vocab',
+      label: 'Vocabs 1.0',
+      url: 'example.json',
+    }
+  ],
+  dataSources: [
+    {
+      id: 'data',
+      label: 'Data',
+      type: 'csv',
+      url: 'example.csv',
+      transform: mkObjTransformer<DataVal, InitiativeObj>({
+        uri: T.prefixed(baseUri).from('Identifier'),
+        name: T.text('').from('Name'),
+        lat: T.nullable.number(null).from('Latitude'),
+        lng: T.nullable.number(null).from('Longitude'),
+        description: T.text('').from('Description'),
+        address: T.text('').from('Address'),
+        size: T.prefixed('https://example.com/size/1.1/').from('Size'),
+      }),
+    },
+  ],
 }
 ```
 
-These values are defaults, however, which can be overridden in various ways,
-as described in [README.md](README.md)
+This config would need to be accompanied with a `example.json` file
+defining the vocabs, and a data file `example.csv`. Both of these
+can be supplied in map project source code in the `www/` directory,
+or an URL to elsewhere can be supplied. The `transform` attribute defines 
+the mapping from CSV fields to map pin fields.
+
+The vocabs file might look like this, which defines one vocabulary: size,
+represented in the config by the abbreviated base URI `sz:`. The language 
+isn't specified above, which means it defaults to English, hence there is only one
+language section for `EN`, with term labels in English. For example:
+
+```
+{
+  "prefixes": {
+    "https://example.com/sizes/1.1/": "sz",
+  },
+  "vocabs": {
+    "sz:": {
+      "EN": {
+        "title": ""
+        "terms": {
+          "sz:large": "Large",
+          "sz:medium": "Medium",
+          "sz:small": "Small",
+        },
+      },
+    }
+  }
+}
+```
+
+The data file might look like this, which defines just three pins,
+with some extra fields which are ignored in our example. Some
+identifier field is mandatory, however.
+
+```
+Identifier,Name,Description,Address,Size,Latitude,Longitude,Geocoded Latitude,Geocoded Longitude
+1,"Apple Co-op",We grow fruit.","1 Apple Way, Appleton",large,0,0,51.6084367,-3.6547778
+2,"Banana Co","We straighten bananas.","1 Banana Boulevard, Skinningdale",medium,0,0,55.9646979,-3.1733052
+3,"The Cabbage Collective","We are artists.","2 Cabbage Close, Caulfield",small,0,0,54.9744687,-1.6108945
+```
+
 
 ## Attributes
 
