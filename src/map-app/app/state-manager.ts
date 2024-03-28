@@ -30,7 +30,7 @@ export class AppState {
   ) {}
 
   // Helper function which applies string search to initiative set
-  private applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
+  static applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
     if (!textSearch)
       return initiatives;
     if (textSearch.willMatch())
@@ -39,7 +39,7 @@ export class AppState {
   }
 
   // Helper function which applies property filters to initiative array
-  private applyPropFilters(initiatives: Set<Initiative>, propFilters?: Dictionary<PropEquality>): Set<Initiative> {
+  static applyPropFilters(initiatives: Set<Initiative>, propFilters?: Dictionary<PropEquality>): Set<Initiative> {
     if (!propFilters)
       return initiatives;
     for(const propName in propFilters) {
@@ -50,6 +50,19 @@ export class AppState {
     return initiatives;
   }
 
+  // Helper function which applies string search to initiative set
+  private applyTextSearch(initiatives: Set<Initiative>,
+                          textSearch?: TextSearch) {
+    return AppState.applyTextSearch(initiatives, textSearch);
+  }
+  
+  // Helper function which applies property filters to initiative array
+  private applyPropFilters(initiatives: Set<Initiative>,
+                          propFilters?: Dictionary<PropEquality>) {
+    return AppState.applyPropFilters(initiatives, propFilters);
+  }
+
+      
   /// Finds all the possible values for propName not excluded by the other filters
   ///
   /// i.e. if we wanted to select another PropEquality value for propName,
