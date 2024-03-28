@@ -240,3 +240,14 @@ export function assert(expr: unknown, msg?: string): asserts expr {
 }
 
 export type Predicate<T> = (it: T) => boolean;
+
+// Filters a Set with a predicate, returning a new Set.
+export function filterSet<T>(set: Set<T>, predicate: Predicate<T>): Set<T> {
+  const result = new Set<T>();
+  set.forEach(item => {
+    if (predicate(item))
+      result.add(item);
+  });
+  return result;
+}
+
