@@ -1,6 +1,6 @@
 import { Dictionary } from "../common-types";
 import { StateChange, UndoStack } from "../undo-stack";
-import { compactArray } from "../utils";
+import { compactArray, filterSet } from "../utils";
 import { Initiative } from "./model/initiative";
 
 export type Action = TextSearch | PropEquality | ClearPropEquality | ClearPropEqualities;
@@ -30,18 +30,18 @@ export class AppState {
   ) {}
 
   // Helper function which applies string search to initiative set
-  private applyTextSearch(textSearch: TextSearch, initiatives: Set<Initiative>): Initiative[] {
-    if (!textSearch.willMatch())
-      return Array.from(initiatives).filter(textSearch.predicate);
-    return Array.from(initiatives);
+  private applyTextSearch(textSearch: TextSearch, initiatives: Set<Initiative>): Set<Initiative> {
+    if (textSearch.willMatch())
+      return initiatives;
+    return filterSet(initiatives, textSearch.predicate);
   }
 
   // Helper function which applies property filters to initiative array
-  private applyPropFilters(propFilters: Dictionary<PropEquality>, initiatives: Initiative[]): Initiative[] {
+  private applyPropFilters(propFilters: Dictionary<PropEquality>, initiatives: Set<Initiative>): Set<Initiative> {
     for(const propName in propFilters) {
       const filter = propFilters[propName];
       if (filter)
-        initiatives = initiatives.filter(filter.predicate);
+        initiatives = filterSet(initiatives, filter.predicate);
     }
     return initiatives;
   }
@@ -62,13 +62,13 @@ export class AppState {
         continue; // skip the filter for this property
       const filter = this.propFilters[filterPropName];
       if (filter)
-        initiatives = initiatives.filter(filter.predicate);
+        initiatives = filterSet(initiatives, filter.predicate);
     }
 
     // Find the variation in the property, not including undefined.
     // Assume any arrays are multi-valued fields
     // (this is possibly a bit slack but it works for now)
-    const fieldVals = compactArray(initiatives.flatMap(it => it[propName]));
+    const fieldVals = compactArray(Array.from(initiatives).flatMap(it => it[propName]));
     return new Set(fieldVals);
   }
 
