@@ -6,9 +6,15 @@
       "type": "hostSparql"
     }
   ],
+  "fields": {
+    "primaryActivity": {
+      "type": "vocab",
+      "uri": "pa:"
+    }
+  },
   "htmlTitle": "Test Title",
   "defaultLatLng": ["55.55", "66.66" ],
-  "filterableFields": [{ "field": "primaryActivity", "label": "Activities" }],
+  "filterableFields": ["primaryActivity"],
   "doesDirectoryHaveColours": true,
   "disableClusteringAtZoom": 10,
   "maxZoomOnGroup":12,

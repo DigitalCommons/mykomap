@@ -1,6 +1,6 @@
 import { Dictionary } from "../common-types";
 import { StateChange, UndoStack } from "../undo-stack";
-import { compactArray } from "../utils";
+import { compactArray, filterSet } from "../utils";
 import { Initiative } from "./model/initiative";
 
 export type Action = TextSearch | PropEquality | ClearPropEquality | ClearPropEqualities;
@@ -29,23 +29,66 @@ export class AppState {
     readonly propFilters: Dictionary<PropEquality> = {},
   ) {}
 
+  // Helper method to construct a start state from some initiatives and start
+  // actions
+  static startState(allInitiatives: Set<Initiative>,
+                    startingTextSearch?: TextSearch,
+                    startingFilters?: Partial<Record<string, PropEquality>>): AppState {
+    // `startingFilters` may be an empty collection if no default filters
+    // are set in the config. Which results in `initialInitiatives` being
+    // the same list as `allInitiatives`.
+    let initiatives = this.applyTextSearch(allInitiatives, startingTextSearch);
+    initiatives = this.applyPropFilters(initiatives, startingFilters);
+    return new AppState(
+      allInitiatives,
+      initiatives,
+      startingTextSearch,
+      startingFilters,
+    );
+  }
+
+  restartState(allInitiatives: Set<Initiative>): AppState {
+    return AppState.startState(
+      allInitiatives,
+      this.textSearch,
+      this.propFilters,
+    );
+  }
+  
   // Helper function which applies string search to initiative set
-  private applyTextSearch(textSearch: TextSearch, initiatives: Set<Initiative>): Initiative[] {
-    if (!textSearch.willMatch())
-      return Array.from(initiatives).filter(textSearch.predicate);
-    return Array.from(initiatives);
+  static applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
+    if (!textSearch)
+      return initiatives;
+    if (textSearch.willMatch())
+      return initiatives;
+    return filterSet(initiatives, textSearch.predicate);
   }
 
   // Helper function which applies property filters to initiative array
-  private applyPropFilters(propFilters: Dictionary<PropEquality>, initiatives: Initiative[]): Initiative[] {
+  static applyPropFilters(initiatives: Set<Initiative>, propFilters?: Dictionary<PropEquality>): Set<Initiative> {
+    if (!propFilters)
+      return initiatives;
     for(const propName in propFilters) {
       const filter = propFilters[propName];
       if (filter)
-        initiatives = initiatives.filter(filter.predicate);
+        initiatives = filterSet(initiatives, filter.predicate);
     }
     return initiatives;
   }
 
+  // Helper function which applies string search to initiative set
+  private applyTextSearch(initiatives: Set<Initiative>,
+                          textSearch?: TextSearch) {
+    return AppState.applyTextSearch(initiatives, textSearch);
+  }
+  
+  // Helper function which applies property filters to initiative array
+  private applyPropFilters(initiatives: Set<Initiative>,
+                          propFilters?: Dictionary<PropEquality>) {
+    return AppState.applyPropFilters(initiatives, propFilters);
+  }
+
+      
   /// Finds all the possible values for propName not excluded by the other filters
   ///
   /// i.e. if we wanted to select another PropEquality value for propName,
@@ -54,7 +97,7 @@ export class AppState {
     // We can't easily check if propName is a valid one here...
     // If it is, an empty set will be returned.
 
-    let initiatives = this.applyTextSearch(this.textSearch, this.allInitiatives);
+    let initiatives = this.applyTextSearch(this.allInitiatives, this.textSearch);
 
     // Filter all initiatives but the one for propName
     for(const filterPropName in this.propFilters) {
@@ -62,13 +105,13 @@ export class AppState {
         continue; // skip the filter for this property
       const filter = this.propFilters[filterPropName];
       if (filter)
-        initiatives = initiatives.filter(filter.predicate);
+        initiatives = filterSet(initiatives, filter.predicate);
     }
 
     // Find the variation in the property, not including undefined.
     // Assume any arrays are multi-valued fields
     // (this is possibly a bit slack but it works for now)
-    const fieldVals = compactArray(initiatives.flatMap(it => it[propName]));
+    const fieldVals = compactArray(Array.from(initiatives).flatMap(it => it[propName]));
     return new Set(fieldVals);
   }
 
@@ -84,8 +127,8 @@ export class AppState {
     if (textSearch.searchText === this.textSearch.searchText)
       return undefined; // No change.
 
-    let initiatives = this.applyTextSearch(textSearch, this.allInitiatives);
-    initiatives = this.applyPropFilters(this.propFilters, initiatives);
+    let initiatives = this.applyTextSearch(this.allInitiatives, textSearch);
+    initiatives = this.applyPropFilters(initiatives, this.propFilters);
     
     const result = new AppState(
       this.allInitiatives,
@@ -107,12 +150,12 @@ export class AppState {
       && oldPropFilter.propName === propEq.propName)
       return undefined; // No change
 
-    let initiatives = this.applyTextSearch(this.textSearch, this.allInitiatives);
+    let initiatives = this.applyTextSearch(this.allInitiatives, this.textSearch);
 
     const propFilters = { ...this.propFilters };
     propFilters[propEq.propName] = propEq;
 
-    initiatives = this.applyPropFilters(propFilters, initiatives);
+    initiatives = this.applyPropFilters(initiatives, propFilters);
     
     const result = new AppState(
       this.allInitiatives,
@@ -128,12 +171,12 @@ export class AppState {
       return undefined; // No change
     
     const action = new ClearPropEquality(propName);
-    let initiatives = this.applyTextSearch(this.textSearch, this.allInitiatives);
+    let initiatives = this.applyTextSearch(this.allInitiatives, this.textSearch);
 
     const propFilters = { ...this.propFilters };
     delete propFilters[propName];
 
-    initiatives = this.applyPropFilters(propFilters, initiatives);
+    initiatives = this.applyPropFilters(initiatives, propFilters);
     const result = new AppState(
       this.allInitiatives,
       new Set(initiatives),
@@ -147,7 +190,7 @@ export class AppState {
     if (Object.keys(this.propFilters).length === 0)
       return undefined; // No change
     
-    let initiatives = this.applyTextSearch(this.textSearch, this.allInitiatives);
+    let initiatives = this.applyTextSearch(this.allInitiatives, this.textSearch);
 
     const action = new ClearPropEqualities();
     const result = new AppState(
@@ -262,7 +305,7 @@ export class StateManager {
 
     if (initiatives) {
       const initiativesSet = new Set(initiatives);
-      const state = new AppState(initiativesSet);
+      const state = this.stack.current.result.restartState(initiativesSet);
       const change = new StateChange(undefined, state);
       this.stack.current = change;
       this.onChange(change); // This is unambiguously a change!

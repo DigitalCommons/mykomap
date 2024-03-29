@@ -22,12 +22,12 @@ is essentially an empty object, but that would result in a totally empty map.
 
 For the sake of illustration, here is an example of what you might put
 in this parameter for a map with pins which have a `size`,
-`description` and `address` field, in addition of the hard-wired
-bare minimum fields of `uri`, `name`, `lat` and `lng`. The
+`description` and `address` properties, in addition of the hard-wired
+bare minimum properties of `uri`, `name`, `lat` and `lng`. The
 `size` field can be one of several pre-defined values - a taxonomy,
-also known as a vocabulary.  Because of the `filterableFields`
-attribute, there will be a single drop-down on the search panel for this
-narrowing the displayed pins by values of this field.
+also known as a vocabulary.  Because of the presence of a `filter` 
+attribute of `size`, there will be a single drop-down on the search 
+panel for this narrowing the displayed pins by values of this field.
 
 ```
 import { ConfigData } from  "mykomap/app/model/config-schema";
@@ -36,14 +36,14 @@ import { InitiativeObj } from "mykomap/src/map-app/app/model/initiative";
 
 const config: ConfigData = {
   htmlTitle: "Outlets",
-  fields: {
+  propDefs: { // the old name for this is 'fields', but deprecated
     address: 'value',
     size: {
       type: 'vocab',
       uri: 'sz:',
+      filter: undefined,
     },
   },
-  filterableFields: ["size"],
   vocabularies: [
     {
       type: 'json',
@@ -76,7 +76,7 @@ This config would need to be accompanied with a `example.json` file
 defining the vocabs, and a data file `example.csv`. Both of these
 can be supplied in map project source code in the `www/` directory,
 or an URL to elsewhere can be supplied. The `transform` attribute defines 
-the mapping from CSV fields to map pin fields.
+the mapping from CSV fields to map pin properties.
 
 The vocabs file might look like this, which defines one vocabulary: size,
 represented in the config by the abbreviated base URI `sz:`. The language 
@@ -248,10 +248,10 @@ True if the directory should feature coloured entries
 
 - *type:* `{PropDefs}` A dictionary of initiative property definitions, or just a property type string, keyed by property id
 - *in string context:* parsed as-is
-- *default:* `[object Object]`
+- *default:* `undefined`
 - *settable?:* no
 
-Defines extended definitions of new or existing initiative fields
+If present, defines extended definitions of extended or existing initiative fields (deprecated - use propDefs going forward)
 
 
 
@@ -426,6 +426,18 @@ Responses to SPARQL queries will normally be cached in /services/locCache.txt if
 
 
 
+### `propDefs`
+
+- *type:* `{PropDefs}` A dictionary of initiative property definitions, or just a property type string, keyed by property id
+- *in string context:* parsed as-is
+- *default:* `[object Object]`
+- *settable?:* no
+
+Defines extended definitions of extended or existing initiative properties
+
+
+
+
 ### `searchedFields`
 
 - *type:* `{string[]}` An array of strings.
@@ -563,7 +575,7 @@ The name of the variant used to generate this map application.
 - *default:* No vocabs are queried if nothing is provided
 - *settable?:* no
 
-Specifies the vocabularies to obtain via SPARQL query for use in `fields`
+Specifies the vocabularies to obtain via SPARQL query for use in `propDefs`
 
 
 
