@@ -110,7 +110,8 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
-  fields(): FieldDefs;
+  fields(): FieldDefs; // @deprecated
+  getPropDefs(): FieldDefs;
   getCustomPopup(): InitiativeRenderFunction | undefined;
   getDataSources(): AnyDataSource[];
   getDefaultLatLng(): Point2d;
@@ -210,7 +211,7 @@ export class ConfigData {
   disableClusteringAtZoom: number = 0;
   doesDirectoryHaveColours: boolean = false;
   elem_id: string = 'map-app';
-  fields: Dictionary<PropDef | PropDef['type']> = {};
+  fields?: Dictionary<PropDef | PropDef['type']>; // @deprecated - use propDefs going forwards
   filterableFields: string[] = [];
   gitcommit: string = '0';
   htmlTitle: string = '';
@@ -227,6 +228,7 @@ export class ConfigData {
   minZoom: number = 2;
   noLodCache: boolean = true;
   mykoMapVersion: string = '0';
+  propDefs: Dictionary<PropDef | PropDef['type']> = {};
   searchedFields: string[] = ['name'];
   servicesPath: string = 'services/';
   showAboutPanel: boolean = true;
@@ -470,14 +472,14 @@ export class Config implements ReadableConfig, WritableConfig {
   
   private readonly data: ConfigData;
   private readonly configSchemas: ConfigSchemas;
-  private _fields: PropDefs;
+  private _propDefs: PropDefs;
 
-  private stringsToPropDefs(fields: ConfigData['fields']): PropDefs {
-    const propDefEntries = Object.entries(fields ?? {}).map(
-      ([id, field]) => {
-        if (typeof field === 'string')
-          return [id, { type: field, from: id }];
-        return [id, field];
+  private stringsToPropDefs(propDefs: ConfigData['propDefs']): PropDefs {
+    const propDefEntries = Object.entries(propDefs ?? {}).map(
+      ([id, def]) => {
+        if (typeof def === 'string')
+          return [id, { type: def, from: id }];
+        return [id, def];
       }
     );
     return Object.fromEntries(propDefEntries);
@@ -572,7 +574,8 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       fields: {
         id: 'fields',
-        descr: 'Defines extended definitions of new or existing initiative fields',
+        descr: 'If present, defines extended definitions of extended or existing initiative fields '+
+          '(deprecated - use propDefs going forward)',
         getter: 'fields',
         type: types.propDefs,
       },
@@ -688,6 +691,12 @@ export class Config implements ReadableConfig, WritableConfig {
         getter: 'getVersionTag',
         type: types.string,
       },
+      propDefs: {
+        id: 'propDefs',
+        descr: 'Defines extended definitions of extended or existing initiative properties',
+        getter: 'getPropDefs',
+        type: types.propDefs,
+      },
       searchedFields: {
         id: 'searchedFields',
         descr: "A list of fields that are looked at when using the search function. Valid "+
@@ -772,7 +781,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       vocabularies: {
         id: 'vocabularies',
-        descr: 'Specifies the vocabularies to obtain via SPARQL query for use in `fields`',
+        descr: 'Specifies the vocabularies to obtain via SPARQL query for use in `propDefs`',
         defaultDescr: 'No vocabs are queried if nothing is provided',
         getter: 'vocabularies',
         type: types.vocabSources,
@@ -788,7 +797,7 @@ export class Config implements ReadableConfig, WritableConfig {
     this.validateFilterableFields(this.data.filterableFields);
     
     // Expand abbreviated field defs
-    this._fields = this.stringsToPropDefs(this.data.fields);
+    this._propDefs = this.stringsToPropDefs(this.data.fields ?? this.data.propDefs);
     
     // Special know-how validations...
     
@@ -820,10 +829,10 @@ export class Config implements ReadableConfig, WritableConfig {
       }
     }
 
-    // Make sure the fields all reference a known vocab
+    // Make sure the propDefs all reference a known vocab
     /* FIXME this no longer works - can we check it later?
-    for(const fieldId in this._fields ?? {}) {
-      let field = this._fields[fieldId];
+    for(const fieldId in this._propDefs ?? {}) {
+      let field = this._propDefs[fieldId];
       if (field === undefined)
         continue;
       if (field.type === 'multi')
@@ -875,8 +884,8 @@ is essentially an empty object, but that would result in a totally empty map.
 
 For the sake of illustration, here is an example of what you might put
 in this parameter for a map with pins which have a \`size\`,
-\`description\` and \`address\` field, in addition of the hard-wired
-bare minimum fields of \`uri\`, \`name\`, \`lat\` and \`lng\`. The
+\`description\` and \`address\` properties, in addition of the hard-wired
+bare minimum properties of \`uri\`, \`name\`, \`lat\` and \`lng\`. The
 \`size\` field can be one of several pre-defined values - a taxonomy,
 also known as a vocabulary.  Because of the presence of a \`filter\` 
 attribute of \`size\`, there will be a single drop-down on the search 
@@ -889,7 +898,7 @@ import { InitiativeObj } from "mykomap/src/map-app/app/model/initiative";
 
 const config: ConfigData = {
   htmlTitle: "Outlets",
-  fields: {
+  propDefs: { // the old name for this is 'fields', but deprecated
     address: 'value',
     size: {
       type: 'vocab',
@@ -929,7 +938,7 @@ This config would need to be accompanied with a \`example.json\` file
 defining the vocabs, and a data file \`example.csv\`. Both of these
 can be supplied in map project source code in the \`www/\` directory,
 or an URL to elsewhere can be supplied. The \`transform\` attribute defines 
-the mapping from CSV fields to map pin fields.
+the mapping from CSV fields to map pin properties.
 
 The vocabs file might look like this, which defines one vocabulary: size,
 represented in the config by the abbreviated base URI \`sz:\`. The language 
@@ -1038,8 +1047,13 @@ ${def.descr}
     return this.data.elem_id;
   }
 
+  // @deprecated
   fields() {
-    return this._fields;
+    return this._propDefs;
+  }
+
+  getPropDefs() {
+    return this._propDefs;
   }
 
   getDataSources(): AnyDataSource[] {
@@ -1063,27 +1077,27 @@ ${def.descr}
   getFilterableFields(): string[] {    
     return this.data.filterableFields;
   }
-  // Gets a dictionary of filtered fields, with the same order as their definition.
+  // Gets a dictionary of filtered properties, with the same order as their definition.
   //
-  // Returns a shortlist dictionary of fields which have a filter attribute present
+  // Returns a shortlist dictionary of properties which have a filter attribute present
   // (even if that is `undefined` or `null`, which still implies there  should be a filter,
   // just not one set to anything in particular, or one which includes only empty values)
   getFilteredPropDefs(): Record<string, PropDef> {
-    const fields = this.fields();
+    const propDefs = this.getPropDefs();
     const filterableFields = this.data.filterableFields;
     const filteredFields: Record<string, PropDef> = {};
     if (filterableFields.length > 0) {
-      // Back-compatibility override case: use these fields as filters
+      // Back-compatibility override case: use these properties as filters
       for(const name of filterableFields) {
-        const propDef = fields[name];
+        const propDef = propDefs[name];
         if (propDef)
           filteredFields[name] = propDef;
       }
     }
     else {
-      // Standard case: look for fields with a filter
-      for(const name in fields) {
-        const propDef = fields[name];
+      // Standard case: look for properties with a filter
+      for(const name in propDefs) {
+        const propDef = propDefs[name];
         if (propDef != null && 'filter' in propDef) { // note loose null match
           filteredFields[name] = propDef;
         }
@@ -1184,8 +1198,9 @@ ${def.descr}
   validateFilterableFields(val: string[]): void {
     // Check that all the filterable fields are property names -
     // Something is wrong if not.
+    const propDefs = this.data.fields ?? this.data.propDefs;
     const badFields = val
-      .filter(name => !this.data.fields[name]);
+      .filter(name => !propDefs[name]);
     
     if (badFields.length > 0) {
       throw new Error(
