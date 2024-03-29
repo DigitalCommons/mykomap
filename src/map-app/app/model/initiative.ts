@@ -15,7 +15,7 @@ export const trivialParamBuilder: ParamBuilder<PropDef> = (id, params, _) => par
 
 /// This class represents an initiative, AKA a pin on the map.
 ///
-/// It is somewhat dynamic - the number and type of fields is defined at runtime,
+/// It is somewhat dynamic - the number and type of properties is defined at runtime,
 /// from a PropDefs structure, and the initialisation is defined by a ParamBuilder.
 ///
 /// Inherently, it's basically a dictionary of enumberable, read-only
@@ -24,7 +24,7 @@ export const trivialParamBuilder: ParamBuilder<PropDef> = (id, params, _) => par
 /// initialilsed created.
 ///
 /// Additionally, it has a search index property `searchstr`, which is
-/// a string constructed by normalising the values of selected fields,
+/// a string constructed by normalising the values of selected properties,
 /// and an `__internal` property for associating arbitrary data with
 /// the instance.
 ///
@@ -34,8 +34,8 @@ export class Initiative {
   /// Constructor constructor!
   ///
   /// This constructs an Initiative constructor from the given specification
-  /// in propDefs (which defines the fields) and paramBuilder (which defines
-  /// how to construct values for these fields).
+  /// in propDefs (which defines the properties) and paramBuilder (which defines
+  /// how to construct values for these properties).
   static mkFactory(propDefs: PropDefs,
                    paramBuilder: ParamBuilder<PropDef> = trivialParamBuilder,
                    searchIndexer?: (value: unknown, propName: string, propDef: PropDef) => string|undefined) {
@@ -78,7 +78,7 @@ export class Initiative {
     return _toString(a[prop]).localeCompare(_toString(b[prop]));
   }
 
-  /// Searches initiatives for objects whose searchstr fields include the search text
+  /// Searches initiatives for objects whose searchstr properties include the search text
   ///
   /// @return a new list of initiatives
   static textSearch(text: string, initiatives: Initiative[]): Initiative[] {
@@ -92,14 +92,14 @@ export class Initiative {
     );
   }
 
-  // Sorts initiatives by the named field, if text
+  // Sorts initiatives by the named property, if text
   //
   // @return a list of matching initiatives.
   static textSort(initiatives: Initiative[], prop: string = 'name'): Initiative[] {
     return [...initiatives].sort((a, b) => Initiative.compare(a, b, prop));
   }  
 
-  // Filters initiatives by the named field
+  // Filters initiatives by the named property
   static filter(initiatives: Initiative[], prop: string, valueRequired: unknown) {
     return initiatives.filter(
       it => it[prop] == valueRequired

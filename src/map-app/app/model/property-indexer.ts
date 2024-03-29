@@ -39,7 +39,7 @@ export class PropertyIndexer {
       const value = initiative[propName];
       if (value == null) {
         // This initiative has no value for `propName`, so can't be indexed further.
-        console.warn(`Initiative has no value for filter field ${propName}: ${initiative.uri}`);
+        console.warn(`Initiative has no value for filtered property ${propName}: ${initiative.uri}`);
         return;
       }
 
@@ -53,8 +53,8 @@ export class PropertyIndexer {
     });
   }
 
-  /// Loop through the filteredFields and sort the data, then sort the
-  /// keys in order. Sorts only the propName fields, not the
+  /// Loop through the filtered properties and sort the data, then sort the
+  /// keys in order. Sorts only the propName properies, not the
   /// initiatives they hold.
   onComplete(): void {
     
@@ -116,7 +116,7 @@ export class PropertyIndexer {
     }
     else {
       // Create the object that holds the registered values for the current
-      // field if it hasn't already been created
+      // property if it hasn't already been created
       const values: Dictionary<Initiative[]> = this.byPropThenValue[propName] = {};
       values[valueKey] = [initiative];
     }

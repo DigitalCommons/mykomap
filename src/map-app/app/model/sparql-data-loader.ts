@@ -64,7 +64,7 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
       const response: SparqlDatasetResponse = await this.fetchDataset(this.id);
       console.debug(`loaded ${this.id} data`, response);
       
-      this.meta = { // Fill in any missing fields in the JSON
+      this.meta = { // Fill in any missing properties in the JSON
         endpoint: response.meta?.endpoint ?? '',
         default_graph_uri: response?.meta?.default_graph_uri ?? '',
         query: response?.meta?.query ?? ''
@@ -79,9 +79,9 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
         
         // We have to be aware that an initiative can be spread
         // across several records, due to the way that a SPARQL
-        // response encodes fields with multiple values as
-        // multiple records with the non-multiple fields
-        // duplicated, and the multiple fields varying.
+        // response encodes properties with multiple values as
+        // multiple records with the non-multiple properties
+        // duplicated, and the multiple properties varying.
         //
         // Therefore, read in records with the same uri all at once
         while(batch.length < this.maxInitiativesToLoadPerFrame) {
@@ -127,7 +127,7 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
   //      { uri: 'yyy', multivalue: undefined },
   //      { uri: 'zzz', multivalue: 4 }]
   //
-  // Note that yyy and zzz's multivalue fields are represented by a
+  // Note that yyy and zzz's multivalue properties are represented by a
   // single non-array value. This is due to the lack of any metadata
   // at the time of pre-processing. Note also that this applies to
   // nulls or undefineds, which need to be interpreted downstream as
@@ -140,7 +140,7 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
   // data.
   //
   // The plan is to make the server send more sensibly formatted
-  // multiple fields later.
+  // multiple properties later.
   private readInitiativeObj(records: InitiativeObj[]): InitiativeObj | undefined {
     if (records.length === 0)
       return undefined; // No more records
@@ -149,9 +149,9 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
 
     // Add any more with the same uri Note, we're a bit limited by
     // what we can infer without having access to the expected
-    // property schema, or any metadata from SPARQL about the field
+    // property schema, or any metadata from SPARQL about the property
     // types.  If we get multiple identical values in a multivalue
-    // field, we might not be able to tell it isn't single valued.
+    // property, we might not be able to tell it isn't single valued.
     // Live with this for now, later move this code to the
     // server-side, where this metadata is available.
     while(records.length > 0 && records[0].uri === first?.uri) {
@@ -191,7 +191,7 @@ export class SparqlDataLoader implements DataLoader<InitiativeObj> {
   //
   // @return the response data wrapped in a promise, direct from d3.json.
   // The data should be a SparqlDatasetResponse object with the properties:
-  // - `data`: [Array] list of inititive definitions, each a map of field names to values
+  // - `data`: [Array] list of inititive definitions, each a map of property names to values
   // - `meta`: [Object] a map of the following information:
   //    - `endpoint`: [String] the SPARQL endpoint queried 
   //    - `query`: [String] the SPARQL query used

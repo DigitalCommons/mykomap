@@ -217,7 +217,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     return buildAny;
   }
 
-  // This expects complete initiaitives, with multi-valued fields
+  // This expects complete initiaitives, with multi-valued properties
   // expressed as either single values, or an array of multiple
   // values. (Single values are historically allowed to make it easier
   // to marshall the multiple-record expression of multiple values
