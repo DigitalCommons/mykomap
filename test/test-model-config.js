@@ -31,7 +31,7 @@ describe('The config.js module', function () {
       assert.equal(config.getShowDatasetsPanel(), true);
       assert.equal(config.getInitialBounds(), undefined);
       assert.deepEqual(config.getDefaultLatLng(), ['55.55', '66.66']);
-      assert.deepEqual(config.getFilterableFields(), [{ "field": "primaryActivity", "label": "Activities" }]);
+      assert.deepEqual(config.getFilterableFields(), ["primaryActivity"]);
       assert.equal(config.doesDirectoryHaveColours(), true);
       assert.equal(config.getDisableClusteringAtZoom(), 10);
       assert.deepEqual(config.getSearchedFields(), ['name']);
