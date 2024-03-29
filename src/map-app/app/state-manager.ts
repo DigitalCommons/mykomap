@@ -29,6 +29,32 @@ export class AppState {
     readonly propFilters: Dictionary<PropEquality> = {},
   ) {}
 
+  // Helper method to construct a start state from some initiatives and start
+  // actions
+  static startState(allInitiatives: Set<Initiative>,
+                    startingTextSearch?: TextSearch,
+                    startingFilters?: Partial<Record<string, PropEquality>>): AppState {
+    // `startingFilters` may be an empty collection if no default filters
+    // are set in the config. Which results in `initialInitiatives` being
+    // the same list as `allInitiatives`.
+    let initiatives = this.applyTextSearch(allInitiatives, startingTextSearch);
+    initiatives = this.applyPropFilters(initiatives, startingFilters);
+    return new AppState(
+      allInitiatives,
+      initiatives,
+      startingTextSearch,
+      startingFilters,
+    );
+  }
+
+  restartState(allInitiatives: Set<Initiative>): AppState {
+    return AppState.startState(
+      allInitiatives,
+      this.textSearch,
+      this.propFilters,
+    );
+  }
+  
   // Helper function which applies string search to initiative set
   static applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
     if (!textSearch)
@@ -279,7 +305,7 @@ export class StateManager {
 
     if (initiatives) {
       const initiativesSet = new Set(initiatives);
-      const state = new AppState(initiativesSet);
+      const state = this.stack.current.result.restartState(initiativesSet);
       const change = new StateChange(undefined, state);
       this.stack.current = change;
       this.onChange(change); // This is unambiguously a change!

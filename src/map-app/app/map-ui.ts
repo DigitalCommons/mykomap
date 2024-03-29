@@ -3,7 +3,7 @@ import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
 import { MarkerManager } from "./marker-manager";
 import { Config } from "./model/config";
-import { DataServices } from "./model/data-services";
+import { DataServices, isVocabPropDef } from "./model/data-services";
 import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
@@ -11,6 +11,7 @@ import { PhraseBook } from "../localisations";
 import { toString as _toString } from '../utils';
 import { Action, AppState, PropEquality, StateManager, TextSearch } from "./state-manager";
 import { StateChange } from "../undo-stack";
+import { Dictionary } from "../common-types";
 
 export class MapUI {
   public map?: Map;
@@ -28,7 +29,12 @@ export class MapUI {
     this.labels = this.dataServices.getFunctionalLabels();
 
     const allInitiatives = new Set(dataServices.getAggregatedData().loadedInitiatives);
-    const initialState = new AppState(allInitiatives, allInitiatives);
+    const initialFilters = this.mkInitialFilters();
+    
+    const initialState = AppState.startState(allInitiatives, undefined, initialFilters);
+
+    // Set the intial state when constructing the StateManager. This will be the state
+    // to which a reset returns to.
     this.stateManager = new StateManager(initialState, change => this.onStateChange(change));
     
     // This is here to resolve a circular dependency loop - MapUI needs the SidebarView
@@ -43,6 +49,35 @@ export class MapUI {
     };
 
     EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
+  }
+
+  // This inspects the config and constructs an appropriate set of
+  // filters to construct the initial AppState with.
+  static mkInitialFilters(config: Config): Dictionary<PropEquality> {
+    const filters: Dictionary<PropEquality> = {};
+    const filteredFields = config.getFilteredPropDefs();
+    for(const name in filteredFields) {
+      const propDef = filteredFields[name];
+      const filter = propDef.filter;
+      if (filter != undefined) {
+        // If we get here, this property should have a default filter
+        // value set.
+
+        // We can only filter Vocab properties (single or multi), so check that.
+        if (isVocabPropDef(propDef)) {
+          filters[name] = new PropEquality(
+            name, filter, propDef.type === 'multi'
+          );
+        }
+      }
+    }
+    return filters;
+  }
+
+  // This inspects the MapUI's config and constructs an appropriate
+  // set of filters to construct the initial AppState with.
+  private mkInitialFilters() {
+    return MapUI.mkInitialFilters(this.config);
   }
 
   createMap() {
