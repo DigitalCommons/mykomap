@@ -134,7 +134,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed(classname, true)
         .classed("sea-directory-field", true)
         .on("click", (event: MouseEvent) => {
-          this.presenter.parent.mapui.removeFilters();
+          this.presenter.parent.mapui.resetSearch();
           this.listInitiativesForSelection(propName, propValue); // key may be null
           this.resetFilterSearch();
           d3.select(".sea-field-active").classed("sea-field-active", false);
