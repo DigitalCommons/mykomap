@@ -25,7 +25,7 @@ import type {
   DataServices,
   PropDef,
   PropDefs,
-  FieldDefs,
+  ConfigPropDefs,
 } from './data-services';
 
 import type {
@@ -110,8 +110,8 @@ export interface ReadableConfig {
   attr_namespace(): string;
   doesDirectoryHaveColours(): boolean;
   elem_id(): string;
-  fields(): FieldDefs; // @deprecated
-  getPropDefs(): FieldDefs;
+  fields(): ConfigPropDefs; // @deprecated
+  getPropDefs(): ConfigPropDefs;
   getCustomPopup(): InitiativeRenderFunction | undefined;
   getDataSources(): AnyDataSource[];
   getDefaultLatLng(): Point2d;

@@ -77,16 +77,37 @@ export interface CommonPropDef {
   // corresponding localised term will be used as the title.
   //
   // If undefined, the title defaults to the property's localised
-  // vocab title (if the property *is* a vocab field). Otherwise, the
+  // vocab title (if the property *is* a vocab property). Otherwise, the
   // property ID is used verbatim, as a fallback. Note that a vocab
-  // title is *not* a good choice if more than one field shares the
+  // title is *not* a good choice if more than one property shares the
   // same vocab!
   titleUri?: string;
+
+  // Defines the filtering on this property, if present. Can be set to one of:
+  // - undefined: enable filter in UI, but don't pre-set it
+  // - any other value: enable filter in UI and pre-set it to this
+  //
+  // This design attempts to leave the possibility open for filtering
+  // non-vocab properties, even though that isn't currently
+  // implemented. Which means it could be set to match any value (or
+  // even an array of values). So to allow for that, we use
+  // `undefined` to mean "enable the filter in the UI, but don't
+  // preset it", so that we can use `true`, `false` and `null` to
+  // match those values in the non-vocab case. Simply the presence of
+  // this attribute is enough to enable filtering in the UI.
+  //
+  // In the case of a vocab property, a uri string should be used.
+  //
+  // In any case, setting a value which has no matches, or cannot
+  // possibly have matches because it is not a valid value, will
+  // result in the filter default being ineffective - as it it weren't
+  // present. If it can be detected, there may be a warning.
+  filter?: unknown;
 }
 
-// InnerDefs define value constraints, but not PropDef-related fields.
+// InnerDefs define value constraints, but not PropDef-related information.
 // This is so that a MultiPropDef can wrap the value constrains without
-// duplicating the PropDef fields redundantly.
+// duplicating the PropDef information redundantly.
 export type InnerDef = InnerValueDef | InnerVocabDef | InnerCustomDef | InnerMultiDef ;
 export type InnerValueDef = {
   type: 'value';
@@ -129,11 +150,15 @@ export type MultiPropDef = CommonPropDef & {
 export type PropDefs = Dictionary<PropDef>;
 
 // A convenience variation of PropDefs used in ConfigData
-export type FieldDefs = Dictionary<PropDef | PropDef['type']>;
+export type ConfigPropDefs = Dictionary<PropDef | PropDef['type']>;
+
+// Old definition of ConfigPropDefs for backward-compatibility support
+// @deprecated
+export type FieldDefs = ConfigPropDefs;
 
 // A convenient composite PropDef variation which combines vocab and
 // multi property definitions. It is essentially either a VocabPropDef
-// or a MultiPropDef with an added uri field - so the uri field is
+// or a MultiPropDef with an added uri attribute - so the uri attribute is
 // always present at the top level.
 export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
 
@@ -168,15 +193,15 @@ export function sortedInsert(element: unknown, array: unknown[]) {
 
 // Implement the latitude/longitude fall-back logic for InitiativeObj.
 //
-// Creates a function which interprets a field of an InitiativeObj
+// Creates a function which interprets an attribute of an InitiativeObj
 // (the param in question) as a numeric latitude or longitude value
-// (or undefined if this fails).  This works for string field values
+// (or undefined if this fails).  This works for string attributes
 // as well as numeric ones.
 //
 // Additionally, if manLat *and* manLng are defined in the
 // InitiativeObj (and numeric or numeric strings, but not "0"), use
-// the field named by overrideParam. This will typically be manLat
-// or manLng, allowing these fields to override the original field,
+// the attribute named by overrideParam. This will typically be manLat
+// or manLng, allowing these attributes to override the original attribute,
 // whatever it is.
 function mkLocFromParamBuilder(from: string, overrideParam: string) {
   return (id: string, def: CustomPropDef, params: InitiativeObj) => {
@@ -390,10 +415,10 @@ export class DataServicesImpl implements DataServices {
     this.functionalLabels = functionalLabels;
     
     {
-      const fields = this.config.fields();
-      for(const fieldId in fields) {
-        const fieldDef = fields[fieldId];
-        this.propertySchema[fieldId] = fieldDef;
+      const propDefs = this.config.getPropDefs();
+      for(const id in propDefs) {
+        const propDef = propDefs[id];
+        this.propertySchema[id] = propDef;
       }
     }
 
