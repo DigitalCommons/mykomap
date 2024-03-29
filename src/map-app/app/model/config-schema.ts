@@ -118,6 +118,7 @@ export interface ReadableConfig {
   getDialogueSize(): DialogueSize;
   getDisableClusteringAtZoom(): number;
   getFilterableFields(): string[];
+  getFilteredPropDefs(): Record<string, PropDef>;
   getInitialBounds(): Box2d | undefined;
   getLanguage(): string;
   getLanguages(): string[];
@@ -784,6 +785,7 @@ export class Config implements ReadableConfig, WritableConfig {
     if (this.data.languages.length === 0)
       throw new Error("languages is configured empty, this should not happen");
     this.data.languages = this.data.languages.map(validateLang);
+    this.validateFilterableFields(this.data.filterableFields);
     
     // Expand abbreviated field defs
     this._fields = this.stringsToPropDefs(this.data.fields);
@@ -876,9 +878,9 @@ in this parameter for a map with pins which have a \`size\`,
 \`description\` and \`address\` field, in addition of the hard-wired
 bare minimum fields of \`uri\`, \`name\`, \`lat\` and \`lng\`. The
 \`size\` field can be one of several pre-defined values - a taxonomy,
-also known as a vocabulary.  Because of the \`filterableFields\`
-attribute, there will be a single drop-down on the search panel for this
-narrowing the displayed pins by values of this field.
+also known as a vocabulary.  Because of the presence of a \`filter\` 
+attribute of \`size\`, there will be a single drop-down on the search 
+panel for this narrowing the displayed pins by values of this field.
 
 \`\`\`
 import { ConfigData } from  "mykomap/app/model/config-schema";
@@ -892,9 +894,9 @@ const config: ConfigData = {
     size: {
       type: 'vocab',
       uri: 'sz:',
+      filter: undefined,
     },
   },
-  filterableFields: ["size"],
   vocabularies: [
     {
       type: 'json',
@@ -1057,8 +1059,37 @@ ${def.descr}
   getDisableClusteringAtZoom(): number {
     return this.data.disableClusteringAtZoom;
   }
-  getFilterableFields(): string[] {
+  // @deprecated: use getFilteredFields going forward
+  getFilterableFields(): string[] {    
     return this.data.filterableFields;
+  }
+  // Gets a dictionary of filtered fields, with the same order as their definition.
+  //
+  // Returns a shortlist dictionary of fields which have a filter attribute present
+  // (even if that is `undefined` or `null`, which still implies there  should be a filter,
+  // just not one set to anything in particular, or one which includes only empty values)
+  getFilteredPropDefs(): Record<string, PropDef> {
+    const fields = this.fields();
+    const filterableFields = this.data.filterableFields;
+    const filteredFields: Record<string, PropDef> = {};
+    if (filterableFields.length > 0) {
+      // Back-compatibility override case: use these fields as filters
+      for(const name of filterableFields) {
+        const propDef = fields[name];
+        if (propDef)
+          filteredFields[name] = propDef;
+      }
+    }
+    else {
+      // Standard case: look for fields with a filter
+      for(const name in fields) {
+        const propDef = fields[name];
+        if (propDef != null && 'filter' in propDef) { // note loose null match
+          filteredFields[name] = propDef;
+        }
+      }
+    }
+    return filteredFields;
   }
   getInitialBounds(): Box2d | undefined {
     return this.data.initialBounds;
@@ -1145,8 +1176,23 @@ ${def.descr}
   setDisableClusteringAtZoom(val: number): void {
     this.data.disableClusteringAtZoom = val;
   }
+  // @deprecated: set the `filter` property in field property definitions instead
   setFilterableFields(val: string[]): void {
+    this.validateFilterableFields(val);
     this.data.filterableFields = val;
+  }
+  validateFilterableFields(val: string[]): void {
+    // Check that all the filterable fields are property names -
+    // Something is wrong if not.
+    const badFields = val
+      .filter(name => !this.data.fields[name]);
+    
+    if (badFields.length > 0) {
+      throw new Error(
+        `setFilterableFields() used with invalid property names: `+
+          badFields.join(", ")
+      );
+    }
   }
   setHtmlTitle(val: string): void {
     this.data.htmlTitle = val;

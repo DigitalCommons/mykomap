@@ -471,16 +471,6 @@ export class DataServicesImpl implements DataServices {
     }
 
     {
-      // Need to record all instances of any of the fields that are specified in the config
-      // Expects an array of strings which are initiative field names.
-      const filterableFields: string[] = this.config.getFilterableFields();
-      if (typeof (filterableFields) !== 'object' || !(filterableFields instanceof Array))
-        throw new Error(`invalid filterableFields config for 'filterableFields' - not an array`);
-      if (filterableFields.findIndex(e => typeof (e) !== 'string') >= 0)
-        throw new Error(`invalid filterableFields config for 'filterableFields' - contains non-strings`);
-    }
-
-    {
       // `languages`' codes are validated and normalised in the config initialisation,
       // not here, so they are available everywhere. We can be sure there is at least one,
       // it is upper-case, and weird characters are excluded.
@@ -494,22 +484,6 @@ export class DataServicesImpl implements DataServices {
       const language = this.config.getLanguage();
       console.info("using language", language);
     }
-    
-    {
-      // Check that all the filterable fields are property names -
-      // Something is wrong if not.
-      const badFields = this.config.getFilterableFields()
-        .filter(name => !this.propertySchema[name]);
-      
-      if (badFields.length > 0) {
-        throw new Error(
-          `Filterable fields config must only include `+
-            `names of defined properties: ${badFields.join(", ")}`
-        );
-      }
-    }
-    
-
   }
 
   getAggregatedData(): AggregatedData {
