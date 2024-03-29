@@ -151,10 +151,10 @@ export class DirectorySidebarView extends BaseSidebarView {
 
     const mapui = this.presenter.parent.mapui;
     const registeredValues = mapui.dataServices.getAggregatedData().registeredValues;
-    const filterableFields = mapui.config.getFilterableFields();
-    const directoryPropName: string|undefined = filterableFields[0];
+    const filterableFields = mapui.config.getFilteredPropDefs();
+    const directoryPropName: string|undefined = Object.keys(filterableFields)[0];
     if (directoryPropName === undefined)
-      throw new Error(`filterableFields is empty - so no directory can be rendered. Shouldn't happen!`);
+      throw new Error(`there are no filtered fields - so no directory can be rendered. Shouldn't happen!`);
       
     // Just run on the first property for now
     // TODO: Support user selectable fields

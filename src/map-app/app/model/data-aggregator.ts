@@ -61,7 +61,7 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     this.paramBuilder = this.mkBuilder(vocabs);
     this.propIndex = new PropertyIndexer(
       this.registeredValues,
-      config.getFilterableFields(),
+      Object.keys(config.getFilteredPropDefs()),
       new PropDefIndex(this.propDefs,
                        (uri) => vocabs.getVocab(uri, config.getLanguage()),
                        labels),

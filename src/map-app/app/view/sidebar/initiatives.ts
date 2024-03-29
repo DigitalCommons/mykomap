@@ -118,18 +118,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
   private createAdvancedSearch(container: d3DivSelection) {
     const mapui = this.presenter.parent.mapui;
-    const propNames = mapui.config.getFilterableFields();
+    const filtered = mapui.config.getFilteredPropDefs();
     const vocabs = mapui.dataServices.getVocabs();
     const lang = mapui.config.getLanguage();
     
-    for(const propName of propNames) {
-      const propDef = mapui.config.fields()[propName];
-      if (!propDef) {
-        throw new Error(`filterableFields contains ${propName}, which is not a valid field`);
-      }
+    for(const propName in filtered) {
+      const propDef = filtered[propName];
       const uri = propDefToVocabUri(propDef);
       if (!uri) {
-        throw new Error(`filterableFields contains ${propName}, which is not a valid vocab field`);
+        throw new Error(`to be a filtered property, '${propName}' should be a vocab field, but is not`);
       }
       
       let propTitle = propName;
