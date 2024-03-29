@@ -39,6 +39,16 @@ function mkInitiativeObj(name: string, regorg?: string, ea?: string, sa?: string
 // The minimal config (just sets what to aggregate)
 const config = new Config({
   filterableFields: ['orgStructure', 'primaryActivity'],
+  propDefs: {
+    orgStructure: {
+      type: 'vocab',
+      uri: 'os:',
+    },
+    primaryActivity: {
+      type: 'vocab',
+      uri: 'pa:',
+    },
+  }
 });
 
 // A vocab service
