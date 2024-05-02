@@ -8,7 +8,7 @@ import { MapUI } from '../map-ui';
 
 export class MapPresenter extends BasePresenter {
   readonly view: MapView;
-  private previouslySelected: Initiative[] = [];
+  private currentlySelected: Initiative[] = [];
   
   constructor(readonly mapUI: MapUI) {
     super();
@@ -35,7 +35,7 @@ export class MapPresenter extends BasePresenter {
     EventBus.Initiatives.loadStarted.sub(() => this.onInitiativeLoadMessage());
     EventBus.Initiatives.loadFailed.sub(error => this.onInitiativeLoadMessage(error));
     
-    EventBus.Markers.needToShowLatestSelection.sub(initiative => this.onMarkersNeedToShowLatestSelection(initiative));
+    EventBus.Markers.needToShowLatestSelection.sub(initiatives => this.onMarkersNeedToShowLatestSelection(initiatives));
     EventBus.Map.needsToBeZoomedAndPanned.sub(data => this.onMapNeedsToBeZoomedAndPanned(data));
     EventBus.Map.needToShowInitiativeTooltip.sub(initiative => this.onNeedToShowInitiativeTooltip(initiative));
     EventBus.Map.needToHideInitiativeTooltip.sub(initiative => this.onNeedToHideInitiativeTooltip(initiative));
@@ -49,7 +49,7 @@ export class MapPresenter extends BasePresenter {
   }
     
   onInitiativeClicked() {
-    EventBus.Directory.initiativeClicked.pub(undefined);
+    EventBus.Map.initiativeClicked.pub(undefined);
   }
 
   onLoad() {
@@ -96,11 +96,11 @@ export class MapPresenter extends BasePresenter {
   }
 
   onMarkersNeedToShowLatestSelection(selected: Initiative[]) {
-    this.previouslySelected.forEach((initiative) => {
+    this.currentlySelected.forEach((initiative) => {
       this.mapUI.markers.setUnselected(initiative);
     });
 
-    this.previouslySelected = selected;
+    this.currentlySelected = selected;
     
     //zoom in and then select 
     selected.forEach((initiative) => {
@@ -144,4 +144,7 @@ export class MapPresenter extends BasePresenter {
     this.view.selectAndZoomOnInitiative(data);
   }
 
+  getSelectedInitiatives(): Initiative[] {
+    return this.currentlySelected;
+  }
 }
