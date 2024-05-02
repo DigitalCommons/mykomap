@@ -48,7 +48,7 @@ export class MapUI {
       });
     };
 
-    EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
+    EventBus.Map.resetSearch.sub(() => this.resetSearch());
   }
 
   // This inspects the config and constructs an appropriate set of
