@@ -59,7 +59,7 @@ export class AppState {
   static applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
     if (!textSearch)
       return initiatives;
-    if (textSearch.willMatch())
+    if (textSearch.isEmpty())
       return initiatives;
     return filterSet(initiatives, textSearch.predicate);
   }
@@ -120,7 +120,7 @@ export class AppState {
   }
   
   get hasTextSearch(): boolean {
-    return this.textSearch.willMatch();
+    return !this.textSearch.isEmpty();
   }
   
   addTextSearch(textSearch: TextSearch): AppStateChange|undefined {
@@ -233,7 +233,7 @@ export class TextSearch {
       .trim();                  // trim whitespace from front and back
   }
 
-  willMatch() {
+  isEmpty() {
     return this.normSearchText === '';
   }
 }

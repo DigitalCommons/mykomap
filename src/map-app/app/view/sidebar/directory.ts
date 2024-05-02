@@ -27,6 +27,16 @@ export class DirectorySidebarView extends BaseSidebarView {
     this.title = presenter.parent.mapui.labels.directory;
   }
 
+  refresh(changed: boolean) {
+    this.loadHistoryNavigation();
+    if (changed) {
+      // only need to load these if we changed to the directory sidebar
+      this.loadFixedSection();
+      this.loadScrollableSection();
+    }
+    this.refreshSearchResults();
+  }
+
 
   populateFixedSelection(selection: d3Selection): void {
     const that = this;

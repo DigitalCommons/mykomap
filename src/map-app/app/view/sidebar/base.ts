@@ -13,8 +13,6 @@ export abstract class BaseSidebarView extends BaseView {
   static readonly accordionClasses =
     "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + BaseSidebarView.hoverColour;
   static readonly sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
-
-
   
   abstract readonly presenter: BaseSidebarPresenter;
   
@@ -85,10 +83,17 @@ export abstract class BaseSidebarView extends BaseView {
     }
   }
 
-  refresh() {
+  /**
+   * Refreshes the sidebar view
+   * 
+   * @param changed true if we changed to this sidebar, false if it was already showing and we're
+   * just refreshing it.
+   */
+  refresh(changed: boolean) {
     this.loadFixedSection();
     this.loadHistoryNavigation(); // back and forward buttons
     this.loadScrollableSection();
+    this.refreshSearchResults();
   }
 
   /**
