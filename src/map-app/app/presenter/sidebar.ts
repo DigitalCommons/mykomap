@@ -1,6 +1,7 @@
 import { Dictionary } from '../../common-types';
 import { EventBus } from '../../eventbus';
 import { MapUI } from '../map-ui';
+import { Initiative } from '../model/initiative';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
 import { AboutSidebarPresenter } from './sidebar/about';
@@ -63,7 +64,7 @@ export class SidebarPresenter extends BasePresenter {
     if (name !== undefined) {
       // If name is set, change the current sidebar and then refresh
       this.sidebarName = name;
-      this.children[this.sidebarName]?.refreshView();
+      this.children[this.sidebarName]?.refreshView(true);
     }
     else {
       // Just refresh the currently showing sidebar.
@@ -76,11 +77,13 @@ export class SidebarPresenter extends BasePresenter {
           return; // No sidebars? Can't do anything.
       }
         
-      this.children[this.sidebarName]?.refreshView();
+      this.children[this.sidebarName]?.refreshView(false);
     }
   }
 
   showSidebar() {
+    // Refresh the view before showing
+    this.children[this.sidebarName ?? 'undefined']?.refreshView(true);
     this.view.showSidebar();
   }
 
@@ -95,6 +98,14 @@ export class SidebarPresenter extends BasePresenter {
 
   hideInitiativeSidebar() {
     this.view.hideInitiativeSidebar();
+  }
+
+  populateInitiativeSidebar(initiative: Initiative, initiativeContent: string) {
+    this.view.populateInitiativeSidebar(initiative, initiativeContent);
+  }
+
+  showInitiativeList() {
+    this.view.showInitiativeList();
   }
 
   hideInitiativeList() {
@@ -112,7 +123,7 @@ export class SidebarPresenter extends BasePresenter {
     });
     EventBus.Sidebar.showDirectory.sub(() => {
       this.changeSidebar("directory");
-      this.view.showInitiativeList();
+      this.showSidebar();
     });
     EventBus.Sidebar.showDatasets.sub(() => {
       this.changeSidebar("datasets");
@@ -121,8 +132,12 @@ export class SidebarPresenter extends BasePresenter {
     EventBus.Sidebar.showSidebar.sub(() => this.showSidebar());
     EventBus.Sidebar.hideSidebar.sub(() => this.hideSidebar());
     EventBus.Sidebar.hideInitiativeSidebar.sub(() => this.hideInitiativeSidebar());
+    EventBus.Sidebar.showInitiativeList.sub(() => this.showInitiativeList());
     EventBus.Sidebar.hideInitiativeList.sub(() => this.hideInitiativeList());
-    EventBus.Initiatives.reset.sub(() => this.changeSidebar());
+    EventBus.Initiatives.reset.sub(() => {
+      this.changeSidebar();
+      this.hideInitiativeList();
+    });
     EventBus.Initiatives.loadComplete.sub(() => this.changeSidebar());
   }
 

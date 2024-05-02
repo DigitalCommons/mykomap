@@ -17,10 +17,12 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     super();
   }
   
-  // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
-  // it should override this definition with its own:
+  /**
+   * If the sidebar wants to do something more than to get its view to refresh when the history
+   * buttons have been used, then it should override this definition with its own.
+   */
   historyButtonsUsed(): void {    
-    this.view.refresh();
+    this.view.refresh(false);
   }
 
   deselectInitiatives(): void {
@@ -49,6 +51,15 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     this.historyButtonsUsed();
   }
 
+  /**
+   * Refreshes the sidebar view
+   * 
+   * @param changed true if we changed to this sidebar, false if it was already showing and we're
+   * just refreshing it.
+   */
+  refreshView(changed: boolean) {
+    this.view.refresh(changed);
+  }
 
   onInitiativeClicked(initiative: Initiative): void {
     EventBus.Map.initiativeClicked.pub(initiative);
