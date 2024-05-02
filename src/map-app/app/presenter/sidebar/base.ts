@@ -2,6 +2,7 @@ import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
+import { Initiative } from '../../model/initiative';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -48,9 +49,17 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     this.historyButtonsUsed();
   }
 
-  /// Refreshes the view
-  refreshView() {
-    this.view.refresh();
+
+  onInitiativeClicked(initiative: Initiative): void {
+    EventBus.Map.initiativeClicked.pub(initiative);
+  }
+
+  onInitiativeMouseoverInSidebar(initiative: Initiative): void {
+    EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
+  }
+
+  onInitiativeMouseoutInSidebar(initiative: Initiative): void {
+    EventBus.Map.needToHideInitiativeTooltip.pub(initiative);
   }
 }
 

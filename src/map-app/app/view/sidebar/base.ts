@@ -1,7 +1,9 @@
 // Set up the various sidebars
 import { BaseSidebarPresenter, NavigationCallback } from '../../presenter/sidebar/base';
 import {  BaseView  } from '../base';
-import { d3Selection } from '../d3-utils';
+import { d3DivSelection, d3Selection } from '../d3-utils';
+import { toString as _toString } from '../../../utils';
+import { EventBus } from "../../../eventbus";
 
 /// Base class of all sidebar views
 export abstract class BaseSidebarView extends BaseView {
@@ -89,6 +91,90 @@ export abstract class BaseSidebarView extends BaseView {
     this.loadScrollableSection();
   }
 
+  /**
+   * Display a list of all initiatives that match the current filters, in a separate pane to the
+   * right of the sidebar or, if on mobile, in the sidebar.
+   */
+  refreshSearchResults() {
+    const appState = this.presenter.parent.mapui.currentItem();
+    const labels = this.presenter.parent.mapui.labels;
+    const initiatives = Array.from(appState.visibleInitiatives);
+
+    const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
+    const initiativesListSidebarHeader = selection.append("div").attr("class", "initiatives-list-sidebar-header");
+    
+    this.createInitiativeListSidebarHeader(initiativesListSidebarHeader)
+
+    selection
+      .append("p")
+      .classed("filter-count", true)
+      .text(initiatives.length ? `${initiatives.length} ${labels.matchingResults}`: labels.nothingMatched);
+  
+    const list = selection.append("ul").classed("sea-initiatives-list", true);
+    for (let initiative of initiatives) {
+      let activeClass = "";
+      let nongeoClass = "";
+      if (this.presenter.parent.mapui.isSelected(initiative)) {
+        activeClass = "sea-initiative-active";
+      }
+
+      if (!initiative.hasLocation()) {
+        nongeoClass = "sea-initiative-non-geo";
+      }
+
+      list
+        .append("li")
+        .text(_toString(initiative.name))
+        .attr("data-uid", _toString(initiative.uri))
+        .classed(activeClass, true)
+        .classed(nongeoClass, true)
+        .on("click", ()=> this.presenter.onInitiativeClicked(initiative))
+        .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative))
+        .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative));
+    }
+  }
+
+  private createInitiativeListSidebarHeader(container: d3DivSelection) {
+    const labels = this.presenter.parent.mapui.labels;
+
+    if (this.presenter.parent.showingDirectory()) {
+      container
+        .append("button")
+        // mobile only since these buttons already exist in the sidebar on larger screens
+        .attr("class", "w3-button w3-border-0 mobile-only")
+        .attr("title", labels.showDirectory)
+        .on("click", function () {
+          EventBus.Sidebar.hideInitiativeList.pub();
+          EventBus.Sidebar.showDirectory.pub();
+          EventBus.Map.resetSearch.pub();
+          EventBus.Markers.needToShowLatestSelection.pub([]);
+        })
+        .append("i")
+        .attr("class", "fa fa-bars");
+    }
+
+    if (this.presenter.parent.showingSearch()) {
+      container
+        .append("button")
+        .attr("class", "w3-button w3-border-0 mobile-only")
+        .attr("title", labels.showSearch)
+        .on("click", function () {
+          EventBus.Sidebar.hideInitiativeList.pub();
+          EventBus.Sidebar.showInitiatives.pub();
+          document.getElementById("search-box")?.focus();
+        })
+        .append("i")
+        .attr("class", "fa fa-search");
+    }
+
+    container
+      .append("p")
+      .attr("class", "ml-auto clear-filters-button")
+      .text(labels.clearFilters)
+      .on("click", () => {
+        EventBus.Sidebar.hideInitiativeList.pub();
+        EventBus.Map.resetSearch.pub();
+        EventBus.Markers.needToShowLatestSelection.pub([]);
+      })
+  }
 }
-
-
