@@ -40,6 +40,7 @@ export interface PhraseBook {
   allEntries: string;
   and: string;
   any: string;
+  applyFilters: string;
   clearFilters: string;
   clickToSearch: string;
   clickForDetailsHereAndMap: string;
@@ -49,11 +50,13 @@ export interface PhraseBook {
   countries: string;
   datasets: string;
   directory: string;
+  directoryEntries: string;
   errorLoading: string;
   hideDirectory: string;
   in: string;
   loading: string;
   mapDisclaimer: string;
+  matchingResults: string;
   mixedSources: string;
   noLocation: string;
   notAvailable: string;
@@ -87,20 +90,23 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "All Entries",
     and: "AND",
     any: "Any",
+    applyFilters: "Apply filters",
+    clearFilters: "Clear filters",
     clickToSearch: "Click to search",
     clickForDetailsHereAndMap: "Click to see details here and on map",
-    clearFilters: "Clear Filters",
     close: "Close ",
     contact: "Contact",
     contributers: "contributers",
     countries: "Countries",
     datasets: "Datasets",
     directory: "Directory",
+    directoryEntries: "directory entries",
     errorLoading: "Error loading",
     hideDirectory: "Hide directory",
     in: "in",
     loading: "Loading",
     mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
+    matchingResults: "matching results",
     mixedSources: "Mixed Sources",
     noLocation: "No location available",
     notAvailable: "N / A",
@@ -129,6 +135,7 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "Toutes les entrées",
     and: "ET",
     any: "Tout afficher",
+    applyFilters: "Appliquer les filtres",
     clearFilters: "Réinitialiser les filtres",
     clickToSearch: "Cliquez pour rechercher",
     clickForDetailsHereAndMap: "Cliquez pour voir les détails ici et sur la carte",
@@ -138,11 +145,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "Des pays",
     datasets: "Ensembles de données",
     directory: "Annuaire",
+    directoryEntries: "entrées d'annuaire",
     errorLoading: "FIXME",
     hideDirectory: "Masquer l’annuaire",
     in: "dans",
     loading: "Chargement des données",
     mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
+    matchingResults: "résultats correspondants",
     mixedSources: "Sources mixtes",
     noLocation: "Aucun emplacement disponible",
     notAvailable: "Pas disponible",
@@ -171,6 +180,7 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "Todas las entradas",
     and: "Y",
     any: "Qualquiera",
+    applyFilters: "Aplicar filtros",
     clearFilters: "Borrar filtros",
     clickToSearch: "Haga clic para buscar",
     clickForDetailsHereAndMap: "Haga clic para ver detalles aquí y en el mapa",
@@ -180,11 +190,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "Países",
     datasets: "Conjuntos de datos",
     directory: "Directorio",
+    directoryEntries: "entradas de directorio",
     errorLoading: "FIXME",
     hideDirectory: "Ocultar directorio",
     in: "en",
     loading: "Cargando…",
     mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
+    matchingResults: "resultados coincidentes",
     mixedSources: "Fuentes mixtas",
     noLocation: "No hay ubicación disponible",
     notAvailable: "No disponible",
@@ -213,6 +225,7 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "모든 항목들",
     and: "그리고",
     any: "아무거나",
+    applyFilters: "필터 적용",
     clearFilters: "필터 지우기",
     clickToSearch: "클릭하여 검색",
     clickForDetailsHereAndMap: "여기와 지도에서 세부정보를 보려면 클릭하세요.",
@@ -222,11 +235,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "국가",
     datasets: "데자료",
     directory: "디렉토리",
+    directoryEntries: "디렉토리 항목",
     errorLoading: "FIXME",
     hideDirectory: "디렉토리 숨기기",
     in: "에",
     loading: "로딩",
     mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
+    matchingResults: "일치하는 결과",
     mixedSources: "혼합",
     noLocation: "사용 가능한 위치 없음",
     notAvailable: "사용 불가",
