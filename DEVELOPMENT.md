@@ -43,7 +43,7 @@ mykomap's repository:
 Install the prerequisites
 
 	apt install php php-curl rsync # On Debian
-	npm run install
+	npm install
 	
 Run the development web server in the background (do this in a separate console):
 
