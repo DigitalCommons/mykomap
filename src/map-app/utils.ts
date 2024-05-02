@@ -251,3 +251,23 @@ export function filterSet<T>(set: Set<T>, predicate: Predicate<T>): Set<T> {
   return result;
 }
 
+/**
+ * This matches with the value of `@media (width)` in the css on all browsers.
+ */
+export const getViewportWidth = () =>
+  Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+
+/**
+ * We can display an expanded sidebar if the viewport is wide enough (over 1080 pixels), otherwise
+ * we collapse to a single sidebar.
+ */
+export const canDisplayExpandedSidebar = () =>
+  getViewportWidth() > 1080;
+
+
+  /**
+ * We can display initiative popups if the viewport is wide enough (over 800 pixels), otherwise we
+ * display the info in the sidebar.
+ */
+export const canDisplayInitiativePopups = () =>
+  getViewportWidth() > 800;
