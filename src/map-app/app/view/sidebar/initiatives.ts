@@ -3,8 +3,7 @@ import * as d3 from 'd3';
 import { BaseSidebarView } from './base';
 import { InitiativesSidebarPresenter } from '../../presenter/sidebar/initiatives';
 import type { d3Selection, d3DivSelection } from '../d3-utils';
-import { Initiative } from '../../model/initiative';
-import { toString as _toString } from '../../../utils';
+import { EventBus } from '../../../eventbus';
 import { SentryValues } from '../base';
 import { propDefToVocabUri } from '../../model/data-services';
 
@@ -29,23 +28,16 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
     this.changeSearchText(this.presenter.parent.mapui.getSearchText());
 
+    this.createFilterCount(container);
+
     //advanced search
     const advancedSearchContainer = container
       .append("div")
 
 
     this.createAdvancedSearch(advancedSearchContainer);
-  }
 
-  onInitiativeClicked(id: string) {
-    d3.select(".sea-search-initiative-active")
-      .classed("sea-search-initiative-active", false);
-
-    d3.select('[data-uid="' + id + '"]')
-      .classed(
-        "sea-search-initiative-active",
-        true
-      );
+    this.createApplyFiltersButton(container);
   }
 
   getSearchText(): string {
@@ -56,25 +48,32 @@ export class InitiativesSidebarView extends BaseSidebarView {
     d3.select("#search-box").property("value", txt);
   }
 
-  createSearchBox(selection: d3DivSelection) {
-
+  createSearchBox(container: d3DivSelection) {
     const submitCallback = (event: Event) => {
       event.preventDefault(); // prevent page reloads on submit
-      const searchText = this.getSearchText()
-      this.presenter.performSearch(searchText);
+  
+      const oldSearchText = this.presenter.parent.mapui.getSearchText()
+      const newSearchText = this.getSearchText();
+  
+      if (newSearchText !== oldSearchText) {
+        this.presenter.performSearch(newSearchText);
+      }
     };
 
-    const selection2 = selection
+    const form = container
       .append("form")
       .attr("id", "map-app-search-form")
       .attr(
         "class",
         "w3-card-2 w3-round map-app-search-form"
       )
-      .on("submit", submitCallback)
+      .on("submit", submitCallback);
+    
+    const selection = form
       .append("div")
       .attr("class", "w3-border-0");
-    selection2
+
+    selection
       .append("div")
       .attr("class", "w3-col")
       .attr("title", this.presenter.parent.mapui.labels.clickToSearch)
@@ -84,7 +83,8 @@ export class InitiativesSidebarView extends BaseSidebarView {
       .attr("class", "w3-btn w3-border-0")
       .append("i")
       .attr("class", "w3-xlarge fa fa-search");
-    selection2
+    
+    selection
       .append("div")
       .attr("class", "w3-rest")
       .append("input")
@@ -93,12 +93,32 @@ export class InitiativesSidebarView extends BaseSidebarView {
       .attr("type", "search")
       .attr("placeholder", this.presenter.parent.mapui.labels.searchInitiatives)
       .attr("autocomplete", "off")
-    // If we don't submit the search on blur, selecting another filter will reset the search text
-    // https://github.com/digitalcommons/mykomap/issues/197
+      // If we don't submit the search on blur, selecting another filter will reset the search text
+      // https://github.com/digitalcommons/mykomap/issues/197
       .on("blur", submitCallback);
+  }
 
+  private createFilterCount(container: d3DivSelection) {
+    const appState = this.presenter.parent.mapui.currentItem();
+    const labels = this.presenter.parent.mapui.labels;
+    
+    const count = appState.visibleInitiatives.size;
+    const filterApplied = appState.hasPropFilters || appState.hasTextSearch;
 
-    document.getElementById("search-box")?.focus();
+    const selection = container
+      .append("div")
+      .attr("class", "map-app-search-filter-count")
+      .append("p");
+    
+    selection
+      .append("span")
+      .attr("class", "filter-count-value")
+      .text(count);
+    
+    selection
+      .append("span")
+      .attr("class", "filter-count-descriptor")
+      .text(` ${filterApplied ? labels.matchingResults : labels.directoryEntries}`);
   }
 
   // used in the dropdown to change the filter
@@ -205,60 +225,20 @@ export class InitiativesSidebarView extends BaseSidebarView {
     }
   }
 
-  populateScrollableSelection(selection: d3Selection) {
+  private createApplyFiltersButton(container: d3DivSelection) {
     const labels = this.presenter.parent.mapui.labels;
-    const appState = this.presenter.parent.mapui.currentItem();
 
-    // add clear button
-    selection
+    // add apply filters button on mobile
+    container
       .append("div")
-      .attr("class", "w3-container w3-center sidebar-button-container")
-      .attr("id", "clearSearchFilterBtn")
+      .attr("class", "w3-container w3-center mobile-only apply-filters-button-container")
       .append("button")
-      .attr("class", "w3-button w3-black")
-      .property("disabled", this.presenter.isBackButtonDisabled() || undefined)
-      .text(labels.clearFilters)
-      .on("click", () => {
-        this.presenter.resetSearch();
-      });
-
-    switch (appState.visibleInitiatives.size) {
-      case 0: // No matches
-        selection
-            .append("div")
-            .attr("class", "w3-container w3-center")
-            .append("p")
-            .text(labels.nothingMatched);
-        break;
-
-      default: // Matches
-        this.populateSelectionWithListOfInitiatives(
-          selection, appState.visibleInitiatives
-        );
-    }
+      .attr("class", "w3-button w3-round w3-border-dark-grey apply-filters-button")
+      .text(labels.applyFilters.toLocaleUpperCase())
+      .on("click", () => EventBus.Sidebar.showInitiativeList.pub());
   }
 
-  private populateSelectionWithListOfInitiatives(
-    selection: d3Selection,
-    initiatives: Set<Initiative>
-  ) {
-    const initiativeClass = "w3-bar-item w3-button w3-mobile srch-initiative";
-    initiatives.forEach((initiative) => {
-      const uri = _toString(initiative.uri, null);
-      if (!uri) {
-        console.error("initiative with no uri field! ignoring...", initiative);
-        return;
-      }
-      selection
-        .append("button")
-        .attr("class", initiativeClass)
-        .classed("sea-initiative-non-geo", !initiative.hasLocation())
-        .attr("data-uid", uri)
-        .attr("title", this.presenter.parent.mapui.labels.clickForDetailsHereAndMap)
-        .on("click", () => this.presenter.initClicked(initiative))
-        .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative) )
-        .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative) )
-        .text(_toString(initiative.name));
-    });
+  populateScrollableSelection(selection: d3Selection) {
+    // No scrollable section
   }
 }
