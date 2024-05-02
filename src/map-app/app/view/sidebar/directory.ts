@@ -68,11 +68,11 @@ export class DirectorySidebarView extends BaseSidebarView {
       d3.selectAll("li.sea-directory-field").attr("hidden", null);
     else {
       const a = d3.selectAll("li.sea-directory-field");
-      a.attr("hidden", null); // Hide everything
+      a.attr("hidden", true); // Hide everything
       a.filter(function () {
         // Unhide elements which have matching text
         return d3.select(this).text().toLowerCase().includes(input);
-      }).attr("hidden", true);
+      }).attr("hidden", null);
       //appear and set dissapear after seconds 
       //cancel last dissapear if new one is coming in
       d3.select("#dir-filter")
@@ -88,9 +88,7 @@ export class DirectorySidebarView extends BaseSidebarView {
 
       // dissapear in 1 sec
       this.dissapear = window.setTimeout(dissapear, 1000);
-
     }
-
   }
 
   populateScrollableSelection(selection: d3Selection) {
