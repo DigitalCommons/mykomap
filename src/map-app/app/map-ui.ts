@@ -49,7 +49,7 @@ export class MapUI {
     };
 
     EventBus.Map.initiativeClicked.sub(initiative => this.onInitiativeClicked(initiative));
-    EventBus.Map.resetSearch.sub(() => this.resetSearch());
+    EventBus.Map.clearFiltersAndSearch.sub(() => this.clearFiltersAndSearch());
   }
 
   // This inspects the config and constructs an appropriate set of
@@ -114,8 +114,8 @@ export class MapUI {
     this.stateManager.clearPropFilter(filterName);
   }
 
-  resetSearch(): void {
-    this.stateManager.reset();
+  clearFiltersAndSearch(): void {
+    this.stateManager.clearFiltersAndSearch();
   }
 
   /// Returns a list of property values matching the given filter

@@ -35,10 +35,6 @@ export class InitiativesSidebarPresenter extends BaseSidebarPresenter {
     this.parent.mapui.performSearch(text);
   }
 
-  resetSearch() {
-    this.parent.mapui.resetSearch();
-  }
-
   changeSearchText(txt: string) {
     this.view.changeSearchText(txt);
   }

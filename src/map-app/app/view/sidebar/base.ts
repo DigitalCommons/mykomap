@@ -149,9 +149,9 @@ export abstract class BaseSidebarView extends BaseView {
         .attr("class", "w3-button w3-border-0 mobile-only")
         .attr("title", labels.showDirectory)
         .on("click", function () {
+          EventBus.Map.clearFiltersAndSearch.pub();
           EventBus.Sidebar.hideInitiativeList.pub();
           EventBus.Sidebar.showDirectory.pub();
-          EventBus.Map.resetSearch.pub();
           EventBus.Markers.needToShowLatestSelection.pub([]);
         })
         .append("i")
@@ -177,8 +177,8 @@ export abstract class BaseSidebarView extends BaseView {
       .attr("class", "ml-auto clear-filters-button")
       .text(labels.clearFilters)
       .on("click", () => {
+        EventBus.Map.clearFiltersAndSearch.pub();
         EventBus.Sidebar.hideInitiativeList.pub();
-        EventBus.Map.resetSearch.pub();
         EventBus.Markers.needToShowLatestSelection.pub([]);
       })
   }

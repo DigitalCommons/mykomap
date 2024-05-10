@@ -45,7 +45,7 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", labels.showDirectory)
       .on("click", () => {
-        this.presenter.mapui.resetSearch();
+        this.presenter.mapui.clearFiltersAndSearch();
         this.hideInitiativeList();
         this.presenter.changeSidebar("directory");
 

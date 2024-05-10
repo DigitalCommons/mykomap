@@ -75,7 +75,7 @@ export namespace EventBus {
 	  export const selectAndZoomOnInitiative = new PostalTopic<SelectAndZoomData>("Map.selectAndZoomOnInitiative");
     export const initiativeClicked = new PostalTopic<Initiative|undefined>("Map.initiativeClicked");
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
-    export const resetSearch = new PostalTopic("Map.resetSearch");
+    export const clearFiltersAndSearch = new PostalTopic("Map.clearFiltersAndSearch");
   }
   export namespace Marker {
 	  export const selectionToggled = new PostalTopic<Initiative>("Marker.SelectionToggled");
