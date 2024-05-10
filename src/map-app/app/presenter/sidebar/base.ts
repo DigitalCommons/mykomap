@@ -3,6 +3,7 @@ import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
 import { Initiative } from '../../model/initiative';
+import { canDisplayExpandedSidebar } from '../../../utils';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -21,8 +22,12 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
    * If the sidebar wants to do something more than to get its view to refresh when the history
    * buttons have been used, then it should override this definition with its own.
    */
-  historyButtonsUsed(): void {    
+  historyButtonsUsed(): void {
     this.view.refresh(false);
+
+    // Show the results pane again, since there have been changes
+    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Apply Filters
+      EventBus.Sidebar.showInitiativeList.pub();
   }
 
   deselectInitiatives(): void {
