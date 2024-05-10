@@ -140,7 +140,7 @@ export class DirectorySidebarView extends BaseSidebarView {
         .classed(classname, true)
         .classed("sea-directory-field", true)
         .on("click", (event: MouseEvent) => {
-          this.presenter.parent.mapui.resetSearch();
+          this.presenter.parent.mapui.clearFiltersAndSearch();
           this.presenter.parent.mapui.changeFilters(propName, propValue);
           EventBus.Sidebar.showInitiativeList.pub();
           this.resetFilterSearch();
