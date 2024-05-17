@@ -192,6 +192,18 @@ Set whether the sidebar is by default open on starting the app.
 
 
 
+### `defaultPanel`
+
+- *type:* `{SidebarId}` One of these strings: "diretory", "initiatives", "about" or "datasets"
+- *in string context:* parsed as-is
+- *default:* If unset, the default is 'directory'
+- *settable?:* yes
+
+Defines which panel opens by default.
+
+
+
+
 ### `dialogueSize`
 
 - *type:* `{DialogueSize}` An object containing only string values.
@@ -479,7 +491,7 @@ Preset location of the data source script(s).
 - *default:* `true`
 - *settable?:* yes
 
-If true this will load the datasets panel
+If true this will load the about panel
 
 
 
@@ -503,7 +515,7 @@ If true this will load the datasets panel
 - *default:* `true`
 - *settable?:* yes
 
-If true this will load the datasets panel
+If true this will load the directory panel
 
 
 
@@ -515,7 +527,7 @@ If true this will load the datasets panel
 - *default:* `true`
 - *settable?:* yes
 
-If true this will load the datasets panel
+If true this will load the initiatives (i.e. search) panel
 
 
 
