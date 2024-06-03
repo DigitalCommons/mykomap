@@ -34,6 +34,7 @@ import type {
 
 import { Initiative, InitiativeObj } from './initiative';
 import { isIso6391Code, Iso6391Code } from '../../localisations';
+import { SidebarId } from '../presenter/sidebar';
 
 class TypeDef<T> {
   constructor(params: {
@@ -54,7 +55,7 @@ class TypeDef<T> {
   stringDescr?: string;
   // A string-parsing function
   parseString?: (val: string) => T;
-};
+}
 
 
 export interface VocabSource {
@@ -84,7 +85,7 @@ export interface DataSource {
   id: string;
   type: string;
   label: string;
-};
+}
 
 export interface HostSparqlDataSource extends DataSource {
   type: 'hostSparql';
@@ -135,6 +136,7 @@ export interface ReadableConfig {
   getShowDatasetsPanel(): boolean;
   getShowDirectoryPanel(): boolean;
   getShowSearchPanel(): boolean;
+  getDefaultPanel(): SidebarId;
   getSidebarButtonColour(): string;
   getSoftwareGitCommit(): string;
   getSoftwareTimestamp(): string;
@@ -144,7 +146,7 @@ export interface ReadableConfig {
   htmlTitle(): string;
   logo(): string | undefined;
   vocabularies(): AnyVocabSource[];
-};
+}
 
 export interface WritableConfig {
   setDefaultLatLng(val: Point2d): void;
@@ -166,7 +168,8 @@ export interface WritableConfig {
   setShowDatasetsPanel(val: boolean): void;
   setShowDirectoryPanel(val: boolean): void;
   setShowSearchPanel(val: boolean): void;
-};
+  setDefaultPanel(val: SidebarId): void;
+}
 
 export interface ConfigSchema<T> {
   // An identifier string
@@ -187,7 +190,7 @@ export interface DialogueSize {
     width?: string;
     height?: string;
     descriptionRatio?: number;
-};  
+}  
 
 export type InitiativeRenderFunction =
   (initiative: Initiative, model: DataServices) => string;
@@ -235,6 +238,7 @@ export class ConfigData {
   showDatasetsPanel: boolean = true;
   showDirectoryPanel: boolean = true;
   showSearchPanel: boolean = true;
+  defaultPanel: SidebarId = 'directory';
   sidebarButtonColour: string = '#39cccc';
   tileUrl?: string;
   timestamp: string = '2000-01-01T00:00:00.000Z';
@@ -247,12 +251,12 @@ export class ConfigData {
   constructor(params: Partial<ConfigData> = {}) {
     Object.assign(this, params);
   }
-};
+}
 
 // This type is constrained to have the same keys as ConfigData, and
 // values which are ConfigSchema of the appropriate type for the
 // ConfigData property in question.
-export type ConfigSchemas = { [K in keyof ConfigData]: ConfigSchema<ConfigData[K]> };
+export type ConfigSchemas = { [K in keyof ConfigData]: ConfigSchema<ConfigData[K]> }
 
 
 // Validates/normalises a language code.
@@ -406,6 +410,14 @@ const types = {
     name: '{InitiativeRenderFunction}',
     descr: 'A function which accepts an Initiative instance and returns an HTML string',
   }),
+  sidebarId: new TypeDef<SidebarId>({
+    name: '{SidebarId}',
+    // Would be sensible to generate this from the keys of a `new SidebarPanels()`
+    // - except if we import that we hit ERR_REQUIRE_ESM because d3 is a pure ESM module.
+    // And this module is currently not pure ESM. Argh. And it's not trivial to switch!
+    // See, for example https://commerce.nearform.com/blog/2022/victory-esm/
+    descr: 'One of these strings: "diretory", "initiatives", "about" or "datasets"'
+  }),
   vocabSources: new TypeDef<AnyVocabSource[]>({
     name: '{AnyVocabSource[]}',
     descr: 'An array of vocab source definitions, defining a SPARQL endpoint URL, '+
@@ -417,7 +429,7 @@ const types = {
     descr: 'An array of data source definitions, defining the type, ID, and in certain cases '+
       'other source-secific parameters needed for the source type',  
   }),
-};
+}
 
 
 
@@ -724,7 +736,7 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       showAboutPanel: {
         id: 'showAboutPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the about panel`,
         getter: 'getShowAboutPanel',
         setter: 'setShowAboutPanel',
         type: types.boolean,
@@ -738,17 +750,25 @@ export class Config implements ReadableConfig, WritableConfig {
       },
       showDirectoryPanel: {
         id: 'showDirectoryPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the directory panel`,
         getter: 'getShowDirectoryPanel',
         setter: 'setShowDirectoryPanel',
         type: types.boolean,
       },
       showSearchPanel: {
         id: 'showSearchPanel',
-        descr: `If true this will load the datasets panel`,
+        descr: `If true this will load the initiatives (i.e. search) panel`,
         getter: 'getShowSearchPanel',
         setter: 'setShowSearchPanel',
         type: types.boolean,
+      },
+      defaultPanel: {
+        id: "defaultPanel",
+        descr: "Defines which panel opens by default.",
+        defaultDescr: "If unset, the default is 'directory'",
+        getter: "getDefaultPanel",
+        setter: "setDefaultPanel",
+        type: types.sidebarId,
       },
       sidebarButtonColour: {
         id: "sidebarButtonColour",
@@ -1150,6 +1170,9 @@ ${def.descr}
   getShowSearchPanel(): boolean {
     return this.data.showSearchPanel;
   }
+  getDefaultPanel(): SidebarId {
+    return this.data.defaultPanel;
+  }
   getSidebarButtonColour(): string {
     return this.data.sidebarButtonColour;
   }
@@ -1251,8 +1274,9 @@ ${def.descr}
   setShowSearchPanel(val: boolean): void {
     this.data.showSearchPanel = val;
   }
+  setDefaultPanel(val: SidebarId): void {
+    this.data.defaultPanel = val;
+  }
   
-//  [id: string]: Getter | Setter;
-};
-
-
+  //  [id: string]: Getter | Setter;
+}
