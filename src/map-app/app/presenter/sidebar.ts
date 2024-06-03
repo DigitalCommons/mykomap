@@ -131,7 +131,6 @@ export class SidebarPresenter extends BasePresenter {
     });
     EventBus.Sidebar.showSidebar.sub(() => this.showSidebar());
     EventBus.Sidebar.hideSidebar.sub(() => this.hideSidebar());
-    EventBus.Sidebar.hideInitiativeSidebar.sub(() => this.hideInitiativeSidebar());
     EventBus.Sidebar.showInitiativeList.sub(() => this.showInitiativeList());
     EventBus.Sidebar.hideInitiativeList.sub(() => this.hideInitiativeList());
     EventBus.Initiatives.reset.sub(() => {

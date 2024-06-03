@@ -171,15 +171,6 @@ export class SidebarView extends BaseView {
 
   }
 
-  hideInitiativeSidebar() {
-    const initiativeSidebar = d3.select("#sea-initiative-sidebar");
-    const node = initiativeSidebar.node();
-    
-    if (node instanceof HTMLElement && node?.getBoundingClientRect().x === 0) {
-      initiativeSidebar.classed("sea-initiative-sidebar-open", false);
-    }
-  }
-
   showInitiativeList() {
     //if empty don't show
     const empty = d3.select("#sea-initiatives-list-sidebar-content").select("ul").empty();
@@ -243,5 +234,14 @@ export class SidebarView extends BaseView {
 
     if (!canDisplayInitiativePopups())
       EventBus.Sidebar.showSidebar.pub();
+  }
+
+  hideInitiativeSidebar() {
+    const initiativeSidebar = d3.select("#sea-initiative-sidebar");
+    const node = initiativeSidebar.node();
+    
+    if (node instanceof HTMLElement && node?.getBoundingClientRect().x === 0) {
+      initiativeSidebar.classed("sea-initiative-sidebar-open", false);
+    }
   }
 }

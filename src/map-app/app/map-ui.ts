@@ -138,7 +138,7 @@ export class MapUI {
       this.stateManager.propFilter(new PropEquality(propName, value, isMulti));
     }
 
-    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Apply Filters
+    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Show Results
       EventBus.Sidebar.showInitiativeList.pub();
   }
 
@@ -216,6 +216,9 @@ export class MapUI {
     else {
       // User has deselected
       EventBus.Markers.needToShowLatestSelection.pub([]);
+      this.getSidebarPresenter(this).then((presenter) => {
+        presenter.hideInitiativeSidebar();
+      });
     }
 
     this.refreshSidebar();

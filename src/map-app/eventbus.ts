@@ -87,7 +87,6 @@ export namespace EventBus {
   export namespace Sidebar {
     export const showInitiativeList = new PostalTopic("Sidebar.showInitiativeList");
 	  export const hideInitiativeList = new PostalTopic("Sidebar.hideInitiativeList");
-	  export const hideInitiativeSidebar = new PostalTopic("Sidebar.hideInitiativeSidebar");
 	  export const hideSidebar = new PostalTopic("Sidebar.hideSidebar");
 	  export const showAbout = new PostalTopic("Sidebar.showAbout");
 	  export const showDatasets = new PostalTopic("Sidebar.showDatasets");
