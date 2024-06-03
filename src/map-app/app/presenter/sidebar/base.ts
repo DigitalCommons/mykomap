@@ -2,6 +2,8 @@ import { EventBus } from '../../../eventbus';
 import { BasePresenter }from '../base';
 import { BaseSidebarView } from '../../view/sidebar/base';
 import { SidebarPresenter } from '../sidebar';
+import { Initiative } from '../../model/initiative';
+import { canDisplayExpandedSidebar } from '../../../utils';
 
 export interface NavigationCallback {
   disabled: boolean;
@@ -16,10 +18,16 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     super();
   }
   
-  // If the sidebar wants to do something more than to get its view to refresh when the history buttons have been used, then
-  // it should override this definition with its own:
-  historyButtonsUsed(): void {    
-    this.view.refresh();
+  /**
+   * If the sidebar wants to do something more than to get its view to refresh when the history
+   * buttons have been used, then it should override this definition with its own.
+   */
+  historyButtonsUsed(): void {
+    this.view.refresh(false);
+
+    // Show the results pane again, since there have been changes
+    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Show Results
+      EventBus.Sidebar.showInitiativeList.pub();
   }
 
   deselectInitiatives(): void {
@@ -48,9 +56,26 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     this.historyButtonsUsed();
   }
 
-  /// Refreshes the view
-  refreshView() {
-    this.view.refresh();
+  /**
+   * Refreshes the sidebar view
+   * 
+   * @param changed true if we changed to this sidebar, false if it was already showing and we're
+   * just refreshing it.
+   */
+  refreshView(changed: boolean) {
+    this.view.refresh(changed);
+  }
+
+  onInitiativeClicked(initiative: Initiative): void {
+    EventBus.Map.initiativeClicked.pub(initiative);
+  }
+
+  onInitiativeMouseoverInSidebar(initiative: Initiative): void {
+    EventBus.Map.needToShowInitiativeTooltip.pub(initiative);
+  }
+
+  onInitiativeMouseoutInSidebar(initiative: Initiative): void {
+    EventBus.Map.needToHideInitiativeTooltip.pub(initiative);
   }
 }
 

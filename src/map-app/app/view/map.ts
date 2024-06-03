@@ -9,7 +9,7 @@ import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
 import { PhraseBook } from "../../localisations";
 import { Box2d } from "../../common-types";
-import { isFiniteBox2d } from "../../utils";
+import { getViewportWidth, isFiniteBox2d } from "../../utils";
 
 export class MapView extends BaseView {
   readonly map: Map;
@@ -188,7 +188,7 @@ export class MapView extends BaseView {
       
       this.map.zoomControl.setPosition("bottomright");
 
-      this.map.on('click', (e) => this.onInitiativeClicked(e));
+      this.map.on('click', (e) => this.onMapClicked(e));
       this.map.on('load', (e) => this.onLoad(e));
       this.map.on('resize', (e) => this.onResize(e));
       
@@ -221,7 +221,7 @@ export class MapView extends BaseView {
     }
   }
 
-  private onInitiativeClicked(me: leaflet.LeafletMouseEvent): void {
+  private onMapClicked(me: leaflet.LeafletMouseEvent): void {
     // Deselect any selected markers        
     if (me.originalEvent.ctrlKey && me.latlng) {
       MapView.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
@@ -235,7 +235,7 @@ export class MapView extends BaseView {
   
   private onResize(_: leaflet.ResizeEvent) {
     this.map.invalidateSize();
-    console.log("Map resize", window.outerWidth);
+    console.log("Map resize", getViewportWidth());
   }
 
   fitBounds(data: EventBus.Map.BoundsData) {

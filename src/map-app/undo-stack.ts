@@ -39,7 +39,10 @@ export class WalkableStack1<T> {
     assert(this.storage.length > this.index, "storage should always have the initial state element");
     
     this.index += 1;
-    this.storage[this.index] = obj; // sets storage.length to index+1
+    this.storage[this.index] = obj;
+    
+    // remove later items from the stack
+    this.storage.length = this.index + 1; 
   }
 
   // Get the current item in the stack

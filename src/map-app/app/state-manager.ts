@@ -59,7 +59,7 @@ export class AppState {
   static applyTextSearch(initiatives: Set<Initiative>, textSearch?: TextSearch): Set<Initiative> {
     if (!textSearch)
       return initiatives;
-    if (textSearch.willMatch())
+    if (textSearch.isEmpty())
       return initiatives;
     return filterSet(initiatives, textSearch.predicate);
   }
@@ -120,7 +120,7 @@ export class AppState {
   }
   
   get hasTextSearch(): boolean {
-    return this.textSearch.willMatch();
+    return !this.textSearch.isEmpty();
   }
   
   addTextSearch(textSearch: TextSearch): AppStateChange|undefined {
@@ -137,10 +137,6 @@ export class AppState {
       this.propFilters,
     );
     return new AppStateChange(textSearch, result);
-  }
-
-  clearTextSearch(): AppStateChange|undefined {
-    return this.addTextSearch(new TextSearch(''));
   }
   
   addPropEquality(propEq: PropEquality): AppStateChange|undefined {
@@ -200,6 +196,17 @@ export class AppState {
     );
     return new AppStateChange(action, result);
   }
+
+  removePropEqualitiesAndClearTextSearch(): AppStateChange|undefined {
+    if (Object.keys(this.propFilters).length === 0 && this.textSearch.searchText === '')
+      return undefined; // No change
+    
+    const result = new AppState(
+      this.allInitiatives,
+      this.allInitiatives
+    );
+    return new AppStateChange(undefined, result);
+  }
 }
 
 
@@ -233,7 +240,7 @@ export class TextSearch {
       .trim();                  // trim whitespace from front and back
   }
 
-  willMatch() {
+  isEmpty() {
     return this.normSearchText === '';
   }
 }
@@ -335,10 +342,6 @@ export class StateManager {
     this.onChange(stateChange);
   }
 
-  clearTextSearch(): void {
-    return this.textSearch(new TextSearch(''));
-  }
-
   propFilter(propEq: PropEquality): void {
     const stateChange = this.stack.current.result.addPropEquality(propEq);
     if (stateChange === undefined)
@@ -357,6 +360,14 @@ export class StateManager {
 
   clearPropFilters(): void {
     const stateChange = this.stack.current.result.removePropEqualities();
+    if (stateChange === undefined)
+      return; // No change
+    this.stack.push(stateChange);
+    this.onChange(stateChange);
+  }
+
+  clearFiltersAndSearch(): void {
+    const stateChange = this.stack.current.result.removePropEqualitiesAndClearTextSearch();
     if (stateChange === undefined)
       return; // No change
     this.stack.push(stateChange);

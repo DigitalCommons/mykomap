@@ -1,7 +1,9 @@
-// Set up the various sidebars
+import * as d3 from 'd3';
 import { BaseSidebarPresenter, NavigationCallback } from '../../presenter/sidebar/base';
 import {  BaseView  } from '../base';
-import { d3Selection } from '../d3-utils';
+import { d3DivSelection, d3Selection } from '../d3-utils';
+import { toString as _toString } from '../../../utils';
+import { EventBus } from "../../../eventbus";
 
 /// Base class of all sidebar views
 export abstract class BaseSidebarView extends BaseView {
@@ -11,8 +13,6 @@ export abstract class BaseSidebarView extends BaseView {
   static readonly accordionClasses =
     "w3-bar-item w3-tiny w3-light-grey w3-padding-small" + BaseSidebarView.hoverColour;
   static readonly sectionClasses = "w3-bar-item w3-small w3-white w3-padding-small";
-
-
   
   abstract readonly presenter: BaseSidebarPresenter;
   
@@ -83,12 +83,112 @@ export abstract class BaseSidebarView extends BaseView {
     }
   }
 
-  refresh() {
+  /**
+   * Refreshes the sidebar view
+   * 
+   * @param changed true if we changed to this sidebar, false if it was already showing and we're
+   * just refreshing it.
+   */
+  refresh(changed: boolean) {
     this.loadFixedSection();
     this.loadHistoryNavigation(); // back and forward buttons
     this.loadScrollableSection();
+    this.refreshSearchResults();
   }
 
+  /**
+   * Display a list of all initiatives that match the current filters, in a separate pane to the
+   * right of the sidebar or, if on mobile, in the sidebar.
+   */
+  refreshSearchResults() {
+    const appState = this.presenter.parent.mapui.currentItem();
+    const labels = this.presenter.parent.mapui.labels;
+    const initiatives = Array.from(appState.visibleInitiatives);
+
+    const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
+    const initiativesListSidebarHeader = selection.append("div").attr("class", "initiatives-list-sidebar-header");
+    
+    this.createInitiativeListSidebarHeader(initiativesListSidebarHeader)
+
+    selection
+      .append("p")
+      .classed("filter-count", true)
+      .text(initiatives.length ? `${initiatives.length} ${labels.matchingResults}`: labels.nothingMatched);
+  
+    const list = selection.append("ul").classed("sea-initiatives-list", true);
+    for (let initiative of initiatives) {
+      let activeClass = "";
+      let nongeoClass = "";
+      if (this.presenter.parent.mapui.isSelected(initiative)) {
+        activeClass = "sea-initiative-active";
+      }
+
+      if (!initiative.hasLocation()) {
+        nongeoClass = "sea-initiative-non-geo";
+      }
+
+      list
+        .append("li")
+        .text(_toString(initiative.name))
+        .attr("data-uid", _toString(initiative.uri))
+        .classed(activeClass, true)
+        .classed(nongeoClass, true)
+        .on("click", () => {
+          // Highlight the selected initiative in the list
+          d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
+          d3.select('[data-uid="' + initiative.uri + '"]').classed("sea-initiative-active", true);
+          
+          this.presenter.onInitiativeClicked(initiative);
+        })
+        .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative))
+        .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative));
+    }
+  }
+
+  private createInitiativeListSidebarHeader(container: d3DivSelection) {
+    const labels = this.presenter.parent.mapui.labels;
+
+    if (this.presenter.parent.showingDirectory()) {
+      const _this = this;
+      container
+        .append("button")
+        // mobile only since these buttons already exist in the sidebar on larger screens
+        .attr("class", "w3-button w3-border-0 mobile-only")
+        .attr("title", labels.showDirectory)
+        .on("click", function () {
+          if (_this.title !== labels.directory) {
+            EventBus.Map.clearFiltersAndSearch.pub();
+            EventBus.Markers.needToShowLatestSelection.pub([]);
+          }
+          EventBus.Sidebar.hideInitiativeList.pub();
+          EventBus.Sidebar.showDirectory.pub();
+        })
+        .append("i")
+        .attr("class", "fa fa-bars");
+    }
+
+    if (this.presenter.parent.showingSearch()) {
+      container
+        .append("button")
+        .attr("class", "w3-button w3-border-0 mobile-only")
+        .attr("title", labels.showSearch)
+        .on("click", function () {
+          EventBus.Sidebar.hideInitiativeList.pub();
+          EventBus.Sidebar.showInitiatives.pub();
+          document.getElementById("search-box")?.focus();
+        })
+        .append("i")
+        .attr("class", "fa fa-search");
+    }
+
+    container
+      .append("p")
+      .attr("class", "ml-auto clear-filters-button")
+      .text(labels.clearFilters)
+      .on("click", () => {
+        EventBus.Map.clearFiltersAndSearch.pub();
+        EventBus.Sidebar.hideInitiativeList.pub();
+        EventBus.Markers.needToShowLatestSelection.pub([]);
+      })
+  }
 }
-
-

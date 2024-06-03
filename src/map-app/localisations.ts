@@ -49,11 +49,13 @@ export interface PhraseBook {
   countries: string;
   datasets: string;
   directory: string;
+  directoryEntries: string;
   errorLoading: string;
   hideDirectory: string;
   in: string;
   loading: string;
   mapDisclaimer: string;
+  matchingResults: string;
   mixedSources: string;
   noLocation: string;
   notAvailable: string;
@@ -68,6 +70,7 @@ export interface PhraseBook {
   showDatasets: string;
   showDirectory: string;
   showInfo: string;
+  showResults: string;
   showSearch: string;
   source: string;
   technicalInfo: string;
@@ -87,20 +90,22 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "All Entries",
     and: "AND",
     any: "Any",
+    clearFilters: "Clear filters",
     clickToSearch: "Click to search",
     clickForDetailsHereAndMap: "Click to see details here and on map",
-    clearFilters: "Clear Filters",
     close: "Close ",
     contact: "Contact",
     contributers: "contributers",
     countries: "Countries",
     datasets: "Datasets",
     directory: "Directory",
+    directoryEntries: "directory entries",
     errorLoading: "Error loading",
     hideDirectory: "Hide directory",
     in: "in",
     loading: "Loading",
     mapDisclaimer: "This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.",
+    matchingResults: "matching results",
     mixedSources: "Mixed Sources",
     noLocation: "No location available",
     notAvailable: "N / A",
@@ -115,6 +120,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Show datasets",
     showDirectory: "Show directory",
     showInfo: "Show info",
+    showResults: "Show results",
     showSearch: "Show search",
     source: "The source data of the content is here:",
     technicalInfo: "Technical information about the technology behind this map and directory can be found here:",
@@ -138,11 +144,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "Des pays",
     datasets: "Ensembles de données",
     directory: "Annuaire",
+    directoryEntries: "entrées d'annuaire",
     errorLoading: "FIXME",
     hideDirectory: "Masquer l’annuaire",
     in: "dans",
     loading: "Chargement des données",
     mapDisclaimer: "Cette carte contient des indications sur les zones où il y a des différends au sujet territorial. L'ACI n'approuve ni n'accepte les frontières représentées sur la carte.",
+    matchingResults: "résultats correspondants",
     mixedSources: "Sources mixtes",
     noLocation: "Aucun emplacement disponible",
     notAvailable: "Pas disponible",
@@ -157,6 +165,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Afficher les ensembles de données",
     showDirectory: "Afficher l’annuaire",
     showInfo: "Afficher les informations",
+    showResults: "Afficher les résultats",
     showSearch: "Afficher la recherche",
     source: "Les données sources de ce contenu se trouvent ici:",
     technicalInfo: "Des informations techniques sur la technologie derrière cette carte et ce répertoire peuvent être trouvées ici:",
@@ -180,11 +189,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "Países",
     datasets: "Conjuntos de datos",
     directory: "Directorio",
+    directoryEntries: "entradas de directorio",
     errorLoading: "FIXME",
     hideDirectory: "Ocultar directorio",
     in: "en",
     loading: "Cargando…",
     mapDisclaimer: "Este mapa contiene indicaciones de zonas donde hay disputas territoriales. La ACI no respalda ni acepta las fronteras representadas en el mapa.",
+    matchingResults: "resultados coincidentes",
     mixedSources: "Fuentes mixtas",
     noLocation: "No hay ubicación disponible",
     notAvailable: "No disponible",
@@ -199,6 +210,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Mostrar conjuntos de datos",
     showDirectory: "Mostrar directorio",
     showInfo: "Mostrar información",
+    showResults: "Mostrar resultados",
     showSearch: "Mostrar búsqueda",
     source: "Los datos de origen de este contenido están aquí:",
     technicalInfo: "Consulta aquí la información técnica sobre la tecnología con la que se han elaborado el mapa y el directorio:",
@@ -222,11 +234,13 @@ export const phraseBooks: PhraseBooks = {
     countries: "국가",
     datasets: "데자료",
     directory: "디렉토리",
+    directoryEntries: "디렉토리 항목",
     errorLoading: "FIXME",
     hideDirectory: "디렉토리 숨기기",
     in: "에",
     loading: "로딩",
     mapDisclaimer: "이 지도에는 영토에 대한 분쟁이 있는 지역의 표시가 포함되어 있습니다. ICA는 지도에 표시된 경계를 승인하거나 수락하지 않습니다.",
+    matchingResults: "일치하는 결과",
     mixedSources: "혼합",
     noLocation: "사용 가능한 위치 없음",
     notAvailable: "사용 불가",
@@ -241,6 +255,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "자료 표시",
     showDirectory: "디렉토리 표시",
     showInfo: "정보 표시",
+    showResults: "결과 표시",
     showSearch: "검색 표시",
     source: "이 콘텐츠의 소스 데이터는 여기:",
     technicalInfo: "이 지도 및 디렉토리 이면의 기술에 대한 기술 정보를 찾을 수 있습니다 여기:",

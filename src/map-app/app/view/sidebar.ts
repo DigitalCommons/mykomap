@@ -3,6 +3,8 @@ import { EventBus } from '../../eventbus';
 import * as d3 from 'd3';
 import { SidebarPresenter } from '../presenter/sidebar';
 import { BaseView } from './base';
+import { canDisplayInitiativePopups } from '../../utils';
+import { Initiative } from '../model/initiative';
 
 export class SidebarView extends BaseView {
   
@@ -21,7 +23,7 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-btn")
       .attr("style","background-color: " + this.sidebarButtonColour)
       .attr("title", this.presenter.mapui.labels.showDirectory)
-      .on("click", () => this.showSidebar())
+      .on("click", () => this.presenter.showSidebar())
       .append("i")
       .attr("class", "fa fa-angle-right");
   }
@@ -43,10 +45,9 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-button w3-border-0 ml-auto")
       .attr("title", labels.showDirectory)
       .on("click", () => {
-        this.presenter.mapui.resetSearch();
-        //notify zoom
+        this.presenter.mapui.clearFiltersAndSearch();
+        this.hideInitiativeList();
         this.presenter.changeSidebar("directory");
-        this.showInitiativeList();
 
         //deselect
         EventBus.Markers.needToShowLatestSelection.pub([]);
@@ -61,10 +62,8 @@ export class SidebarView extends BaseView {
       .attr("class", "w3-button w3-border-0")
       .attr("title", labels.showSearch)
       .on("click", () => {
-        this.hideInitiativeList();
-        //deselect
-        EventBus.Markers.needToShowLatestSelection.pub([]);
         this.presenter.changeSidebar("initiatives");
+        document.getElementById("search-box")?.focus();
       })
       .append("i")
       .attr("class", "fa fa-search");
@@ -103,30 +102,26 @@ export class SidebarView extends BaseView {
 
   showSidebar() {
     const sidebar = d3.select("#map-app-sidebar");
-    sidebar.on(
-      "transitionend",
-      (event: TransitionEvent) => {
-        const target = event.target as HTMLElement|undefined; // Seems to need coercion
-        if (!target || target?.className === "w3-btn") return;
-        if (event.propertyName === "transform") {
-            d3.select("#map-app-sidebar-button").on("click", () => this.hideSidebar());
-        }
-        //select input textbox if possible 
-        if (document.getElementById("search-box") != null)
-          document.getElementById("search-box")?.focus();
-        this.updateSidebarWidth();
-      },
-      false
-    )
-      .classed("sea-sidebar-open", true);
+
+    if (!sidebar.classed("sea-sidebar-open")) {
+      sidebar.on(
+        "transitionend",
+        (event: TransitionEvent) => {
+          const target = event.target as HTMLElement|undefined; // Seems to need coercion
+          if (!target || target?.className === "w3-btn") return;
+          if (event.propertyName === "transform") {
+              d3.select("#map-app-sidebar-button").on("click", () => this.hideSidebar());
+          }
+          this.updateSidebarWidth();
+        },
+        false
+      )
+        .classed("sea-sidebar-open", true);
+    }
     
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
       d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
-
-    this.presenter.changeSidebar(); // Refresh the content of the sidebar
-    if (document.getElementById("dir-filter") && window.outerWidth >= 1080)
-      document.getElementById("dir-filter")?.focus();
   }
 
   updateSidebarWidth() {
@@ -177,15 +172,6 @@ export class SidebarView extends BaseView {
 
   }
 
-  hideInitiativeSidebar() {
-    const initiativeSidebar = d3.select("#sea-initiative-sidebar");
-    const node = initiativeSidebar.node();
-    
-    if (node instanceof HTMLElement && node?.getBoundingClientRect().x === 0) {
-      initiativeSidebar.classed("sea-initiative-sidebar-open", false);
-    }
-  }
-
   showInitiativeList() {
     //if empty don't show
     const empty = d3.select("#sea-initiatives-list-sidebar-content").select("ul").empty();
@@ -194,13 +180,7 @@ export class SidebarView extends BaseView {
     }
     //else show it
     const sidebar = d3.select("#map-app-sidebar");
-    const sidebarButton = d3.select("#map-app-sidebar-button");
     d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
-
-    const initiativeListSidebar = d3.select("#sea-initiatives-list-sidebar");
-    if (!initiativeListSidebar.empty() && !sidebarButton.empty())
-      initiativeListSidebar.insert(() => sidebarButton.node(), // moves sidebarButton
-                                   "#sea-initiatives-list-sidebar-content");
 
     sidebar
       .on(
@@ -219,9 +199,7 @@ export class SidebarView extends BaseView {
   
   hideInitiativeList() {
     const sidebar = d3.select("#map-app-sidebar");
-    const sidebarButton = d3.select("#map-app-sidebar-button");
-    sidebar.insert(() => sidebarButton.node(), // moves sidebarButton
-                   "#sea-initiatives-list-sidebar");
+    
     sidebar.on(
       "transitionend",
       (event: TransitionEvent) => {
@@ -236,5 +214,35 @@ export class SidebarView extends BaseView {
       .classed("sea-sidebar-list-initiatives", false);
 
     d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
-  }  
+  }
+
+  populateInitiativeSidebar(initiative: Initiative, initiativeContent: string) {
+    let initiativeSidebar = d3.select("#sea-initiative-sidebar");
+    let initiativeContentElement = this.d3selectAndClear(
+      "#sea-initiative-sidebar-content"
+    );
+    initiativeContentElement
+      .append("button")
+      .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
+      .attr("title", `${this.presenter.mapui.labels.close} ${initiative.name}`)
+      .on("click", this.hideInitiativeSidebar)
+      .append("i")
+      .attr("class", "fa " + "fa-times");
+    initiativeContentElement
+      .append("div")
+      .html(initiativeContent);
+    initiativeSidebar.classed("sea-initiative-sidebar-open", true);
+
+    if (!canDisplayInitiativePopups())
+      EventBus.Sidebar.showSidebar.pub();
+  }
+
+  hideInitiativeSidebar() {
+    const initiativeSidebar = d3.select("#sea-initiative-sidebar");
+    const node = initiativeSidebar.node();
+    
+    if (node instanceof HTMLElement && node?.getBoundingClientRect().x === 0) {
+      initiativeSidebar.classed("sea-initiative-sidebar-open", false);
+    }
+  }
 }

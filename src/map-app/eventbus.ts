@@ -18,8 +18,6 @@ export namespace EventBus {
     //export const filterDataset = new PostalEvent<Data>("Datasets.filterDataset");
   }
   export namespace Directory {
-	  export const initiativeClicked = new PostalTopic<Initiative|undefined>("Directory.initiativeClicked"); // deselected if undefined
-	  export const initiativeClickedHideSidebar = new PostalTopic<Initiative>("Directory.InitiativeClickedSidebar.hideSidebar");
   }
   export namespace Initiatives {
     export interface DatasetError { error: Error; dataset?: string; }
@@ -32,8 +30,6 @@ export namespace EventBus {
   export namespace Initiative {
     export const created = new PostalTopic<Initiative>("Initiative.created");
 	  export const refreshed = new PostalTopic<Initiative>("Initiative.refreshed");
-	  export const searchedInitiativeClicked = new PostalTopic<Initiative>("Initiative.searchedInitiativeClicked");
-	  //export const selected = new PostalTopic<Data>("Initiative.selected");
   }
   export namespace Map {
     export interface ZoomOptions {
@@ -77,7 +73,9 @@ export namespace EventBus {
 	  export const needToShowInitiativeTooltip = new PostalTopic<Initiative>("Map.needToShowInitiativeTooltip");
 	  export const needsToBeZoomedAndPanned = new PostalTopic<SelectAndZoomData>("Map.needsToBeZoomedAndPanned");
 	  export const selectAndZoomOnInitiative = new PostalTopic<SelectAndZoomData>("Map.selectAndZoomOnInitiative");
+    export const initiativeClicked = new PostalTopic<Initiative|undefined>("Map.initiativeClicked");
 	  export const setActiveArea = new PostalTopic<ActiveArea>("Map.setActiveArea");
+    export const clearFiltersAndSearch = new PostalTopic("Map.clearFiltersAndSearch");
   }
   export namespace Marker {
 	  export const selectionToggled = new PostalTopic<Initiative>("Marker.SelectionToggled");
@@ -87,9 +85,8 @@ export namespace EventBus {
 	  export const needToShowLatestSelection = new PostalTopic<Initiative[]>("Markers.needToShowLatestSelection");
   }
   export namespace Sidebar {
-	  export const hideInitiative = new PostalTopic("Sidebar.hideInitiative");
+    export const showInitiativeList = new PostalTopic("Sidebar.showInitiativeList");
 	  export const hideInitiativeList = new PostalTopic("Sidebar.hideInitiativeList");
-	  export const hideInitiativeSidebar = new PostalTopic("Sidebar.hideInitiativeSidebar");
 	  export const hideSidebar = new PostalTopic("Sidebar.hideSidebar");
 	  export const showAbout = new PostalTopic("Sidebar.showAbout");
 	  export const showDatasets = new PostalTopic("Sidebar.showDatasets");

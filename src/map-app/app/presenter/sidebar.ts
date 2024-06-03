@@ -1,5 +1,6 @@
 import { EventBus } from '../../eventbus';
 import { MapUI } from '../map-ui';
+import { Initiative } from '../model/initiative';
 import { SidebarView } from '../view/sidebar';
 import { BasePresenter } from './base';
 import { AboutSidebarPresenter } from './sidebar/about';
@@ -58,18 +59,19 @@ export class SidebarPresenter extends BasePresenter {
 
     this.changeSidebar(defaultPanel);
   }
-  
-  // Changes or refreshes the sidebar
-  //
-  // @param name - the sidebar to change
+
+  /**
+   * Changes the sidebar
+   * @param name the sidebar to change (needs to be one of the keys of this.sidebar)
+   */
   changeSidebar(name?: SidebarId): void {
     if (!name) {
       if (this.sidebarName) {
         // Just refresh the currently showing sidebar.
-        this.children[this.sidebarName]?.refreshView();
+        this.children[this.sidebarName]?.refreshView(false);
       }
       else {
-        // If nothing is showing, refresh the first in the list. Or nothing, if none.
+        // If no sidebar is set, pick the first one
         let key: SidebarId;
         for(key in this.children) {
           const child = this.children[key];
@@ -77,9 +79,10 @@ export class SidebarPresenter extends BasePresenter {
             continue;
           
           this.sidebarName = key;
-          child.refreshView();
+          child.refreshView(true);
           break;
         }
+        console.warn('No sidebars to show');
       }
       return;
     }
@@ -89,9 +92,37 @@ export class SidebarPresenter extends BasePresenter {
       const child = this.children[name];
       if (child !== undefined) {
         this.sidebarName = name;
-        child.refreshView();
+        child.refreshView(true);
       }
       return;
+    }
+
+    // If we get here it's not a valid sidebar (possibly it wasn't configured)
+    console.warn(
+      "Attempting to call SidebarPresenter.changeSidebar() with a "+
+        `non-existant sidebar '${name}' - ignoring.`
+    );
+  }
+
+  /**
+   * Fully refresh the sidebar
+   */
+  refreshSidebar() {
+    if (this.sidebarName) {
+      this.children[this.sidebarName]?.refreshView(true);
+    } else {
+      // If no sidebar is set, pick the first one
+      let key: SidebarId;
+      for(key in this.children) {
+        const child = this.children[key];
+        if (!child)
+          continue;
+        
+        this.sidebarName = key;
+        child.refreshView(true);
+        break;
+      }
+      console.warn('No sidebars to show');
     }
 
     // If we get here it's not a valid sidebar (possibly it wasn't configured)
@@ -118,6 +149,14 @@ export class SidebarPresenter extends BasePresenter {
     this.view.hideInitiativeSidebar();
   }
 
+  populateInitiativeSidebar(initiative: Initiative, initiativeContent: string) {
+    this.view.populateInitiativeSidebar(initiative, initiativeContent);
+  }
+
+  showInitiativeList() {
+    this.view.showInitiativeList();
+  }
+
   hideInitiativeList() {
     this.view.hideInitiativeList();
   }
@@ -133,7 +172,7 @@ export class SidebarPresenter extends BasePresenter {
     });
     EventBus.Sidebar.showDirectory.sub(() => {
       this.changeSidebar("directory");
-      this.view.showInitiativeList();
+      this.showSidebar();
     });
     EventBus.Sidebar.showDatasets.sub(() => {
       this.changeSidebar("datasets");
@@ -141,10 +180,12 @@ export class SidebarPresenter extends BasePresenter {
     });
     EventBus.Sidebar.showSidebar.sub(() => this.showSidebar());
     EventBus.Sidebar.hideSidebar.sub(() => this.hideSidebar());
-    EventBus.Sidebar.hideInitiativeSidebar.sub(() => this.hideInitiativeSidebar());
+    EventBus.Sidebar.showInitiativeList.sub(() => this.showInitiativeList());
     EventBus.Sidebar.hideInitiativeList.sub(() => this.hideInitiativeList());
-    EventBus.Initiatives.reset.sub(() => this.changeSidebar());
-    EventBus.Initiatives.loadComplete.sub(() => this.changeSidebar());
+    EventBus.Initiatives.reset.sub(() => {
+      this.changeSidebar();
+      this.hideInitiativeList();
+    });
   }
 
 }

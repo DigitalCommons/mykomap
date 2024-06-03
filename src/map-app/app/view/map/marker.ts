@@ -119,16 +119,13 @@ export class MapMarkerView extends BaseView {
       this.presenter.notifySelectionToggled(this.presenter.initiative);
     } else {
       console.log(this.presenter.initiative);
-      // this.presenter.notifySelectionSet(this.initiative);
-      EventBus.Directory.initiativeClicked.pub(this.presenter.initiative);
+      EventBus.Map.initiativeClicked.pub(this.presenter.initiative);
     }
   }
 
   setUnselected(initiative: Initiative) {
     //close pop-up
     this.presenter.mapUI.map?.closePopup();
-    //close information on the left hand side (for smaller screens)
-    EventBus.Sidebar.hideInitiative.pub();
     //reset the map vars and stop the zoom event from triggering selectInitiative ({target}) method
 
     //change the color of an initiative with a location
@@ -210,7 +207,7 @@ export class MapMarkerView extends BaseView {
     let deselectInitiative = (e: leaflet.LeafletEvent) => {
       if (factory.geoClusterGroup.getVisibleParent(marker) !== marker) {
         this.setUnselected(initiative);
-        EventBus.Directory.initiativeClicked.pub(undefined); // deselects
+        EventBus.Map.initiativeClicked.pub(undefined); // deselects
         factory.geoClusterGroup.off("animationend", deselectInitiative);
       }
     }

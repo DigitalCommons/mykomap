@@ -8,7 +8,7 @@ import { EventBus } from "../eventbus";
 import "./map"; // Seems to be needed to prod the leaflet CSS into loading.
 import { SidebarPresenter } from "./presenter/sidebar";
 import { PhraseBook } from "../localisations";
-import { toString as _toString } from '../utils';
+import { toString as _toString, canDisplayExpandedSidebar } from '../utils';
 import { Action, AppState, PropEquality, StateManager, TextSearch } from "./state-manager";
 import { StateChange } from "../undo-stack";
 import { Dictionary } from "../common-types";
@@ -48,7 +48,8 @@ export class MapUI {
       });
     };
 
-    EventBus.Directory.initiativeClicked.sub(initiative => this.onInitiativeClickedInSidebar(initiative));
+    EventBus.Map.initiativeClicked.sub(initiative => this.onInitiativeClicked(initiative));
+    EventBus.Map.clearFiltersAndSearch.sub(() => this.clearFiltersAndSearch());
   }
 
   // This inspects the config and constructs an appropriate set of
@@ -99,6 +100,7 @@ export class MapUI {
   onNewInitiatives() {
     const loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
     this.stateManager.reset(loadedInitiatives);
+    this.refreshSidebar();
   }
   
   createPresenter(): MapPresenter {
@@ -113,8 +115,8 @@ export class MapUI {
     this.stateManager.clearPropFilter(filterName);
   }
 
-  resetSearch(): void {
-    this.stateManager.reset();
+  clearFiltersAndSearch(): void {
+    this.stateManager.clearFiltersAndSearch();
   }
 
   /// Returns a list of property values matching the given filter
@@ -131,36 +133,38 @@ export class MapUI {
       throw new Error(`an attempt to add a filter on an unknown propery name '${propName}'`);
 
     const isMulti = propDef.type === 'multi';
-    if (value === undefined)
+    if (value === undefined) {
       this.stateManager.clearPropFilter(propName);
-    else
+    } else {
       this.stateManager.propFilter(new PropEquality(propName, value, isMulti));
+    }
+
+    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Show Results
+      EventBus.Sidebar.showInitiativeList.pub();
   }
 
   isSelected(initiative: Initiative): boolean {
-    // Currently unimplemented - I can see an sea-initiative-active class
-    // being applied if a test was true, but it makes no sense in the current
-    // context AFAICT. The test was:
-    // initiative === this.contextStack.current()?.initiatives[0]
-
-    // The main thing is seemed to do is highlight an initiative (or
-    // initiatives) in the directory pop-out list of initiatives in a
-    // category.
-    
-    // For now, just return false always. We may re-implement this later.
-    return false; 
+    const selectedInitiatives = this.mapPresenter?.getSelectedInitiatives() ?? [];
+    return  selectedInitiatives.includes(initiative);
   }
 
   toggleSelectInitiative(initiative: Initiative) {
-    // Currently unimplemented.
+    const selectedInitiatives = this.mapPresenter?.getSelectedInitiatives() ?? [];
     
-    // EventBus.Markers.needToShowLatestSelection.pub(lastContent.initiatives);
+    if (selectedInitiatives.includes(initiative)) {
+      EventBus.Markers.needToShowLatestSelection.pub(selectedInitiatives.filter(i => i !== initiative));
+    } else {
+      EventBus.Markers.needToShowLatestSelection.pub([...selectedInitiatives, initiative]);
+    }
   }
-
 
   performSearch(text: string) {
     console.log("Search submitted: [" + text + "]");
     this.stateManager.textSearch(new TextSearch(text));
+
+    if (canDisplayExpandedSidebar()) {// on smaller screens, wait until user clicks Show Results
+      EventBus.Sidebar.showInitiativeList.pub();
+    }
   }
 
   // Text to show in the search box
@@ -182,26 +186,40 @@ export class MapUI {
   }
 
   private refreshSidebar() {
-    this.getSidebarPresenter(this).then((presenter) => presenter.changeSidebar());
+    this.getSidebarPresenter(this).then((presenter) => {
+      presenter.refreshSidebar();
+    });
   }
 
-
-
-  private notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative: Initiative) {
-    const data = EventBus.Map.mkSelectAndZoomData([initiative]);
-    EventBus.Map.needsToBeZoomedAndPanned.pub(data);
+  private notifyMapNeedsToNeedsToSelectAndZoomOnInitiative(initiative: Initiative) {
+    const maxZoom = this.config.getMaxZoomOnOne();
+    const defaultPos = this.config.getDefaultLatLng();
+    
+    const data = EventBus.Map.mkSelectAndZoomData([initiative], { maxZoom, defaultPos });
+    EventBus.Map.selectAndZoomOnInitiative.pub(data);
   }
   
-  private onInitiativeClickedInSidebar(initiative?: Initiative) {
-    if (!initiative)
-      return;
+  private onInitiativeClicked(initiative?: Initiative) {
+    console.log('Clicked', initiative);
     
-    //this.parent.mapui.stateManager.append(new SearchResults([initiative]));
-    //console.log(this.parent.mapui.stateManager.current());
-
-    this.notifyMapNeedsToNeedsToBeZoomedAndPannedOneInitiative(initiative);
-    this.refreshSidebar();
-    EventBus.Initiative.searchedInitiativeClicked.pub(initiative);
+    if (initiative) {
+      // Move the window to the right position first
+      this.notifyMapNeedsToNeedsToSelectAndZoomOnInitiative(initiative);
+      // Populate the sidebar and highlight the intiative in the directory
+      this.getSidebarPresenter(this).then((presenter) => {
+        presenter.populateInitiativeSidebar(
+          initiative,
+          this.markers.getInitiativeContent(initiative) ?? ''
+        );
+      });
+    }
+    else {
+      // User has deselected
+      EventBus.Markers.needToShowLatestSelection.pub([]);
+      this.getSidebarPresenter(this).then((presenter) => {
+        presenter.hideInitiativeSidebar();
+      });
+    }
   }
 
   currentItem() {
