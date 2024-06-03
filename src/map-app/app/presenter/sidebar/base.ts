@@ -26,7 +26,7 @@ export abstract class BaseSidebarPresenter extends BasePresenter {
     this.view.refresh(false);
 
     // Show the results pane again, since there have been changes
-    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Apply Filters
+    if (canDisplayExpandedSidebar()) // on smaller screens, wait until user clicks Show Results
       EventBus.Sidebar.showInitiativeList.pub();
   }
 

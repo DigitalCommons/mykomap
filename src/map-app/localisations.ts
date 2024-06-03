@@ -40,7 +40,6 @@ export interface PhraseBook {
   allEntries: string;
   and: string;
   any: string;
-  applyFilters: string;
   clearFilters: string;
   clickToSearch: string;
   clickForDetailsHereAndMap: string;
@@ -71,6 +70,7 @@ export interface PhraseBook {
   showDatasets: string;
   showDirectory: string;
   showInfo: string;
+  showResults: string;
   showSearch: string;
   source: string;
   technicalInfo: string;
@@ -90,7 +90,6 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "All Entries",
     and: "AND",
     any: "Any",
-    applyFilters: "Apply filters",
     clearFilters: "Clear filters",
     clickToSearch: "Click to search",
     clickForDetailsHereAndMap: "Click to see details here and on map",
@@ -121,6 +120,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Show datasets",
     showDirectory: "Show directory",
     showInfo: "Show info",
+    showResults: "Show results",
     showSearch: "Show search",
     source: "The source data of the content is here:",
     technicalInfo: "Technical information about the technology behind this map and directory can be found here:",
@@ -135,7 +135,6 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "Toutes les entrées",
     and: "ET",
     any: "Tout afficher",
-    applyFilters: "Appliquer les filtres",
     clearFilters: "Réinitialiser les filtres",
     clickToSearch: "Cliquez pour rechercher",
     clickForDetailsHereAndMap: "Cliquez pour voir les détails ici et sur la carte",
@@ -166,6 +165,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Afficher les ensembles de données",
     showDirectory: "Afficher l’annuaire",
     showInfo: "Afficher les informations",
+    showResults: "Afficher les résultats",
     showSearch: "Afficher la recherche",
     source: "Les données sources de ce contenu se trouvent ici:",
     technicalInfo: "Des informations techniques sur la technologie derrière cette carte et ce répertoire peuvent être trouvées ici:",
@@ -180,7 +180,6 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "Todas las entradas",
     and: "Y",
     any: "Qualquiera",
-    applyFilters: "Aplicar filtros",
     clearFilters: "Borrar filtros",
     clickToSearch: "Haga clic para buscar",
     clickForDetailsHereAndMap: "Haga clic para ver detalles aquí y en el mapa",
@@ -211,6 +210,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "Mostrar conjuntos de datos",
     showDirectory: "Mostrar directorio",
     showInfo: "Mostrar información",
+    showResults: "Mostrar resultados",
     showSearch: "Mostrar búsqueda",
     source: "Los datos de origen de este contenido están aquí:",
     technicalInfo: "Consulta aquí la información técnica sobre la tecnología con la que se han elaborado el mapa y el directorio:",
@@ -225,7 +225,6 @@ export const phraseBooks: PhraseBooks = {
     allEntries: "모든 항목들",
     and: "그리고",
     any: "아무거나",
-    applyFilters: "필터 적용",
     clearFilters: "필터 지우기",
     clickToSearch: "클릭하여 검색",
     clickForDetailsHereAndMap: "여기와 지도에서 세부정보를 보려면 클릭하세요.",
@@ -256,6 +255,7 @@ export const phraseBooks: PhraseBooks = {
     showDatasets: "자료 표시",
     showDirectory: "디렉토리 표시",
     showInfo: "정보 표시",
+    showResults: "결과 표시",
     showSearch: "검색 표시",
     source: "이 콘텐츠의 소스 데이터는 여기:",
     technicalInfo: "이 지도 및 디렉토리 이면의 기술에 대한 기술 정보를 찾을 수 있습니다 여기:",

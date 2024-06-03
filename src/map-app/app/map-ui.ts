@@ -161,7 +161,7 @@ export class MapUI {
     console.log("Search submitted: [" + text + "]");
     this.stateManager.textSearch(new TextSearch(text));
 
-    if (canDisplayExpandedSidebar()) {// on smaller screens, wait until user clicks Apply Filters
+    if (canDisplayExpandedSidebar()) {// on smaller screens, wait until user clicks Show Results
       EventBus.Sidebar.showInitiativeList.pub();
     }
   }

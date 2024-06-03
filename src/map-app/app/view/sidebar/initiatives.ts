@@ -37,7 +37,7 @@ export class InitiativesSidebarView extends BaseSidebarView {
 
     this.createAdvancedSearch(advancedSearchContainer);
 
-    this.createApplyFiltersButton(container);
+    this.createShowResultsButton(container);
   }
 
   getSearchText(): string {
@@ -225,16 +225,15 @@ export class InitiativesSidebarView extends BaseSidebarView {
     }
   }
 
-  private createApplyFiltersButton(container: d3DivSelection) {
+  private createShowResultsButton(container: d3DivSelection) {
     const labels = this.presenter.parent.mapui.labels;
 
-    // add apply filters button on mobile
     container
       .append("div")
-      .attr("class", "w3-container w3-center mobile-only apply-filters-button-container")
+      .attr("class", "w3-container w3-center mobile-only show-results-button-container")
       .append("button")
-      .attr("class", "w3-button w3-round w3-border-dark-grey apply-filters-button")
-      .text(labels.applyFilters.toLocaleUpperCase())
+      .attr("class", "w3-button w3-round w3-border-dark-grey show-results-button")
+      .text(labels.showResults.toLocaleUpperCase())
       .on("click", () => EventBus.Sidebar.showInitiativeList.pub());
   }
 

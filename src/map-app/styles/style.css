@@ -161,11 +161,11 @@ body {
   color: #ccc; 
 }
 
-.apply-filters-button-container{
+.show-results-button-container{
   margin-top: 28px;
 }
 
-.apply-filters-button{
+.show-results-button{
   border: solid;
   border-width: 2px;
   font-weight: 450;
