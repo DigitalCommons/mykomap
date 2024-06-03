@@ -100,6 +100,7 @@ export class MapUI {
   onNewInitiatives() {
     const loadedInitiatives = this.dataServices.getAggregatedData().loadedInitiatives;
     this.stateManager.reset(loadedInitiatives);
+    this.refreshSidebar();
   }
   
   createPresenter(): MapPresenter {
@@ -186,7 +187,7 @@ export class MapUI {
 
   private refreshSidebar() {
     this.getSidebarPresenter(this).then((presenter) => {
-      presenter.changeSidebar();
+      presenter.refreshSidebar();
     });
   }
 
@@ -204,7 +205,6 @@ export class MapUI {
     if (initiative) {
       // Move the window to the right position first
       this.notifyMapNeedsToNeedsToSelectAndZoomOnInitiative(initiative);
-      this.refreshSidebar();
       // Populate the sidebar and highlight the intiative in the directory
       this.getSidebarPresenter(this).then((presenter) => {
         presenter.populateInitiativeSidebar(
@@ -220,8 +220,6 @@ export class MapUI {
         presenter.hideInitiativeSidebar();
       });
     }
-
-    this.refreshSidebar();
   }
 
   currentItem() {

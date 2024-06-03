@@ -88,7 +88,7 @@ export class MapPresenter extends BasePresenter {
     console.log("onInitiativeComplete");
 
     // Call this last so map will have bounds set (else error!) 
-    this.mapUI.onNewInitiatives(); 
+    this.mapUI.onNewInitiatives();
   }
   
   private onInitiativeLoadMessage(error?: EventBus.Initiatives.DatasetError) {

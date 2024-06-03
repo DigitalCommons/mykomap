@@ -48,10 +48,10 @@ export class SidebarPresenter extends BasePresenter {
       this.children.datasets = new DatasetsSidebarPresenter(this);
   }
   
-  // Changes or refreshes the sidebar
-  //
-  // @param name - the sidebar to change (needs to be one of the keys
-  // of this.sidebar)
+  /**
+   * Changes the sidebar
+   * @param name the sidebar to change (needs to be one of the keys of this.sidebar)
+   */
   changeSidebar(name?: string) {
     if (name !== undefined) {
       // Validate name
@@ -71,19 +71,39 @@ export class SidebarPresenter extends BasePresenter {
       // If nothing is showing, show the first. Or nothing, if none.
       if (!this.sidebarName) {
         const names = Object.keys(this.children);
-        if (names.length > 0)
+        if (names.length > 0) {
           this.sidebarName = names[0];
-        else
+          this.children[this.sidebarName]?.refreshView(true);
+        } else {
+          console.warn('No sidebars to show');
           return; // No sidebars? Can't do anything.
+        }
+      } else {
+        this.children[this.sidebarName]?.refreshView(false);
       }
-        
-      this.children[this.sidebarName]?.refreshView(false);
+    }
+  }
+
+  /**
+   * Fully refresh the sidebar
+   */
+  refreshSidebar() {
+    if (!this.sidebarName) {
+      // If no sidebar is set, pick the first one
+      const names = Object.keys(this.children);
+      if (names.length > 0) {
+        this.sidebarName = names[0];
+        this.children[this.sidebarName]?.refreshView(true);
+      } else {
+        console.warn('No sidebars to show');
+        return; // No sidebars? Can't do anything.
+      }
+    } else {
+      this.children[this.sidebarName]?.refreshView(true);
     }
   }
 
   showSidebar() {
-    // Refresh the view before showing
-    this.children[this.sidebarName ?? 'undefined']?.refreshView(true);
     this.view.showSidebar();
   }
 
@@ -137,7 +157,6 @@ export class SidebarPresenter extends BasePresenter {
       this.changeSidebar();
       this.hideInitiativeList();
     });
-    EventBus.Initiatives.loadComplete.sub(() => this.changeSidebar());
   }
 
 }

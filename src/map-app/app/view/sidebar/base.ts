@@ -1,4 +1,4 @@
-// Set up the various sidebars
+import * as d3 from 'd3';
 import { BaseSidebarPresenter, NavigationCallback } from '../../presenter/sidebar/base';
 import {  BaseView  } from '../base';
 import { d3DivSelection, d3Selection } from '../d3-utils';
@@ -133,7 +133,13 @@ export abstract class BaseSidebarView extends BaseView {
         .attr("data-uid", _toString(initiative.uri))
         .classed(activeClass, true)
         .classed(nongeoClass, true)
-        .on("click", ()=> this.presenter.onInitiativeClicked(initiative))
+        .on("click", () => {
+          // Highlight the selected initiative in the list
+          d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
+          d3.select('[data-uid="' + initiative.uri + '"]').classed("sea-initiative-active", true);
+          
+          this.presenter.onInitiativeClicked(initiative);
+        })
         .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative))
         .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative));
     }
@@ -143,16 +149,19 @@ export abstract class BaseSidebarView extends BaseView {
     const labels = this.presenter.parent.mapui.labels;
 
     if (this.presenter.parent.showingDirectory()) {
+      const _this = this;
       container
         .append("button")
         // mobile only since these buttons already exist in the sidebar on larger screens
         .attr("class", "w3-button w3-border-0 mobile-only")
         .attr("title", labels.showDirectory)
         .on("click", function () {
-          EventBus.Map.clearFiltersAndSearch.pub();
+          if (_this.title !== labels.directory) {
+            EventBus.Map.clearFiltersAndSearch.pub();
+            EventBus.Markers.needToShowLatestSelection.pub([]);
+          }
           EventBus.Sidebar.hideInitiativeList.pub();
           EventBus.Sidebar.showDirectory.pub();
-          EventBus.Markers.needToShowLatestSelection.pub([]);
         })
         .append("i")
         .attr("class", "fa fa-bars");

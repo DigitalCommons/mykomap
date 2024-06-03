@@ -102,25 +102,26 @@ export class SidebarView extends BaseView {
 
   showSidebar() {
     const sidebar = d3.select("#map-app-sidebar");
-    sidebar.on(
-      "transitionend",
-      (event: TransitionEvent) => {
-        const target = event.target as HTMLElement|undefined; // Seems to need coercion
-        if (!target || target?.className === "w3-btn") return;
-        if (event.propertyName === "transform") {
-            d3.select("#map-app-sidebar-button").on("click", () => this.hideSidebar());
-        }
-        this.updateSidebarWidth();
-      },
-      false
-    )
-      .classed("sea-sidebar-open", true);
+
+    if (!sidebar.classed("sea-sidebar-open")) {
+      sidebar.on(
+        "transitionend",
+        (event: TransitionEvent) => {
+          const target = event.target as HTMLElement|undefined; // Seems to need coercion
+          if (!target || target?.className === "w3-btn") return;
+          if (event.propertyName === "transform") {
+              d3.select("#map-app-sidebar-button").on("click", () => this.hideSidebar());
+          }
+          this.updateSidebarWidth();
+        },
+        false
+      )
+        .classed("sea-sidebar-open", true);
+    }
     
     if (!sidebar.classed("sea-sidebar-list-initiatives"))
       d3.select(".w3-btn").attr("title", this.presenter.mapui.labels.hideDirectory);
     d3.select("#map-app-sidebar i").attr("class", "fa fa-angle-left");
-
-    this.presenter.changeSidebar(); // Refresh the content of the sidebar
   }
 
   updateSidebarWidth() {
@@ -224,7 +225,7 @@ export class SidebarView extends BaseView {
       .append("button")
       .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
       .attr("title", `${this.presenter.mapui.labels.close} ${initiative.name}`)
-      .on("click", () => EventBus.Map.initiativeClicked.pub(undefined))
+      .on("click", this.hideInitiativeSidebar)
       .append("i")
       .attr("class", "fa " + "fa-times");
     initiativeContentElement
