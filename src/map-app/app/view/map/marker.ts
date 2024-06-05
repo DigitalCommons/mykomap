@@ -22,7 +22,7 @@ export class MapMarkerView extends BaseView {
     // options argument overrides our default options:
     const opts = Object.assign(this.dfltOptions, {
       // icon: this.presenter.getIcon(initiative),
-      popuptext: this.presenter.getInitiativeContent(initiative)
+      getPopupText: () => this.presenter.getInitiativeContent(initiative)
     });
 
     // For non-geo initiatives we don't need a marker but still want to get the initiativeContent
@@ -47,7 +47,7 @@ export class MapMarkerView extends BaseView {
 
       initiative.__internal.marker = this.marker;
 
-      this.marker.bindPopup(opts.popuptext, {
+      this.marker.bindPopup(opts.getPopupText, {
         autoPan: false,
         minWidth: 472,
         maxWidth: 472,
@@ -83,7 +83,7 @@ export class MapMarkerView extends BaseView {
 
       // maxWidth helps to accomodate big font, for presentation purpose, set up in CSS
       // maxWidth:800 is needed if the font-size is set to 200% in CSS:
-      this.marker.bindPopup(opts.popuptext, {
+      this.marker.bindPopup(opts.getPopupText, {
         autoPan: false,
         //minWidth: "472",
         //maxWidth: "800",
