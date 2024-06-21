@@ -67,7 +67,6 @@
     "leaflet-active-area": "^1.1.0",
     "leaflet-contextmenu": "^1.4.0",
     "leaflet.awesome-markers": "^2.0.5",
-    "leaflet.markercluster": "^1.5.1",
     "mini-css-extract-plugin": "^1.6.2",
     "minimist": "^1.2.6",
     "mocha": "^10.1.0",
