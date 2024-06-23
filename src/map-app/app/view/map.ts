@@ -3,7 +3,7 @@ import { BaseView } from './base';
 import { Map } from '../map';
 import * as d3 from 'd3';
 import * as leaflet from 'leaflet';
-
+import * as Supercluster from 'supercluster';
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
@@ -20,8 +20,8 @@ export class MapView extends BaseView {
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  readonly nonGeoClusterGroup: leaflet.MarkerClusterGroup;
-  readonly geoClusterGroup: leaflet.MarkerClusterGroup;
+  readonly nonGeoClusterGroup: Supercluster;
+  readonly geoClusterGroup: Supercluster;
 
   // Used to initialise the map for the "loading" spinner
   private static readonly spinMapInitHook: (this: leaflet.Map) => void = function() {
@@ -128,25 +128,22 @@ export class MapView extends BaseView {
     // unset. But if you set it to a number, and especially 0, it is
     // set, and enabled, which changes the behaviour of the clustering.
     // So, here we create it unset, and coerce the type to be MarkerClusterGroupOptions.
-    const options = {} as leaflet.MarkerClusterGroupOptions;
+    const options = {} as Supercluster.Options<Supercluster.AnyProps, Supercluster.AnyProps>;
 
     const disableClusteringAtZoom = this.presenter.mapUI.config.getDisableClusteringAtZoom()
     // Preserve the old config behaviour: zero means unset, so
     // clustering happens. Whereas zero actually means clustering is
     // disabled at all zoom levels. This may be a FIXME... later.
-    if (disableClusteringAtZoom !== 0) 
-      options.disableClusteringAtZoom = disableClusteringAtZoom;
+    if (disableClusteringAtZoom !== 0)
+      options.minZoom = disableClusteringAtZoom;
 
 
-    this.geoClusterGroup = leaflet.markerClusterGroup(
-      Object.assign(options, {
-        chunkedLoading: true
-      })
-    );
+    this.geoClusterGroup = new Supercluster(options);
 
     // Disable clustering on this cluster - which contains the location-less initiatives.
-    this.nonGeoClusterGroup = leaflet.markerClusterGroup({
-      spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
+    this.nonGeoClusterGroup = new Supercluster({
+      // spiderfyOnMaxZoom: false, FIXME - looks like superclusder doesn't support this?
+      minZoom: 0
     });
 
     
@@ -372,13 +369,14 @@ export class MapView extends BaseView {
 
     // zoom to layer if needed and unspiderify
     // FIXME guard against missing __parent - which means not part of a group?
+    /* FIXME we're just disabling this for now. No obvious supercluster equivalent.
     if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
       this.geoClusterGroup.zoomToShowLayer(
         marker,
         () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
       );
       this.geoClusterGroup.refreshClusters(marker);
-    }
+    }*/
 
     //code for not destroying pop-up when zooming out
     //only execute zoom to bounds if initiatives in data.initiatives are not currently vissible

@@ -84,7 +84,7 @@ export class MapPresenter extends BasePresenter {
           "both that there are no defaults configured and no visible initiatives");
     
     this.view.fitBounds({bounds: bounds});
-    this.view.geoClusterGroup.addLayers(this.mapUI.markers.withPhysicalLocation());
+    this.view.geoClusterGroup.load(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
 
     // Call this last so map will have bounds set (else error!) 

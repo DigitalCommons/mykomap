@@ -1,4 +1,5 @@
 import * as leaflet from 'leaflet';
+import * as Supercluster from 'supercluster';
 import { InitiativeRenderFunction } from './model/config-schema';
 import { Initiative } from './model/initiative';
 import { toString as _toString } from '../utils';
@@ -14,8 +15,8 @@ export class MarkerManager {
   private readonly markerForInitiative = new Map<Initiative, MapMarkerPresenter>();
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
-  nonGeoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
-  geoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  nonGeoClusterGroup = new Supercluster(); // FIXME options
+  geoClusterGroup = new Supercluster(); // FIXME options
 
 
   constructor(readonly mapUI: MapUI) {
@@ -64,12 +65,11 @@ export class MarkerManager {
       marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
   }
 
-  setNonGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
-    // CAUTION: this may be either a ClusterGroup, or the map itself
+  setNonGeoClusterGroup(clusterGroup: Supercluster) {
     this.nonGeoClusterGroup = clusterGroup;
   }
 
-  setGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
+  setGeoClusterGroup(clusterGroup: Supercluster) {
     this.geoClusterGroup = clusterGroup;
   }
 
@@ -94,9 +94,11 @@ export class MarkerManager {
     return this.geoClusterGroup;
   }
   
-  withPhysicalLocation(): leaflet.Marker[] {
+  withPhysicalLocation(): Supercluster.PointFeature<Supercluster.AnyProps>[] {
     return Array.from(this.markerForInitiative.values())
-      .map((mp) => mp?.hasPhysicalLocation? mp.view.marker : undefined)
-      .filter((marker): marker is leaflet.Marker => marker !== undefined)
+      .map((mp) => mp?.hasPhysicalLocation?
+        mp.view.marker.toGeoJSON() : undefined)
+      .filter((marker): marker is Supercluster.PointFeature<leaflet.Marker> =>
+        marker !== undefined)
   }
 }

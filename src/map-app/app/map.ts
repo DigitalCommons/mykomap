@@ -1,7 +1,7 @@
 import * as leaflet from 'leaflet';
 import 'leaflet-active-area';
 //import * as contextmenu from 'leaflet-contextmenu';
-import 'leaflet.markercluster';
+//import 'leaflet.markercluster';
 import 'leaflet.awesome-markers';
 
 /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */

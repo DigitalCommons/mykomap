@@ -561,7 +561,7 @@ export class Config implements ReadableConfig, WritableConfig {
       disableClusteringAtZoom: {
         id: 'disableClusteringAtZoom',
         descr: ['Defines the zoom level above which to cluster pins;',
-                'passed to Leaflet.markercluster plugin.',
+                'passed to Leaflet.markercluster plugin. FIXME nope its not',
                 'Zero effectively disables clustering, as this is a fully zoomed-out, global map;',
                 'most maps zoom in to level 18.',
                 'If omitted, clustering is always off. ',

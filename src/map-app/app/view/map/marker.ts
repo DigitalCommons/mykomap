@@ -1,4 +1,5 @@
 import * as leaflet from 'leaflet';
+import * as Supercluster from 'supercluster';
 import { EventBus } from '../../../eventbus';
 import { MapMarkerPresenter } from '../../presenter/map/marker';
 import { BaseView } from '../base';
@@ -11,7 +12,7 @@ export class MapMarkerView extends BaseView {
   // Using font-awesome icons, the available choices can be seen here:
   // http://fortawesome.github.io/Font-Awesome/icons/
   dfltOptions = { prefix: "fa" }; // "fa" selects the font-awesome icon set (we have no other)
-  cluster: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  cluster: Supercluster = new Supercluster();
 
   
   constructor(readonly presenter: MapMarkerPresenter) {
@@ -56,7 +57,7 @@ export class MapMarkerView extends BaseView {
       });
 
       this.cluster = this.presenter.mapUI.markers.nonGeoClusterGroup;
-      //this.cluster.addLayer(this.marker);
+      this.cluster.addLayer(this.marker);
       this.presenter.hasPhysicalLocation = false;
     }
     else {
@@ -95,7 +96,7 @@ export class MapMarkerView extends BaseView {
         this.onClick(e);
       });
       this.cluster = this.presenter.mapUI.markers.geoClusterGroup;
-      this.cluster.addLayer(this.marker);
+      this.cluster.load(this.marker);
       this.presenter.hasPhysicalLocation = true;
     }
   }
