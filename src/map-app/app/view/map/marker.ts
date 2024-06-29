@@ -95,7 +95,7 @@ export class MapMarkerView extends BaseView {
         this.onClick(e);
       });
       this.cluster = this.presenter.mapUI.markers.geoClusterGroup;
-      this.cluster.addLayer(this.marker);
+      // this.cluster.addLayer(this.marker);
       this.presenter.hasPhysicalLocation = true;
     }
   }
@@ -242,16 +242,16 @@ export class MapMarkerView extends BaseView {
     return this.presenter.getInitiativeContent(initiative);
   }
 
-  destroy() {
-    this.cluster.removeLayer(this.marker);
-  }
+  // destroy() {
+  //   this.cluster.removeLayer(this.marker);
+  // }
 
-  show() {
-    this.cluster.addLayer(this.marker);
-  }
+  // show() {
+  //   this.cluster.addLayer(this.marker);
+  // }
   
-  isVisible() {
-    return this.cluster.hasLayer(this.marker);
-  }
+  // isVisible() {
+  //   return this.cluster.hasLayer(this.marker);
+  // }
 }
 

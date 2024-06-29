@@ -30,23 +30,25 @@ export class MarkerManager {
   }
 
   destroyAll() {
-    this.markerForInitiative.forEach((_, initiative) => {
-      this.markerForInitiative.get(initiative)?.view.destroy();
-    });
-    this.markerForInitiative.clear();
+    // this.markerForInitiative.forEach((_, initiative) => {
+    //   this.markerForInitiative.get(initiative)?.view.destroy();
+    // });
+    // this.markerForInitiative.clear();
+    // this.geoClusterGroup.removeLayers(this.markerForInitiative.keys().map(mp => mp.view.marker));
+
   }
 
   updateVisibility(visibleInitiatives: Set<Initiative>) {
-    this.markerForInitiative.forEach((marker, initiative) => {
-      if (visibleInitiatives.has(initiative)) {
-        if (!marker.view.isVisible())
-          marker.view.show();
-      }
-      else {
-        if (marker.view.isVisible())
-          marker.view.destroy();
-      }
-    })
+    // this.markerForInitiative.forEach((marker, initiative) => {
+    //   if (visibleInitiatives.has(initiative)) {
+    //     if (!marker.view.isVisible())
+    //       marker.view.show();
+    //   }
+    //   else {
+    //     if (marker.view.isVisible())
+    //       marker.view.destroy();
+    //   }
+    // })
   }
 
   createMarker(initiative: Initiative) {
