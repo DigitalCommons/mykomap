@@ -165,7 +165,7 @@ export type AnyVocabPropDef = VocabPropDef | ( MultiPropDef & { uri: string } );
 // Inserts an element into a sorted array
 export function sortedInsert(element: unknown, array: unknown[]) {
   array.splice(locationOf(element, array), 0, element);
-  return array;
+  return;
 
   // Internal helper function
   function locationOf(element: any, array: any[], start: number = 0, end: number = array.length): number {
@@ -650,6 +650,10 @@ export class DataServicesImpl implements DataServices {
       EventBus.Initiatives.loadStarted.pub();
 
       await loadDatasets(dataLoaders, aggregator);
+
+      //sort
+      aggregator.loadedInitiatives.sort((a, b) => Initiative.compare(a, b));
+
       aggregator.allComplete(); // finish the aggregation
       
       this.aggregatedData = aggregator;

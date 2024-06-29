@@ -242,7 +242,8 @@ export class DataAggregator extends AggregatedData implements DataConsumer<Initi
     this.propIndex.onData(initiative);
 
     // Insert the initiative into loadedInitiatives
-    sortedInsert(initiative, this.loadedInitiatives);
+    this.loadedInitiatives.push(initiative);
+    // sortedInsert(initiative, this.loadedInitiatives);
 
     // Insert the initiative into initiativesByUid
     const uri = initiative.uri;
