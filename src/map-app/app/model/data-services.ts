@@ -580,10 +580,24 @@ export class DataServicesImpl implements DataServices {
     const lngs = (initiatives || this.aggregatedData.loadedInitiatives)
                    .map(obj => toNumber(obj.lng, null))
                    .filter((val): val is number => val !== null)
-    const west = Math.min.apply(Math, lngs);
-    const east = Math.max.apply(Math, lngs);
-    const south = Math.min.apply(Math, lats);
-    const north = Math.max.apply(Math, lats);
+
+    if (lats.length == 0 || lngs.length == 0) {
+      return [[-90, -180], [90, 180]]; // whole world
+    }
+
+    let west = lngs[0];
+    let east = lngs[0];
+    for (const lng of lngs) {
+      if (lng < west) west = lng;
+      if (lng > east) east = lng;
+    }
+
+    let south = lats[0];
+    let north = lats[0];
+    for (const lat of lats) {
+      if (lat < south) south = lat;
+      if (lat > north) north = lat;
+    }
 
     if (!initiatives) {
       this.cachedLatLon = [[south, west], [north, east]];
