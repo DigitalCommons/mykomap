@@ -914,7 +914,7 @@ panel for this narrowing the displayed pins by values of this field.
 \`\`\`
 import { ConfigData } from  "mykomap/app/model/config-schema";
 import { mkObjTransformer, DataVal } from "mykomap/obj-transformer";
-import { InitiativeObj } from "mykomap/src/map-app/app/model/initiative";
+import { InitiativeObj } from "mykomap/app/model/initiative";
 
 const config: ConfigData = {
   htmlTitle: "Outlets",
