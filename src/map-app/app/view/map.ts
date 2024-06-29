@@ -175,6 +175,8 @@ export class MapView extends BaseView {
 
       // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
       const minZoom = this.presenter.mapUI.config.getMinZoom();
+      console.log('aaaaa renderer changed');
+      
       this.map = leaflet.map("map-app-leaflet-map", {
         // set to true to re-enable context menu.
         // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
@@ -182,7 +184,8 @@ export class MapView extends BaseView {
         // noWrap: true, // FIXME this is commented as not supported? 
         minZoom: minZoom,
         //set max bounds - will bounce back if user attempts to cross them
-        maxBounds: worldBounds
+        maxBounds: worldBounds,
+        renderer: leaflet.canvas()
         // contextmenuWidth: 140,
       }) as Map; // Need to coerce the type to include our loaded extension methods
       

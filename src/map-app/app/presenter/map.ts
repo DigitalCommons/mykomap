@@ -73,6 +73,7 @@ export class MapPresenter extends BasePresenter {
     /* The protecting veil is now obsolete. */
     //view.clearProtectingVeil();
     // TODO - hook this up to a log?
+    console.log('bbbbbbbbb');
     this.view.stopLoading();
 
     // Load the markers into the clustergroup and set the bounds (an
