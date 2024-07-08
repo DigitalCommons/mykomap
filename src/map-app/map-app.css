@@ -1,8 +1,9 @@
 @import url("./w3.css");
-@import url("~leaflet.awesome-markers/dist/leaflet.awesome-markers.css");
+/* @import url("~leaflet.awesome-markers/dist/leaflet.awesome-markers.css"); */
 @import url("~@fortawesome/fontawesome-free/css/all.css");
-@import url("~leaflet-contextmenu/dist/leaflet.contextmenu.css");
-@import url("~leaflet.markercluster/dist/MarkerCluster.css");
-@import url("~leaflet.markercluster/dist/MarkerCluster.Default.css");
+/* @import url("~leaflet-contextmenu/dist/leaflet.contextmenu.css"); */
+/* @import url("~leaflet.markercluster/dist/MarkerCluster.css"); */
+/* @import url("~leaflet.markercluster/dist/MarkerCluster.Default.css"); */
+@import url("~mapbox-gl/dist/mapbox-gl.css");
 /* NOTE: must come after 3rd party styles, so they can be overridden */
 @import url("styles/style.css");

@@ -1,5 +1,4 @@
 import { Initiative } from "./model/initiative";
-import { Map } from "./map";
 import { MapPresenter } from "./presenter/map";
 import { MarkerManager } from "./marker-manager";
 import { Config } from "./model/config";
@@ -12,9 +11,9 @@ import { toString as _toString, canDisplayExpandedSidebar } from '../utils';
 import { Action, AppState, PropEquality, StateManager, TextSearch } from "./state-manager";
 import { StateChange } from "../undo-stack";
 import { Dictionary } from "../common-types";
+import { GeoJSONSource } from "mapbox-gl";
 
 export class MapUI {
-  public map?: Map;
   private mapPresenter?: MapPresenter;
   // for deferred load of sidebarView - breaking a recursive dep
   private readonly getSidebarPresenter: (f: MapUI) => Promise<SidebarPresenter>;
@@ -89,7 +88,11 @@ export class MapUI {
   
   private onStateChange(change: StateChange<AppState, Action|undefined>) {
     const visibleInitiatives = change.result.visibleInitiatives;
-    this.markers.updateVisibility(visibleInitiatives);
+    const mapSource = this.mapPresenter?.view.map.getSource('initiatives') as GeoJSONSource | undefined;
+    console.log('mapSource', mapSource);
+    
+    mapSource?.setData(this.currentItem().getVisibleInitiativesGeoJson());
+    // this.markers.updateVisibility(visibleInitiatives);
 
     this.refreshSidebar();
     

@@ -13,8 +13,8 @@ export class MapPresenter extends BasePresenter {
   constructor(readonly mapUI: MapUI) {
     super();
     this.view = new MapView(this);
-    this.mapUI.markers.setNonGeoClusterGroup(this.view.nonGeoClusterGroup);
-    this.mapUI.markers.setGeoClusterGroup(this.view.geoClusterGroup);
+    // this.mapUI.markers.setNonGeoClusterGroup(this.view.nonGeoClusterGroup);
+    // this.mapUI.markers.setGeoClusterGroup(this.view.geoClusterGroup);
 
     EventBus.Initiatives.datasetLoaded.sub(() => {
       this.mapUI.onNewInitiatives();
@@ -30,6 +30,7 @@ export class MapPresenter extends BasePresenter {
         this.onInitiativeReset();
     });
     EventBus.Initiatives.loadComplete.sub(() => {
+      this.mapUI.onNewInitiatives();
       this.onInitiativeLoadComplete();
     });
     EventBus.Initiatives.loadStarted.sub(() => this.onInitiativeLoadMessage());
@@ -85,7 +86,7 @@ export class MapPresenter extends BasePresenter {
           "both that there are no defaults configured and no visible initiatives");
     
     this.view.fitBounds({bounds: bounds});
-    this.view.geoClusterGroup.addLayers(this.mapUI.markers.withPhysicalLocation());
+    // this.view.geoClusterGroup.addLayers(this.mapUI.markers.withPhysicalLocation());
     console.log("onInitiativeComplete");
 
     // Call this last so map will have bounds set (else error!) 
@@ -117,9 +118,9 @@ export class MapPresenter extends BasePresenter {
     this.mapUI.markers.hideTooltip(initiative);
   }
   
-  private onMapNeedsToBeZoomedAndPanned(latLngBounds: EventBus.Map.SelectAndZoomData) {
-    console.log("onMapNeedsToBeZoomedAndPanned ", latLngBounds);
-    this.view.flyToBounds(latLngBounds);
+  private onMapNeedsToBeZoomedAndPanned(lngLatBounds: EventBus.Map.SelectAndZoomData) {
+    console.log("onMapNeedsToBeZoomedAndPanned ", lngLatBounds);
+    this.view.flyToBounds(lngLatBounds);
     // this.view.flyTo(data);
     // this.view.setView(data);
   }
@@ -129,8 +130,13 @@ export class MapPresenter extends BasePresenter {
   }
 
   private getInitialBounds() {
-    return this.mapUI.config.getInitialBounds() == undefined ?
+    const bounds = this.mapUI.config.getInitialBounds() == undefined ?
            this.mapUI.dataServices.latLngBounds() : this.mapUI.config.getInitialBounds();
+    for (const point of bounds ?? []) {
+      // change to lng lat
+      point.reverse();
+    }
+    return bounds;
   }
 
   private setActiveArea(offset: number) {

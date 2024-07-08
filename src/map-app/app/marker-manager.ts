@@ -1,21 +1,20 @@
-import * as leaflet from 'leaflet';
 import { InitiativeRenderFunction } from './model/config-schema';
 import { Initiative } from './model/initiative';
 import { toString as _toString } from '../utils';
-import { MapMarkerPresenter } from './presenter/map/marker';
+// import { MapMarkerPresenter } from './presenter/map/marker';
 import { MapUI } from './map-ui';
 import { getPopup } from './default-popup';
 
 export class MarkerManager {
-  private readonly popup: InitiativeRenderFunction;
+  readonly popup: InitiativeRenderFunction;
   
   // Keep a mapping between initiatives and their Markers:
   // Note: contents currently contain only the active dataset
-  private readonly markerForInitiative = new Map<Initiative, MapMarkerPresenter>();
+  // private readonly markerForInitiative = new Map<Initiative, MapMarkerPresenter>();
   
   // CAUTION: this may be either a ClusterGroup, or the map itself
-  nonGeoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
-  geoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  // nonGeoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
+  // geoClusterGroup: leaflet.MarkerClusterGroup = new leaflet.MarkerClusterGroup();
 
 
   constructor(readonly mapUI: MapUI) {
@@ -23,10 +22,10 @@ export class MarkerManager {
   }
 
   setSelected(initiative: Initiative) {
-    this.markerForInitiative.get(initiative)?.view.setSelected(initiative);
+    // this.markerForInitiative.get(initiative)?.view.setSelected(initiative);
   }
   setUnselected(initiative: Initiative) {
-    this.markerForInitiative.get(initiative)?.view.setUnselected(initiative);
+    // this.markerForInitiative.get(initiative)?.view.setUnselected(initiative);
   }
 
   destroyAll() {
@@ -52,53 +51,41 @@ export class MarkerManager {
   }
 
   createMarker(initiative: Initiative) {
-    const uri = _toString(initiative.uri, null);
-    if (uri === null)
-      throw new Error(`initiative is missing the mandatory uri property: ${initiative}`);
-    const presenter = new MapMarkerPresenter(this.mapUI, initiative, this.popup);
-    this.markerForInitiative.set(initiative, presenter);
-    return presenter;
+    // const uri = _toString(initiative.uri, null);
+    // if (uri === null)
+    //   throw new Error(`initiative is missing the mandatory uri property: ${initiative}`);
+    // const presenter = new MapMarkerPresenter(this.mapUI, initiative, this.popup);
+    // this.markerForInitiative.set(initiative, presenter);
+    // return presenter;
   }
 
   refreshMarker(initiative: Initiative) {
-    const marker = this.markerForInitiative.get(initiative);
-    if (marker)
-      marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
-  }
-
-  setNonGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
-    // CAUTION: this may be either a ClusterGroup, or the map itself
-    this.nonGeoClusterGroup = clusterGroup;
-  }
-
-  setGeoClusterGroup(clusterGroup: leaflet.MarkerClusterGroup) {
-    this.geoClusterGroup = clusterGroup;
+    // const marker = this.markerForInitiative.get(initiative);
+    // if (marker)
+    //   marker.view.marker.setPopupContent(marker.getInitiativeContent(initiative));
   }
 
   showTooltip(initiative: Initiative) {
-    this.markerForInitiative.get(initiative)?.view.showTooltip(initiative);
+    // this.markerForInitiative.get(initiative)?.view.showTooltip(initiative);
   }
   
   hideTooltip(initiative: Initiative) {
-    this.markerForInitiative.get(initiative)?.view.hideTooltip(initiative);
+    // this.markerForInitiative.get(initiative)?.view.hideTooltip(initiative);
   }
 
   getInitiativeContent(initiative: Initiative) {
     // console.log(this.getInitiativeContent(initiative));
-    const marker = this.markerForInitiative.get(initiative);
-    if (marker)
-      return marker.getInitiativeContent(initiative);
-    else
-      return undefined;
-  }
-
-  getClusterGroup() {
-    return this.geoClusterGroup;
+    return this.mapUI.markers.popup(initiative, this.mapUI.dataServices);
+    // const marker = this.markerForInitiative.get(initiative);
+    // if (marker)
+    //   return marker.getInitiativeContent(initiative);
+    // else
+    //   return undefined;
   }
   
-  withPhysicalLocation(): leaflet.Marker[] {
-    return Array.from(this.markerForInitiative.values())
-      .map((mp) => mp?.hasPhysicalLocation? mp.view.marker : undefined)
-      .filter((marker): marker is leaflet.Marker => marker !== undefined)
-  }
+  // withPhysicalLocation(): leaflet.Marker[] {
+  //   return Array.from(this.markerForInitiative.values())
+  //     .map((mp) => mp?.hasPhysicalLocation? mp.view.marker : undefined)
+  //     .filter((marker): marker is leaflet.Marker => marker !== undefined)
+  // }
 }

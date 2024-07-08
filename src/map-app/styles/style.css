@@ -647,17 +647,14 @@ input[type="search"] {
 
 /* Popup */
 
-
-.sea-initiative-popup .leaflet-popup-content-wrapper {
+.sea-initiative-popup .mapboxgl-popup-content {
   box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   padding: 0;
-}
-
-.sea-initiative-popup .leaflet-popup-content {
   display: flex;
   flex-direction: row;
   margin: 0;
+  color: #333;
 }
 
 .sea-initiative-popup .sea-initiative-details {

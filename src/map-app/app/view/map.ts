@@ -2,7 +2,8 @@ import { MapPresenter } from "../presenter/map";
 import { BaseView } from './base';
 import { Map } from '../map';
 import * as d3 from 'd3';
-import * as leaflet from 'leaflet';
+import mapboxgl, { GeoJSONSource, LngLatBounds, LngLatLike } from "mapbox-gl";
+// import '../../../../node_modules/mapbox-gl/dist/mapbox-gl.css';
 
 import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
@@ -11,52 +12,55 @@ import { PhraseBook } from "../../localisations";
 import { Box2d } from "../../common-types";
 import { getViewportWidth, isFiniteBox2d } from "../../utils";
 
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9vbHp0IiwiYSI6ImNsdWw5ZG1yMzB4MXQya2xtMnBpbzRidngifQ.ywKPqQKGJk-r2XwoyCirKw';
+
 export class MapView extends BaseView {
   readonly map: Map;
   private _settingActiveArea: boolean = false;
+  private _popup: mapboxgl.Popup | undefined;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
   private readonly dialogueHeight;
   private readonly dialogueWidth;
   private readonly labels: PhraseBook;
   private readonly markers: MarkerManager;
-  readonly nonGeoClusterGroup: leaflet.MarkerClusterGroup;
-  readonly geoClusterGroup: leaflet.MarkerClusterGroup;
+  // readonly nonGeoClusterGroup: leaflet.MarkerClusterGroup;
+  // readonly geoClusterGroup: leaflet.MarkerClusterGroup;
 
   // Used to initialise the map for the "loading" spinner
-  private static readonly spinMapInitHook: (this: leaflet.Map) => void = function() {
-    this.on('layeradd', (e) => {
-      // If added layer is currently loading, spin !
-      if (typeof e.layer.on !== 'function') return;
-      e.layer.on('data:loading', () => {}, this);
-      e.layer.on('data:loaded', () => {}, this);
-    }, this);
-    this.on('layerremove', (e) => {
-      // Clean-up
-      if (typeof e.layer.on !== 'function') return;
-      e.layer.off('data:loaded');
-      e.layer.off('data:loading');
-    }, this);
-  }
+  // private static readonly spinMapInitHook: (this: leaflet.Map) => void = function() {
+  //   this.on('layeradd', (e) => {
+  //     // If added layer is currently loading, spin !
+  //     if (typeof e.layer.on !== 'function') return;
+  //     e.layer.on('data:loading', () => {}, this);
+  //     e.layer.on('data:loaded', () => {}, this);
+  //   }, this);
+  //   this.on('layerremove', (e) => {
+  //     // Clean-up
+  //     if (typeof e.layer.on !== 'function') return;
+  //     e.layer.off('data:loaded');
+  //     e.layer.off('data:loading');
+  //   }, this);
+  // }
 
-  private static copyTextToClipboard(text: string) {
-    const body = d3.select(document.body)
-    const textArea = body.append("textarea")
-      .attr(
-        "style",
-        // Place in top-left corner of screen regardless of scroll position.
-        "position: fixed; top: 0; left: 0; "+
-          // Ensure it has a small width and height. Setting to 1px / 1em
-          // doesn't work as this gives a negative w/h on some browsers.
-          "width: 2em; height: 2em; "+
-          // We don't need padding, reducing the size if it does flash render.
-          "padding: 0; "+
-          // Clean up any borders.          
-          "border: none; outline: none; box-shadow: none; "+
-          // Avoid flash of white box if rendered for any reason.
-          "background: transparent"
-           )
-      .attr("value", text)
+  // private static copyTextToClipboard(text: string) {
+  //   const body = d3.select(document.body)
+  //   const textArea = body.append("textarea")
+  //     .attr(
+  //       "style",
+  //       // Place in top-left corner of screen regardless of scroll position.
+  //       "position: fixed; top: 0; left: 0; "+
+  //         // Ensure it has a small width and height. Setting to 1px / 1em
+  //         // doesn't work as this gives a negative w/h on some browsers.
+  //         "width: 2em; height: 2em; "+
+  //         // We don't need padding, reducing the size if it does flash render.
+  //         "padding: 0; "+
+  //         // Clean up any borders.          
+  //         "border: none; outline: none; box-shadow: none; "+
+  //         // Avoid flash of white box if rendered for any reason.
+  //         "background: transparent"
+  //          )
+  //     .attr("value", text)
     
     // ***taken from https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript?page=1&tab=votes#tab-top ***
     //
@@ -75,17 +79,17 @@ export class MapView extends BaseView {
     // copy to the clipboard.
     //
 
-    textArea.node()?.focus();
-    textArea.node()?.select();
+  //   textArea.node()?.focus();
+  //   textArea.node()?.select();
 
-    try {
-      document.execCommand('copy'); // FIXME this method has been deprecated!
-    } catch (err) {
-      console.log('Oops, unable to copy', err);
-    }
+  //   try {
+  //     document.execCommand('copy'); // FIXME this method has been deprecated!
+  //   } catch (err) {
+  //     console.log('Oops, unable to copy', err);
+  //   }
 
-    textArea.remove()
-  }
+  //   textArea.remove()
+  // }
 
   
   /// Initialises the view, and creates the map.
@@ -103,22 +107,18 @@ export class MapView extends BaseView {
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
-  div.leaflet-popup-content {
-      height: ${this.dialogueHeight};
-      width: ${this.dialogueWidth}!important;
-  }
-  
-  .sea-initiative-popup .sea-initiative-details {
-      width: ${this.descriptionPercentage}%;
-  }
-  
-  .sea-initiative-popup .sea-initiative-contact {
-      width: ${100 - this.descriptionPercentage}%;
-  }
-  
-  .sea-initiative-popup{
-    left: calc(-${this.dialogueWidth} / 2)!important;
-  }`;
+      div.mapboxgl-popup-content {
+          height: ${this.dialogueHeight};
+          width: ${this.dialogueWidth}!important;
+      }
+      
+      .sea-initiative-popup .sea-initiative-details {
+          width: ${this.descriptionPercentage}%;
+      }
+      
+      .sea-initiative-popup .sea-initiative-contact {
+          width: ${100 - this.descriptionPercentage}%;
+      }`;
 
     // We have to deliberately frig the typing here - I am not
     // entirely sure why I didn't have to do this right when I started
@@ -128,144 +128,302 @@ export class MapView extends BaseView {
     // unset. But if you set it to a number, and especially 0, it is
     // set, and enabled, which changes the behaviour of the clustering.
     // So, here we create it unset, and coerce the type to be MarkerClusterGroupOptions.
-    const options = {} as leaflet.MarkerClusterGroupOptions;
+    // const options = {} as leaflet.MarkerClusterGroupOptions;
 
-    const disableClusteringAtZoom = this.presenter.mapUI.config.getDisableClusteringAtZoom()
-    // Preserve the old config behaviour: zero means unset, so
-    // clustering happens. Whereas zero actually means clustering is
-    // disabled at all zoom levels. This may be a FIXME... later.
-    if (disableClusteringAtZoom !== 0) 
-      options.disableClusteringAtZoom = disableClusteringAtZoom;
+    // const disableClusteringAtZoom = this.presenter.mapUI.config.getDisableClusteringAtZoom()
+    // // Preserve the old config behaviour: zero means unset, so
+    // // clustering happens. Whereas zero actually means clustering is
+    // // disabled at all zoom levels. This may be a FIXME... later.
+    // if (disableClusteringAtZoom !== 0) 
+    //   options.disableClusteringAtZoom = disableClusteringAtZoom;
 
 
-    this.geoClusterGroup = leaflet.markerClusterGroup(
-      Object.assign(options, {
-        chunkedLoading: true
-      })
-    );
+    // this.geoClusterGroup = leaflet.markerClusterGroup(
+    //   Object.assign(options, {
+    //     chunkedLoading: true
+    //   })
+    // );
 
-    // Disable clustering on this cluster - which contains the location-less initiatives.
-    this.nonGeoClusterGroup = leaflet.markerClusterGroup({
-      spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
-    });
-
+    // // Disable clustering on this cluster - which contains the location-less initiatives.
+    // this.nonGeoClusterGroup = leaflet.markerClusterGroup({
+    //   spiderfyOnMaxZoom: false, disableClusteringAtZoom: 0
+    // });
     
-    {
-      let mapAttribution = this.presenter.mapUI.config.getMapAttribution();
-      const tileUrl = this.presenter.mapUI.config.getTileUrl();
+    let mapAttribution = this.presenter.mapUI.config.getMapAttribution();
+    // const tileUrl = this.presenter.mapUI.config.getTileUrl();
 
-      document.body.appendChild(this.dialogueSizeStyles);
+    document.body.appendChild(this.dialogueSizeStyles);
+    
+    // setup map (could potentially add this to the map initialization instead)
+    //world ends corners
+    // var corner1 = leaflet.latLng(-90, -180),
+    // corner2 = leaflet.latLng(90, 180),
+    // worldBounds = leaflet.latLngBounds(corner1, corner2);
+    
+    // const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    // console.log(tileUrl)
+    // const tileMapURL = tileUrl ?? osmURL;
+    
+    mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
+    mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
+    mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
+    mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
+    // const osmAttrib = mapAttribution;
+
+
+    // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
+    const minZoom = this.presenter.mapUI.config.getMinZoom();
+
+    this.map = new mapboxgl.Map({
+      container: "map-app-leaflet-map",
+      projection: 'mercator',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      // center: [-103.5917, 40.6699],
+      // zoom: 3,
+      minZoom: minZoom,
+      //set max bounds - will bounce back if user attempts to cross them
+      maxBounds: [[-180, -90], [180, 90]],
+    });
+    
+    this.map.on('load', () => {
+      this.map.loadImage(
+        'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+        (error, image) => {
+          if (error) throw error;
+          if (!image ) throw 'Marker image not loaded';
+          this.map.addImage('custom-marker', image);
+          // Add a new source from our GeoJSON data and
+          // set the 'cluster' option to true. GL-JS will
+          // add the point_count property to your source data.
+          this.map.addSource('initiatives', {
+            type: 'geojson',
+            data: this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
+            cluster: true,
+            clusterMaxZoom: 14, // Max zoom to cluster points on
+            clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+          });
+    
+          this.map.addLayer({
+            id: 'clusters',
+            type: 'circle',
+            source: 'initiatives',
+            filter: ['has', 'point_count'],
+            paint: {
+              // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
+              // with three steps to implement three types of circles:
+              //   * Blue, 20px circles when point count is less than 100
+              //   * Yellow, 30px circles when point count is between 100 and 750
+              //   * Pink, 40px circles when point count is greater than or equal to 750
+              'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6',
+                100,
+                '#f1f075',
+                750,
+                '#f28cb1'
+              ],
+              'circle-radius': 20
+            }
+          });
+    
+          this.map.addLayer({
+            id: 'cluster-count',
+            type: 'symbol',
+            source: 'initiatives',
+            filter: ['has', 'point_count'],
+            layout: {
+              'text-field': ['get', 'point_count_abbreviated'],
+              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+              'text-size': 12
+            }
+          });
+    
+          this.map.addLayer({
+            id: 'unclustered-point',
+            type: 'symbol',
+            source: 'initiatives',
+            filter: ['!', ['has', 'point_count']],
+            'layout': {
+              'icon-image': 'custom-marker',
+              // get the title name from the source's "title" property
+              'text-field': ['get', 'title'],
+              'text-font': [
+                'Open Sans Semibold',
+                'Arial Unicode MS Bold'
+              ],
+              'text-offset': [0, 1.25],
+              'text-anchor': 'top'
+            }
+          });
+    
+          // inspect a cluster on click
+          this.map.on('click', 'clusters', (e) => {
+            const features: GeoJSON.Feature<GeoJSON.Point>[] = this.map.queryRenderedFeatures(e.point, {
+              layers: ['clusters']
+            }) as GeoJSON.Feature<GeoJSON.Point>[];
+              const clusterId = features[0].properties?.cluster_id;
+              const geojsonSource: GeoJSONSource = this.map.getSource('initiatives') as GeoJSONSource;
+              geojsonSource.getClusterExpansionZoom(
+                clusterId,
+                (err, zoom) => {
+                  if (err) return;
       
-      // setup map (could potentially add this to the map initialization instead)
-      //world ends corners
-      var corner1 = leaflet.latLng(-90, -180),
-      corner2 = leaflet.latLng(90, 180),
-      worldBounds = leaflet.latLngBounds(corner1, corner2);
-      
-      const osmURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-      console.log(tileUrl)
-      const tileMapURL = tileUrl ?? osmURL;
-      
-      mapAttribution = mapAttribution.replace('contributors', this.labels.contributers);
-      mapAttribution = mapAttribution.replace('Other data', this.labels.otherData);
-      mapAttribution = mapAttribution.replace("Powered by <a href='https://www.geoapify.com/'>Geoapify</a>", `<a href='https://www.geoapify.com/'>${this.labels.poweredBy}</a>`);
-      mapAttribution = mapAttribution.replace('This map contains indications of areas where there are disputes over territories. The ICA does not endorse or accept the boundaries depicted on the map.', this.labels.mapDisclaimer);
-      const osmAttrib = mapAttribution;
+                  this.map.easeTo({
+                    center: features[0].geometry.coordinates as mapboxgl.LngLatLike,
+                    zoom: zoom ?? undefined
+                  });
+                }
+              );
+          });
+    
+          // When a click event occurs on a feature in
+          // the unclustered-point layer, open a popup at
+          // the location of the feature, with
+          // description HTML from its properties.
+          this.map.on('click', 'unclustered-point', (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const uri = e.features[0].properties.uri;
+    
+            // Ensure that if the map is zoomed out such that
+            // multiple copies of the feature are visible, the
+            // popup appears over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            const initiative = this.presenter.mapUI.dataServices.getAggregatedData().initiativesByUid[uri];
+            console.log('Clicked initiative:', initiative);
+            
+            if (initiative) {
+              const coordinates = (initiative.hasLocation() ? [initiative.lng, initiative.lat] : this.presenter.mapUI.config.getDefaultLatLng().slice().reverse()) as LngLatLike;
+              const content = this.presenter.mapUI.markers.getInitiativeContent(initiative) || '';
+              const classname = initiative?.hasLocation() ? "sea-initiative-popup" : "sea-initiative-popup sea-non-geo-initiative"
+              
+              this._popup?.remove();
+              this._popup = new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(content)
+                .addTo(this.map)
+                .addClassName(classname)
+                .addClassName(`popup-uri-${initiative.uri}`);
+            };
+          });
+
+          this.map.on('zoomend', () => {
+            if (this._popup?.isOpen()) {
+              const uri = Array.from(this._popup?._classList).find(c => c.startsWith('popup-uri-'))?.replace("popup-uri-", "");
+              const visibleFeatureUris = this.map.queryRenderedFeatures(undefined, {
+                layers: ['unclustered-point']
+              }).map(f => f?.properties?.uri);
+
+              if (!visibleFeatureUris.includes(uri)) {
+                // close the popup if the feature is no longer visible
+                this._popup.remove();
+              }
+            }
+          });
+    
+          this.map.on('mouseenter', 'clusters', () => {
+            this.map.getCanvas().style.cursor = 'pointer';
+          });
+          this.map.on('mouseleave', 'clusters', () => {
+            this.map.getCanvas().style.cursor = '';
+          });
+          this.map.on('mouseenter', 'unclustered-point', () => {
+            this.map.getCanvas().style.cursor = 'pointer';
+          });
+          this.map.on('mouseleave', 'unclustered-point', () => {
+            this.map.getCanvas().style.cursor = '';
+          });
+      })
+      this.presenter.onLoad();
+    });
+    
+    // this.map = leaflet.map("map-app-leaflet-map", {
+    //   // set to true to re-enable context menu.
+    //   // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
+    //   // contextmenu: false,
+    //   // noWrap: true, // FIXME this is commented as not supported? 
+    //   minZoom: minZoom,
+    //   //set max bounds - will bounce back if user attempts to cross them
+    //   maxBounds: worldBounds,
+    //   renderer: leaflet.canvas()
+    //   // contextmenuWidth: 140,
+    // }) as Map; // Need to coerce the type to include our loaded extension methods
+    
+    this.map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+    // this.map.on('click', (e) => this.onMapClicked(e));
+    // this.map.on('load', (e) => this.onLoad(e));
+    // this.map.on('resize', (e) => this.onResize(e));
+    
+    // leaflet
+    //   .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
+    //   .addTo(this.map);
 
 
-      // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
-      const minZoom = this.presenter.mapUI.config.getMinZoom();
-      console.log('aaaaa renderer changed');
-      
-      this.map = leaflet.map("map-app-leaflet-map", {
-        // set to true to re-enable context menu.
-        // See https://github.com/SolidarityEconomyAssociation/open-data-and-maps/issues/78
-        // contextmenu: false,
-        // noWrap: true, // FIXME this is commented as not supported? 
-        minZoom: minZoom,
-        //set max bounds - will bounce back if user attempts to cross them
-        maxBounds: worldBounds,
-        renderer: leaflet.canvas()
-        // contextmenuWidth: 140,
-      }) as Map; // Need to coerce the type to include our loaded extension methods
-      
-      this.map.zoomControl.setPosition("bottomright");
+    // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
+    // this.map.addLayer(this.geoClusterGroup);
+    // this.map.addLayer(this.nonGeoClusterGroup);
 
-      this.map.on('click', (e) => this.onMapClicked(e));
-      this.map.on('load', (e) => this.onLoad(e));
-      this.map.on('resize', (e) => this.onResize(e));
-      
-      leaflet
-        .tileLayer(tileMapURL, { attribution: osmAttrib, maxZoom: 17, noWrap: true })
-        .addTo(this.map);
+    // leaflet.Map.addInitHook(MapView.spinMapInitHook);
 
 
-      // Look at https://github.com/Leaflet/Leaflet.markercluster#bulk-adding-and-removing-markers for chunk loading
-      this.map.addLayer(this.geoClusterGroup);
-      this.map.addLayer(this.nonGeoClusterGroup);
-
-      leaflet.Map.addInitHook(MapView.spinMapInitHook);
-
-
-      var logo = this.presenter.getLogo();
-      if (logo) {
-        d3.select(".leaflet-top.leaflet-right")
-          .append("div")
-          .attr("id", "logo-holder")
-          .append("img")
-          .attr("src", logo)
-          .attr("alt", "company logo")
-          .classed("logo", true);
-      }
-
-      const initialBounds = this.presenter.mapUI.config.getInitialBounds();
-      if (initialBounds)
-        this.map.fitBounds(initialBounds);
+    var logo = this.presenter.getLogo();
+    if (logo) {
+      d3.select(".leaflet-top.leaflet-right")
+        .append("div")
+        .attr("id", "logo-holder")
+        .append("img")
+        .attr("src", logo)
+        .attr("alt", "company logo")
+        .classed("logo", true);
     }
+
+    const initialBounds = this.presenter.mapUI.config.getInitialBounds();
+    if (initialBounds)
+      this.map.fitBounds(initialBounds);
   }
 
-  private onMapClicked(me: leaflet.LeafletMouseEvent): void {
-    // Deselect any selected markers        
-    if (me.originalEvent.ctrlKey && me.latlng) {
-      MapView.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
-    }
-    this.presenter.onInitiativeClicked();
-  }
+  // private onMapClicked(me: leaflet.LeafletMouseEvent): void {
+  //   // Deselect any selected markers        
+  //   if (me.originalEvent.ctrlKey && me.latlng) {
+  //     MapView.copyTextToClipboard(me.latlng.lat + "," + me.latlng.lng);
+  //   }
+  //   this.presenter.onInitiativeClicked();
+  // }
   
-  private onLoad(_: leaflet.LeafletEvent) {
-    this.presenter.onLoad();
-  }
+  // private onLoad(_: leaflet.LeafletEvent) {
+  //   this.presenter.onLoad();
+  // }
   
-  private onResize(_: leaflet.ResizeEvent) {
-    this.map.invalidateSize();
-    console.log("Map resize", getViewportWidth());
-  }
+  // private onResize(_: leaflet.ResizeEvent) {
+  //   this.map.invalidateSize();
+  //   console.log("Map resize", getViewportWidth());
+  // }
 
   fitBounds(data: EventBus.Map.BoundsData) {
     this.map.fitBounds(data.bounds, data.options);
   }
 
-  getClusterGroup() {
-    return this.markers.getClusterGroup();
-  }
-
-  isVisible(initiatives: Initiative[]): boolean {
-    //check if whether the passed initiatives are currently visible or not
-    //for each marker check if the marker is directly visible 
-    //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
-    //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
-    const group = this.geoClusterGroup;
-    if (group)
-      return initiatives.every(initiative => {
-        const marker = initiative.__internal?.marker;
-        if (marker instanceof leaflet.Marker)
-          return group.getVisibleParent(marker) == marker;
-        console.error("initiative is missing a marker reference", initiative);
-        return false;
-      });
-    else
-      return true;
-  }
+  // isVisible(initiatives: Initiative[]): boolean {
+  //   //check if whether the passed initiatives are currently visible or not
+  //   //for each marker check if the marker is directly visible 
+  //   //!!initative.__internal.marker && !!initative.__internal.marker._icon => marker is visible on the map
+  //   //this.unselectedClusterGroup.getVisibleParent(initative.__internal.marker) == initative.__internal.marker => marker does not have a parent (i.e. not in a cluster)
+  //   const group = this.geoClusterGroup;
+  //   if (group)
+  //     return initiatives.every(initiative => {
+  //       const marker = initiative.__internal?.marker;
+  //       if (marker instanceof leaflet.Marker)
+  //         return group.getVisibleParent(marker) == marker;
+  //       console.error("initiative is missing a marker reference", initiative);
+  //       return false;
+  //     });
+  //   else
+  //     return true;
+  // }
 
   boundsWithinCurrentBounds(bounds: Box2d): boolean {
     const map = this.map;
@@ -274,14 +432,14 @@ export class MapView extends BaseView {
     
     //checks if the bounds passed are smaller than the current bounds
     //(north-south) and (east-west)
-    let mapBounds = map.getBounds();
+    let mapBounds = map.getBounds() ?? new LngLatBounds([[-180, -90], [180, 90]]);
     //rectangle size for map
     let am = Math.abs(mapBounds.getSouth() - mapBounds.getNorth());
     let bm = Math.abs(mapBounds.getWest() - mapBounds.getEast());
 
     //rectangle size for passed bounds
-    let a = Math.abs(bounds[0][0] - bounds[1][0]);
-    let b = Math.abs(bounds[0][1] - bounds[1][1]);
+    let a = Math.abs(bounds[0][1] - bounds[1][1]);
+    let b = Math.abs(bounds[0][0] - bounds[1][0]);
 
     if (a <= am && b <= bm)
       return true;
@@ -293,11 +451,7 @@ export class MapView extends BaseView {
     const map = this.map;
     if (!map)
       return;
-    const options = {
-      duration: 0.25
-      // maxZoom: map.getZoom()
-    };
-    map.flyTo(data.latlng, map.getZoom(), Object.assign(options, data.options));
+    map.flyTo({center: data.lngLat, zoom: map.getZoom(), duration: 0.25, ...data.options});
   }
 
   flyToBounds(data: EventBus.Map.SelectAndZoomData) {
@@ -318,19 +472,20 @@ export class MapView extends BaseView {
         return;
       }
       
-      if (data.initiatives && this.isVisible(data.initiatives)
-        && this.boundsWithinCurrentBounds(data.bounds)) {// all are visible
-        //case 1 and 2
-        //if you can contain the markers within the screen, then just pan
-        // map.panTo(map.getBounds().getCenter())  ; // get center 
-        //map.panTo(bounds.getBounds().getCenter())  ;
-        let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
-        map.panTo(centre, { animate: true });
-        //pan does not trigger the open popup event though because there is no zoom event
-      }
-      else { //case 3
-        map.flyToBounds(data.bounds, Object.assign(options, data.options)); // normal zoom/pan
-      }
+      // if (data.initiatives && this.isVisible(data.initiatives)
+      //   && this.boundsWithinCurrentBounds(data.bounds)) {// all are visible
+      //   //case 1 and 2
+      //   //if you can contain the markers within the screen, then just pan
+      //   // map.panTo(map.getBounds().getCenter())  ; // get center 
+      //   //map.panTo(bounds.getBounds().getCenter())  ;
+      //   let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
+      //   map.panTo(centre, { animate: true });
+      //   //pan does not trigger the open popup event though because there is no zoom event
+      // }
+      // else { //case 3
+        // map.flyToBounds(data.bounds, Object.assign(options, data.options)); // normal zoom/pan
+        map.fitBounds(data.bounds, { duration: 0.25, ...data.options});
+      // }
     }
   }
 
@@ -341,47 +496,47 @@ export class MapView extends BaseView {
       return;
     if (!data.bounds)
       return;
+    map.fitBounds(data.bounds, { duration: 0.25, ...data.options});
     
     //const options = Object.assign({ duration: 0.25, maxZoom: this.map.getZoom() }, data.options);
-    let centre = leaflet.latLngBounds(data.bounds[0], data.bounds[1]).getCenter();
+    // let centre = new LngLatBounds(data.bounds).getCenter();
     
-    //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
-    let lat = map.getCenter().lat;
+    // //keep latitude unchanged unless the marker is less than 300 pixels from the top of the screen
+    // let lat = map.getCenter().lat;
 
-    //this is from the config, so if you change the unit there you need to change it here
-    const dialogueHeight = parseInt(this.dialogueHeight.split("px")[0]); // FIXME only works for pixels!
+    // //this is from the config, so if you change the unit there you need to change it here
+    // const dialogueHeight = parseInt(this.dialogueHeight.split("px")[0]); // FIXME only works for pixels!
 
-    //get a latitude that shows the whole dialogue on screen
-    const mapMinY = map.getPixelBounds().min?.y ?? 0;
-    const mapCenter = map.project(centre);
-    if (mapCenter.y - mapMinY < dialogueHeight) {
-      const point = new leaflet.Point(mapCenter.x, mapCenter.y - dialogueHeight/2);
-      lat = map.unproject(point).lat;
-    }
+    // //get a latitude that shows the whole dialogue on screen
+    // const sw = map.getBounds()?.getSouthWest();
+    // const mapMinY = sw ? map.project(sw).y : 0;
+    // const mapCenter = map.project(centre);
+    // if (mapCenter.y - mapMinY < dialogueHeight) {
+    //   const point = new mapboxgl.Point(mapCenter.x, mapCenter.y - dialogueHeight/2);
+    //   lat = map.unproject(point).lat;
+    // }
 
-    let lngCentre = { lat: lat, lng: centre.lng };
+    // let lngCentre = { lat: lat, lng: centre.lng };
 
-    //make sure you pan to center the initiative on the x axis, or longitudanally.
-    map.panTo(lngCentre, { animate: true });
+    // //make sure you pan to center the initiative on the x axis, or longitudanally.
+    // map.panTo(lngCentre, { animate: true });
 
-    //trigger refresh if the marker is outside of the screen or if it's clustered
-    const marker = data.initiatives[0].__internal?.marker;
-    if (!(marker instanceof leaflet.Marker)) {
-      console.error("initiative is missing a marker reference", data.initiatives[0]);
-      return;
-    }
+    // //trigger refresh if the marker is outside of the screen or if it's clustered
+    // const marker = data.initiatives[0].__internal?.marker;
+    // if (!(marker instanceof leaflet.Marker)) {
+    //   console.error("initiative is missing a marker reference", data.initiatives[0]);
+    //   return;
+    // }
 
-
-
-    // zoom to layer if needed and unspiderify
-    // FIXME guard against missing __parent - which means not part of a group?
-    if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
-      this.geoClusterGroup.zoomToShowLayer(
-        marker,
-        () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
-      );
-      this.geoClusterGroup.refreshClusters(marker);
-    }
+    // // zoom to layer if needed and unspiderify
+    // // FIXME guard against missing __parent - which means not part of a group?
+    // if ('__parent' in marker && marker?.__parent instanceof leaflet.MarkerCluster) {
+    //   this.geoClusterGroup.zoomToShowLayer(
+    //     marker,
+    //     () => this.presenter.onMarkersNeedToShowLatestSelection(data.initiatives)
+    //   );
+    //   this.geoClusterGroup.refreshClusters(marker);
+    // }
 
     //code for not destroying pop-up when zooming out
     //only execute zoom to bounds if initiatives in data.initiatives are not currently vissible
@@ -426,8 +581,6 @@ export class MapView extends BaseView {
 
     // map.fire("resize");
     // map.invalidateSize();
-
-
   }
 
   startLoading(error?: EventBus.Initiatives.DatasetError) {
@@ -465,30 +618,27 @@ export class MapView extends BaseView {
   stopLoading() {
     d3.select('#loadingCircle').style('display', 'none');
   }
-
-
-
   
   setActiveArea(offset: number) {
-    if (this._settingActiveArea) return;
-    this.map.once("moveend", () => {
-      this._settingActiveArea = false;
-    });
-    this._settingActiveArea = true;
-    let css = {
-      position: "absolute",
-      top: "20px",
-      left: offset + "px",
-      right: '0',
-      bottom: '0'
-    };
+    // if (this._settingActiveArea) return;
+    // this.map.once("moveend", () => {
+    //   this._settingActiveArea = false;
+    // });
+    // this._settingActiveArea = true;
+    // let css = {
+    //   position: "absolute",
+    //   top: "20px",
+    //   left: offset + "px",
+    //   right: '0',
+    //   bottom: '0'
+    // };
 
-    // Hovering the sidebar open/close button seems to trigger this to. Check for this and return
-    // if (!data.target.id) return;
+    // // Hovering the sidebar open/close button seems to trigger this to. Check for this and return
+    // // if (!data.target.id) return;
     
-    const refocusMap = true;
-    const animateRefocus = true;
-    this.map.setActiveArea(css, refocusMap, animateRefocus);
+    // const refocusMap = true;
+    // const animateRefocus = true;
+    // this.map.setActiveArea(css, refocusMap, animateRefocus);
   }
 
 }

@@ -1,6 +1,6 @@
 import { Dictionary } from "../common-types";
 import { StateChange, UndoStack } from "../undo-stack";
-import { compactArray, filterSet } from "../utils";
+import { compactArray, filterSet, toPoint2d } from "../utils";
 import { Initiative } from "./model/initiative";
 
 export type Action = TextSearch | PropEquality | ClearPropEquality | ClearPropEqualities;
@@ -206,6 +206,24 @@ export class AppState {
       this.allInitiatives
     );
     return new AppStateChange(undefined, result);
+  }
+
+  getVisibleInitiativesGeoJson(): GeoJSON.FeatureCollection {
+    const features = Array.from(this.visibleInitiatives).map(initiative => ({
+      type: 'Feature',
+      properties: {
+        uri: initiative.uri,
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: toPoint2d([initiative.lng, initiative.lat], null) ?? undefined
+      }
+    })).filter(initative => initative.geometry.coordinates !== undefined) as  GeoJSON.Feature[];
+    
+    return {
+      type: 'FeatureCollection',
+      features: features,
+    };
   }
 }
 

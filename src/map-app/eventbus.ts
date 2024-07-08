@@ -1,8 +1,8 @@
-import { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 import * as postal from 'postal';
 import { Initiative } from './app/model/initiative';
 import { Box2d, Point2d } from './common-types';
 import { arrays2Box2d, yesANumber } from './utils';
+import { LngLatBoundsLike, LngLatLike } from 'mapbox-gl';
 
 /// This defines a typed wrapper to a Postal topic
 export class PostalTopic<T = void> {
@@ -36,17 +36,17 @@ export namespace EventBus {
       maxZoom?: number;
     }
     export interface ZoomData {
-      latlng: LatLngExpression;
+      lngLat: LngLatLike;
       options: ZoomOptions;
       zoom?: number;
     }
     export interface SelectAndZoomData {
       initiatives: Initiative[];
-      bounds?: Box2d;
+      bounds?: Box2d; // lng lat
       options: ZoomOptions;
     }
     export interface BoundsData {
-      bounds: LatLngBoundsExpression;
+      bounds: LngLatBoundsLike;
       options?: ZoomOptions;
     }
     export interface ActiveArea {
@@ -60,7 +60,7 @@ export namespace EventBus {
       
       const lats = initiatives.map(x => x.lat ?? opts.defaultPos?.[0]).filter(yesANumber);
       const lngs = initiatives.map(x => x.lng ?? opts.defaultPos?.[1]).filter(yesANumber);
-      const bounds = arrays2Box2d(lats, lngs);
+      const bounds = arrays2Box2d(lngs, lats);
       return {
         initiatives: initiatives,
         bounds: bounds,
