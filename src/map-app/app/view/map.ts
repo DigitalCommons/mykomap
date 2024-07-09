@@ -3,21 +3,25 @@ import { BaseView } from './base';
 import { Map } from '../map';
 import * as d3 from 'd3';
 import mapboxgl, { GeoJSONSource, LngLatBounds, LngLatLike } from "mapbox-gl";
-// import '../../../../node_modules/mapbox-gl/dist/mapbox-gl.css';
 
-import { Initiative } from "../model/initiative";
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
 import { PhraseBook } from "../../localisations";
 import { Box2d } from "../../common-types";
 import { getViewportWidth, isFiniteBox2d } from "../../utils";
+import { getPopup } from "../simple-popup";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9vbHp0IiwiYSI6ImNsdWw5ZG1yMzB4MXQya2xtMnBpbzRidngifQ.ywKPqQKGJk-r2XwoyCirKw';
+
+// TODO; plumb these in from config
+const geojsonUrl = 'test-500000-trimmed.geojson';
+const baseUri = "https://update-me/some/path/";
 
 export class MapView extends BaseView {
   readonly map: Map;
   private _settingActiveArea: boolean = false;
   private _popup: mapboxgl.Popup | undefined;
+  private _tooltip: mapboxgl.Popup | undefined;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
   private readonly dialogueHeight;
@@ -107,7 +111,7 @@ export class MapView extends BaseView {
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
-      div.mapboxgl-popup-content {
+    .sea-initiative-popup div.mapboxgl-popup-content {
           height: ${this.dialogueHeight};
           width: ${this.dialogueWidth}!important;
       }
@@ -174,18 +178,20 @@ export class MapView extends BaseView {
     // For the contextmenu docs, see https://github.com/aratcliffe/Leaflet.contextmenu.
     const minZoom = this.presenter.mapUI.config.getMinZoom();
 
+    console.log('ccccc making the map');
+    this.startLoading();
+
     this.map = new mapboxgl.Map({
       container: "map-app-leaflet-map",
       projection: 'mercator',
       style: 'mapbox://styles/mapbox/streets-v12',
-      // center: [-103.5917, 40.6699],
-      // zoom: 3,
       minZoom: minZoom,
-      //set max bounds - will bounce back if user attempts to cross them
+      bounds: [[-180, -59.9], [180, 78.1]],
       maxBounds: [[-180, -90], [180, 90]],
     });
     
     this.map.on('load', () => {
+      console.log('ccccc map loaded');
       this.map.loadImage(
         'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
         (error, image) => {
@@ -197,10 +203,18 @@ export class MapView extends BaseView {
           // add the point_count property to your source data.
           this.map.addSource('initiatives', {
             type: 'geojson',
-            data: this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
+            data: geojsonUrl,//this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
+            buffer: 0,
             cluster: true,
             clusterMaxZoom: 14, // Max zoom to cluster points on
             clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+          });
+
+          this.map.on('sourcedata', (e) => {
+            if (e.isSourceLoaded && e.sourceId === 'initiatives') {
+              console.log('Source data loaded', e);
+              this.stopLoading();
+            }
           });
     
           this.map.addLayer({
@@ -283,7 +297,9 @@ export class MapView extends BaseView {
           // description HTML from its properties.
           this.map.on('click', 'unclustered-point', (e) => {
             const coordinates = e.features[0].geometry.coordinates.slice();
-            const uri = e.features[0].properties.uri;
+            const identifier = e.features[0].properties['Identifier'];
+            const name = e.features[0].properties['Name'];
+            const uri = `${baseUri}${identifier}`
     
             // Ensure that if the map is zoomed out such that
             // multiple copies of the feature are visible, the
@@ -293,21 +309,25 @@ export class MapView extends BaseView {
             }
 
             const initiative = this.presenter.mapUI.dataServices.getAggregatedData().initiativesByUid[uri];
-            console.log('Clicked initiative:', initiative);
-            
+            console.log(`Clicked uri: ${uri} initiative: ${initiative}`);
+            let content = '';
+            let classname = `sea-initiative-popup popup-uri-${uri}`
+
             if (initiative) {
-              const coordinates = (initiative.hasLocation() ? [initiative.lng, initiative.lat] : this.presenter.mapUI.config.getDefaultLatLng().slice().reverse()) as LngLatLike;
-              const content = this.presenter.mapUI.markers.getInitiativeContent(initiative) || '';
-              const classname = initiative?.hasLocation() ? "sea-initiative-popup" : "sea-initiative-popup sea-non-geo-initiative"
-              
-              this._popup?.remove();
-              this._popup = new mapboxgl.Popup()
+              content = this.presenter.mapUI.markers.getInitiativeContent(initiative) || '';
+              if (!initiative.hasLocation()) classname += ' sea-non-geo-initiative';
+            } else {
+              content = getPopup(name, this.presenter.mapUI.dataServices);
+            }
+
+            this._popup?.remove();
+              this._popup = new mapboxgl.Popup({
+                maxWidth: 'none'
+              })
                 .setLngLat(coordinates)
                 .setHTML(content)
                 .addTo(this.map)
-                .addClassName(classname)
-                .addClassName(`popup-uri-${initiative.uri}`);
-            };
+                .addClassName(classname);
           });
 
           this.map.on('zoomend', () => {
@@ -330,10 +350,21 @@ export class MapView extends BaseView {
           this.map.on('mouseleave', 'clusters', () => {
             this.map.getCanvas().style.cursor = '';
           });
-          this.map.on('mouseenter', 'unclustered-point', () => {
+          this.map.on('mouseenter', 'unclustered-point', (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            this._tooltip?.remove();
+            this._tooltip = new mapboxgl.Popup({
+              closeButton: false,
+              maxWidth: 'none'
+            })
+              .setLngLat(coordinates)
+              .setText(e.features[0].properties['Name'])
+              .addTo(this.map)
+              .addClassName("sea-initiative-tooltip");
             this.map.getCanvas().style.cursor = 'pointer';
           });
           this.map.on('mouseleave', 'unclustered-point', () => {
+            this._tooltip?.remove();
             this.map.getCanvas().style.cursor = '';
           });
       })

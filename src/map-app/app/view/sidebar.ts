@@ -18,84 +18,84 @@ export class SidebarView extends BaseView {
   }
 
   createOpenButton() {
-    this.d3selectAndClear("#map-app-sidebar-button")
-      .append("button")
-      .attr("class", "w3-btn")
-      .attr("style","background-color: " + this.sidebarButtonColour)
-      .attr("title", this.presenter.mapui.labels.showDirectory)
-      .on("click", () => this.presenter.showSidebar())
-      .append("i")
-      .attr("class", "fa fa-angle-right");
+    // this.d3selectAndClear("#map-app-sidebar-button")
+    //   .append("button")
+    //   .attr("class", "w3-btn")
+    //   .attr("style","background-color: " + this.sidebarButtonColour)
+    //   .attr("title", this.presenter.mapui.labels.showDirectory)
+    //   .on("click", () => this.presenter.showSidebar())
+    //   .append("i")
+    //   .attr("class", "fa fa-angle-right");
   }
 
   createButtonRow() {
-    const selection = this.d3selectAndClear("#map-app-sidebar-header");
-    const labels = this.presenter.mapui.labels;
-    // This is where the navigation buttons will go.
-    // These are recreated when the sidebar is changed, e.g. from MainMenu to initiatives.
-    selection.append("span")
-             .attr("id", "map-app-sidebar-history-navigation")
-             .classed("map-app-sidebar-history-navigation");
+    // const selection = this.d3selectAndClear("#map-app-sidebar-header");
+    // const labels = this.presenter.mapui.labels;
+    // // This is where the navigation buttons will go.
+    // // These are recreated when the sidebar is changed, e.g. from MainMenu to initiatives.
+    // selection.append("span")
+    //          .attr("id", "map-app-sidebar-history-navigation")
+    //          .classed("map-app-sidebar-history-navigation");
     
-    // The sidebar has a button that causes the main menu to be dispayed
+    // // The sidebar has a button that causes the main menu to be dispayed
 
-    if (this.presenter.showingDirectory()) {
-    selection
-      .append("button")
-      .attr("class", "w3-button w3-border-0 ml-auto")
-      .attr("title", labels.showDirectory)
-      .on("click", () => {
-        this.presenter.mapui.clearFiltersAndSearch();
-        this.hideInitiativeList();
-        this.presenter.changeSidebar("directory");
+    // if (this.presenter.showingDirectory()) {
+    // selection
+    //   .append("button")
+    //   .attr("class", "w3-button w3-border-0 ml-auto")
+    //   .attr("title", labels.showDirectory)
+    //   .on("click", () => {
+    //     this.presenter.mapui.clearFiltersAndSearch();
+    //     this.hideInitiativeList();
+    //     this.presenter.changeSidebar("directory");
 
-        //deselect
-        EventBus.Markers.needToShowLatestSelection.pub([]);
-      })
-      .append("i")
-      .attr("class", "fa fa-bars");
-    }
+    //     //deselect
+    //     EventBus.Markers.needToShowLatestSelection.pub([]);
+    //   })
+    //   .append("i")
+    //   .attr("class", "fa fa-bars");
+    // }
     
-    if (this.presenter.showingSearch()) {
-    selection
-      .append("button")
-      .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showSearch)
-      .on("click", () => {
-        this.presenter.changeSidebar("initiatives");
-        document.getElementById("search-box")?.focus();
-      })
-      .append("i")
-      .attr("class", "fa fa-search");
-    }
+    // if (this.presenter.showingSearch()) {
+    // selection
+    //   .append("button")
+    //   .attr("class", "w3-button w3-border-0")
+    //   .attr("title", labels.showSearch)
+    //   .on("click", () => {
+    //     this.presenter.changeSidebar("initiatives");
+    //     document.getElementById("search-box")?.focus();
+    //   })
+    //   .append("i")
+    //   .attr("class", "fa fa-search");
+    // }
 
-    if (this.presenter.showingAbout()) {
-    selection
-      .append("button")
-      .attr("class", "w3-button w3-border-0")
-      .attr("title", labels.showInfo)
-      .on("click", () => {
-        this.hideInitiativeList();
-        EventBus.Markers.needToShowLatestSelection.pub([]);
-        this.presenter.changeSidebar("about");
-      })
-      .append("i")
-      .attr("class", "fa fa-info-circle");
-    }
+    // if (this.presenter.showingAbout()) {
+    // selection
+    //   .append("button")
+    //   .attr("class", "w3-button w3-border-0")
+    //   .attr("title", labels.showInfo)
+    //   .on("click", () => {
+    //     this.hideInitiativeList();
+    //     EventBus.Markers.needToShowLatestSelection.pub([]);
+    //     this.presenter.changeSidebar("about");
+    //   })
+    //   .append("i")
+    //   .attr("class", "fa fa-info-circle");
+    // }
 
-    if (this.presenter.showingDatasets()) {
-      selection
-        .append("button")
-        .attr("class", "w3-button w3-border-0")
-        .attr("title", labels.showDatasets)
-        .on("click", () => {
-          this.hideInitiativeList();
-          EventBus.Markers.needToShowLatestSelection.pub([]);
-          this.presenter.changeSidebar("datasets");
-        })
-        .append("i")
-        .attr("class", "fa fa-database");
-    }
+    // if (this.presenter.showingDatasets()) {
+    //   selection
+    //     .append("button")
+    //     .attr("class", "w3-button w3-border-0")
+    //     .attr("title", labels.showDatasets)
+    //     .on("click", () => {
+    //       this.hideInitiativeList();
+    //       EventBus.Markers.needToShowLatestSelection.pub([]);
+    //       this.presenter.changeSidebar("datasets");
+    //     })
+    //     .append("i")
+    //     .attr("class", "fa fa-database");
+    // }
 
 
   }
@@ -217,24 +217,24 @@ export class SidebarView extends BaseView {
   }
 
   populateInitiativeSidebar(initiative: Initiative, initiativeContent: string) {
-    let initiativeSidebar = d3.select("#sea-initiative-sidebar");
-    let initiativeContentElement = this.d3selectAndClear(
-      "#sea-initiative-sidebar-content"
-    );
-    initiativeContentElement
-      .append("button")
-      .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
-      .attr("title", `${this.presenter.mapui.labels.close} ${initiative.name}`)
-      .on("click", this.hideInitiativeSidebar)
-      .append("i")
-      .attr("class", "fa " + "fa-times");
-    initiativeContentElement
-      .append("div")
-      .html(initiativeContent);
-    initiativeSidebar.classed("sea-initiative-sidebar-open", true);
+    // let initiativeSidebar = d3.select("#sea-initiative-sidebar");
+    // let initiativeContentElement = this.d3selectAndClear(
+    //   "#sea-initiative-sidebar-content"
+    // );
+    // initiativeContentElement
+    //   .append("button")
+    //   .attr("class", "w3-button w3-border-0 ml-auto sidebar-button")
+    //   .attr("title", `${this.presenter.mapui.labels.close} ${initiative.name}`)
+    //   .on("click", this.hideInitiativeSidebar)
+    //   .append("i")
+    //   .attr("class", "fa " + "fa-times");
+    // initiativeContentElement
+    //   .append("div")
+    //   .html(initiativeContent);
+    // initiativeSidebar.classed("sea-initiative-sidebar-open", true);
 
-    if (!canDisplayInitiativePopups())
-      EventBus.Sidebar.showSidebar.pub();
+    // if (!canDisplayInitiativePopups())
+    //   EventBus.Sidebar.showSidebar.pub();
   }
 
   hideInitiativeSidebar() {

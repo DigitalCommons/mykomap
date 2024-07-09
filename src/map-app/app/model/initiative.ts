@@ -1,7 +1,6 @@
 import { PropDef, PropDefs } from './data-services';
 import { Dictionary } from '../../common-types';
-import { compactArray, promoteToArray, toString as _toString } from '../../utils';
-import { TextSearch } from '../state-manager';
+import { compactArray, toString as _toString } from '../../utils';
 
 /// This represents an initiative represented as bare JSON
 export interface InitiativeObj {

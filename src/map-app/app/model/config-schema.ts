@@ -228,7 +228,7 @@ export class ConfigData {
   maxZoomOnGroup: number = 18;
   maxZoomOnOne: number = 18;
   maxZoomOnSearch: number = 18;
-  minZoom: number = 2;
+  minZoom: number = 1;
   noLodCache: boolean = true;
   mykoMapVersion: string = '0';
   propDefs: Dictionary<PropDef | PropDef['type']> = {};

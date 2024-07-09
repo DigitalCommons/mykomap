@@ -92,6 +92,8 @@ export class MapUI {
     console.log('mapSource', mapSource);
     
     mapSource?.setData(this.currentItem().getVisibleInitiativesGeoJson());
+    console.log('aaaaaaa changed state');
+    
     // this.markers.updateVisibility(visibleInitiatives);
 
     this.refreshSidebar();

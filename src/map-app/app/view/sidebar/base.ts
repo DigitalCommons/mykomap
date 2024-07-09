@@ -31,56 +31,56 @@ export abstract class BaseSidebarView extends BaseView {
   abstract populateFixedSelection(selection: d3Selection): void;
 
   loadFixedSection(): void {
-    this.populateFixedSelection(
-      this.d3selectAndClear("#map-app-sidebar-fixed-section")
-    );
+    // this.populateFixedSelection(
+    //   this.d3selectAndClear("#map-app-sidebar-fixed-section")
+    // );
   }
 
   loadScrollableSection(): void {
-    this.populateScrollableSelection(
-      this.d3selectAndClear("#map-app-sidebar-scrollable-section")
-    );
+    // this.populateScrollableSelection(
+    //   this.d3selectAndClear("#map-app-sidebar-scrollable-section")
+    // );
   }
 
   loadCloseButton(): void {}
 
   loadHistoryNavigation(): void {
-    // Fwd/back navigation for moving around the contentStack of a particular sidebar
-    // (e.g. moving between different search results)
-    const backButton = {
-      disabled: this.presenter.isBackButtonDisabled(),
-      onClick: () => this.presenter.onBackButtonClick(),
-    };
-    const forwardButton = {
-      disabled: this.presenter.isForwardButtonDisabled(),
-      onClick: () => this.presenter.onForwardButtonClick(),
-    };
+    // // Fwd/back navigation for moving around the contentStack of a particular sidebar
+    // // (e.g. moving between different search results)
+    // const backButton = {
+    //   disabled: this.presenter.isBackButtonDisabled(),
+    //   onClick: () => this.presenter.onBackButtonClick(),
+    // };
+    // const forwardButton = {
+    //   disabled: this.presenter.isForwardButtonDisabled(),
+    //   onClick: () => this.presenter.onForwardButtonClick(),
+    // };
 
-    //w3-button
-    var buttonClasses = "w3-white w3-cell w3-border-0";
-    var selection = this.d3selectAndClear(
-      "#map-app-sidebar-history-navigation"
-    );
+    // //w3-button
+    // var buttonClasses = "w3-white w3-cell w3-border-0";
+    // var selection = this.d3selectAndClear(
+    //   "#map-app-sidebar-history-navigation"
+    // );
     
-    const createButton = (b: NavigationCallback, faClass: string, hovertext: string) => {
-      selection
-        .append("button")
-      // Minor issue: if we add the class w3-mobile to these buttons, then each takes up a whole line
-      // on an iPhone, instad of being next to each other on the same line.
-        .attr("class", buttonClasses + (b.disabled ? " w3-disabled" : ""))
-        .attr("title", hovertext)
-        .on("click", () => {
-          b.onClick();
-          this.presenter.deselectInitiatives();
-          //hide initiatives
-        })
-        .append("i")
-        .attr("class", "fa " + faClass);
-    }
-    if (this.hasHistoryNavigation) {
-	    createButton(backButton, "fa-arrow-left", "Earlier search results");
-	    createButton(forwardButton, "fa-arrow-right", "Later search results");
-    }
+    // const createButton = (b: NavigationCallback, faClass: string, hovertext: string) => {
+    //   selection
+    //     .append("button")
+    //   // Minor issue: if we add the class w3-mobile to these buttons, then each takes up a whole line
+    //   // on an iPhone, instad of being next to each other on the same line.
+    //     .attr("class", buttonClasses + (b.disabled ? " w3-disabled" : ""))
+    //     .attr("title", hovertext)
+    //     .on("click", () => {
+    //       b.onClick();
+    //       this.presenter.deselectInitiatives();
+    //       //hide initiatives
+    //     })
+    //     .append("i")
+    //     .attr("class", "fa " + faClass);
+    // }
+    // if (this.hasHistoryNavigation) {
+	  //   createButton(backButton, "fa-arrow-left", "Earlier search results");
+	  //   createButton(forwardButton, "fa-arrow-right", "Later search results");
+    // }
   }
 
   /**
@@ -101,48 +101,48 @@ export abstract class BaseSidebarView extends BaseView {
    * right of the sidebar or, if on mobile, in the sidebar.
    */
   refreshSearchResults() {
-    const appState = this.presenter.parent.mapui.currentItem();
-    const labels = this.presenter.parent.mapui.labels;
-    const initiatives = Array.from(appState.visibleInitiatives);
+    // const appState = this.presenter.parent.mapui.currentItem();
+    // const labels = this.presenter.parent.mapui.labels;
+    // const initiatives = Array.from(appState.visibleInitiatives);
 
-    const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
-    const initiativesListSidebarHeader = selection.append("div").attr("class", "initiatives-list-sidebar-header");
+    // const selection = this.d3selectAndClear("#sea-initiatives-list-sidebar-content");
+    // const initiativesListSidebarHeader = selection.append("div").attr("class", "initiatives-list-sidebar-header");
     
-    this.createInitiativeListSidebarHeader(initiativesListSidebarHeader)
+    // this.createInitiativeListSidebarHeader(initiativesListSidebarHeader)
 
-    selection
-      .append("p")
-      .classed("filter-count", true)
-      .text(initiatives.length ? `${initiatives.length} ${labels.matchingResults}`: labels.nothingMatched);
+    // selection
+    //   .append("p")
+    //   .classed("filter-count", true)
+    //   .text(initiatives.length ? `${initiatives.length} ${labels.matchingResults}`: labels.nothingMatched);
   
-    const list = selection.append("ul").classed("sea-initiatives-list", true);
-    for (let initiative of initiatives) {
-      let activeClass = "";
-      let nongeoClass = "";
-      if (this.presenter.parent.mapui.isSelected(initiative)) {
-        activeClass = "sea-initiative-active";
-      }
+    // const list = selection.append("ul").classed("sea-initiatives-list", true);
+    // for (let initiative of initiatives) {
+    //   let activeClass = "";
+    //   let nongeoClass = "";
+    //   if (this.presenter.parent.mapui.isSelected(initiative)) {
+    //     activeClass = "sea-initiative-active";
+    //   }
 
-      if (!initiative.hasLocation()) {
-        nongeoClass = "sea-initiative-non-geo";
-      }
+    //   if (!initiative.hasLocation()) {
+    //     nongeoClass = "sea-initiative-non-geo";
+    //   }
 
-      list
-        .append("li")
-        .text(_toString(initiative.name))
-        .attr("data-uid", _toString(initiative.uri))
-        .classed(activeClass, true)
-        .classed(nongeoClass, true)
-        .on("click", () => {
-          // Highlight the selected initiative in the list
-          d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
-          d3.select('[data-uid="' + initiative.uri + '"]').classed("sea-initiative-active", true);
+    //   list
+    //     .append("li")
+    //     .text(_toString(initiative.name))
+    //     .attr("data-uid", _toString(initiative.uri))
+    //     .classed(activeClass, true)
+    //     .classed(nongeoClass, true)
+    //     .on("click", () => {
+    //       // Highlight the selected initiative in the list
+    //       d3.select(".sea-initiative-active").classed("sea-initiative-active", false);
+    //       d3.select('[data-uid="' + initiative.uri + '"]').classed("sea-initiative-active", true);
           
-          this.presenter.onInitiativeClicked(initiative);
-        })
-        .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative))
-        .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative));
-    }
+    //       this.presenter.onInitiativeClicked(initiative);
+    //     })
+    //     .on("mouseover", () => this.presenter.onInitiativeMouseoverInSidebar(initiative))
+    //     .on("mouseout", () => this.presenter.onInitiativeMouseoutInSidebar(initiative));
+    // }
   }
 
   private createInitiativeListSidebarHeader(container: d3DivSelection) {

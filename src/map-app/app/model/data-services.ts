@@ -656,7 +656,7 @@ export class DataServicesImpl implements DataServices {
         throw new Error("Cannot aggregate data, no vocabs available");
       const aggregator = new DataAggregator(
         this.config, this.propertySchema, this.vocabs, labels,
-        initiative => EventBus.Initiative.created.pub(initiative),
+        undefined, // this takes up a lot of time for each initiative
         dataset => EventBus.Initiatives.datasetLoaded.pub(dataset),
         (dataset, error) => EventBus.Initiatives.loadFailed.pub({dataset, error})
       );
@@ -665,8 +665,8 @@ export class DataServicesImpl implements DataServices {
 
       await loadDatasets(dataLoaders, aggregator);
 
-      //sort
-      aggregator.loadedInitiatives.sort((a, b) => Initiative.compare(a, b));
+      // sort later, and replace mapui.allInitiatives and statemanager.initialstate
+      // aggregator.loadedInitiatives.sort((a, b) => Initiative.compare(a, b));
 
       aggregator.allComplete(); // finish the aggregation
       

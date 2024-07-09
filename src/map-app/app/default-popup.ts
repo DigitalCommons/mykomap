@@ -3,7 +3,7 @@ import type { DataServices } from "./model/data-services";
 import type { Initiative } from "./model/initiative";
 import { toString as _toString } from "../utils";
 
-export function htmlEscape(str: string) {
+function htmlEscape(str: string) {
   if (str == null) // deliberately loose equality
     return '';
   return String(str)
@@ -13,7 +13,7 @@ export function htmlEscape(str: string) {
     .replace(/"/g, '&quot;');
 }
 
-export function getAddress(initiative: Initiative) {
+function getAddress(initiative: Initiative) {
   // We want to add the whole address into a single paragraph.
   // Not all orgs have an address, however.
   let address = [] as string[];
@@ -36,21 +36,21 @@ export function getAddress(initiative: Initiative) {
   return address.join('<br/>\n        ');
 }
 
-export function getEmail(initiative: Initiative) {
+function getEmail(initiative: Initiative) {
   // Not all orgs have an email
   if (initiative.email)
     return `<a class="fa fa-at" href="mailto:${initiative.email}" target="_blank" ></a>`;
   return "";
 }
 
-export function getFacebook(initiative: Initiative) {
+function getFacebook(initiative: Initiative) {
   // not all have a facebook
   if (initiative.facebook)
     return `<a class="fab fa-facebook" href="https://facebook.com/${initiative.facebook}" target="_blank" ></a>`;
   return "";
 }  
 
-export function getTwitter(initiative: Initiative) {
+function getTwitter(initiative: Initiative) {
   // not all have twitter
   if (initiative.twitter)
     return `<a class="fab fa-twitter" href="https://twitter.com/${initiative.twitter}" target="_blank" ></a>`;

@@ -213,6 +213,7 @@ export class AppState {
       type: 'Feature',
       properties: {
         uri: initiative.uri,
+        name: initiative.name,
       },
       geometry: {
         type: 'Point',

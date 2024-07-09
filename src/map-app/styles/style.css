@@ -647,14 +647,21 @@ input[type="search"] {
 
 /* Popup */
 
-.sea-initiative-popup .mapboxgl-popup-content {
+.mapboxgl-popup-content {
   box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
-  padding: 0;
   display: flex;
   flex-direction: row;
   margin: 0;
   color: #333;
+}
+
+.sea-initiative-popup .mapboxgl-popup-content {
+  padding: 0;
+}
+
+.sea-initiative-tooltip .mapboxgl-popup-content {
+  padding: 3px 8px;
 }
 
 .sea-initiative-popup .sea-initiative-details {
@@ -786,12 +793,25 @@ input[type="search"] {
 #dir-title {
   padding: 0px 0px 0px 16px;
 }
-#loadingCircle * {
+
+#loadingCircle {
+  background-color: rgba(255, 255, 255, 0.8);
+  display: block;
+  position: fixed;
+  padding:0;
+  margin:0;
+  top:0;
+  left:0;
+  width: 100%;
+  height: 100%;
   z-index: 400;
+}
+#loadingCircle * {
+  z-index: 401;
 }
 
 #loadingCirclespin {
-  border: 16px solid #f3f3f3;
+  border: 16px solid white;
   border-radius: 50%;
   border-top: 16px solid #3498db;
   width: 300px;
