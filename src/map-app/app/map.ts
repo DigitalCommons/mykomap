@@ -1,4 +1,4 @@
-import mapboxgl from 'mapbox-gl';
+import { Map as MapLibreMap } from 'maplibre-gl';
 // import 'leaflet-active-area';
 // //import * as contextmenu from 'leaflet-contextmenu';
 // import 'leaflet.markercluster';
@@ -6,7 +6,7 @@ import mapboxgl from 'mapbox-gl';
 
 // /* This code is needed to properly load the stylesheet, and images in the Leaflet CSS */
 // import 'leaflet/dist/leaflet.css';
-import '../../../node_modules/mapbox-gl/dist/mapbox-gl.css';
+import '../../../node_modules/maplibre-gl/dist/maplibre-gl.css';
 
 // This is a hack added to allow leaflet icons be the right size
 // @ts-ignore 
@@ -31,5 +31,5 @@ import '../../../node_modules/mapbox-gl/dist/mapbox-gl.css';
 //   ): void;
 // }
 
-export type Map = mapboxgl.Map;
+export type Map = MapLibreMap;
 

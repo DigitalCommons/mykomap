@@ -2,7 +2,7 @@ import * as postal from 'postal';
 import { Initiative } from './app/model/initiative';
 import { Box2d, Point2d } from './common-types';
 import { arrays2Box2d, yesANumber } from './utils';
-import { LngLatBoundsLike, LngLatLike } from 'mapbox-gl';
+import { LngLatBoundsLike, LngLatLike } from 'maplibre-gl';
 
 /// This defines a typed wrapper to a Postal topic
 export class PostalTopic<T = void> {

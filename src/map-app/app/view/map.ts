@@ -1,8 +1,8 @@
 import { MapPresenter } from "../presenter/map";
 import { BaseView } from './base';
-import { Map } from '../map';
+// import { Map } from '../map';
 import * as d3 from 'd3';
-import mapboxgl, { GeoJSONSource, LngLatBounds, LngLatLike } from "mapbox-gl";
+import { Map, GeoJSONSource, LngLatBounds, LngLatLike, NavigationControl, Popup } from "maplibre-gl";
 
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
@@ -11,8 +11,6 @@ import { Box2d } from "../../common-types";
 import { getViewportWidth, isFiniteBox2d } from "../../utils";
 import { getPopup } from "../simple-popup";
 
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9vbHp0IiwiYSI6ImNsdWw5ZG1yMzB4MXQya2xtMnBpbzRidngifQ.ywKPqQKGJk-r2XwoyCirKw';
-
 // TODO; plumb these in from config
 const geojsonUrl = 'test-500000-trimmed.geojson';
 const baseUri = "https://update-me/some/path/";
@@ -20,8 +18,9 @@ const baseUri = "https://update-me/some/path/";
 export class MapView extends BaseView {
   readonly map: Map;
   private _settingActiveArea: boolean = false;
-  private _popup: mapboxgl.Popup | undefined;
-  private _tooltip: mapboxgl.Popup | undefined;
+  private _loadedVectorSource: boolean = false;
+  private _popup: Popup | undefined;
+  private _tooltip: Popup | undefined;
   private readonly descriptionPercentage: number;
   private readonly dialogueSizeStyles: HTMLStyleElement;
   private readonly dialogueHeight;
@@ -111,7 +110,7 @@ export class MapView extends BaseView {
     this.descriptionPercentage = Math.round(100 / (descriptionRatio + 1) * descriptionRatio);
     this.dialogueSizeStyles = document.createElement('style');
     this.dialogueSizeStyles.innerHTML = `
-    .sea-initiative-popup div.mapboxgl-popup-content {
+    .sea-initiative-popup div.maplibregl-popup-content {
           height: ${this.dialogueHeight};
           width: ${this.dialogueWidth}!important;
       }
@@ -181,193 +180,204 @@ export class MapView extends BaseView {
     console.log('ccccc making the map');
     this.startLoading();
 
-    this.map = new mapboxgl.Map({
+    this.map = new Map({
       container: "map-app-leaflet-map",
-      projection: 'mercator',
-      style: 'mapbox://styles/mapbox/streets-v12',
+      // projection: 'mercator',
+      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${process.env.MAPTILER_API_KEY}`,
       minZoom: minZoom,
-      bounds: [[-180, -59.9], [180, 78.1]],
-      maxBounds: [[-180, -90], [180, 90]],
+      maxZoom: 18,
+      // bounds: [[-180, -59.9], [180, 78.1]],
+      // maxBounds: [[-180, -90], [180, 90]],
     });
     
     this.map.on('load', () => {
-      console.log('ccccc map loaded');
+      this.map.addSource('initiatives-vector', {
+        type: 'vector',
+        url: `https://api.maptiler.com/tiles/de227c0e-730f-49af-887e-4a124ed90c95/tiles.json?key=${process.env.MAPTILER_API_KEY}`
+      });
+
+      this.map.on('sourcedata', (e) => {
+        if (!this._loadedVectorSource && e.isSourceLoaded && e.sourceId === 'initiatives-vector') {
+          this._loadedVectorSource = true;
+          // console.log('Source data loaded', e);
+          this.stopLoading();
+
+          // Priority 'low' doesn't work, need to download as stream/chunks to allow vector tiles
+          // to refresh inbetween, so map is usable while downloading.
+          fetch(geojsonUrl, {priority: 'low'}).then(response => response.json()).then(data => {
+            this.map.addSource('initiatives-geojson', {
+              type: 'geojson',
+              data: data,//this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
+              buffer: 0,
+              cluster: true,
+              clusterMaxZoom: 16, // Max zoom to cluster points on
+              clusterRadius: 60 // Radius of each cluster when clustering points (defaults to 50)
+            });
+          });
+
+          // TODO: Then, change layers to use this new GeoJSON source...
+        }
+      });
+
+      this.map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'initiatives-vector',
+        "source-layer": "initiatives",
+        filter: ['has', 'point_count'],
+        paint: {
+          // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
+          // with three steps to implement three types of circles:
+          //   * Blue, 20px circles when point count is less than 100
+          //   * Yellow, 30px circles when point count is between 100 and 750
+          //   * Pink, 40px circles when point count is greater than or equal to 750
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#51bbd6',
+            100,
+            '#f1f075',
+            750,
+            '#f28cb1'
+          ],
+          'circle-radius': 20
+        }
+      });
+
+      this.map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'initiatives-vector',
+        "source-layer": "initiatives",
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12
+        }
+      });
+
       this.map.loadImage(
-        'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
-        (error, image) => {
-          if (error) throw error;
-          if (!image ) throw 'Marker image not loaded';
-          this.map.addImage('custom-marker', image);
-          // Add a new source from our GeoJSON data and
-          // set the 'cluster' option to true. GL-JS will
-          // add the point_count property to your source data.
-          this.map.addSource('initiatives', {
-            type: 'geojson',
-            data: geojsonUrl,//this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
-            buffer: 0,
-            cluster: true,
-            clusterMaxZoom: 14, // Max zoom to cluster points on
-            clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
-          });
+        'map-marker.171x256.png').then((image) => {
+          this.map.addImage('custom-marker', image.data);
+        });
 
-          this.map.on('sourcedata', (e) => {
-            if (e.isSourceLoaded && e.sourceId === 'initiatives') {
-              console.log('Source data loaded', e);
-              this.stopLoading();
+      this.map.addLayer({
+        id: 'unclustered-point',
+        type: 'symbol',
+        source: 'initiatives-vector',
+        "source-layer": "initiatives",
+        filter: ['!', ['has', 'point_count']],
+        'layout': {
+          'icon-image': 'custom-marker',
+          // get the title name from the source's "title" property
+          'text-field': ['get', 'title'],
+          'text-font': [
+            'Open Sans Semibold',
+            'Arial Unicode MS Bold'
+          ],
+          'text-offset': [0, 1.25],
+          'text-anchor': 'top'
+        }
+      });
+
+      // inspect a cluster on click
+      // this.map.on('click', 'clusters', (e) => {
+      //   const features: GeoJSON.Feature<GeoJSON.Point>[] = this.map.queryRenderedFeatures(e.point, {
+      //     layers: ['clusters']
+      //   }) as GeoJSON.Feature<GeoJSON.Point>[];
+      //     const clusterId = features[0].properties?.cluster_id;
+      //     const geojsonSource: GeoJSONSource = this.map.getSource('initiatives') as GeoJSONSource;
+      //     geojsonSource.getClusterExpansionZoom(
+      //       clusterId).then((zoom) => {
+      //         this.map.easeTo({
+      //           center: features[0].geometry.coordinates as LngLatLike,
+      //           zoom: zoom ?? undefined
+      //         });
+      //       });
+              
+      // });
+
+      // When a click event occurs on a feature in
+      // the unclustered-point layer, open a popup at
+      // the location of the feature, with
+      // description HTML from its properties.
+      this.map.on('click', 'unclustered-point', (e: any) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const identifier = e.features[0].properties['Identifier'];
+        const name = e.features[0].properties['Name'];
+        const uri = `${baseUri}${identifier}`
+
+        // Ensure that if the map is zoomed out such that
+        // multiple copies of the feature are visible, the
+        // popup appears over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        const initiative = this.presenter.mapUI.dataServices.getAggregatedData().initiativesByUid[uri];
+        console.log(`Clicked uri: ${uri} initiative: ${initiative}`);
+        let content = '';
+        const classnames = ['sea-initiative-popup', `popup-uri-${uri}`];
+
+        if (initiative) {
+          content = this.presenter.mapUI.markers.getInitiativeContent(initiative) || '';
+          if (!initiative.hasLocation()) classnames.push('sea-non-geo-initiative');
+        } else {
+          content = getPopup(name, this.presenter.mapUI.dataServices);
+        }
+
+        this._popup?.remove();
+          this._popup = new Popup({
+            maxWidth: 'none'
+          })
+            .setLngLat(coordinates)
+            .setHTML(content)
+            .addTo(this.map);
+          
+            for (const classname of classnames) {
+              this._popup.addClassName(classname);
             }
-          });
-    
-          this.map.addLayer({
-            id: 'clusters',
-            type: 'circle',
-            source: 'initiatives',
-            filter: ['has', 'point_count'],
-            paint: {
-              // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
-              // with three steps to implement three types of circles:
-              //   * Blue, 20px circles when point count is less than 100
-              //   * Yellow, 30px circles when point count is between 100 and 750
-              //   * Pink, 40px circles when point count is greater than or equal to 750
-              'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                100,
-                '#f1f075',
-                750,
-                '#f28cb1'
-              ],
-              'circle-radius': 20
-            }
-          });
-    
-          this.map.addLayer({
-            id: 'cluster-count',
-            type: 'symbol',
-            source: 'initiatives',
-            filter: ['has', 'point_count'],
-            layout: {
-              'text-field': ['get', 'point_count_abbreviated'],
-              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-              'text-size': 12
-            }
-          });
-    
-          this.map.addLayer({
-            id: 'unclustered-point',
-            type: 'symbol',
-            source: 'initiatives',
-            filter: ['!', ['has', 'point_count']],
-            'layout': {
-              'icon-image': 'custom-marker',
-              // get the title name from the source's "title" property
-              'text-field': ['get', 'title'],
-              'text-font': [
-                'Open Sans Semibold',
-                'Arial Unicode MS Bold'
-              ],
-              'text-offset': [0, 1.25],
-              'text-anchor': 'top'
-            }
-          });
-    
-          // inspect a cluster on click
-          this.map.on('click', 'clusters', (e) => {
-            const features: GeoJSON.Feature<GeoJSON.Point>[] = this.map.queryRenderedFeatures(e.point, {
-              layers: ['clusters']
-            }) as GeoJSON.Feature<GeoJSON.Point>[];
-              const clusterId = features[0].properties?.cluster_id;
-              const geojsonSource: GeoJSONSource = this.map.getSource('initiatives') as GeoJSONSource;
-              geojsonSource.getClusterExpansionZoom(
-                clusterId,
-                (err, zoom) => {
-                  if (err) return;
+      });
+
+      this.map.on('zoomend', () => {
+        if (this._popup?.isOpen()) {
+          const uri = Array.from(this._popup?._container.classList).find((c: any) => c.startsWith('popup-uri-'))?.replace("popup-uri-", "");
+          const visibleFeatureUris = this.map.queryRenderedFeatures(undefined, {
+            layers: ['unclustered-point']
+          }).map(f => f?.properties?.uri);
+
+          if (!visibleFeatureUris.includes(uri)) {
+            // close the popup if the feature is no longer visible
+            this._popup.remove();
+          }
+        }
+      });
+
+      this.map.on('mouseenter', 'clusters', () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', 'clusters', () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+      this.map.on('mouseenter', 'unclustered-point', (e: any) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        this._tooltip?.remove();
+        this._tooltip = new Popup({
+          closeButton: false,
+          maxWidth: 'none'
+        })
+          .setLngLat(coordinates)
+          .setText(e.features[0].properties['Name'])
+          .addTo(this.map)
+          .addClassName("sea-initiative-tooltip");
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', 'unclustered-point', () => {
+        this._tooltip?.remove();
+        this.map.getCanvas().style.cursor = '';
+      });
       
-                  this.map.easeTo({
-                    center: features[0].geometry.coordinates as mapboxgl.LngLatLike,
-                    zoom: zoom ?? undefined
-                  });
-                }
-              );
-          });
-    
-          // When a click event occurs on a feature in
-          // the unclustered-point layer, open a popup at
-          // the location of the feature, with
-          // description HTML from its properties.
-          this.map.on('click', 'unclustered-point', (e) => {
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            const identifier = e.features[0].properties['Identifier'];
-            const name = e.features[0].properties['Name'];
-            const uri = `${baseUri}${identifier}`
-    
-            // Ensure that if the map is zoomed out such that
-            // multiple copies of the feature are visible, the
-            // popup appears over the copy being pointed to.
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-
-            const initiative = this.presenter.mapUI.dataServices.getAggregatedData().initiativesByUid[uri];
-            console.log(`Clicked uri: ${uri} initiative: ${initiative}`);
-            let content = '';
-            let classname = `sea-initiative-popup popup-uri-${uri}`
-
-            if (initiative) {
-              content = this.presenter.mapUI.markers.getInitiativeContent(initiative) || '';
-              if (!initiative.hasLocation()) classname += ' sea-non-geo-initiative';
-            } else {
-              content = getPopup(name, this.presenter.mapUI.dataServices);
-            }
-
-            this._popup?.remove();
-              this._popup = new mapboxgl.Popup({
-                maxWidth: 'none'
-              })
-                .setLngLat(coordinates)
-                .setHTML(content)
-                .addTo(this.map)
-                .addClassName(classname);
-          });
-
-          this.map.on('zoomend', () => {
-            if (this._popup?.isOpen()) {
-              const uri = Array.from(this._popup?._classList).find(c => c.startsWith('popup-uri-'))?.replace("popup-uri-", "");
-              const visibleFeatureUris = this.map.queryRenderedFeatures(undefined, {
-                layers: ['unclustered-point']
-              }).map(f => f?.properties?.uri);
-
-              if (!visibleFeatureUris.includes(uri)) {
-                // close the popup if the feature is no longer visible
-                this._popup.remove();
-              }
-            }
-          });
-    
-          this.map.on('mouseenter', 'clusters', () => {
-            this.map.getCanvas().style.cursor = 'pointer';
-          });
-          this.map.on('mouseleave', 'clusters', () => {
-            this.map.getCanvas().style.cursor = '';
-          });
-          this.map.on('mouseenter', 'unclustered-point', (e) => {
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            this._tooltip?.remove();
-            this._tooltip = new mapboxgl.Popup({
-              closeButton: false,
-              maxWidth: 'none'
-            })
-              .setLngLat(coordinates)
-              .setText(e.features[0].properties['Name'])
-              .addTo(this.map)
-              .addClassName("sea-initiative-tooltip");
-            this.map.getCanvas().style.cursor = 'pointer';
-          });
-          this.map.on('mouseleave', 'unclustered-point', () => {
-            this._tooltip?.remove();
-            this.map.getCanvas().style.cursor = '';
-          });
-      })
       this.presenter.onLoad();
     });
     
@@ -383,7 +393,7 @@ export class MapView extends BaseView {
     //   // contextmenuWidth: 140,
     // }) as Map; // Need to coerce the type to include our loaded extension methods
     
-    this.map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    this.map.addControl(new NavigationControl(), 'bottom-right');
 
     // this.map.on('click', (e) => this.onMapClicked(e));
     // this.map.on('load', (e) => this.onLoad(e));

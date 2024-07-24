@@ -11,7 +11,7 @@ import { toString as _toString, canDisplayExpandedSidebar } from '../utils';
 import { Action, AppState, PropEquality, StateManager, TextSearch } from "./state-manager";
 import { StateChange } from "../undo-stack";
 import { Dictionary } from "../common-types";
-import { GeoJSONSource } from "mapbox-gl";
+import { GeoJSONSource } from "maplibre-gl";
 
 export class MapUI {
   private mapPresenter?: MapPresenter;

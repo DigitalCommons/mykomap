@@ -14,6 +14,7 @@ const os = require('os');
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const Dotenv = require('dotenv-webpack');
 const webpack = require('webpack');
 const spawn = require('child_process').spawnSync;
 const cwd = process.cwd();
@@ -238,6 +239,10 @@ const webpackAppConfig = {
                    globOptions: { ignore: ["**/*~"] } }
         })
       ],
+    }),
+    new Dotenv({
+      safe: true,
+      allowEmptyValues: true,
     }),
   ],
 };

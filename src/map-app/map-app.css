@@ -4,6 +4,6 @@
 /* @import url("~leaflet-contextmenu/dist/leaflet.contextmenu.css"); */
 /* @import url("~leaflet.markercluster/dist/MarkerCluster.css"); */
 /* @import url("~leaflet.markercluster/dist/MarkerCluster.Default.css"); */
-@import url("~mapbox-gl/dist/mapbox-gl.css");
+@import url("~maplibre-gl/dist/maplibre-gl.css");
 /* NOTE: must come after 3rd party styles, so they can be overridden */
 @import url("styles/style.css");

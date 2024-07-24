@@ -1,3 +1,5 @@
+.env
+
 # For Vim users:
 *.swp
 *.swo

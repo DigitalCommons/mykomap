@@ -192,7 +192,7 @@ export function webRun(window: Window, base_config: ConfigData): void {
   window.mapUI = initUI(config, dataServices);
 
   // Commented this out since we are just using GeoJSON data. If we let this run in the background,
-  // it takes up CPU time and makes the initial Mapbox render slower. In practise, we can trigger
+  // it takes up CPU time and makes the initial MaplibreGL render slower. In practise, we can trigger
   // this to happen in the background after the map has rendered, and process more info such as some
   // filterable props.
   
