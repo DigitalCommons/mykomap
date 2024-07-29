@@ -8,6 +8,7 @@
     "lib": ["DOM", "ES2021"],
     "jsx": "react",
     "allowJs": true,
+    "module": "esnext",
     "moduleResolution": "node"
   }
 }

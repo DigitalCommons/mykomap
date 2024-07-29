@@ -1,8 +1,7 @@
 import { MapPresenter } from "../presenter/map";
 import { BaseView } from './base';
-// import { Map } from '../map';
 import * as d3 from 'd3';
-import { Map, GeoJSONSource, LngLatBounds, LngLatLike, NavigationControl, Popup } from "maplibre-gl";
+import { Map, GeoJSONSource, LngLatBounds, LngLatLike, NavigationControl, Popup, SymbolLayerSpecification, CircleLayerSpecification, VectorTileSource } from "maplibre-gl";
 
 import { EventBus } from "../../eventbus";
 import { MarkerManager } from "../marker-manager";
@@ -12,13 +11,14 @@ import { getViewportWidth, isFiniteBox2d } from "../../utils";
 import { getPopup } from "../simple-popup";
 
 // TODO; plumb these in from config
-const geojsonUrl = 'test-500000-trimmed.geojson';
+const geojsonUrl = 'test-500000_trimmed.geojson';
 const baseUri = "https://update-me/some/path/";
 
 export class MapView extends BaseView {
   readonly map: Map;
   private _settingActiveArea: boolean = false;
   private _loadedVectorSource: boolean = false;
+  private _loadedGeoJSONSource: boolean = false;
   private _popup: Popup | undefined;
   private _tooltip: Popup | undefined;
   private readonly descriptionPercentage: number;
@@ -189,7 +189,7 @@ export class MapView extends BaseView {
       // bounds: [[-180, -59.9], [180, 78.1]],
       // maxBounds: [[-180, -90], [180, 90]],
     });
-    
+
     this.map.on('load', () => {
       this.map.addSource('initiatives-vector', {
         type: 'vector',
@@ -202,20 +202,52 @@ export class MapView extends BaseView {
           // console.log('Source data loaded', e);
           this.stopLoading();
 
-          // Priority 'low' doesn't work, need to download as stream/chunks to allow vector tiles
-          // to refresh inbetween, so map is usable while downloading.
-          fetch(geojsonUrl, {priority: 'low'}).then(response => response.json()).then(data => {
+          new Promise<any>((resolve, reject) => {
+            if (window.Worker) {
+              const myWorker = new Worker(new URL("./fetch-json-worker.ts", import.meta.url));
+  
+              myWorker.postMessage(new URL(geojsonUrl, window.location.href).href);
+              console.log('Triggered worker to fetch GeoJSON');
+  
+              myWorker.onmessage = (e) => {
+                console.log('Result received from worker');
+                resolve(e.data);
+              }
+            } else {
+              console.warn('Web workers not supported, fetching GeoJSON in main thread');
+              fetch(geojsonUrl).then(response => resolve(response.json()));
+            }
+          }).then((data) => {
             this.map.addSource('initiatives-geojson', {
               type: 'geojson',
               data: data,//this.presenter.mapUI.currentItem().getVisibleInitiativesGeoJson(),
               buffer: 0,
               cluster: true,
-              clusterMaxZoom: 16, // Max zoom to cluster points on
+              clusterMaxZoom: 8, // Max zoom to cluster points on
               clusterRadius: 60 // Radius of each cluster when clustering points (defaults to 50)
             });
           });
+        }
+      });
 
-          // TODO: Then, change layers to use this new GeoJSON source...
+      this.map.on('sourcedata', (e) => {
+        if (!this._loadedGeoJSONSource && e.isSourceLoaded && e.sourceId === 'initiatives-geojson') {
+          this._loadedGeoJSONSource = true;
+
+          // Then, change layers to use this new GeoJSON source...
+          const oldLayers = this.map.getStyle().layers as Array<SymbolLayerSpecification|CircleLayerSpecification>;
+          for (const layer of oldLayers) {
+            if (layer.source === 'initiatives-vector') {
+              layer.source = 'initiatives-geojson';
+              delete layer['source-layer'];
+              
+              this.map.removeLayer(layer.id);
+              this.map.addLayer(layer);
+            }
+          }
+          this.map.removeSource('initiatives-vector');
+
+          console.log('Replaced vector source with GeoJSON source');
         }
       });
 
@@ -223,7 +255,7 @@ export class MapView extends BaseView {
         id: 'clusters',
         type: 'circle',
         source: 'initiatives-vector',
-        "source-layer": "initiatives",
+        "source-layer": "geojsonLayer",
         filter: ['has', 'point_count'],
         paint: {
           // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
@@ -248,7 +280,7 @@ export class MapView extends BaseView {
         id: 'cluster-count',
         type: 'symbol',
         source: 'initiatives-vector',
-        "source-layer": "initiatives",
+        "source-layer": "geojsonLayer",
         filter: ['has', 'point_count'],
         layout: {
           'text-field': ['get', 'point_count_abbreviated'],
@@ -266,37 +298,33 @@ export class MapView extends BaseView {
         id: 'unclustered-point',
         type: 'symbol',
         source: 'initiatives-vector',
-        "source-layer": "initiatives",
+        "source-layer": "geojsonLayer",
         filter: ['!', ['has', 'point_count']],
         'layout': {
           'icon-image': 'custom-marker',
-          // get the title name from the source's "title" property
-          'text-field': ['get', 'title'],
-          'text-font': [
-            'Open Sans Semibold',
-            'Arial Unicode MS Bold'
-          ],
-          'text-offset': [0, 1.25],
-          'text-anchor': 'top'
         }
       });
 
       // inspect a cluster on click
-      // this.map.on('click', 'clusters', (e) => {
-      //   const features: GeoJSON.Feature<GeoJSON.Point>[] = this.map.queryRenderedFeatures(e.point, {
-      //     layers: ['clusters']
-      //   }) as GeoJSON.Feature<GeoJSON.Point>[];
-      //     const clusterId = features[0].properties?.cluster_id;
-      //     const geojsonSource: GeoJSONSource = this.map.getSource('initiatives') as GeoJSONSource;
-      //     geojsonSource.getClusterExpansionZoom(
-      //       clusterId).then((zoom) => {
-      //         this.map.easeTo({
-      //           center: features[0].geometry.coordinates as LngLatLike,
-      //           zoom: zoom ?? undefined
-      //         });
-      //       });
-              
-      // });
+      this.map.on('click', 'clusters', async (e) => {
+        const features: GeoJSON.Feature<GeoJSON.Point>[] = this.map.queryRenderedFeatures(e.point, {
+          layers: ['clusters']
+        }) as GeoJSON.Feature<GeoJSON.Point>[];
+        let zoom;
+
+        if (this._loadedGeoJSONSource) {
+          const source = this.map.getSource('initiatives-geojson') as GeoJSONSource;
+          zoom = await source.getClusterExpansionZoom(features[0].properties?.cluster_id);
+        } else {
+          // Stored in properties when vector tiles were generated
+          zoom =  features[0].properties?.clusterExpansionZoom;
+        }
+
+        this.map.easeTo({
+          center: features[0].geometry.coordinates as LngLatLike,
+          zoom: zoom ?? undefined
+        });
+      });
 
       // When a click event occurs on a feature in
       // the unclustered-point layer, open a popup at
@@ -341,13 +369,15 @@ export class MapView extends BaseView {
       });
 
       this.map.on('zoomend', () => {
+        // console.log(this.map.getZoom());
+        
         if (this._popup?.isOpen()) {
           const uri = Array.from(this._popup?._container.classList).find((c: any) => c.startsWith('popup-uri-'))?.replace("popup-uri-", "");
           const visibleFeatureUris = this.map.queryRenderedFeatures(undefined, {
             layers: ['unclustered-point']
-          }).map(f => f?.properties?.uri);
+          }).map(f => `${baseUri}${f?.properties['Identifier']}`);
 
-          if (!visibleFeatureUris.includes(uri)) {
+          if (!uri || !visibleFeatureUris.includes(uri)) {
             // close the popup if the feature is no longer visible
             this._popup.remove();
           }
