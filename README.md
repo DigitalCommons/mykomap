@@ -1,3 +1,9 @@
+# Mykomap LEGACY
+
+Note: this is not in active development. This version is kept unarchived to support our legacy mykomaps.
+
+The actively-developed Mykomap codebase is [here](https://github.com/DigitalCommons/mykomap).
+
 # PACKAGE
 
 mykomap - A web application for mapping initiatives in the Solidarity & Co-operative Economies
